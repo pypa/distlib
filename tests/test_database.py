@@ -142,6 +142,13 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
     expected_str_output = 'choxie 2.0.0.9'
 
     def setUp(self):
+        def get_files(location):
+            for path in ('REQUESTED', 'INSTALLER', 'METADATA'):
+                yield os.path.join(location + '.dist-info', path)
+            for path, dirs, files in os.walk(location):
+                for f in files:
+                    yield os.path.join(path, f)
+
         super(TestDistribution, self).setUp()
         self.dirs = [os.path.join(self.fake_dists_path, f)
                      for f in os.listdir(self.fake_dists_path)
@@ -149,24 +156,11 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
         self.records = {}
         for distinfo_dir in self.dirs:
-
+            dist_location = distinfo_dir.replace('.dist-info', '')
             record_file = os.path.join(distinfo_dir, 'RECORD')
-            fp = open(record_file, 'w')
-            try:
-                record_writer = csv.writer(
-                    fp, delimiter=',', quoting=csv.QUOTE_NONE,
-                    lineterminator='\n')
-
-                dist_location = distinfo_dir.replace('.dist-info', '')
-
-                for path, dirs, files in os.walk(dist_location):
-                    for f in files:
-                        record_writer.writerow(record_pieces((path, f)))
-                for file in ('INSTALLER', 'METADATA', 'REQUESTED'):
-                    record_writer.writerow(record_pieces((distinfo_dir, file)))
-                record_writer.writerow([record_file])
-            finally:
-                fp.close()
+            dist = self.cls(distinfo_dir)
+            
+            dist.write_installed_files(get_files(dist_location))
 
             fp = open(record_file)
             try:

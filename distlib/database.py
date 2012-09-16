@@ -1,7 +1,9 @@
 """PEP 376 implementation."""
 
 import os
+import codecs
 import csv
+import logging
 import sys
 import zipimport
 
@@ -19,6 +21,8 @@ __all__ = [
     'enable_cache', 'disable_cache', 'clear_cache',
     'get_file_path', 'get_file']
 
+
+logger = logging.getLogger(__name__)
 
 # TODO update docs
 
@@ -207,6 +211,31 @@ class Distribution(object):
         """
         for result in self._get_records(local):
             yield result
+
+    def write_installed_files(self, paths):
+        """
+        Writes the ``RECORD`` file, using the ``paths`` iterable passed in. Any
+        existing ``RECORD`` file is silently overwritten.
+        """
+        record_path = os.path.join(self.path, 'RECORD')
+        logger.info('creating %s', record_path)
+        with codecs.open(record_path, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter=',',
+                                lineterminator='\n',
+                                quotechar='"')
+            for path in paths:
+                if path.endswith(('.pyc', '.pyo')):
+                    # do not put size and md5 hash, as in PEP-376
+                    writer.writerow((fpath, '', ''))
+                else:
+                    size = os.path.getsize(path)
+                    with open(path, 'rb') as fp:
+                        hash = md5(fp.read())
+                    md5sum = hash.hexdigest()
+                    writer.writerow((path, md5sum, size))
+
+            # add the RECORD file itself
+            writer.writerow((record_path, '', ''))
 
     def uses(self, path):
         """
