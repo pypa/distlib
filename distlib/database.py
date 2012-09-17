@@ -167,7 +167,7 @@ class Distribution(object):
 
     def _get_records(self, local=False):
         results = []
-        record = self.get_distinfo_file('RECORD')
+        record = self.get_distinfo_file('RECORD', preserve_newline=True)
         try:
             record_reader = csv.reader(record, delimiter=',',
                                        lineterminator='\n')
@@ -183,7 +183,8 @@ class Distribution(object):
         return results
 
     def get_resource_path(self, relative_path):
-        resources_file = self.get_distinfo_file('RESOURCES')
+        resources_file = self.get_distinfo_file('RESOURCES',
+                preserve_newline=True)
         try:
             resources_reader = csv.reader(resources_file, delimiter=',',
                                           lineterminator='\n')
@@ -290,7 +291,7 @@ class Distribution(object):
                 return True
         return False
 
-    def get_distinfo_file(self, path, binary=False):
+    def get_distinfo_file(self, path, binary=False, preserve_newline=False):
         """
         Returns a file located under the ``.dist-info`` directory. Returns a
         ``file`` instance for the file pointed by *path*.
@@ -304,9 +305,27 @@ class Distribution(object):
         :parameter binary: If *binary* is ``True``, opens the file in read-only
                            binary mode (``rb``), otherwise opens it in
                            read-only mode (``r``).
+        :parameter preserve_newline: If *preserve_newline* is ``True``, opens
+                                     the file with no newline translation
+                                     (``newline=''`` in Python 3, binary mode
+                                     in Python 2). In Python 3, this differs
+                                     from binary mode in that the reading the
+                                     file still returns strings, not bytes.
         :rtype: file object
         """
+        # XXX: There is no way to specify the file encoding. As RECORD is
+        # written in UTF8 (see write_installed_files) and that isn't the
+        # default on Windows, there is the potential for bugs here with
+        # Unicode filenames.
         open_flags = 'r'
+
+        nl_arg = {}
+        if preserve_newline:
+            if sys.version_info[0] < 3:
+                binary = True
+            else:
+                nl_arg = {'newline': ''}
+
         if binary:
             open_flags += 'b'
 
@@ -325,7 +344,7 @@ class Distribution(object):
                                   path)
 
         path = os.path.join(self.path, path)
-        return open(path, open_flags)
+        return open(path, open_flags, **nl_arg)
 
     def list_distinfo_files(self, local=False):
         """
