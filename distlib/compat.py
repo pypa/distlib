@@ -30,9 +30,3 @@ except ImportError:
             return 'IronPython'
         return 'CPython'
 
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import new as md5
-
-

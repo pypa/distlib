@@ -1,5 +1,6 @@
 import os
 import csv
+import hashlib
 import random
 import shutil
 import sys
@@ -8,7 +9,7 @@ from textwrap import dedent
 import unittest
 
 from distlib import DistlibException
-from distlib.compat import md5, text_type, file_type
+from distlib.compat import text_type, file_type
 import distlib.database
 from distlib.metadata import Metadata
 from distlib.database import (
@@ -25,22 +26,6 @@ from support import LoggingCatcher, requires_zlib
 # TODO Add a test for getting a distribution provided by another distribution
 # TODO Add a test for absolute pathed RECORD items (e.g. /etc/myapp/config.ini)
 # TODO Add tests from the former pep376 project (zipped site-packages, etc.)
-
-
-def get_hexdigest(filename):
-    fp = open(filename, 'rb')
-    try:
-        checksum = md5(fp.read())
-    finally:
-        fp.close()
-    return checksum.hexdigest()
-
-
-def record_pieces(path):
-    path = os.path.join(*path)
-    digest = get_hexdigest(path)
-    size = os.path.getsize(path)
-    return path, digest, size
 
 
 class FakeDistsMixin(object):
@@ -129,10 +114,10 @@ class CommonDistributionTests(FakeDistsMixin):
     def test_list_installed_files(self):
         for dir_ in self.dirs:
             dist = self.cls(dir_)
-            for path, md5_, size in dist.list_installed_files():
+            for path, hash, size in dist.list_installed_files():
                 record_data = self.records[dist.path]
                 self.assertIn(path, record_data)
-                self.assertEqual(md5_, record_data[path][0])
+                self.assertEqual(hash, record_data[path][0])
                 self.assertEqual(size, record_data[path][1])
 
     def test_check_installed_files(self):
@@ -149,7 +134,7 @@ class CommonDistributionTests(FakeDistsMixin):
             with open(bad_file_name, 'rb') as f:
                 data = f.read()
             bad_data = bytes(bytearray(reversed(data)))
-            bad_hash = md5(bad_data).hexdigest()
+            bad_hash = dist.get_hash(bad_data)
             with open(bad_file_name, 'wb') as f:
                 f.write(bad_data)
             mismatches = dist.check_installed_files()
@@ -172,7 +157,23 @@ class CommonDistributionTests(FakeDistsMixin):
             # restore the file
             with open(bad_file_name, 'wb') as f:
                 f.write(data)
-            
+
+    def test_hash(self):
+        datalen = random.randrange(0, 500)
+        data = os.urandom(datalen)
+        for dir_ in self.dirs:
+            dist = self.cls(dir_)
+            for hasher in ('sha1', 'sha224', 'sha384',
+                           'sha256', 'sha512', None):
+                dist.hasher = hasher
+                actual = dist.get_hash(data)
+                if hasher is None:
+                    expected = hashlib.md5(data).hexdigest()
+                else:
+                    expected = '%s=%s' % (hasher,
+                        getattr(hashlib, hasher)(data).hexdigest())
+                self.assertEqual(actual, expected)
+
 class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
     cls = Distribution
@@ -208,9 +209,9 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
                 for row in record_reader:
                     if row == []:
                         continue
-                    path, md5_, size = (row[:] +
+                    path, hash, size = (row[:] +
                                         [None for i in range(len(row), 3)])
-                    record_data[path] = md5_, size
+                    record_data[path] = hash, size
             self.records[distinfo_dir] = record_data
 
     def test_instantiation(self):

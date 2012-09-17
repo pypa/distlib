@@ -3,12 +3,13 @@
 import os
 import codecs
 import csv
+import hashlib
 import logging
 import sys
 import zipimport
 
 from . import DistlibException
-from .compat import StringIO, md5
+from .compat import StringIO
 from .version import suggest_normalized_version, VersionPredicate
 from .metadata import Metadata
 from .util import parse_requires
@@ -141,6 +142,8 @@ class Distribution(object):
     present (in other words, whether the package was installed by user
     request or it was installed as a dependency)."""
 
+    hasher = None
+
     def __init__(self, path):
         if _cache_enabled and path in _cache_path:
             self.metadata = _cache_path[path].metadata
@@ -196,7 +199,7 @@ class Distribution(object):
     def list_installed_files(self, local=False):
         """
         Iterates over the ``RECORD`` entries and returns a tuple
-        ``(path, md5, size)`` for each line. If *local* is ``True``,
+        ``(path, hash, size)`` for each line. If *local* is ``True``,
         the returned path is transformed into a local absolute path.
         Otherwise the raw value from RECORD is returned.
 
@@ -207,10 +210,21 @@ class Distribution(object):
                           absolute path
 
         :type local: boolean
-        :returns: iterator of (path, md5, size)
+        :returns: iterator of (path, hash, size)
         """
         for result in self._get_records(local):
             yield result
+
+    def get_hash(self, data, hasher=None):
+        if hasher is None:
+            hasher = self.hasher
+        if hasher is None:
+            hasher = hashlib.md5
+            prefix = ''
+        else:
+            hasher = getattr(hashlib, hasher)
+            prefix = '%s=' % self.hasher
+        return '%s%s' % (prefix, hasher(data).hexdigest())
 
     def write_installed_files(self, paths):
         """
@@ -225,14 +239,13 @@ class Distribution(object):
                                 quotechar='"')
             for path in paths:
                 if path.endswith(('.pyc', '.pyo')):
-                    # do not put size and md5 hash, as in PEP-376
+                    # do not put size and hash, as in PEP-376
                     writer.writerow((fpath, '', ''))
                 else:
                     size = os.path.getsize(path)
                     with open(path, 'rb') as fp:
-                        hash = md5(fp.read())
-                    md5sum = hash.hexdigest()
-                    writer.writerow((path, md5sum, size))
+                        hash = self.get_hash(fp.read())
+                    writer.writerow((path, hash, size))
 
             # add the RECORD file itself
             writer.writerow((record_path, '', ''))
@@ -243,7 +256,7 @@ class Distribution(object):
         matched by the files themselves. Returns a (possibly empty) list of
         mismatches. Each entry in the mismatch list will be a tuple consisting
         of the path, 'exists', 'size' or 'hash' according to what didn't match
-        (existence is checked first, then size, then then hash), the expected
+        (existence is checked first, then size, then hash), the expected
         value and the actual value.
         """
         mismatches = []
@@ -259,7 +272,7 @@ class Distribution(object):
                     mismatches.append((path, 'size', size, actual_size))
                 else:
                     with open(path, 'rb') as f:
-                        actual_hash = md5(f.read()).hexdigest()
+                        actual_hash = self.get_hash(f.read())
                         if actual_hash != hash:
                             mismatches.append((path, 'hash', hash, actual_hash))
         return mismatches
