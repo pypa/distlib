@@ -237,6 +237,33 @@ class Distribution(object):
             # add the RECORD file itself
             writer.writerow((record_path, '', ''))
 
+    def check_installed_files(self):
+        """
+        Checks that the hashes and sizes of the files in ``RECORD`` are
+        matched by the files themselves. Returns a (possibly empty) list of
+        mismatches. Each entry in the mismatch list will be a tuple consisting
+        of the path, 'exists', 'size' or 'hash' according to what didn't match
+        (existence is checked first, then size, then then hash), the expected
+        value and the actual value.
+        """
+        mismatches = []
+        record_path = os.path.join(self.path, 'RECORD')
+        for path, hash, size in self.list_installed_files():
+            if path == record_path:
+                continue
+            if not os.path.exists(path):
+                mismatches.append((path, 'exists', True, False))
+            else:
+                actual_size = str(os.path.getsize(path))
+                if actual_size != size:
+                    mismatches.append((path, 'size', size, actual_size))
+                else:
+                    with open(path, 'rb') as f:
+                        actual_hash = md5(f.read()).hexdigest()
+                        if actual_hash != hash:
+                            mismatches.append((path, 'hash', hash, actual_hash))
+        return mismatches
+
     def uses(self, path):
         """
         Returns ``True`` if path is listed in ``RECORD``. *path* can be a local

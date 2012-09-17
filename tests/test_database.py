@@ -1,5 +1,6 @@
 import os
 import csv
+import random
 import shutil
 import sys
 import tempfile
@@ -134,7 +135,44 @@ class CommonDistributionTests(FakeDistsMixin):
                 self.assertEqual(md5_, record_data[path][0])
                 self.assertEqual(size, record_data[path][1])
 
+    def test_check_installed_files(self):
+        for dir_ in self.dirs:
+            dist = self.cls(dir_)
+            mismatches = dist.check_installed_files()
+            self.assertEqual(mismatches, [])
+            # pick a non-empty file at random and change its contents
+            # but not its size. Check the failure returned,
+            # then restore the file.
+            files = [f for f in dist.list_installed_files() if f[-1] not in ('', '0')]
+            bad_file = random.choice(files)
+            bad_file_name = bad_file[0]
+            with open(bad_file_name, 'rb') as f:
+                data = f.read()
+            bad_data = bytes(bytearray(reversed(data)))
+            bad_hash = md5(bad_data).hexdigest()
+            with open(bad_file_name, 'wb') as f:
+                f.write(bad_data)
+            mismatches = dist.check_installed_files()
+            self.assertEqual(mismatches, [(bad_file_name, 'hash', bad_file[1],
+                                           bad_hash)])
+            # now truncate the file by one byte and see what's returned
+            with open(bad_file_name, 'wb') as f:
+                f.write(bad_data[:-1])
+            bad_size = str(len(bad_data) - 1)
+            mismatches = dist.check_installed_files()
+            self.assertEqual(mismatches, [(bad_file_name, 'size', bad_file[2],
+                                           bad_size)])
+            
+            # now remove the file and see what's returned
+            os.remove(bad_file_name)
+            mismatches = dist.check_installed_files()
+            self.assertEqual(mismatches, [(bad_file_name, 'exists',
+                                           True, False)])
 
+            # restore the file
+            with open(bad_file_name, 'wb') as f:
+                f.write(data)
+            
 class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
     cls = Distribution
@@ -158,12 +196,13 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         for distinfo_dir in self.dirs:
             dist_location = distinfo_dir.replace('.dist-info', '')
             record_file = os.path.join(distinfo_dir, 'RECORD')
+
+            # Write the files using write_installed_files.
+            # list_installed_files should read and match.
             dist = self.cls(distinfo_dir)
-            
             dist.write_installed_files(get_files(dist_location))
 
-            fp = open(record_file)
-            try:
+            with open(record_file) as fp:
                 record_reader = csv.reader(fp, lineterminator='\n')
                 record_data = {}
                 for row in record_reader:
@@ -172,8 +211,6 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
                     path, md5_, size = (row[:] +
                                         [None for i in range(len(row), 3)])
                     record_data[path] = md5_, size
-            finally:
-                fp.close()
             self.records[distinfo_dir] = record_data
 
     def test_instantiation(self):
