@@ -39,7 +39,7 @@ distutils.core.setup(
     long_description = 'Low-level components of distutils2/packaging',
     license='BSD',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',

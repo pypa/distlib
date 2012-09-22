@@ -1,3 +1,4 @@
 \.(py[co]|log)$
 tests/run/
+docs/_build/
 
