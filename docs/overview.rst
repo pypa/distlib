@@ -55,8 +55,8 @@ best practices, ``packaging`` suffered from some drawbacks, too:
   can be seen (with the benefit of hindsight) as due to the goals being set too
   ambitiously; the project developers bit off more than they could chew.
 
-How can Distlib help?
----------------------
+How Distlib can help
+--------------------
 
 The idea behind Distlib is expressed in `this python-dev post
 <http://mail.python.org/pipermail/python-dev/2012-September/121716.html>`_,
@@ -88,6 +88,15 @@ Distlib currently offers the following features:
   defined by :pep:`345`, :pep:`314` and :pep:`241`.
 * The package ``distlib.markers``, which implements environment markers as
   defined by :pep:`345`.
+* The package ``distlib.database``, which implements a database of installed
+  distributions, as defined by :pep:`376`.
+* The package ``distlib.depgraph``, which implements distribution dependency
+  graph logic.
+* The package ``distlib.glob``, which implements globbing functionality
+  such as the ability to use ``**`` in patterns to specify recursing into
+  subdirectories.
+* The package ``distlib.resources``, which allows access to data files stored
+  in Python packages, both in the file system and in .zip files.
 
 Python version and platform compatibility
 -----------------------------------------

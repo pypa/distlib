@@ -3,7 +3,7 @@
 Distlib's design
 ================
 
-This is the section where some description of how ``distlib``'s design was
+This is the section containing some discussion of how ``distlib``'s design was
 arrived at, as and when time permits.
 
 The ``resources`` API
@@ -11,8 +11,21 @@ The ``resources`` API
 
 This section describes the design of resources.
 
-Basic approach
-^^^^^^^^^^^^^^
+The problem we're trying to solve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A minimal solution
+^^^^^^^^^^^^^^^^^^
+
+The ``Resource`` class
+^^^^^^^^^^^^^^^^^^^^^^
+
+The ``FileResourceFinder`` class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``ZipResourceFinder`` class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 
 Next steps
