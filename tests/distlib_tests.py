@@ -7,4 +7,5 @@ from test_markers import MarkersTestCase
 from test_metadata import MetadataTestCase
 from test_database import DataFilesTestCase, TestDatabase, TestDistribution
 from test_depgraph import DepGraphTestCase
+from test_resources import ZipResourceTestCase, FileResourceTestCase
 

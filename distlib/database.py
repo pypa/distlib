@@ -217,6 +217,24 @@ class Distribution(object):
             yield result
 
     def get_hash(self, data, hasher=None):
+        """
+        Get the hash of some data, using a particular hash algorithm, if
+        specified.
+        
+        :param data: The data to be hashed.
+        :type data: bytes
+        :param hasher: The name of a hash implementation, supported by hashlib,
+                       or ``None``. Examples of valid values are ``'sha1'``,
+                       ``'sha224'``, ``'sha384'``, '``sha256'``, ``'md5'`` and
+                       ``'sha512'``. If no hasher is specified, the ``hasher``
+                       attribute of the :class:`Distribution` instance is used.
+                       If the hasher is determined to be ``None``, MD5 is used
+                       as the hashing algorithm.
+        :returns: The hash of the data. If a hasher was explicitly specified,
+                  the returned hash will be prefixed with the specified hasher
+                  followed by '='.
+        :rtype: str
+        """
         if hasher is None:
             hasher = self.hasher
         if hasher is None:
