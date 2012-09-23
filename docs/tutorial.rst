@@ -29,6 +29,57 @@ First steps
 
 TBD
 
+Using the resource API
+^^^^^^^^^^^^^^^^^^^^^^
+
+You can use the ``distlib.resources`` package to access data stored in Python
+packages, whether in the file system or .zip files. Consider a package
+which contains data alongside Python code::
+
+    foofoo
+    ├── bar
+    │   ├── bar_resource.bin
+    │   ├── baz.py
+    │   └── __init__.py
+    ├── foo_resource.bin
+    ├── __init__.py
+    └── nested
+        └── nested_resource.bin
+
+You can access these resources like so::
+
+    >>> from distlib.resources import finder
+    >>> f = finder('foofoo')
+    >>> r = f.find('foo_resource.bin')
+    >>> r.is_container
+    False
+    >>> r.size
+    10
+    >>> r.bytes
+    b'more_data\n'
+    >>> s = r.as_stream()
+    >>> s.read()
+    b'more_data\n'
+    >>> s.close()
+    >>> r = f.find('nested')
+    >>> r.is_container
+    True
+    >>> r.resources
+    {'nested_resource.bin'}
+    >>> r = f.find('nested/nested_resource.bin')
+    >>> r.size
+    12
+    >>> r.bytes
+    b'nested data\n'
+    >>> f = finder('foofoo.bar')
+    >>> r = f.find('bar_resource.bin')
+    >>> r.is_container
+    False
+    >>> r.bytes
+    b'data\n'
+    >>> 
+
+
 Next steps
 ----------
 
