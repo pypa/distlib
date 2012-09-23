@@ -7,6 +7,7 @@ import os
 import sys
 import zipimport
 
+from . import DistlibException
 from .util import cached_property
 
 class Resource(object):
@@ -16,22 +17,22 @@ class Resource(object):
 
     def stream(self):
         if self.is_container:
-            raise ValueError("A container resource can't be returned as a "
-                             "stream")
+            raise DistlibException("A container resource can't be returned as "
+                                    "a stream")
         return io.BytesIO(self.bytes)
 
     @cached_property
     def bytes(self):
         if self.is_container:
-            raise ValueError("A container resource can't be returned as "
-                             "bytes")
+            raise DistlibException("A container resource can't be returned as "
+                                   "bytes")
         return self.finder.get_bytes(self)
 
     @cached_property
     def resources(self):
         if not self.is_container:
-            raise ValueError("A non-container resource can't be queried "
-                             "for its contents")
+            raise DistlibException("A non-container resource can't be queried "
+                                   "for its contents")
         return self.finder.get_resources(self)
 
     @cached_property
@@ -145,10 +146,14 @@ def finder(package):
         if package not in sys.modules:
             __import__(package)
         module = sys.modules[package]
+        path = getattr(module, '__path__', None)
+        if path is None:
+            raise DistlibException('You cannot call a finder for a module, '
+                                   'only for a package')
         loader = getattr(module, '__loader__', None)
         finder_maker = _finder_registry.get(type(loader))
         if finder_maker is None:
-            raise ValueError('Unable to locate finder for %r' % package)
+            raise DistlibException('Unable to locate finder for %r' % package)
         result = finder_maker(module)
         _finder_cache[package] = result
     return result
