@@ -41,6 +41,13 @@ class Resource(object):
     def is_container(self):
         return self.finder.is_container(self)
 
+    @cached_property
+    def size(self):
+        if self.is_container:
+            raise DistlibException("The size of container resource can't be "
+                                   "returned")
+        return self.finder.get_size(self)
+
 class ResourceFinder(object):
     """
     Resource finder for file system resources.
@@ -81,6 +88,9 @@ class ResourceFinder(object):
         with open(resource.path, 'rb') as f:
             return f.read()
 
+    def get_size(self, resource):
+        return os.path.getsize(resource.path)
+
     def get_resources(self, resource):
         def allowed(f):
             return f != '__pycache__' and not f.endswith(('.pyc', '.pyo'))
@@ -115,6 +125,9 @@ class ZipResourceFinder(ResourceFinder):
 
     def get_stream(self, resource):
         return io.BytesIO(self.get_bytes(resource))
+
+    def get_size(self, resource):
+        return self.loader._files[resource.path][3]
 
     def get_resources(self, resource):
         path = '%s%s' % (resource.path, os.sep)

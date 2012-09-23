@@ -69,10 +69,11 @@ can see that a ``Resource`` would have the following:
 
 * A ``name`` property identifying the resource.
 * A ``as_stream`` method allowing access to the resource data as a binary 
-  stream. This is not a property; a new stream is returned each time this
-  method is called, and must be closed by the caller.
+  stream. This is not a property, because a new stream is returned each time
+  this method is called. The returned stream should be closed by the caller.
 * A ``bytes`` property returning the entire contents of the resource as a byte
   string.
+* A ``size`` property indicating the size of the resource (in bytes).
 * An ``is_container`` property indicating whether the resource is a container
   of other resources.
 * A ``resources`` property returning the names of resources contained within
@@ -81,8 +82,8 @@ can see that a ``Resource`` would have the following:
 The ``Resource`` class would be the logical place to perform sanity checks
 which relate to all resources. For example:
 
-* It doesn't make sense to ask for the ``bytes`` property or call the
-  ``as_stream`` method of a container resource.
+* It doesn't make sense to ask for the ``bytes`` or ``size`` properties or call
+  the ``as_stream`` method of a container resource.
 * It doesn't make sense to ask for the ``resources`` property of a resource
   which is *not* a container.
 
@@ -190,6 +191,9 @@ What a finder needs to do can be exemplified by the following skeleton for
 
         def get_bytes(self, resource):
             # return the resource's data as bytes
+
+        def get_size(self, resource):
+            # return the size of the resource's data in bytes
 
         def get_stream(self, resource):
             # return the resource's data as a binary stream
