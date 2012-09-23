@@ -1,6 +1,8 @@
 #
 # Copyright (C) 2012 Vinay Sajip. All rights reserved.
 #
+from __future__ import unicode_literals
+
 import bisect
 import io
 import os
@@ -15,11 +17,11 @@ class Resource(object):
         self.finder = finder
         self.name = name
 
-    def stream(self):
+    def as_stream(self):
         if self.is_container:
             raise DistlibException("A container resource can't be returned as "
                                     "a stream")
-        return io.BytesIO(self.bytes)
+        return self.finder.get_stream(self)
 
     @cached_property
     def bytes(self):
@@ -63,7 +65,7 @@ class ResourceFinder(object):
     def _find(self, path):
         return os.path.exists(path)
 
-    def get_resource(self, resource_name):
+    def find(self, resource_name):
         path = self._make_path(resource_name)
         if not self._find(path):
             result = None
@@ -71,6 +73,9 @@ class ResourceFinder(object):
             result = Resource(self, resource_name)
             result.path = path
         return result
+
+    def get_stream(self, resource):
+        return open(resource.path, 'rb')
 
     def get_bytes(self, resource):
         with open(resource.path, 'rb') as f:
@@ -104,9 +109,12 @@ class ZipResourceFinder(ResourceFinder):
             except IndexError:
                 result = False
         return result
-    
+
     def get_bytes(self, resource):
         return self.loader.get_data(resource.path)
+
+    def get_stream(self, resource):
+        return io.BytesIO(self.get_bytes(resource))
 
     def get_resources(self, resource):
         path = '%s%s' % (resource.path, os.sep)

@@ -65,11 +65,12 @@ A minimal solution
 
 We know that we will have to deal with resources, so it seems natural that
 there would be a ``Resource`` class in the solution. From the requirements, we
-can see that a ``Resource`` would have the following properties:
+can see that a ``Resource`` would have the following:
 
 * A ``name`` property identifying the resource.
-* A ``stream`` property allowing access to the resource data as a binary 
-  stream.
+* A ``as_stream`` method allowing access to the resource data as a binary 
+  stream. This is not a property; a new stream is returned each time this
+  method is called, and must be closed by the caller.
 * A ``bytes`` property returning the entire contents of the resource as a byte
   string.
 * An ``is_container`` property indicating whether the resource is a container
@@ -80,12 +81,13 @@ can see that a ``Resource`` would have the following properties:
 The ``Resource`` class would be the logical place to perform sanity checks
 which relate to all resources. For example:
 
-* It doesn't make sense to ask for the ``stream`` or ``bytes`` properties of a
-  container resource.
+* It doesn't make sense to ask for the ``bytes`` property or call the
+  ``as_stream`` method of a container resource.
 * It doesn't make sense to ask for the ``resources`` property of a resource
   which is *not* a container.
 
-It seems reasonable to raise exceptions for incorrect property accesses.
+It seems reasonable to raise exceptions for incorrect property or method
+accesses.
 
 We know that we need to support resource access in the file system as well as
 .zip files, and to support other sources of storage which might be used to
