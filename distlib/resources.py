@@ -169,7 +169,7 @@ def finder(package):
         module = sys.modules[package]
         path = getattr(module, '__path__', None)
         if path is None:
-            raise DistlibException('You cannot call a finder for a module, '
+            raise DistlibException('You cannot get a finder for a module, '
                                    'only for a package')
         loader = getattr(module, '__loader__', None)
         finder_maker = _finder_registry.get(type(loader))

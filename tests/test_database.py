@@ -370,42 +370,35 @@ class TestDatabase(LoggingCatcher,
     def test_get_distributions(self):
         # Lookup all distributions found in the ``sys.path``.
         # This test could potentially pick up other installed distributions
-        fake_dists = [('grammar', '1.0a4'), ('choxie', '2.0.0.9'),
-                      ('towel-stuff', '0.1'), ('babar', '0.1')]
-        found_dists = []
+        non_egg_dists = [('grammar', '1.0a4'), ('choxie', '2.0.0.9'),
+                         ('towel-stuff', '0.1'), ('babar', '0.1')]
+        egg_dists = [('bacon', '0.1'), ('cheese', '2.0.2'),
+                     ('coconuts-aster', '10.3'),
+                     ('banana', '0.4'), ('strawberry', '0.6'),
+                     ('truffles', '5.0'), ('nut', 'funkyversion')]
 
-        # Verify the fake dists have been found.
-        dists = [dist for dist in get_distributions(use_egg_info=False)]
-        for dist in dists:
-            self.assertIsInstance(dist, Distribution)
-            if (dist.name in dict(fake_dists) and
-                dist.path.startswith(self.fake_dists_path)):
-                found_dists.append((dist.name, dist.version))
-            else:
-                # check that it doesn't find anything more than this
-                self.assertFalse(dist.path.startswith(self.fake_dists_path))
-            # otherwise we don't care what other distributions are found
+        all_dists = non_egg_dists + egg_dists
 
-        # Finally, test that we found all that we were looking for
-        self.assertEqual(sorted(found_dists), sorted(fake_dists))
+        cases = ((False, non_egg_dists, (Distribution,)),
+                 (True, all_dists, (Distribution, EggInfoDistribution)))
 
-        # Now, test if the egg-info distributions are found correctly as well
-        fake_dists += [('bacon', '0.1'), ('cheese', '2.0.2'),
-                       ('coconuts-aster', '10.3'),
-                       ('banana', '0.4'), ('strawberry', '0.6'),
-                       ('truffles', '5.0'), ('nut', 'funkyversion')]
-        found_dists = []
+        for use_egg_info, fake_dists, allowed_classes in cases:
+            found_dists = []
 
-        dists = [dist for dist in get_distributions(use_egg_info=True)]
-        for dist in dists:
-            self.assertIsInstance(dist, (Distribution, EggInfoDistribution))
-            if (dist.name in dict(fake_dists) and
-                dist.path.startswith(self.fake_dists_path)):
-                found_dists.append((dist.name, dist.version))
-            else:
-                self.assertFalse(dist.path.startswith(self.fake_dists_path))
+            # Verify the fake dists have been found.
+            dists = list(get_distributions(use_egg_info=use_egg_info))
+            for dist in dists:
+                self.assertIsInstance(dist, allowed_classes)
+                if (dist.name in dict(fake_dists) and
+                    dist.path.startswith(self.fake_dists_path)):
+                    found_dists.append((dist.name, dist.version))
+                else:
+                    # check that it doesn't find anything more than this
+                    self.assertFalse(dist.path.startswith(self.fake_dists_path))
+                # otherwise we don't care what other distributions are found
 
-        self.assertEqual(sorted(fake_dists), sorted(found_dists))
+            # Finally, test that we found all that we were looking for
+            self.assertEqual(sorted(found_dists), sorted(fake_dists))
 
     @requires_zlib
     def test_get_distribution(self):
