@@ -11,11 +11,15 @@ if sys.version_info[0] < 3:
     string_types = basestring,
     text_type = unicode
     from types import FileType as file_type
+    import __builtin__ as builtins
+    import ConfigParser as configparser
 else:
     from io import StringIO
     string_types = str,
     text_type = str
     from io import TextIOWrapper as file_type
+    import builtins
+    import configparser
 
 try:
     from platform import python_implementation
