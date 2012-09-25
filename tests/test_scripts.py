@@ -18,4 +18,9 @@ class ScriptTestCase(unittest.TestCase):
         shutil.rmtree(self.maker.target_dir)
 
     def test_basic(self):
-        pass
+        files = self.maker.make('foo.py')
+        self.assertEqual(len(files), 1)
+        d, f = os.path.split(files[0])
+        self.assertEqual(f, 'foo.py')
+        self.assertEqual(d, self.maker.target_dir)
+

@@ -3,8 +3,9 @@ import logging
 import os
 import re
 
-from distlib.compat import string_types
-from distlib.glob import iglob
+from . import DistlibException
+from .compat import string_types, shutil
+from .glob import iglob
 
 logger = logging.getLogger(__name__)
 
@@ -115,4 +116,63 @@ class cached_property(object):
         if obj is None: return self
         obj.__dict__[self.func.__name__] = value = self.func(obj)
         return value
+
+class FileOperator(object):
+    def __init__(self, dry_run=False):
+        self.dry_run = dry_run
+
+    def convert_path(self, pathname):
+        """Return 'pathname' as a name that will work on the native filesystem.
+
+        The path is split on '/' and put back together again using the current
+        directory separator.  Needed because filenames in the setup script are
+        always supplied in Unix style, and have to be converted to the local
+        convention before we can actually use them in the filesystem.  Raises
+        ValueError on non-Unix-ish systems if 'pathname' either starts or
+        ends with a slash.
+        """
+        if os.sep == '/':
+            return pathname
+        if not pathname:
+            return pathname
+        if pathname[0] == '/':
+            raise ValueError("path '%s' cannot be absolute" % pathname)
+        if pathname[-1] == '/':
+            raise ValueError("path '%s' cannot end with '/'" % pathname)
+
+        paths = pathname.split('/')
+        while os.curdir in paths:
+            paths.remove(os.curdir)
+        if not paths:
+            return os.curdir
+        return os.path.join(*paths)
+
+    def newer(self, source, target):
+        """Tell if the target is newer than the source.
+
+        Returns true if 'source' exists and is more recently modified than
+        'target', or if 'source' exists and 'target' doesn't.
+
+        Returns false if both exist and 'target' is the same age or younger
+        than 'source'. Raise PackagingFileError if 'source' does not exist.
+
+        Note that this test is not very accurate: files created in the same second
+        will have the same "age".
+        """
+        if not os.path.exists(source):
+            raise DistlibException("file '%r' does not exist" %
+                                     os.path.abspath(source))
+        if not os.path.exists(target):
+            return True
+
+        return os.stat(source).st_mtime > os.stat(target).st_mtime
+
+    def copy_file(self, infile, outfile):
+        """Copy a file respecting dry-run and force flags.
+        """
+        if not self.dry_run:
+            if os.path.isdir(outfile):
+                outfile = os.path.join(outfile, os.path.split(infile)[-1])
+            shutil.copyfile(infile, outfile)
+
 
