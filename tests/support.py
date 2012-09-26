@@ -189,16 +189,84 @@ class EnvironRestorer(object):
         super(EnvironRestorer, self).tearDown()
 
 try:
+    skipIf = unittest.skipIf
+    skipUnless = unittest.skipUnless
+    skip = unittest.skip
+except AttributeError:
+    from unittest import SkipTest
+
+    def _id(obj):
+        return obj
+
+    def skip(reason):
+        """
+        Unconditionally skip a test.
+        """
+        def decorator(test_item):
+            if not isinstance(test_item, type):
+                @functools.wraps(test_item)
+                def skip_wrapper(*args, **kwargs):
+                    raise SkipTest(reason)
+                test_item = skip_wrapper
+
+            test_item.__unittest_skip__ = True
+            test_item.__unittest_skip_why__ = reason
+            return test_item
+        return decorator
+
+    def skipIf(condition, reason):
+        """
+        Skip a test if the condition is true.
+        """
+        if condition:
+            return skip(reason)
+        return _id
+
+    def skipUnless(condition, reason):
+        """
+        Skip a test unless the condition is true.
+        """
+        if not condition:
+            return skip(reason)
+        return _id
+
+try:
     import docutils
 except ImportError:
     docutils = None
 
-requires_docutils = unittest.skipUnless(docutils, 'requires docutils')
+requires_docutils = skipUnless(docutils, 'requires docutils')
 
 try:
     import zlib
 except ImportError:
     zlib = None
 
-requires_zlib = unittest.skipUnless(docutils, 'requires zlib')
+requires_zlib = skipUnless(docutils, 'requires zlib')
+
+_can_symlink = None
+def can_symlink():
+    global _can_symlink
+    if _can_symlink is not None:
+        return _can_symlink
+    fd, TESTFN = tempfile.mkstemp()
+    os.close(fd)
+    os.unlink(TESTFN)
+    symlink_path = TESTFN + "can_symlink"
+    try:
+        os.symlink(TESTFN, symlink_path)
+        can = True
+    except (OSError, NotImplementedError, AttributeError):
+        can = False
+    else:
+        os.remove(symlink_path)
+    _can_symlink = can
+    return can
+
+def skip_unless_symlink(test):
+    """Skip decorator for tests that require functional symlink"""
+    ok = can_symlink()
+    msg = "Requires functional symlink implementation"
+    return test if ok else unittest.skip(msg)(test)
+
 

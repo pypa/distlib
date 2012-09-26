@@ -20,7 +20,7 @@ from distlib.database import (
 from distlib.util import get_resources_dests
 
 from test_glob import GlobTestCaseBase
-from support import LoggingCatcher, requires_zlib
+from support import LoggingCatcher, requires_zlib, skip
 
 
 # TODO Add a test for getting a distribution provided by another distribution
@@ -320,7 +320,7 @@ class TestEggInfoDistribution(CommonDistributionTests,
 
         self.records = {}
 
-    @unittest.skip('not implemented yet')
+    @skip('not implemented yet')
     def test_list_installed_files(self):
         # EggInfoDistribution defines list_installed_files but there is no
         # test for it yet; someone with setuptools expertise needs to add a

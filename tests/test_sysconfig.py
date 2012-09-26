@@ -15,6 +15,8 @@ from distlib._backport.sysconfig import (
     get_config_var, _main)
 from distlib.compat import StringIO
 
+import support
+
 class TestSysConfig(unittest.TestCase):
 
     def setUp(self):
@@ -285,14 +287,14 @@ class TestSysConfig(unittest.TestCase):
         _main()
         self.assertGreater(len(sys.stdout.getvalue().split('\n')), 0)
 
-    @unittest.skipIf(sys.platform == 'win32', 'does not apply to Windows')
+    @support.skipIf(sys.platform == 'win32', 'does not apply to Windows')
     def test_ldshared_value(self):
         ldflags = sysconfig.get_config_var('LDFLAGS')
         ldshared = sysconfig.get_config_var('LDSHARED')
 
         self.assertIn(ldflags, ldshared)
 
-    @unittest.skipUnless(sys.platform == "darwin", "test only relevant on MacOSX")
+    @support.skipUnless(sys.platform == "darwin", "test only relevant on MacOSX")
     def test_platform_in_subprocess(self):
         my_platform = sysconfig.get_platform()
 
@@ -349,8 +351,8 @@ class MakefileTests(unittest.TestCase):
     def tearDown(self):
         os.unlink(self.TESTFN)
 
-    @unittest.skipIf(sys.platform.startswith('win'),
-                     'Test is not Windows compatible')
+    @support.skipIf(sys.platform.startswith('win'),
+                    'Test is not Windows compatible')
     def test_get_makefile_filename(self):
         makefile = sysconfig.get_makefile_filename()
         self.assertTrue(os.path.isfile(makefile), makefile)
