@@ -22,10 +22,8 @@ class TestCommand(distutils.core.Command):
         if '-v' in sys.argv:
             verbosity = 2
         sys.path.append(join(dirname(__file__), 'tests'))
-        import distlib_tests
-        loader = unittest.TestLoader()
-        runner = unittest.TextTestRunner(verbosity=verbosity)
-        runner.run(loader.loadTestsFromModule(distlib_tests))
+        import test_all
+        test_all.main()
 
     def initialize_options(self):
         pass
