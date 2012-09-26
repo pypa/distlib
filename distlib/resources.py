@@ -155,6 +155,12 @@ _finder_registry = {
     zipimport.zipimporter: ZipResourceFinder
 }
 
+try:
+    import _frozen_importlib
+    _finder_registry[_frozen_importlib.SourceFileLoader] = ResourceFinder
+except ImportError:
+    pass
+
 def register_finder(loader, finder_maker):
     _finder_registry[type(loader)] = finder_maker
 
