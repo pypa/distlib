@@ -13,7 +13,7 @@ class ScriptTestCase(unittest.TestCase):
     def setUp(self):
         source_dir = os.path.join(HERE, 'scripts')
         target_dir = tempfile.mkdtemp()
-        self.maker = ScriptMaker(source_dir, target_dir)
+        self.maker = ScriptMaker(source_dir, target_dir, add_launchers=False)
 
     def tearDown(self):
         shutil.rmtree(self.maker.target_dir)
