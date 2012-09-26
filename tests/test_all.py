@@ -12,8 +12,11 @@ sys.path.insert(0, '..')
 import distlib_tests
 
 def main():
+    verbosity = 1
+    if '-v' in sys.argv:
+        verbosity = 2
     loader = unittest.TestLoader()
-    runner = unittest.TextTestRunner()
+    runner = unittest.TextTestRunner(verbosity=verbosity)
     runner.run(loader.loadTestsFromModule(distlib_tests))
 
 if __name__ == '__main__':

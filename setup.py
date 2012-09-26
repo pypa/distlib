@@ -7,6 +7,7 @@ import distutils.core
 from distutils.sysconfig import get_python_lib
 from os.path import join, dirname, abspath
 import re
+
 import distlib
 
 
@@ -17,10 +18,13 @@ class TestCommand(distutils.core.Command):
         import sys
         import unittest
 
+        verbosity = 1
+        if '-v' in sys.argv:
+            verbosity = 2
         sys.path.append(join(dirname(__file__), 'tests'))
         import distlib_tests
         loader = unittest.TestLoader()
-        runner = unittest.TextTestRunner()
+        runner = unittest.TextTestRunner(verbosity=verbosity)
         runner.run(loader.loadTestsFromModule(distlib_tests))
 
     def initialize_options(self):
