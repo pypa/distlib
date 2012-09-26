@@ -10,11 +10,13 @@ import logging
 
 from email import message_from_file
 
-from . import DistlibException, logger
+from . import DistlibException
 from .compat import StringIO, string_types
 from .markers import interpret
 from .version import (is_valid_predicate, is_valid_version,
                       is_valid_versions)
+
+logger = logging.getLogger(__name__)
 
 class MetadataMissingError(DistlibException):
     """A required metadata is missing"""

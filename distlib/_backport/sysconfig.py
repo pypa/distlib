@@ -5,7 +5,10 @@ import os
 import re
 import sys
 from os.path import pardir, realpath
-from ..compat import configparser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 __all__ = [
     'get_config_h_filename',

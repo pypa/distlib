@@ -11,7 +11,8 @@ from os.path import splitdrive
 import stat
 import sys
 import tempfile
-import unittest
+
+from compat import unittest
 
 
 from distlib._backport import shutil, tarfile
@@ -284,7 +285,7 @@ class TestShutil(unittest.TestCase):
             shutil.rmtree(src_dir)
             shutil.rmtree(os.path.dirname(dst_dir))
 
-    @support.skipUnless(hasattr(os, 'link'), 'requires os.link')
+    @unittest.skipUnless(hasattr(os, 'link'), 'requires os.link')
     def test_dont_copy_file_onto_link_to_itself(self):
         # Temporarily disable test on Windows.
         if os.name == 'nt':
@@ -436,15 +437,15 @@ class TestShutil(unittest.TestCase):
         file2 = os.path.join(tmpdir2, fname)
         return (file1, file2)
 
-    @support.skipUnless(hasattr(os, 'chmod'), 'requires os.chmod')
+    @unittest.skipUnless(hasattr(os, 'chmod'), 'requires os.chmod')
     def test_copy(self):
         # Ensure that the copied file exists and has the same mode bits.
         file1, file2 = self._copy_file(shutil.copy)
         self.assertTrue(os.path.exists(file2))
         self.assertEqual(os.stat(file1).st_mode, os.stat(file2).st_mode)
 
-    @support.skipUnless(hasattr(os, 'chmod'), 'requires os.chmod')
-    @support.skipUnless(hasattr(os, 'utime'), 'requires os.utime')
+    @unittest.skipUnless(hasattr(os, 'chmod'), 'requires os.chmod')
+    @unittest.skipUnless(hasattr(os, 'utime'), 'requires os.utime')
     def test_copy2(self):
         # Ensure that the copied file exists and has the same mode and
         # modification time bits.
@@ -461,7 +462,7 @@ class TestShutil(unittest.TestCase):
             self.assertEqual(getattr(file1_stat, 'st_flags'),
                              getattr(file2_stat, 'st_flags'))
 
-    @support.skipUnless(zlib, "requires zlib")
+    @unittest.skipUnless(zlib, "requires zlib")
     def test_make_tarball(self):
         # creating something to tar
         tmpdir = self.mkdtemp()
@@ -473,8 +474,8 @@ class TestShutil(unittest.TestCase):
         tmpdir2 = self.mkdtemp()
         # force shutil to create the directory
         os.rmdir(tmpdir2)
-        support.skipUnless(splitdrive(tmpdir)[0] == splitdrive(tmpdir2)[0],
-                           "source and target should be on same drive")
+        unittest.skipUnless(splitdrive(tmpdir)[0] == splitdrive(tmpdir2)[0],
+                            "source and target should be on same drive")
 
         base_name = os.path.join(tmpdir2, 'archive')
 
@@ -524,8 +525,8 @@ class TestShutil(unittest.TestCase):
         base_name = os.path.join(tmpdir2, 'archive')
         return tmpdir, tmpdir2, base_name
 
-    @support.skipUnless(zlib, "Requires zlib")
-    @support.skipUnless(find_executable('tar') and find_executable('gzip'),
+    @unittest.skipUnless(zlib, "Requires zlib")
+    @unittest.skipUnless(find_executable('tar') and find_executable('gzip'),
                          'Need the tar command to run')
     def test_tarfile_vs_tar(self):
         tmpdir, tmpdir2, base_name =  self._create_files()
@@ -582,8 +583,8 @@ class TestShutil(unittest.TestCase):
         tarball = base_name + '.tar'
         self.assertTrue(os.path.exists(tarball))
 
-    @support.skipUnless(zlib, "Requires zlib")
-    @support.skipUnless(ZIP_SUPPORT, 'Need zip support to run')
+    @unittest.skipUnless(zlib, "Requires zlib")
+    @unittest.skipUnless(ZIP_SUPPORT, 'Need zip support to run')
     def test_make_zipfile(self):
         # creating something to tar
         tmpdir = self.mkdtemp()
@@ -606,7 +607,7 @@ class TestShutil(unittest.TestCase):
         base_name = os.path.join(tmpdir, 'archive')
         self.assertRaises(ValueError, make_archive, base_name, 'xxx')
 
-    @support.skipUnless(zlib, "Requires zlib")
+    @unittest.skipUnless(zlib, "Requires zlib")
     def test_make_archive_owner_group(self):
         # testing make_archive with owner and group, with various combinations
         # this works even if there's not gid/uid support
@@ -634,8 +635,8 @@ class TestShutil(unittest.TestCase):
         self.assertTrue(os.path.exists(res))
 
 
-    @support.skipUnless(zlib, "Requires zlib")
-    @support.skipUnless(UID_GID_SUPPORT, "Requires grp and pwd support")
+    @unittest.skipUnless(zlib, "Requires zlib")
+    @unittest.skipUnless(UID_GID_SUPPORT, "Requires grp and pwd support")
     def test_tarfile_root_owner(self):
         tmpdir, tmpdir2, base_name =  self._create_files()
         old_dir = os.getcwd()
@@ -703,7 +704,7 @@ class TestShutil(unittest.TestCase):
                     diff.append(file_)
         return diff
 
-    @support.skipUnless(zlib, "Requires zlib")
+    @support.requires_zlib
     def test_unpack_archive(self):
         formats = ['tar', 'gztar', 'zip']
         if BZ2_SUPPORTED:

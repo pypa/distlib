@@ -5,7 +5,8 @@ import os
 import sys
 import subprocess
 import tempfile
-import unittest
+
+from compat import unittest
 
 from distlib._backport import shutil
 from distlib._backport import sysconfig
@@ -287,14 +288,14 @@ class TestSysConfig(unittest.TestCase):
         _main()
         self.assertGreater(len(sys.stdout.getvalue().split('\n')), 0)
 
-    @support.skipIf(sys.platform == 'win32', 'does not apply to Windows')
+    @unittest.skipIf(sys.platform == 'win32', 'does not apply to Windows')
     def test_ldshared_value(self):
         ldflags = sysconfig.get_config_var('LDFLAGS')
         ldshared = sysconfig.get_config_var('LDSHARED')
 
         self.assertIn(ldflags, ldshared)
 
-    @support.skipUnless(sys.platform == "darwin", "test only relevant on MacOSX")
+    @unittest.skipUnless(sys.platform == "darwin", "test only relevant on MacOSX")
     def test_platform_in_subprocess(self):
         my_platform = sysconfig.get_platform()
 
@@ -351,7 +352,7 @@ class MakefileTests(unittest.TestCase):
     def tearDown(self):
         os.unlink(self.TESTFN)
 
-    @support.skipIf(sys.platform.startswith('win'),
+    @unittest.skipIf(sys.platform.startswith('win'),
                     'Test is not Windows compatible')
     def test_get_makefile_filename(self):
         makefile = sysconfig.get_makefile_filename()

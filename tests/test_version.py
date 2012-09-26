@@ -1,6 +1,7 @@
 """Tests for distlib.version."""
 import doctest
-import unittest
+
+from compat import unittest
 
 from distlib.version import NormalizedVersion as V
 from distlib.version import HugeMajorVersionNumError, IrrationalVersionError

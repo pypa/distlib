@@ -1,6 +1,7 @@
 """Tests for distlib.glob."""
 import os
-import unittest
+
+from compat import unittest
 
 from support import TempdirManager
 

@@ -2,7 +2,8 @@
 import os
 import re
 import sys
-import unittest
+
+from compat import unittest
 
 from distlib import depgraph
 from distlib.compat import StringIO

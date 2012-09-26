@@ -6,6 +6,7 @@ graph, find reverse dependencies, and print a graph in DOT format.
 """
 from __future__ import unicode_literals
 
+import logging
 import sys
 
 from . import DistlibException
@@ -15,6 +16,7 @@ from .version import VersionPredicate, IrrationalVersionError
 __all__ = ['DependencyGraph', 'generate_graph', 'dependent_dists',
            'graph_to_dot']
 
+logger = logging.getLogger(__name__)
 
 class DependencyGraph:
     """
@@ -154,9 +156,13 @@ def generate_graph(dists):
             version = None
             if len(comps) == 2:
                 version = comps[1]
+                logger.debug('dist: %r, version: %r', dist.name, version)
                 if len(version) < 3 or version[0] != '(' or version[-1] != ')':
-                    raise PackagingError('distribution %r has ill-formed'
-                                         'provides field: %r' % (dist.name, p))
+                    logger.warning('distribution %r has ill-formed '
+                                   'provides field: %r', dist.name, p)
+                    continue
+                    raise DistlibException('distribution %r has ill-formed '
+                                           'provides field: %r' % (dist.name, p))
                 version = version[1:-1]  # trim off parenthesis
             if name not in provided:
                 provided[name] = []

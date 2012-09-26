@@ -129,7 +129,7 @@ PAX_FIELDS = ("path", "linkpath", "size", "mtime",
               "uid", "gid", "uname", "gname")
 
 # Fields from a pax header that are affected by hdrcharset.
-PAX_NAME_FIELDS = {"path", "linkpath", "uname", "gname"}
+PAX_NAME_FIELDS = set(("path", "linkpath", "uname", "gname"))
 
 # Fields in a pax header that are numbers, all other fields
 # are treated as strings.

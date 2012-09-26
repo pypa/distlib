@@ -1,11 +1,13 @@
 import codecs
+import functools
 import os
 import logging
 import logging.handlers
 import shutil
 import tempfile
-import unittest
 import weakref
+
+from compat import unittest
 
 from distlib import logger
 
@@ -189,102 +191,18 @@ class EnvironRestorer(object):
         super(EnvironRestorer, self).tearDown()
 
 try:
-    skipIf = unittest.skipIf
-    skipUnless = unittest.skipUnless
-    skip = unittest.skip
-    TestCase = unittest.TestCase
-except AttributeError:
-    class SkipTest(Exception):
-        pass
-
-    class _ExpectedFailure(Exception):
-        def __init__(self, exc_info):
-            super(_ExpectedFailure, self).__init__()
-            self.exc_info = exc_info
-
-    class _UnexpectedSuccess(Exception):
-        pass
-
-    class TestCase(unittest.TestCase):
-        def _executeTestPart(self, function, outcome, isTest=False):
-            try:
-                function()
-            except KeyboardInterrupt:
-                raise
-            except SkipTest as e:
-                outcome.success = False
-                outcome.skipped = str(e)
-            except _UnexpectedSuccess:
-                exc_info = sys.exc_info()
-                outcome.success = False
-                if isTest:
-                    outcome.unexpectedSuccess = exc_info
-                else:
-                    outcome.errors.append(exc_info)
-            except _ExpectedFailure:
-                outcome.success = False
-                exc_info = sys.exc_info()
-                if isTest:
-                    outcome.expectedFailure = exc_info
-                else:
-                    outcome.errors.append(exc_info)
-            except self.failureException:
-                outcome.success = False
-                outcome.failures.append(sys.exc_info())
-                exc_info = sys.exc_info()
-            except:
-                outcome.success = False
-                outcome.errors.append(sys.exc_info())
-
-
-    def _id(obj):
-        return obj
-
-    def skip(reason):
-        """
-        Unconditionally skip a test.
-        """
-        def decorator(test_item):
-            if not isinstance(test_item, type):
-                @functools.wraps(test_item)
-                def skip_wrapper(*args, **kwargs):
-                    raise SkipTest(reason)
-                test_item = skip_wrapper
-
-            test_item.__unittest_skip__ = True
-            test_item.__unittest_skip_why__ = reason
-            return test_item
-        return decorator
-
-    def skipIf(condition, reason):
-        """
-        Skip a test if the condition is true.
-        """
-        if condition:
-            return skip(reason)
-        return _id
-
-    def skipUnless(condition, reason):
-        """
-        Skip a test unless the condition is true.
-        """
-        if not condition:
-            return skip(reason)
-        return _id
-
-try:
     import docutils
 except ImportError:
     docutils = None
 
-requires_docutils = skipUnless(docutils, 'requires docutils')
+requires_docutils = unittest.skipUnless(docutils, 'requires docutils')
 
 try:
     import zlib
 except ImportError:
     zlib = None
 
-requires_zlib = skipUnless(docutils, 'requires zlib')
+requires_zlib = unittest.skipUnless(zlib, 'requires zlib')
 
 _can_symlink = None
 def can_symlink():

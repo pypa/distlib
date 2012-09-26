@@ -17,10 +17,10 @@ def main():
     runner.run(loader.loadTestsFromModule(distlib_tests))
 
 if __name__ == '__main__':
-    if os.path.exists('run'):
-        shutil.rmtree('run')
-    os.mkdir('run')
-    fn = os.path.join('run', 'test_all.log')
+    #if os.path.exists('run'):
+    #    shutil.rmtree('run')
+    #os.mkdir('run')
+    fn = os.path.join('run', 'test_all_%d.%d.log' % sys.version_info[:2])
     logging.basicConfig(level=logging.DEBUG, filename=fn, filemode='w',
                         format='%(levelname)-8s %(name)-20s %(message)s')
     main()

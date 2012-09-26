@@ -6,7 +6,8 @@ import os
 import sys
 import codecs
 from textwrap import dedent
-import unittest
+
+from compat import unittest
 
 from distlib.compat import StringIO
 from distlib.metadata import (Metadata, PKG_INFO_PREFERRED_VERSION,
@@ -14,7 +15,7 @@ from distlib.metadata import (Metadata, PKG_INFO_PREFERRED_VERSION,
                              MetadataUnrecognizedVersionError)
 
 from support import (LoggingCatcher, TempdirManager, EnvironRestorer,
-                      requires_docutils, skip)
+                      requires_docutils)
 
 
 class MetadataTestCase(LoggingCatcher, TempdirManager,
@@ -420,7 +421,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertNotIn('Requires', metadata)
         self.assertNotIn('Obsoletes', metadata)
 
-    @skip('needs to be implemented')
+    @unittest.skip('needs to be implemented')
     def test_provides_illegal(self):
         # TODO check the versions (like distutils does for old provides field)
         self.assertRaises(ValueError, Metadata,
@@ -464,7 +465,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         metadata['Requires-Dist'] = ['Foo (>=2.6, <3.0)']
         self.assertEqual(self.get_logs(), [])
 
-    @skip('needs to be implemented')
+    @unittest.skip('needs to be implemented')
     def test_requires_illegal(self):
         self.assertRaises(ValueError, Metadata,
                           mapping={'name': 'project',
@@ -484,7 +485,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(metadata['Obsoletes-Dist'],
                          ['other', 'another (<1.0)'])
 
-    @skip('needs to be implemented')
+    @unittest.skip('needs to be implemented')
     def test_obsoletes_illegal(self):
         self.assertRaises(ValueError, Metadata,
                           mapping={'name': 'project',
