@@ -169,7 +169,7 @@ class ScriptMaker(object):
                      self.target_dir)
             if not self.fileop.dry_run:
                 shebang = self._get_shebang(encoding, post_interp)
-                use_launcher = (os.name == 'nt')
+                use_launcher = self.add_launchers and os.name == 'nt'
                 if use_launcher:
                     n, e = os.path.splitext(outname)
                     exename = n + '.exe'

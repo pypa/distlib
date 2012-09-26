@@ -65,7 +65,7 @@ def _expand_globals(config):
 
 _expand_globals(_SCHEMES)
 
- # FIXME don't rely on sys.version here, its format is an implementatin detail
+ # FIXME don't rely on sys.version here, its format is an implementation detail
  # of CPython, use sys.version_info or sys.hexversion
 _PY_VERSION = sys.version.split()[0]
 _PY_VERSION_SHORT = sys.version[:3]
@@ -290,8 +290,8 @@ def _parse_makefile(filename, vars=None):
                             done[name] = value
                         variables.remove(name)
 
-                        if name.startswith('PY_') \
-                                and name[3:] in renamed_variables:
+                        if (name.startswith('PY_') and
+                            name[3:] in renamed_variables):
 
                             name = name[3:]
                             if name not in done:
