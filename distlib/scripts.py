@@ -1,9 +1,13 @@
+import logging
 import os
 import re
+import sys
 
 from . import DistlibException
 from .compat import sysconfig, fsencode, detect_encoding
 from .util import FileOperator
+
+logger = logging.getLogger(__name__)
 
 # check if Python is called on the first line with this expression
 FIRST_LINE_RE = re.compile(b'^#!.*pythonw?[0-9.]*([ \t].*)?$')
@@ -56,7 +60,7 @@ class ScriptMaker(object):
                                              in os.environ):
                 executable =  os.environ['__VENV_LAUNCHER__']
             else:
-                executable = self.executable
+                executable = sys.executable
         elif hasattr(sys, 'base_prefix') and sys.prefix != sys.base_prefix:
             executable = os.path.join(
                 sysconfig.get_path('scripts'),
@@ -90,7 +94,7 @@ class ScriptMaker(object):
                     'from the script encoding (%r)' % (shebang, encoding))
         return shebang
 
-    def _make_script(name, path, flags, filenames):
+    def _make_script(self, name, path, flags, filenames):
         colons = path.count(':')
         if colons > 1:
             raise DistlibException('Invalid script: %r' % path)
@@ -164,7 +168,7 @@ class ScriptMaker(object):
             logger.info('copying and adjusting %s -> %s', script,
                      self.target_dir)
             if not self.fileop.dry_run:
-                shebang = self.get_shebang(encoding, post_interp)
+                shebang = self._get_shebang(encoding, post_interp)
                 use_launcher = (os.name == 'nt')
                 if use_launcher:
                     n, e = os.path.splitext(outname)
@@ -177,7 +181,7 @@ class ScriptMaker(object):
                         suffix = '-script.py'
                     outfile = n + suffix
                     filenames[-1] = outname
-                with open(outfile, "wb") as outf:
+                with open(outname, "wb") as outf:
                     outf.write(shebang)
                     outf.writelines(f.readlines())
                 if use_launcher:
