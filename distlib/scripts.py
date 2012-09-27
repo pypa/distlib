@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import struct
 import sys
 
 from . import DistlibException
@@ -181,7 +182,6 @@ class ScriptMaker(object):
     if os.name == 'nt':
         # Executable launcher support.
         # Launchers are from https://bitbucket.org/vinay.sajip/simple_launcher/
-        import struct
 
         def _get_launcher(self, kind):
             if struct.calcsize('P') == 8:   # 64-bit
