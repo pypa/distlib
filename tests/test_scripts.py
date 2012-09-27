@@ -2,7 +2,8 @@ import os
 import shutil
 import sys
 import tempfile
-import unittest
+
+from compat import unittest
 
 from distlib.scripts import ScriptMaker
 

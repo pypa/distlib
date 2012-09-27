@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 from operator import attrgetter
 import os
 import sys
-import unittest
+
+from compat import unittest
 
 from distlib import DistlibException
 from distlib.resources import finder

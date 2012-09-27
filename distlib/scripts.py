@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 FIRST_LINE_RE = re.compile(b'^#!.*pythonw?[0-9.]*([ \t].*)?$')
 DOTTED_CALLABLE_RE = re.compile(r'''(?P<name>(\w|-)+)
                                     \s*=\s*(?P<callable>(\w+)([:\.]\w+)+)
-                                    (?P<flags>(\s+\w+)*)''', re.VERBOSE)
+                                    \s*(\[(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\])?''', re.VERBOSE)
 SCRIPT_TEMPLATE = '''%(shebang)s
 if __name__ == '__main__':
     rc = 1
@@ -87,6 +87,8 @@ class ScriptMaker(object):
             module, func = path.split(':')
         else:
             module, func = path.rsplit('.', 1)
+        if flags is None:
+            flags = ''
         flags = flags.strip().split()
         shebang = self._get_shebang('utf-8').decode('utf-8')
         if 'gui' in flags and os.name == 'nt':
