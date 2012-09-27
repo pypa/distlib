@@ -5,6 +5,7 @@ import tempfile
 
 from compat import unittest
 
+from distlib import DistlibException
 from distlib.scripts import ScriptMaker
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -48,10 +49,8 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(set(specs), set(ofiles))
 
     def test_callable(self):
-        cases = (('main', '.'), ('main', ':'),
-                 ('other_main', '.'), ('other_main', ':'))
-        for name, sep in cases:
-            spec = 'foo = foo%s%s' % (sep, name)
+        for name in ('main', 'other_main'):
+            spec = 'foo = foo:' + name
             files = self.maker.make(spec)
             self.assertEqual(len(files), 1)
             d, f = os.path.split(files[0])
@@ -108,5 +107,30 @@ class ScriptTestCase(unittest.TestCase):
                          set([os.path.basename(f) for f in files]))
         ofiles = os.listdir(self.maker.target_dir)
         self.assertFalse(ofiles)
-        
+
+    def test_callable_format(self):
+        get_callable = self.maker.get_callable
+        self.assertIsNone(get_callable('foo.py'))
+        self.assertIsNone(get_callable('foo.py='))
+        self.assertIsNone(get_callable('foo.py=abc'))
+        for spec in ('foo=foo:main', 'foo =foo:main', 'foo= foo:main',
+                     'foo = foo:main'):
+            self.assertEqual(get_callable(spec),
+                             ('foo', 'foo', 'main', []))
+        self.assertEqual(get_callable('foo=foo.bar:main'),
+                             ('foo', 'foo.bar', 'main', []))
+        self.assertEqual(get_callable('foo=foo.bar:main [a]'),
+                             ('foo', 'foo.bar', 'main', ['a']))
+        self.assertEqual(get_callable('foo=foo.bar:main [a=b, c=d,e, f=g]'),
+                             ('foo', 'foo.bar', 'main', ['a=b', 'c=d',
+                                                         'e', 'f=g']))
+        self.assertEqual(get_callable('foo=foo.bar:main [a=9, 9=8,e, f9=g8]'),
+                             ('foo', 'foo.bar', 'main', ['a=9', '9=8',
+                                                         'e', 'f9=g8']))
+        self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x:y')
+        self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [')
+        self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x ]')
+        self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x []')
+        self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [\]')
+        self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [a=]')
 

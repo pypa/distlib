@@ -79,17 +79,7 @@ class ScriptMaker(object):
                     'from the script encoding (%r)' % (shebang, encoding))
         return shebang
 
-    def _make_script(self, name, path, flags, filenames):
-        colons = path.count(':')
-        if colons > 1:
-            raise DistlibException('Invalid script: %r' % path)
-        elif colons == 1:
-            module, func = path.split(':')
-        else:
-            module, func = path.rsplit('.', 1)
-        if flags is None:
-            flags = ''
-        flags = flags.strip().split()
+    def _make_script(self, name, module, func, flags, filenames):
         shebang = self._get_shebang('utf-8').decode('utf-8')
         if 'gui' in flags and os.name == 'nt':
             shebang = shebang.replace('python', 'pythonw')
@@ -198,14 +188,41 @@ class ScriptMaker(object):
 
     # Public API follows
 
-    def make(self, specification):
-        filenames = []
+    def get_callable(self, specification):
         m = DOTTED_CALLABLE_RE.search(specification)
         if not m:
-            self._copy_script(specification, filenames)
+            result = None
+            if '[' in specification or ']' in specification:
+                raise DistlibException('Invalid specification '
+                                       '%r' % specification)
         else:
             d = m.groupdict()
-            self._make_script(d['name'], d['callable'], d['flags'], filenames)
+            name = d['name']
+            path = d['callable']
+            colons = path.count(':')
+            if colons != 1:
+                raise DistlibException('Invalid specification '
+                                       '%r' % specification)
+            module, func = path.split(':')
+            flags = d['flags']
+            if flags is None:
+                if '[' in specification or ']' in specification:
+                    raise DistlibException('Invalid specification '
+                                           '%r' % specification)
+                flags = []
+            else:
+                flags = [f.strip() for f in flags.split(',')]
+            result = name, module, func, flags
+        return result
+        
+    def make(self, specification):
+        filenames = []
+        can_call = self.get_callable(specification)
+        if can_call is None:
+            self._copy_script(specification, filenames)
+        else:
+            name, module, func, flags = can_call
+            self._make_script(name, module, func, flags, filenames)
         return filenames
 
     def make_multiple(self, specifications):
