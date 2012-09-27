@@ -9,8 +9,9 @@ arrived at, as and when time permits.
 The ``resources`` API
 ---------------------
 
-This section describes the design of the API relating to accessing 'resources',
-which is a convenient label for data files associated with Python packages.
+This section describes the design of the ``distlib`` API relating to accessing
+'resources', which is a convenient label for data files associated with Python
+packages.
 
 The problem we're trying to solve
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -141,10 +142,11 @@ class rather than an interface - it'll implement getting resources from
 packages stored in the file system. ``ZipResourceFinder`` will be a
 subclass of ``ResourceFinder``.
 
-Since there is no loader for file system packages, the registry will come with
-the following mappings:
+Since there is no loader for file system packages when the C-based import
+system is used, the registry will come with the following mappings:
 
 * ``type(None)`` -> ``ResourceFinder``
+* ``_frozen_importlib.SourceFileLoader -> ``ResourceFinder``
 * ``zipimport.zipimporter`` -> ``ZipResourceFinder``
 
 Users of the API can add new or override existing mappings using the following
@@ -201,6 +203,102 @@ What a finder needs to do can be exemplified by the following skeleton for
         def get_resources(self, resource):
             # return the resources contained in this resource as a set of
             # (relative) resource names
+
+
+The ``scripts`` API
+-------------------
+
+This section describes the design of the ``distlib`` API relating to
+installing scripts.
+
+The problem we're trying to solve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Installing scripts is slightly more involved than simply copying files from
+source to target, for the following reasons:
+
+* On POSIX systems, scripts need to be made executable. To cater for scenarios
+  where there are multiple Python versions installed on a computer, scripts
+  need to have their shebang lines adjusted to point to the correct
+  interpreter. This requirement is commonly found when virtual environments
+  (venvs) are in use, but also in other multiple-interpreter scenarios.
+* On Windows systems, which don't support shebang lines natively, some
+  alternate means of finding the correct interpreter need to be provided.
+  Following the acceptance and implementation of PEP 397, a shebang-
+  interpreting launcher will be available in Python 3.3 and later, and a
+  standalone version of it for use with earlier Python versions is also
+  available. However, where this can't be used, an alternative approach
+  using executable launchers installed with the scripts may be necessary.
+  (That is the approach taken by ``setuptools``.) 
+
+  Windows also has two types of launchers - console applications and
+  Windows applications. The appropriate launcher needs to be used for
+  scripts.
+* Some scripts are effectively just callable code in a Python package,
+  with boilerplate for importing that code, calling it and returning
+  its return value as the script's return code. It would be useful to
+  have the boilerplate standardised, so that developers need just specify
+  which callables to expose as scripts, and under what names, using e.g. a
+  ``name = callable`` syntax. (This is the approach taken by ``setuptools``
+  for the popular ``console_scripts`` feature).
+
+A minimal solution
+^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: distlib.scripts
+
+Script handling in ``distutils`` and ``setuptools`` is done in two phases:
+'build' and 'install'. Whether a particular packaging tool chooses to do
+the 'heavy lifting' of script creation (i.e. the things referred to
+above, beyond simple copying) in 'build' or 'install' phases, the job is
+the same. To abstract out just the functionality relating to scripts,
+in an extensible way, we can just delegate the work to a class,
+unimaginatively called :class:`~distlib.scripts.ScriptMaker`. Given the
+above requirements, together with the more basic requirement of being able
+to do 'dry-run' installation, we need to provide a ``ScriptMaker`` with the
+following items of information:
+
+* Where source scripts are to be found.
+* Where scripts are to be installed.
+* Whether, on Windows, executable launchers should be added.
+* Whether a dry-run mode is in effect.
+
+These dictate the form that :meth:`ScriptMaker.__init__`
+will take.
+
+In addition, two methods suggest themselves for :class:`ScriptMaker`:
+
+* A :meth:`~ScriptMaker.make` method, which takes a *specification*, which is
+  either a filename or a 'wrap me a callable' indicator which looks
+  like this::
+
+      name = some_package.some_module:some_callable flag1 flag2 ...
+
+  The ``name`` would need to be a valid filename for a script, and the
+  ``some_package.some_module`` part would indicate the module where the
+  callable resides. The ``some_callable`` part identifies the callable,
+  and optionally you can have flags, which are just words that the
+  :class:`ScriptMaker` instance knows how to interpret. One flag would be
+  ``'gui'``, indicating that the launcher should be a Windows application
+  rather than a console application, for GUI-based scripts which shouldn't
+  show a console window.
+  
+  The above specification (apart from the flags) is used by ``setuptools``
+  for the 'console_scripts' feature.
+
+  It seems sensible for this method to return a list of absolute paths of
+  files that were installed (or would have been installed, but for the
+  dry-run mode being in effect).
+
+* A :meth:`~ScriptMaker.make_multiple` method, which takes an iterable of
+  specifications and just runs calls :meth:`~ScriptMaker.make` on each
+  item iterated over, aggregatig the results to return a list of absolute paths
+  of all files that were installed (or would have been installed, but for the
+  dry-run mode being in effect).
+
+  One advantage of having this method is that you can override it in a
+  subclass for post-processing, e.g. to run a tool like ``2to3``, or an
+  analysis tool, over all the installed files.
 
 Next steps
 ----------

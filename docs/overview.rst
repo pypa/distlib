@@ -97,6 +97,9 @@ Distlib currently offers the following features:
   subdirectories.
 * The package ``distlib.resources``, which allows access to data files stored
   in Python packages, both in the file system and in .zip files.
+* The package ``distlib.scripts``, which allows installing of scripts with
+  adjustment of shebang lines and support for native Windows executable
+  launchers.
 
 Python version and platform compatibility
 -----------------------------------------

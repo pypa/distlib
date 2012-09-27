@@ -9,8 +9,10 @@ are described.
 The ``distlib.resources`` package
 ---------------------------------
 
+.. currentmodule:: distlib.resources
+
 Functions
----------
+^^^^^^^^^
 
 .. function:: finder(package)
 
@@ -37,7 +39,7 @@ Functions
                         finder for that package.
 
 Classes
--------
+^^^^^^^
 
 .. class:: Resource
 
@@ -75,6 +77,9 @@ Classes
       Raises an exception if called on a container resource.
 
 .. class:: ResourceFinder
+
+   A base class for resource finders, which finds resources for packages stored
+   in the file system.
 
    .. method:: __init__(module)
    
@@ -127,6 +132,84 @@ Classes
 .. class:: ZipResourceFinder
 
    This has the same interface as :class:`ResourceFinder`.
+
+
+The ``distlib.scripts`` package
+-------------------------------
+
+.. currentmodule:: distlib.scripts
+
+Classes
+^^^^^^^
+
+.. class:: ScriptMaker
+
+   A class used to install scripts based on specifications.
+
+   .. method:: __init__(source_directory, target_directory, add_launchers=True, dry_run=False)
+
+      Initialise the instance with options that control its behaviour.
+
+      :param source_directory: Where to find scripts to install.
+      :type source_directory: str
+      :param target_directory: Where to install scripts to.
+      :type target_directory: str
+      :param add_launchers: If true, create executable launchers on Windows.
+                            The executables are currently generated from the
+                            following project:
+
+                            https://bitbucket.org/vinay.sajip/simple_launcher/
+
+      :type add_launchers: bool
+      :param dry_run: If true, don't actually install scripts - just pretend to.
+
+   .. method:: make(specification)
+
+      Make a script in the target directory.
+
+      :param specification: A specification, which can take one of the
+                            following forms:
+
+                            * A filename, relative to ``source_directory``,
+                              such as ``foo.py`` or ``subdir/bar.py``.
+
+                            * A reference to a callable, given in the form::
+
+                                  name = some_package.some_module:some_callable flags
+
+                              or::
+
+                                  name = some_package.some_module.some_callable flags
+
+                              where the *flags* part is optional, but is a set
+                              of words separated by spaces. The only flag
+                              currently in use is ``'gui'``, which indicates on
+                              Windows that a Windows executable launcher
+                              (rather than a launcher which is a console
+                              application) should be used. (This only applies if
+                              ``add_launchers`` is true.)
+
+                              When this form is passed, a Python stub script
+                              is created with the appropriate shebang line and
+                              with code to load and call the specified callable
+                              with no arguments, returning its value as the
+                              return code from the script.
+      :type specification: str
+      :returns: A list of absolute pathnames of files installed (or which
+                would have been installed, but for ``dry_run`` being true).
+
+   .. method:: make_multiple(specifications)
+   
+      Make multiple scripts from an iterable.
+      
+      This method just calls :meth:`make` once for each value returned by the
+      iterable, but it might be convenient to override this method in some
+      scenarios to do post-processing of the installed files (for example,
+      running ``2to3`` on them).
+      
+      :param specifications: an iterable giving the specifications to follow.
+      :returns: A list of absolute pathnames of files installed (or which
+                would have been installed, but for ``dry_run`` being true).
 
 Next steps
 ----------
