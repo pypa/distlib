@@ -1,3 +1,6 @@
+#
+# Copyright (C) 2012 Vinay Sajip. All rights reserved.
+#
 from __future__ import unicode_literals
 
 from operator import attrgetter

@@ -4,7 +4,7 @@ import sys
 import tempfile
 import unittest
 
-from distlib.scripts import ScriptMaker, _get_launcher
+from distlib.scripts import ScriptMaker
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -62,7 +62,7 @@ class ScriptTestCase(unittest.TestCase):
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_launchers(self):
-        tlauncher = _get_launcher('t')
+        tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
                  'shell.sh')
@@ -81,7 +81,7 @@ class ScriptTestCase(unittest.TestCase):
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_windows(self):
-        wlauncher = _get_launcher('w')
+        wlauncher = self.maker._get_launcher('w')
         self.maker.add_launchers = True
         executable = sys.executable.encode('utf-8')
         files = self.maker.make('script4.py')
@@ -97,3 +97,15 @@ class ScriptTestCase(unittest.TestCase):
                 with open(fn, 'rb') as f:
                     data = f.readline()
                     self.assertIn(executable, data)
+
+    def test_dry_run(self):
+        self.maker.dry_run = True
+        specs = ('foo.py', 'foo = foo:main')
+        files = self.maker.make_multiple(specs)
+        self.assertEqual(len(specs), len(files))
+        self.assertEqual(set(('foo.py', 'foo')),
+                         set([os.path.basename(f) for f in files]))
+        ofiles = os.listdir(self.maker.target_dir)
+        self.assertFalse(ofiles)
+        
+

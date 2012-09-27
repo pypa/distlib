@@ -28,22 +28,6 @@ if __name__ == '__main__':
     sys.exit(rc)
 '''
 
-if os.name == 'nt':
-    # Executable launcher support.
-    # Launchers are from https://bitbucket.org/vinay.sajip/simple_launcher/
-    import struct
-
-    def _get_launcher(kind):
-        if struct.calcsize('P') == 8:   # 64-bit
-            bits = '64'
-        else:
-            bits = '32'
-        fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '%s%s.exe' % (kind, bits))
-        with open(fname, 'rb') as f:
-            result = f.read()
-        return result
-
 
 class ScriptMaker(object):
     def __init__(self, source_dir, target_dir, add_launchers=True,
@@ -111,21 +95,18 @@ class ScriptMaker(object):
         outname = os.path.join(self.target_dir, name)
         use_launcher = self.add_launchers and os.name == 'nt'
         if use_launcher:
-            import pdb; pdb.set_trace()
             exename = '%s.exe' % outname
             if 'gui' in flags:
                 ext = 'pyw'
-                launcher = _get_launcher('w')
+                launcher = self._get_launcher('w')
             else:
                 ext = 'py'
-                launcher = _get_launcher('t')
+                launcher = self._get_launcher('t')
             outname = '%s-script.%s' % (outname, ext)
-        with open(outname, 'wb') as f:
-            f.write(script.encode('utf-8'))
+        self.fileop.write_text_file(outname, script, 'utf-8')
         filenames.append(outname)
         if use_launcher:
-            with open(exename, 'wb') as f:
-                f.write(launcher)
+            self.fileop.write_binary_file(exename, launcher)
             filenames.append(exename)
 
     def _copy_script(self, script, filenames):
@@ -167,7 +148,7 @@ class ScriptMaker(object):
             self.fileop.copy_file(script, outname)
         else:
             logger.info('copying and adjusting %s -> %s', script,
-                     self.target_dir)
+                        self.target_dir)
             if not self.fileop.dry_run:
                 shebang = self._get_shebang(encoding, post_interp)
                 use_launcher = self.add_launchers and os.name == 'nt'
@@ -175,22 +156,45 @@ class ScriptMaker(object):
                     n, e = os.path.splitext(outname)
                     exename = n + '.exe'
                     if b'pythonw' in first_line:
-                        launcher = _get_launcher('w')
+                        launcher = self._get_launcher('w')
                         suffix = '-script.pyw'
                     else:
-                        launcher = _get_launcher('t')
+                        launcher = self._get_launcher('t')
                         suffix = '-script.py'
                     outname = n + suffix
                     filenames[-1] = outname
-                with open(outname, "wb") as outf:
-                    outf.write(shebang)
-                    outf.writelines(f.readlines())
+                self.fileop.write_binary_file(outname, shebang + f.read())
                 if use_launcher:
-                    with open(exename, 'wb') as f:
-                        f.write(launcher)
+                    self.fileop.write_binary_file(exename, launcher)
                     filenames.append(exename)
             if f:
                 f.close()
+
+    @property
+    def dry_run(self):
+        return self.fileop.dry_run
+
+    @dry_run.setter
+    def dry_run(self, value):
+        self.fileop.dry_run = value
+
+    if os.name == 'nt':
+        # Executable launcher support.
+        # Launchers are from https://bitbucket.org/vinay.sajip/simple_launcher/
+        import struct
+
+        def _get_launcher(self, kind):
+            if struct.calcsize('P') == 8:   # 64-bit
+                bits = '64'
+            else:
+                bits = '32'
+            fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 '%s%s.exe' % (kind, bits))
+            with open(fname, 'rb') as f:
+                result = f.read()
+            return result
+
+    # Public API follows
 
     def make(self, specification):
         filenames = []

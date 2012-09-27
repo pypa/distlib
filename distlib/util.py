@@ -175,4 +175,13 @@ class FileOperator(object):
                 outfile = os.path.join(outfile, os.path.split(infile)[-1])
             shutil.copyfile(infile, outfile)
 
+    def write_binary_file(self, path, data):
+        if not self.dry_run:
+            with open(path, 'wb') as f:
+                f.write(data)
+
+    def write_text_file(self, path, data, encoding):
+        if not self.dry_run:
+            with open(path, 'wb') as f:
+                f.write(data.encode(encoding))
 
