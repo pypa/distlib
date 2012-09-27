@@ -80,7 +80,8 @@ You can access these resources like so::
     b'data\n'
     >>> 
 
-This works the same if the package is in a .zip file. Given the zip file::
+This works the same if the package is in a .zip file. Given the zip file
+``foo.zip``::
 
     $ unzip -l foo.zip
     Archive:  foo.zip
@@ -160,6 +161,52 @@ The string passed to make can take one of the following forms:
   method, a Python stub script is created with the appropriate shebang line
   and with code to load and call the specified callable with no arguments,
   returning its value as the return code from the script.
+
+Let's see how wrapping a callable works. Consider the following file::
+
+    $ cat scripts/foo.py
+    def main():
+        print('Hello from foo')
+
+    def other_main():
+        print('Hello again from foo')
+
+we can try wrapping ``main`` and ``other_main`` as callables::
+
+    >>> from distlib.scripts import ScriptMaker
+    >>> maker = ScriptMaker('scripts', '/tmp/scratch')
+    >>> maker.make_multiple(('foo = foo:main', 'bar = foo:other_main'))
+    ['/tmp/scratch/foo', '/tmp/scratch/bar']
+    >>> 
+
+we can inspect the resulting scripts. First, ``foo``::
+
+    $ ls /tmp/scratch/
+    bar  foo
+    $ cat /tmp/scratch/foo
+    #!/usr/bin/python
+
+    if __name__ == '__main__':
+        rc = 1
+        try:
+            import sys, re
+            sys.argv[0] = re.sub('-script.pyw?$', '', sys.argv[0])
+            from foo import main
+            rc = main() # None interpreted as 0
+        except Exception:
+            # use syntax which works with either 2.x or 3.x
+            sys.stderr.write('%s\n' % sys.exc_info()[1])
+        sys.exit(rc)
+
+The other script, ``bar``, is different only in the essentials::
+
+    $ diff /tmp/scratch/foo /tmp/scratch/bar
+    8,9c8,9
+    <         from foo import main
+    <         rc = main() # None interpreted as 0
+    ---
+    >         from foo import other_main
+    >         rc = other_main() # None interpreted as 0
 
 Next steps
 ----------
