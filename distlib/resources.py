@@ -5,12 +5,15 @@ from __future__ import unicode_literals
 
 import bisect
 import io
+import logging
 import os
 import sys
 import zipimport
 
 from . import DistlibException
 from .util import cached_property
+
+logger = logging.getLogger(__name__)
 
 class Resource(object):
     def __init__(self, finder, name):
@@ -55,19 +58,12 @@ class ResourceFinder(object):
     def __init__(self, module):
         self.module = module
         self.loader = getattr(module, '__loader__', None)
-        f = os.path.dirname(getattr(module, '__file__', ''))
-        parts = module.__name__.split('.')
-        for p in parts:
-            f = os.path.dirname(f)
-        self.base = f
+        self.base = os.path.dirname(getattr(module, '__file__', ''))
 
     def _make_path(self, resource_name):
-        parts = self.module.__name__.split('.')
-        parts.append(resource_name)
-        result = os.sep.join(parts)
-        if self.base:
-            result = os.path.join(self.base, result)
-        return result
+        parts = resource_name.split('/')
+        parts.insert(0, self.base)
+        return os.path.join(*parts)
 
     def _find(self, path):
         return os.path.exists(path)
@@ -105,19 +101,24 @@ class ZipResourceFinder(ResourceFinder):
     """
     def __init__(self, module):
         super(ZipResourceFinder, self).__init__(module)
-        self.base = None
+        self.prefix_len = 1 + len(self.loader.archive)
         self.index = sorted(self.loader._files)
 
     def _find(self, path):
+        path = path[self.prefix_len:]
         if path in self.loader._files:
             result = True
         else:
-            path = '%s%s' % (path, os.sep)
+            path = path + os.sep
             i = bisect.bisect(self.index, path)
             try:
                 result = self.index[i].startswith(path)
             except IndexError:
                 result = False
+        if not result:
+            logger.debug('_find failed: %r %r', path, self.loader.prefix)
+        else:
+            logger.debug('_find worked: %r %r', path, self.loader.prefix)
         return result
 
     def get_bytes(self, resource):
@@ -127,10 +128,11 @@ class ZipResourceFinder(ResourceFinder):
         return io.BytesIO(self.get_bytes(resource))
 
     def get_size(self, resource):
-        return self.loader._files[resource.path][3]
+        path = resource.path[self.prefix_len:]
+        return self.loader._files[path][3]
 
     def get_resources(self, resource):
-        path = '%s%s' % (resource.path, os.sep)
+        path = resource.path[self.prefix_len:] + os.sep
         plen = len(path)
         result = set()
         i = bisect.bisect(self.index, path)
@@ -142,7 +144,7 @@ class ZipResourceFinder(ResourceFinder):
         return result
 
     def is_container(self, resource):
-        path = '%s%s' % (resource.path, os.sep)
+        path = resource.path[self.prefix_len:] +  os.sep
         i = bisect.bisect(self.index, path)
         try:
             result = self.index[i].startswith(path)

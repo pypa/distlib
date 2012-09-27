@@ -29,6 +29,16 @@ class ZipResourceTestCase(unittest.TestCase):
         stream = r.as_stream()
         self.assertEqual(stream.read(), b'more_data\n')
         stream.close()
+        # can access subpackage bar's resources using subdir path ...
+        r = f.find('bar/bar_resource.bin')
+        self.assertTrue(r)
+        self.assertFalse(r.is_container)
+        self.assertEqual(r.bytes, b'data\n')
+        self.assertEqual(r.size, 5)
+        stream = r.as_stream()
+        self.assertEqual(stream.read(), b'data\n')
+        stream.close()
+
         r = f.find('bar')
         self.assertTrue(r)
         self.assertTrue(r.is_container)
@@ -46,7 +56,7 @@ class ZipResourceTestCase(unittest.TestCase):
     def test_nonexistent_resource(self):
         f = finder('foo')
         r = f.find('no_such_resource.bin')
-        self.assertEqual(r, None)
+        self.assertIsNone(r)
 
     def test_non_package(self):
         self.assertRaises(DistlibException, finder, 'foo.bar.baz')
@@ -54,11 +64,25 @@ class ZipResourceTestCase(unittest.TestCase):
     def test_contents(self):
         f = finder('foo')
         r = f.find('foo_resource.bin')
+        self.assertTrue(r)
         self.assertRaises(DistlibException, attrgetter('resources'), r)
         r = f.find('bar')
+        self.assertTrue(r)
         expected = set(('bar_resource.bin', 'baz.py', '__init__.py'))
         self.assertEqual(r.resources, expected)
 
+    def test_dir_in_zip(self):
+        sys.path[0] = '%s/lib' % os.path.join(HERE, 'bar.zip')
+        f = finder('barbar')
+        self.assertIsNone(f.find('readme.txt'))
+        r = f.find('bar_resource.bin')
+        self.assertTrue(r)
+        self.assertFalse(r.is_container)
+        f = finder('barbar.baz')
+        r = f.find('baz_resource.bin')
+        self.assertTrue(r)
+        self.assertFalse(r.is_container)
+        
 class FileResourceTestCase(unittest.TestCase):
     def setUp(self):
         sys.path.insert(0, HERE)
@@ -94,13 +118,15 @@ class FileResourceTestCase(unittest.TestCase):
     def test_nonexistent_resource(self):
         f = finder('foofoo')
         r = f.find('no_such_resource.bin')
-        self.assertEqual(r, None)
+        self.assertIsNone(r)
 
     def test_contents(self):
         f = finder('foofoo')
         r = f.find('foo_resource.bin')
+        self.assertTrue(r)
         self.assertRaises(DistlibException, attrgetter('resources'), r)
         r = f.find('bar')
+        self.assertTrue(r)
         expected = set(('bar_resource.bin', 'baz.py', '__init__.py'))
         self.assertEqual(r.resources, expected)
 
