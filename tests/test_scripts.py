@@ -4,7 +4,7 @@ import sys
 import tempfile
 import unittest
 
-from distlib.scripts import ScriptMaker
+from distlib.scripts import ScriptMaker, _get_launcher
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -60,3 +60,40 @@ class ScriptTestCase(unittest.TestCase):
                 text = f.read()
             self.assertIn('from foo import %s' % name, text)
 
+    @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
+    def test_launchers(self):
+        tlauncher = _get_launcher('t')
+        self.maker.add_launchers = True
+        specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
+                 'shell.sh')
+        files = self.maker.make_multiple(specs)
+        self.assertEqual(len(specs), len(files) - 3)
+        filenames = set([os.path.basename(f) for f in files])
+        self.assertEqual(filenames, set(('foo.py', 'script1-script.py',
+                                         'script1.exe', 'script2-script.py',
+                                         'script2.exe', 'script3-script.py',
+                                         'script3.exe', 'shell.sh')))
+        for fn in files:
+            if fn.endswith('.exe'):
+                with open(fn, 'rb') as f:
+                    data = f.read()
+                self.assertEqual(data, tlauncher)
+
+    @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
+    def test_windows(self):
+        wlauncher = _get_launcher('w')
+        self.maker.add_launchers = True
+        executable = sys.executable.encode('utf-8')
+        files = self.maker.make('script4.py')
+        self.assertEqual(len(files), 2)
+        filenames = set([os.path.basename(f) for f in files])
+        self.assertEqual(filenames, set(('script4-script.pyw', 'script4.exe')))
+        for fn in files:
+            if fn.endswith('.exe'):
+                with open(fn, 'rb') as f:
+                    data = f.read()
+                self.assertEqual(data, wlauncher)
+            elif fn.endswith(('.py', '.pyw')):
+                with open(fn, 'rb') as f:
+                    data = f.readline()
+                    self.assertIn(executable, data)

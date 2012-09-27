@@ -33,7 +33,7 @@ if os.name == 'nt':
     # Launchers are from https://bitbucket.org/vinay.sajip/simple_launcher/
     import struct
 
-    def get_launcher(kind):
+    def _get_launcher(kind):
         if struct.calcsize('P') == 8:   # 64-bit
             bits = '64'
         else:
@@ -111,13 +111,14 @@ class ScriptMaker(object):
         outname = os.path.join(self.target_dir, name)
         use_launcher = self.add_launchers and os.name == 'nt'
         if use_launcher:
+            import pdb; pdb.set_trace()
             exename = '%s.exe' % outname
             if 'gui' in flags:
                 ext = 'pyw'
-                launcher = get_launcher('w')
+                launcher = _get_launcher('w')
             else:
                 ext = 'py'
-                launcher = get_launcher('t')
+                launcher = _get_launcher('t')
             outname = '%s-script.%s' % (outname, ext)
         with open(outname, 'wb') as f:
             f.write(script.encode('utf-8'))
@@ -174,12 +175,12 @@ class ScriptMaker(object):
                     n, e = os.path.splitext(outname)
                     exename = n + '.exe'
                     if b'pythonw' in first_line:
-                        launcher = get_launcher('w')
+                        launcher = _get_launcher('w')
                         suffix = '-script.pyw'
                     else:
-                        launcher = get_launcher('t')
+                        launcher = _get_launcher('t')
                         suffix = '-script.py'
-                    outfile = n + suffix
+                    outname = n + suffix
                     filenames[-1] = outname
                 with open(outname, "wb") as outf:
                     outf.write(shebang)
