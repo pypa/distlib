@@ -146,6 +146,14 @@ Classes
 
    A class used to install scripts based on specifications.
 
+   .. attribute:: script_template
+   
+      The text of a template which should contain ``%(shebang)s``,
+      ``%(module)s`` and ``%(func)s`` in the appropriate places.
+
+      The attribute is defined at class level. You can override it at the
+      instance level to customise your scripts.
+
    .. method:: __init__(source_directory, target_directory, add_launchers=True, dry_run=False)
 
       Initialise the instance with options that control its behaviour.
@@ -210,8 +218,8 @@ Classes
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
 
-   .. method:: get_callable(specification)
-   
+   .. classmethod:: get_callable(specification)
+
       Return the callable information from a specification, if it matches the
       expected format, or else ``None``.
 
@@ -219,7 +227,7 @@ Classes
       :type specification: str
       :returns: ``None`` if the specification didn't match the expected form
                 for a callable, or else a tuple of::
-                
+
                 * script name in target directory
                 * module name which contains the callable
                 * the name the callable is bound to

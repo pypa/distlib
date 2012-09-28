@@ -184,26 +184,32 @@ we can inspect the resulting scripts. First, ``foo``::
     #!/usr/bin/python
 
     if __name__ == '__main__':
-        rc = 1
+        def _resolve(module, func):
+            mod = __import__(module)
+            parts = func.split('.')
+            result = getattr(mod, parts.pop(0))
+            for p in parts:
+                result = getattr(result, p)
+            return result
+
         try:
             import sys, re
             sys.argv[0] = re.sub('-script.pyw?$', '', sys.argv[0])
-            from foo import main
-            rc = main() # None interpreted as 0
-        except Exception:
-            # use syntax which works with either 2.x or 3.x
-            sys.stderr.write('%s\n' % sys.exc_info()[1])
+
+            func = _resolve('foo', 'main')
+            rc = func() # None interpreted as 0
+        except Exception as e:  # only supporting Python >= 2.6
+            sys.stderr.write('%s\n' % e)
+            rc = 1
         sys.exit(rc)
 
 The other script, ``bar``, is different only in the essentials::
 
     $ diff /tmp/scratch/foo /tmp/scratch/bar
-    8,9c8,9
-    <         from foo import main
-    <         rc = main() # None interpreted as 0
+    16c16
+    <         func = _resolve('foo', 'main')
     ---
-    >         from foo import other_main
-    >         rc = other_main() # None interpreted as 0
+    >         func = _resolve('foo', 'other_main')
 
 Next steps
 ----------

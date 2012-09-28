@@ -17,20 +17,31 @@ DOTTED_CALLABLE_RE = re.compile(r'''(?P<name>(\w|-)+)
                                     \s*(\[(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\])?''', re.VERBOSE)
 SCRIPT_TEMPLATE = '''%(shebang)s
 if __name__ == '__main__':
-    rc = 1
+    def _resolve(module, func):
+        mod = __import__(module)
+        parts = func.split('.')
+        result = getattr(mod, parts.pop(0))
+        for p in parts:
+            result = getattr(result, p)
+        return result
+
     try:
         import sys, re
         sys.argv[0] = re.sub('-script.pyw?$', '', sys.argv[0])
-        from %(module)s import %(func)s
-        rc = %(func)s() # None interpreted as 0
-    except Exception:
-        # use syntax which works with either 2.x or 3.x
-        sys.stderr.write('%%s\\n' %% sys.exc_info()[1])
+
+        func = _resolve('%(module)s', '%(func)s')
+        rc = func() # None interpreted as 0
+    except Exception as e:  # only supporting Python >= 2.6
+        sys.stderr.write('%%s\\n' %% e)
+        rc = 1
     sys.exit(rc)
 '''
 
 
 class ScriptMaker(object):
+
+    script_template = SCRIPT_TEMPLATE
+
     def __init__(self, source_dir, target_dir, add_launchers=True,
                  dry_run=False):
         self.source_dir = source_dir
@@ -79,12 +90,15 @@ class ScriptMaker(object):
                     'from the script encoding (%r)' % (shebang, encoding))
         return shebang
 
+    def _get_script_text(self, shebang, module, func):
+        return self.script_template % dict(shebang=shebang, module=module,
+                                           func=func)
+
     def _make_script(self, name, module, func, flags, filenames):
         shebang = self._get_shebang('utf-8').decode('utf-8')
         if 'gui' in flags and os.name == 'nt':
             shebang = shebang.replace('python', 'pythonw')
-        script = SCRIPT_TEMPLATE % dict(module=module, shebang=shebang,
-                                        func=func)
+        script = self._get_script_text(shebang, module, func)
         outname = os.path.join(self.target_dir, name)
         use_launcher = self.add_launchers and os.name == 'nt'
         if use_launcher:
@@ -188,6 +202,7 @@ class ScriptMaker(object):
 
     # Public API follows
 
+    @classmethod
     def get_callable(self, specification):
         m = DOTTED_CALLABLE_RE.search(specification)
         if not m:

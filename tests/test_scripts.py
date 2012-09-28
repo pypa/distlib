@@ -1,5 +1,9 @@
+#
+# Copyright (C) 2012 Vinay Sajip. All rights reserved.
+#
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -58,7 +62,7 @@ class ScriptTestCase(unittest.TestCase):
             self.assertEqual(d, self.maker.target_dir)
             with open(files[0], 'r') as f:
                 text = f.read()
-            self.assertIn('from foo import %s' % name, text)
+            self.assertIn("_resolve('foo', '%s')" % name, text)
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_launchers(self):
@@ -108,6 +112,15 @@ class ScriptTestCase(unittest.TestCase):
         ofiles = os.listdir(self.maker.target_dir)
         self.assertFalse(ofiles)
 
+    def test_script_run(self):
+        files = self.maker.make('test = cgi:print_directory')
+        self.assertEqual(len(files), 1)
+        p = subprocess.Popen([sys.executable, files[0]],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        self.assertIn(b'<H3>Current Working Directory:</H3>', stdout)
+        self.assertIn(os.getcwd().encode('utf-8'), stdout)
+        
     def test_callable_format(self):
         get_callable = self.maker.get_callable
         self.assertIsNone(get_callable('foo.py'))
