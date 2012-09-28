@@ -125,12 +125,12 @@ class ScriptTestCase(unittest.TestCase):
         files = self.maker.make('foo = foo:main')
         self.assertEqual(len(files), 1)
         f = files[0]
-        self.assertEqual(os.stat(f).st_mode & 0o7777, 0o664)
+        self.assertIn(os.stat(f).st_mode & 0o7777, (0o644, 0o664))
         self.maker.set_mode = True
         files = self.maker.make('bar = bar:main')
         self.assertEqual(len(files), 1)
         f = files[0]
-        self.assertEqual(os.stat(f).st_mode & 0o7777, 0o775)
+        self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
 
     def test_callable_format(self):
         get_callable = self.maker.get_callable
