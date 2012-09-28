@@ -175,14 +175,9 @@ Classes
 
                             * A reference to a callable, given in the form::
 
-                                  name = some_package.some_module:some_callable flags
+                                  name = some_package.some_module:some_callable [flags]
 
-                              or::
-
-                                  name = some_package.some_module.some_callable flags
-
-                              where the *flags* part is optional, but is a set
-                              of words separated by spaces. The only flag
+                              where the *flags* part is optional. The only flag
                               currently in use is ``'gui'``, which indicates on
                               Windows that a Windows executable launcher
                               (rather than a launcher which is a console
@@ -194,6 +189,10 @@ Classes
                               with code to load and call the specified callable
                               with no arguments, returning its value as the
                               return code from the script.
+                              
+                              For more information about flags, see
+                              :ref:`flag-formats`.
+
       :type specification: str
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
@@ -210,6 +209,21 @@ Classes
       :param specifications: an iterable giving the specifications to follow.
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
+
+   .. method:: get_callable(specification)
+   
+      Return the callable information from a specification, if it matches the
+      expected format, or else ``None``.
+
+      :param specification: A specification, as for the :meth:`make` method.
+      :type specification: str
+      :returns: ``None`` if the specification didn't match the expected form
+                for a callable, or else a tuple of::
+                
+                * script name in target directory
+                * module name which contains the callable
+                * the name the callable is bound to
+                * a (possibly empty) list of flags.
 
 Next steps
 ----------

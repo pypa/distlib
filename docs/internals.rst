@@ -266,25 +266,25 @@ following items of information:
 These dictate the form that :meth:`ScriptMaker.__init__`
 will take.
 
-In addition, two methods suggest themselves for :class:`ScriptMaker`:
+In addition, other methods suggest themselves for :class:`ScriptMaker`:
 
 * A :meth:`~ScriptMaker.make` method, which takes a *specification*, which is
   either a filename or a 'wrap me a callable' indicator which looks
   like this::
 
-      name = some_package.some_module:some_callable flag1 flag2 ...
+      name = some_package.some_module:some_callable [ flag(=value) ... ]
 
   The ``name`` would need to be a valid filename for a script, and the
   ``some_package.some_module`` part would indicate the module where the
   callable resides. The ``some_callable`` part identifies the callable,
-  and optionally you can have flags, which are just words that the
-  :class:`ScriptMaker` instance knows how to interpret. One flag would be
-  ``'gui'``, indicating that the launcher should be a Windows application
-  rather than a console application, for GUI-based scripts which shouldn't
-  show a console window.
+  and optionally you can have flags, which the :class:`ScriptMaker` instance
+  must know how to interpret. One flag would be ``'gui'``, indicating that
+  the launcher should be a Windows application rather than a console
+  application, for GUI-based scripts which shouldn't show a console window.
   
   The above specification (apart from the flags) is used by ``setuptools``
-  for the 'console_scripts' feature.
+  for the 'console_scripts' feature.  See :ref:`flag-formats` for more
+  information about flags.
 
   It seems sensible for this method to return a list of absolute paths of
   files that were installed (or would have been installed, but for the
@@ -299,6 +299,36 @@ In addition, two methods suggest themselves for :class:`ScriptMaker`:
   One advantage of having this method is that you can override it in a
   subclass for post-processing, e.g. to run a tool like ``2to3``, or an
   analysis tool, over all the installed files.
+
+* The callable specification is sufficiently complex and a possible source
+  of extension that another method, :meth:`~ScriptMaker.get_callable`, can
+  be used to encapsulate the details of the callable format. This would
+  take a specification and return ``None``, if the specification didn't
+  match the callable format, or the various components (name, module name,
+  callable name and flags) if it did match.
+
+.. _flag-formats:
+
+Flag formats
+~~~~~~~~~~~~
+
+Flags, if present, are enclosed by square brackets. Each flag can have the
+format of just an alphanumeric string, optionally followed by an '=' and a
+value (with no intervening spaces). Multiple flags can be separated by ','
+and whitespace. The following would be valid flag sections::
+
+  [a,b,c]
+  [a, b, c]
+  [a=b, c=d, e, f=g, 9=8]
+
+whereas the following would be invalid::
+
+ []
+ [\]
+ [a,]
+ [a,,b]
+ [a=,b,c]
+  
 
 Next steps
 ----------

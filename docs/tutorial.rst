@@ -145,17 +145,14 @@ The string passed to make can take one of the following forms:
   or ``subdir/bar.py``.
 * A reference to a callable, given in the form::
 
-      name = some_package.some_module:some_callable flags
+      name = some_package.some_module:some_callable [flags]
 
-  or::
-
-      name = some_package.some_module.some_callable flags
-
-  where the *flags* part is optional, but is a set of words separated by
-  spaces. The only flag currently in use is ``'gui'``, which indicates on
-  Windows that a Windows executable launcher (rather than a launcher which
-  is a console application) should be used. (This only applies if
-  ``add_launchers`` is true.)
+  where the *flags* part is optional. The only flag currently in use is
+  ``'gui'``, which indicates on Windows that a Windows executable launcher
+  (rather than a launcher which is a console application) should be used.
+  (This only applies if ``add_launchers`` is true.)
+  
+  For more information about flags, see :ref:`flag-formats`.
 
   When this form is passed to the :meth:`~distlib.script.ScriptMaker.make`
   method, a Python stub script is created with the appropriate shebang line
