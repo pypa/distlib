@@ -120,7 +120,18 @@ class ScriptTestCase(unittest.TestCase):
         stdout, stderr = p.communicate()
         self.assertIn(b'<H3>Current Working Directory:</H3>', stdout)
         self.assertIn(os.getcwd().encode('utf-8'), stdout)
-        
+
+    def test_mode(self):
+        files = self.maker.make('foo = foo:main')
+        self.assertEqual(len(files), 1)
+        f = files[0]
+        self.assertEqual(os.stat(f).st_mode & 0o7777, 0o664)
+        self.maker.set_mode = True
+        files = self.maker.make('bar = bar:main')
+        self.assertEqual(len(files), 1)
+        f = files[0]
+        self.assertEqual(os.stat(f).st_mode & 0o7777, 0o775)
+
     def test_callable_format(self):
         get_callable = self.maker.get_callable
         self.assertIsNone(get_callable('foo.py'))

@@ -185,3 +185,18 @@ class FileOperator(object):
             with open(path, 'wb') as f:
                 f.write(data.encode(encoding))
 
+    def set_mode(self, bits, mask, files):
+        if os.name == 'posix':
+            # Set the executable bits (owner, group, and world) on
+            # all the files specified.
+            for f in files:
+                if self.dry_run:
+                    logger.info("changing mode of %s", f)
+                else:
+                    mode = (os.stat(f).st_mode | bits) & mask
+                    logger.info("changing mode of %s to %o", f, mode)
+                    os.chmod(f, mode)
+
+    set_executable_mode = lambda s, f: s.set_mode(0o555, 0o7777, f)
+
+

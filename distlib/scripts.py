@@ -48,7 +48,8 @@ class ScriptMaker(object):
         self.target_dir = target_dir
         self.add_launchers = add_launchers
         self.force = False
-        self.fileop = FileOperator(dry_run)
+        self.set_mode = False
+        self._fileop = FileOperator(dry_run)
 
     def _get_shebang(self, encoding, post_interp=b''):
         if not sysconfig.is_python_build():
@@ -110,19 +111,21 @@ class ScriptMaker(object):
                 ext = 'py'
                 launcher = self._get_launcher('t')
             outname = '%s-script.%s' % (outname, ext)
-        self.fileop.write_text_file(outname, script, 'utf-8')
+        self._fileop.write_text_file(outname, script, 'utf-8')
+        if self.set_mode:
+            self._fileop.set_executable_mode([outname])
         filenames.append(outname)
         if use_launcher:
-            self.fileop.write_binary_file(exename, launcher)
+            self._fileop.write_binary_file(exename, launcher)
             filenames.append(exename)
 
     def _copy_script(self, script, filenames):
         adjust = False
-        script = self.fileop.convert_path(script)
+        script = self._fileop.convert_path(script)
         outname = os.path.join(self.target_dir, os.path.basename(script))
         filenames.append(outname)
         script = os.path.join(self.source_dir, script)
-        if not self.force and not self.fileop.newer(script, outname):
+        if not self.force and not self._fileop.newer(script, outname):
             logger.debug('not copying %s (up-to-date)', script)
             return
 
@@ -152,11 +155,11 @@ class ScriptMaker(object):
         if not adjust:
             if f:
                 f.close()
-            self.fileop.copy_file(script, outname)
+            self._fileop.copy_file(script, outname)
         else:
             logger.info('copying and adjusting %s -> %s', script,
                         self.target_dir)
-            if not self.fileop.dry_run:
+            if not self._fileop.dry_run:
                 shebang = self._get_shebang(encoding, post_interp)
                 use_launcher = self.add_launchers and os.name == 'nt'
                 if use_launcher:
@@ -170,20 +173,22 @@ class ScriptMaker(object):
                         suffix = '-script.py'
                     outname = n + suffix
                     filenames[-1] = outname
-                self.fileop.write_binary_file(outname, shebang + f.read())
+                self._fileop.write_binary_file(outname, shebang + f.read())
                 if use_launcher:
-                    self.fileop.write_binary_file(exename, launcher)
+                    self._fileop.write_binary_file(exename, launcher)
                     filenames.append(exename)
             if f:
                 f.close()
+        if self.set_mode:
+            self._fileop.set_executable_mode([outname])
 
     @property
     def dry_run(self):
-        return self.fileop.dry_run
+        return self._fileop.dry_run
 
     @dry_run.setter
     def dry_run(self, value):
-        self.fileop.dry_run = value
+        self._fileop.dry_run = value
 
     if os.name == 'nt':
         # Executable launcher support.

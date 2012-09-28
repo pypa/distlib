@@ -301,11 +301,19 @@ In addition, other methods suggest themselves for :class:`ScriptMaker`:
   analysis tool, over all the installed files.
 
 * The callable specification is sufficiently complex and a possible source
-  of extension that another method, :meth:`~ScriptMaker.get_callable`, can
+  of extension that a class method, :meth:`~ScriptMaker.get_callable`, can
   be used to encapsulate the details of the callable format. This would
   take a specification and return ``None``, if the specification didn't
   match the callable format, or the various components (name, module name,
   callable name and flags) if it did match.
+
+In addition, the following attributes on a ``ScriptMaker`` could be further used
+to refine its behaviour:
+
+* ``force`` to indicate when scripts should be copied from source to target
+  even when timestamps show the target is up to date.
+* ``set_mode`` to indicate whether, on Posix, the execute mode bits should be
+  set on the target script.
 
 .. _flag-formats:
 

@@ -146,6 +146,27 @@ Classes
 
    A class used to install scripts based on specifications.
 
+   .. attribute:: source_dir
+
+      The directory where script sources are to be found.
+
+   .. attribute:: target_dir
+
+      The directory where scripts are to be created.
+
+   .. attribute:: add_launchers
+
+      Whether to create native executable launchers on Windows.
+
+   .. attribute:: force
+   
+      Whether to overwrite scripts even when timestamps show they're up to
+      date.
+
+   .. attribute:: set_mode
+   
+      Whether, on Posix, the scripts should have their execute mode set.
+
    .. attribute:: script_template
    
       The text of a template which should contain ``%(shebang)s``,
