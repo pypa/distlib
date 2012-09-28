@@ -30,4 +30,3 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, filename=fn, filemode='w',
                         format='%(levelname)-8s %(name)-20s %(message)s')
     main()
-

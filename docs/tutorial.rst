@@ -78,7 +78,7 @@ You can access these resources like so::
     False
     >>> r.bytes
     b'data\n'
-    >>> 
+    >>>
 
 This works the same if the package is in a .zip file. Given the zip file
 ``foo.zip``::
@@ -108,7 +108,7 @@ You can access its resources as follows::
     10
     >>> r.bytes
     'more_data\n'
-    >>> 
+    >>>
 
 and so on.
 
@@ -151,7 +151,7 @@ The string passed to make can take one of the following forms:
   ``'gui'``, which indicates on Windows that a Windows executable launcher
   (rather than a launcher which is a console application) should be used.
   (This only applies if ``add_launchers`` is true.)
-  
+
   For more information about flags, see :ref:`flag-formats`.
 
   When this form is passed to the :meth:`~distlib.script.ScriptMaker.make`
@@ -174,7 +174,7 @@ we can try wrapping ``main`` and ``other_main`` as callables::
     >>> maker = ScriptMaker('scripts', '/tmp/scratch')
     >>> maker.make_multiple(('foo = foo:main', 'bar = foo:other_main'))
     ['/tmp/scratch/foo', '/tmp/scratch/bar']
-    >>> 
+    >>>
 
 we can inspect the resulting scripts. First, ``foo``::
 
@@ -214,5 +214,5 @@ The other script, ``bar``, is different only in the essentials::
 Next steps
 ----------
 
-You might find it helpful to look at information about 
+You might find it helpful to look at information about
 :ref:`internals` -- or peruse the :ref:`reference`.

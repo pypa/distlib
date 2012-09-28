@@ -73,7 +73,7 @@ Classes
 
       A binary stream of the resource's data. This must be closed by the caller
       when it's finished with.
-      
+
       Raises an exception if called on a container resource.
 
 .. class:: ResourceFinder
@@ -82,16 +82,16 @@ Classes
    in the file system.
 
    .. method:: __init__(module)
-   
+
       Initialise the finder for the package specified by ``module``.
 
       :param module: The Python module object representing a package.
 
    .. method:: find(resource_name)
-   
+
       Find a resource with the name specified by ``resource_name`` and
       return a ``Resource`` instance which represents it.
-      
+
       :param resource_name: A fully qualified resource name, with
                             hierarchical components separated by '/'.
       :returns: A :class:`Resource` instance, or ``None`` if a resource
@@ -100,7 +100,7 @@ Classes
    .. method:: is_container(resource)
 
       Return whether a resource is a container of other resources.
-      
+
       :param resource: The resource whose status as container is wanted.
       :type resource: a :class:`Resource` instance
       :returns: ``True`` or ``False``.
@@ -108,7 +108,7 @@ Classes
    .. method:: get_stream(resource)
 
       Return a binary stream for the specified resource.
-      
+
       :param resource: The resource for which a stream is wanted.
       :type resource: a :class:`Resource` instance
       :returns: A binary stream for the resource.
@@ -116,7 +116,7 @@ Classes
    .. method:: get_bytes(resource)
 
       Return the contents of the specified resource as a byte string.
-      
+
       :param resource: The resource for which the bytes are wanted.
       :type resource: a :class:`Resource` instance
       :returns: The data in the resource as a byte string.
@@ -124,7 +124,7 @@ Classes
    .. method:: get_size(resource)
 
       Return the size of the specified resource in bytes.
-      
+
       :param resource: The resource for which the size is wanted.
       :type resource: a :class:`Resource` instance
       :returns: The size of the resource in bytes.
@@ -159,16 +159,16 @@ Classes
       Whether to create native executable launchers on Windows.
 
    .. attribute:: force
-   
+
       Whether to overwrite scripts even when timestamps show they're up to
       date.
 
    .. attribute:: set_mode
-   
+
       Whether, on Posix, the scripts should have their execute mode set.
 
    .. attribute:: script_template
-   
+
       The text of a template which should contain ``%(shebang)s``,
       ``%(module)s`` and ``%(func)s`` in the appropriate places.
 
@@ -218,7 +218,7 @@ Classes
                               with code to load and call the specified callable
                               with no arguments, returning its value as the
                               return code from the script.
-                              
+
                               For more information about flags, see
                               :ref:`flag-formats`.
 
@@ -227,14 +227,14 @@ Classes
                 would have been installed, but for ``dry_run`` being true).
 
    .. method:: make_multiple(specifications)
-   
+
       Make multiple scripts from an iterable.
-      
+
       This method just calls :meth:`make` once for each value returned by the
       iterable, but it might be convenient to override this method in some
       scenarios to do post-processing of the installed files (for example,
       running ``2to3`` on them).
-      
+
       :param specifications: an iterable giving the specifications to follow.
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).

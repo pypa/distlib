@@ -160,4 +160,3 @@ class ScriptTestCase(unittest.TestCase):
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [a,]')
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [a,,b]')
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [a b]')
-

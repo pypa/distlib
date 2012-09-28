@@ -69,7 +69,7 @@ there would be a ``Resource`` class in the solution. From the requirements, we
 can see that a ``Resource`` would have the following:
 
 * A ``name`` property identifying the resource.
-* A ``as_stream`` method allowing access to the resource data as a binary 
+* A ``as_stream`` method allowing access to the resource data as a binary
   stream. This is not a property, because a new stream is returned each time
   this method is called. The returned stream should be closed by the caller.
 * A ``bytes`` property returning the entire contents of the resource as a byte
@@ -229,7 +229,7 @@ source to target, for the following reasons:
   standalone version of it for use with earlier Python versions is also
   available. However, where this can't be used, an alternative approach
   using executable launchers installed with the scripts may be necessary.
-  (That is the approach taken by ``setuptools``.) 
+  (That is the approach taken by ``setuptools``.)
 
   Windows also has two types of launchers - console applications and
   Windows applications. The appropriate launcher needs to be used for
@@ -281,7 +281,7 @@ In addition, other methods suggest themselves for :class:`ScriptMaker`:
   must know how to interpret. One flag would be ``'gui'``, indicating that
   the launcher should be a Windows application rather than a console
   application, for GUI-based scripts which shouldn't show a console window.
-  
+
   The above specification (apart from the flags) is used by ``setuptools``
   for the 'console_scripts' feature.  See :ref:`flag-formats` for more
   information about flags.
@@ -336,7 +336,7 @@ whereas the following would be invalid::
  [a,]
  [a,,b]
  [a=,b,c]
-  
+
 
 Next steps
 ----------

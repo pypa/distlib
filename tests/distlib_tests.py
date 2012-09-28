@@ -11,4 +11,3 @@ from test_resources import ZipResourceTestCase, FileResourceTestCase
 from test_scripts import ScriptTestCase
 from test_shutil import TestCopyFile, TestMove, TestShutil
 from test_sysconfig import TestSysConfig, MakefileTests
-

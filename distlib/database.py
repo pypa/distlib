@@ -220,7 +220,7 @@ class Distribution(object):
         """
         Get the hash of some data, using a particular hash algorithm, if
         specified.
-        
+
         :param data: The data to be hashed.
         :type data: bytes
         :param hasher: The name of a hash implementation, supported by hashlib,

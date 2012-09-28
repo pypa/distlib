@@ -99,12 +99,12 @@ def get_resources_dests(resources_root, rules):
 
 @contextlib.contextmanager
 def chdir(d):
-	cwd = os.getcwd()
-	try:
-		os.chdir(d)
-		yield
-	finally:
-		os.chdir(cwd)
+    cwd = os.getcwd()
+    try:
+        os.chdir(d)
+        yield
+    finally:
+        os.chdir(cwd)
 
 class cached_property(object):
     def __init__(self, func):
@@ -198,5 +198,3 @@ class FileOperator(object):
                     os.chmod(f, mode)
 
     set_executable_mode = lambda s, f: s.set_mode(0o555, 0o7777, f)
-
-

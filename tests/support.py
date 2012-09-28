@@ -228,5 +228,3 @@ def skip_unless_symlink(test):
     ok = can_symlink()
     msg = "Requires functional symlink implementation"
     return test if ok else unittest.skip(msg)(test)
-
-

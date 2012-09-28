@@ -83,11 +83,11 @@ class ZipResourceTestCase(unittest.TestCase):
         r = f.find('baz_resource.bin')
         self.assertTrue(r)
         self.assertFalse(r.is_container)
-        
+
 class FileResourceTestCase(unittest.TestCase):
     def setUp(self):
         sys.path.insert(0, HERE)
-        
+
     def tearDown(self):
         sys.path.pop(0)
 
@@ -145,4 +145,3 @@ class FileResourceTestCase(unittest.TestCase):
         self.assertTrue(r.is_container)
         self.assertTrue(r)
         self.assertEqual(r.resources, set(['nested_resource.bin']))
-

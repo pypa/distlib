@@ -234,7 +234,7 @@ class ScriptMaker(object):
                 flags = [f.strip() for f in flags.split(',')]
             result = name, module, func, flags
         return result
-        
+
     def make(self, specification):
         filenames = []
         can_call = self.get_callable(specification)

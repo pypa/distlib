@@ -46,4 +46,3 @@ def _iglob(path_glob):
                 path = os.path.normpath(path)
                 for file in _iglob(os.path.join(path, radical)):
                     yield file
-

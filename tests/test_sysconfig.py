@@ -386,4 +386,3 @@ class MakefileTests(unittest.TestCase):
             'var4': '$/invalid',
             'var5': 'dollar$5',
         })
-

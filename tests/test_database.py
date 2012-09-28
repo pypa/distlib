@@ -148,7 +148,7 @@ class CommonDistributionTests(FakeDistsMixin):
             mismatches = dist.check_installed_files()
             self.assertEqual(mismatches, [(bad_file_name, 'size', bad_file[2],
                                            bad_size)])
-            
+
             # now remove the file and see what's returned
             os.remove(bad_file_name)
             mismatches = dist.check_installed_files()

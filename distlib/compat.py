@@ -159,5 +159,3 @@ except ImportError:
             return encoding, [first, second]
 
         return default, [first, second]
-
-

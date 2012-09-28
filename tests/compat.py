@@ -9,4 +9,3 @@ elif (2, 7) <= _ver < (3, 0):
     import unittest
 else:
     raise ValueError('Tests not supported under Python 3.0 and 3.1')
-

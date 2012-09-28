@@ -1013,4 +1013,3 @@ class TestCopyFile(unittest.TestCase):
         finally:
             if os.path.exists(dst_dir):
                 os.rmdir(dst_dir)
-

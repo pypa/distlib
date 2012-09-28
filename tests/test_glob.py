@@ -175,4 +175,3 @@ class GlobTestCase(GlobTestCaseBase):
 
 if __name__ == '__main__':
     unittest.main()
-
