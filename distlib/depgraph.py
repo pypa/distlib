@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2012 The Python Software Foundation.
+# See LICENSE.txt and CONTRIBUTORS.txt.
+#
 """Class and functions dealing with dependencies between distributions.
 
 This module provides a DependencyGraph class to represent the

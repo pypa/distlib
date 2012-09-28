@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Distlib'
-copyright = u'2012, Vinay Sajip'
+copyright = u'2012, The Python Software Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -221,8 +221,8 @@ man_pages = [
 # Bibliographic Dublin Core info.
 epub_title = u'Distlib'
 epub_author = u'Vinay Sajip'
-epub_publisher = u'Vinay Sajip'
-epub_copyright = u'2012, Vinay Sajip'
+epub_publisher = u'The Python Software Foundation'
+epub_copyright = u'2012, The Python Software Foundation'
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.

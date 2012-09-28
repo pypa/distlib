@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2012 The Python Software Foundation.
+# See LICENSE.txt and CONTRIBUTORS.txt.
+#
 """PEP 376 implementation."""
 
 import os

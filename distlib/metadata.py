@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2012 The Python Software Foundation.
+# See LICENSE.txt and CONTRIBUTORS.txt.
+#
 """Implementation of the Metadata for Python packages PEPs.
 
 Supports all metadata formats (1.0, 1.1, 1.2).
