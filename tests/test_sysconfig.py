@@ -109,6 +109,18 @@ class TestSysConfig(unittest.TestCase):
         self.assertTrue(cvars)
 
     def test_get_platform(self):
+
+        # get_config_vars() needs to be called before messing with
+        # the variables as we do below. Otherwise, when we call
+        # get_config_vars() below AFTER changing os.name to 'posix',
+        # we'll get a failure because _init_posix() will get called
+        # and look for a Makefile - which will not work on Windows :-(
+        #
+        # With the call to get_config_vars() here while os.name is still
+        # 'nt', we call _init_non_posix(), _CONFIG_VARS is set up OK,
+        # and so _init_posix() never gets called on Windows.
+        get_config_vars()
+
         # windows XP, 32bits
         os.name = 'nt'
         sys.version = ('2.4.4 (#71, Oct 18 2006, 08:34:43) '
