@@ -133,4 +133,3 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(len(files), 1)
         f = files[0]
         self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
-

@@ -46,7 +46,7 @@ class DepGraphTestCase(LoggingCatcher,
             self.assertNotEqual(dist, None)
             dists.append(dist)
         return dists
-    
+
     def test_generate_graph(self):
         dists = self.get_dists(self.DISTROS_DIST)
 

@@ -433,7 +433,7 @@ class TestDatabase(LoggingCatcher,
 
         # Now check that it works well in both situations, when egg-info
         # is a file and directory respectively.
-        
+
         for name in ('cheese', 'bacon', 'banana', 'strawberry'):
             dist = ed.get_distribution(name)
             self.assertIsInstance(dist, EggInfoDistribution)
