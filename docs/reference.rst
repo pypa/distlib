@@ -267,7 +267,7 @@ Functions
    Return the callable information from a specification, if it matches the
    expected format, or else ``None``.
 
-   :param specification: A specification, as documented for the 
+   :param specification: A specification, as documented for the
                          :meth:`distlib.scripts.ScriptMaker.make` method.
    :type specification: str
    :returns: ``None`` if the specification didn't match the expected form

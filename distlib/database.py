@@ -46,7 +46,7 @@ class Cache(object):
         if dist.path not in self.path:
             self.path[dist.path] = dist
             self.name.setdefault(dist.name, []).append(dist)
-        
+
 class DistributionSet(object):
     """
     Represents a set of distributions installed on a path (typically sys.path).
@@ -670,5 +670,3 @@ class EggInfoDistribution(object):
 
     # See http://docs.python.org/reference/datamodel#object.__hash__
     __hash__ = object.__hash__
-
-

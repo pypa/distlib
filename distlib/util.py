@@ -234,5 +234,3 @@ def get_callable(specification):
             flags = [f.strip() for f in flags.split(',')]
         result = name, module, func, flags
     return result
-
-
