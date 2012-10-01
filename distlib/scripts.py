@@ -11,15 +11,12 @@ import sys
 
 from . import DistlibException
 from .compat import sysconfig, fsencode, detect_encoding
-from .util import FileOperator
+from .util import FileOperator, get_callable
 
 logger = logging.getLogger(__name__)
 
 # check if Python is called on the first line with this expression
 FIRST_LINE_RE = re.compile(b'^#!.*pythonw?[0-9.]*([ \t].*)?$')
-DOTTED_CALLABLE_RE = re.compile(r'''(?P<name>(\w|-)+)
-                                    \s*=\s*(?P<callable>(\w+)([:\.]\w+)+)
-                                    \s*(\[(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\])?''', re.VERBOSE)
 SCRIPT_TEMPLATE = '''%(shebang)s
 if __name__ == '__main__':
     def _resolve(module, func):
@@ -212,37 +209,9 @@ class ScriptMaker(object):
 
     # Public API follows
 
-    @classmethod
-    def get_callable(self, specification):
-        m = DOTTED_CALLABLE_RE.search(specification)
-        if not m:
-            result = None
-            if '[' in specification or ']' in specification:
-                raise DistlibException('Invalid specification '
-                                       '%r' % specification)
-        else:
-            d = m.groupdict()
-            name = d['name']
-            path = d['callable']
-            colons = path.count(':')
-            if colons != 1:
-                raise DistlibException('Invalid specification '
-                                       '%r' % specification)
-            module, func = path.split(':')
-            flags = d['flags']
-            if flags is None:
-                if '[' in specification or ']' in specification:
-                    raise DistlibException('Invalid specification '
-                                           '%r' % specification)
-                flags = []
-            else:
-                flags = [f.strip() for f in flags.split(',')]
-            result = name, module, func, flags
-        return result
-
     def make(self, specification):
         filenames = []
-        can_call = self.get_callable(specification)
+        can_call = get_callable(specification)
         if can_call is None:
             self._copy_script(specification, filenames)
         else:

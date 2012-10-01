@@ -239,20 +239,31 @@ Classes
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
 
-   .. classmethod:: get_callable(specification)
+The ``distlib.util`` package
+-------------------------------
 
-      Return the callable information from a specification, if it matches the
-      expected format, or else ``None``.
+.. currentmodule:: distlib.util
 
-      :param specification: A specification, as for the :meth:`make` method.
-      :type specification: str
-      :returns: ``None`` if the specification didn't match the expected form
-                for a callable, or else a tuple of::
 
-                * script name in target directory
-                * module name which contains the callable
-                * the name the callable is bound to
-                * a (possibly empty) list of flags.
+Functions
+^^^^^^^^^
+
+.. function:: get_callable(specification)
+
+   Return the callable information from a specification, if it matches the
+   expected format, or else ``None``.
+
+   :param specification: A specification, as documented for the 
+                         :meth:`distlib.scripts.ScriptMaker.make` method.
+   :type specification: str
+   :returns: ``None`` if the specification didn't match the expected form
+             for a callable, or else a tuple of::
+
+             * script name in target directory
+             * module name which contains the callable
+             * the name the callable is bound to
+             * a (possibly empty) list of flags.
+
 
 Next steps
 ----------

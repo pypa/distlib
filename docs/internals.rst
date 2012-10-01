@@ -300,12 +300,11 @@ In addition, other methods suggest themselves for :class:`ScriptMaker`:
   subclass for post-processing, e.g. to run a tool like ``2to3``, or an
   analysis tool, over all the installed files.
 
-* The callable specification is sufficiently complex and a possible source
-  of extension that a class method, :meth:`~ScriptMaker.get_callable`, can
-  be used to encapsulate the details of the callable format. This would
-  take a specification and return ``None``, if the specification didn't
-  match the callable format, or the various components (name, module name,
-  callable name and flags) if it did match.
+* The details of the callable specification can be encapsulated in a utility
+  function, :func:`~distlib.util.get_callable`. This would take a specification
+  and return ``None``, if the specification didn't match the callable format,
+  or the various components (name, module name, callable name and flags) if it
+  did match.
 
 In addition, the following attributes on a ``ScriptMaker`` could be further used
 to refine its behaviour:
