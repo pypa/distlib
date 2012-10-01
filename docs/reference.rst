@@ -67,6 +67,20 @@ Classes
       The relative names of all the contents of this resource. Raises an
       exception if accessed on a resource which is *not* a container.
 
+   .. attribute:: path
+
+      This attribute is set by the resource's finder. It is a textual
+      representation of the path, such that if a PEP 302 loader's
+      :meth:`get_data` method is called with the path, the resource's
+      bytes are returned by the loader. This attribute is analogous to
+      the ``resource_filename`` API in ``setuptools``. Note that for
+      resources in zip files, the path will be a pointer to the resource
+      in the zip file, and not directly usable as a filename. While
+      ``setuptools`` deals with this by extracting zip entries to cache
+      and returning filenames from the cache, this does not seem an
+      appropriate thing to do in this package, as a resource is already
+      made available to callers either as a stream or a string of bytes.
+
    Methods:
 
    .. method:: as_stream()
