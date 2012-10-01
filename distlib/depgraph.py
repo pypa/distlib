@@ -166,8 +166,10 @@ def generate_graph(dists):
                     logger.warning('distribution %r has ill-formed '
                                    'provides field: %r', dist.name, p)
                     continue
-                    raise DistlibException('distribution %r has ill-formed '
-                                           'provides field: %r' % (dist.name, p))
+                    # don't raise an exception. Legacy installed distributions
+                    # could have all manner of metadata
+                    #raise DistlibException('distribution %r has ill-formed '
+                    #                       'provides field: %r' % (dist.name, p))
                 version = version[1:-1]  # trim off parenthesis
             if name not in provided:
                 provided[name] = []
@@ -237,7 +239,7 @@ def dependent_dists(dists, dist):
 
 def main():
     # XXX move to run._graph
-    from distlib.database import get_distributions
+    from .database import get_distributions
     tempout = StringIO()
     try:
         old = sys.stderr

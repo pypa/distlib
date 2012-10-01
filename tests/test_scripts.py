@@ -153,6 +153,8 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(get_callable('foo=foo.bar:main [a=9, 9=8,e, f9=g8]'),
                              ('foo', 'foo.bar', 'main', ['a=9', '9=8',
                                                          'e', 'f9=g8']))
+        self.assertEqual(get_callable('foo=foo.bar:main[x]'),
+                             ('foo', 'foo.bar', 'main', ['x']))
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x:y')
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [')
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x ]')
