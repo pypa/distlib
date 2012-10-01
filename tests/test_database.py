@@ -18,11 +18,7 @@ from distlib import DistlibException
 from distlib.compat import text_type, file_type
 import distlib.database
 from distlib.metadata import Metadata
-from distlib.database import (
-    Distribution, EggInfoDistribution, get_distribution, get_distributions,
-    provides_distribution, obsoletes_distribution, get_file_users,
-    enable_cache, disable_cache, distinfo_dirname, _yield_distributions,
-    get_file_path)
+from distlib.database import Distribution, EggInfoDistribution, DistributionSet
 from distlib.util import get_resources_dests
 
 from test_glob import GlobTestCaseBase
@@ -38,8 +34,6 @@ class FakeDistsMixin(object):
 
     def setUp(self):
         super(FakeDistsMixin, self).setUp()
-        self.addCleanup(enable_cache)
-        disable_cache()
 
         # make a copy that we can write into for our fake installed
         # distributions
@@ -347,9 +341,10 @@ class TestDatabase(LoggingCatcher,
 
     def test_caches(self):
         # sanity check for internal caches
-        for name in ('_cache_name', '_cache_name_egg',
-                     '_cache_path', '_cache_path_egg'):
-            self.assertEqual(getattr(distlib.database, name), {})
+        d = DistributionSet()
+        for name in ('_cache', '_cache_egg'):
+            self.assertEqual(getattr(d, name).name, {})
+            self.assertEqual(getattr(d, name).path, {})
 
     def test_distinfo_dirname(self):
         # Given a name and a version, we expect the distinfo_dirname function
@@ -369,7 +364,7 @@ class TestDatabase(LoggingCatcher,
 
         # Loop through the items to validate the results
         for name, version, standard_dirname in items:
-            dirname = distinfo_dirname(name, version)
+            dirname = DistributionSet.distinfo_dirname(name, version)
             self.assertEqual(dirname, standard_dirname)
 
     @requires_zlib
@@ -385,14 +380,17 @@ class TestDatabase(LoggingCatcher,
 
         all_dists = non_egg_dists + egg_dists
 
-        cases = ((False, non_egg_dists, (Distribution,)),
-                 (True, all_dists, (Distribution, EggInfoDistribution)))
+        d = DistributionSet()
+        ed = DistributionSet(include_egg=True)
 
-        for use_egg_info, fake_dists, allowed_classes in cases:
+        cases = ((d, non_egg_dists, (Distribution,)),
+                 (ed, all_dists, (Distribution, EggInfoDistribution)))
+
+        for distset, fake_dists, allowed_classes in cases:
             found_dists = []
 
             # Verify the fake dists have been found.
-            dists = list(get_distributions(use_egg_info=use_egg_info))
+            dists = list(distset.get_distributions())
             for dist in dists:
                 self.assertIsInstance(dist, allowed_classes)
                 if (dist.name in dict(fake_dists) and
@@ -412,48 +410,42 @@ class TestDatabase(LoggingCatcher,
         # Test the lookup of the towel-stuff distribution
         name = 'towel-stuff'  # Note: This is different from the directory name
 
+        d = DistributionSet()
+        ed = DistributionSet(include_egg=True)
+
         # Lookup the distribution
-        dist = get_distribution(name)
+        dist = d.get_distribution(name)
         self.assertIsInstance(dist, Distribution)
         self.assertEqual(dist.name, name)
 
         # Verify that an unknown distribution returns None
-        self.assertIsNone(get_distribution('bogus'))
+        self.assertIsNone(d.get_distribution('bogus'))
 
         # Verify partial name matching doesn't work
-        self.assertIsNone(get_distribution('towel'))
+        self.assertIsNone(d.get_distribution('towel'))
 
         # Verify that it does not find egg-info distributions, when not
         # instructed to
-        self.assertIsNone(get_distribution('bacon', use_egg_info=False))
-        self.assertIsNone(get_distribution('cheese', use_egg_info=False))
-        self.assertIsNone(get_distribution('strawberry', use_egg_info=False))
-        self.assertIsNone(get_distribution('banana', use_egg_info=False))
+        self.assertIsNone(d.get_distribution('bacon'))
+        self.assertIsNone(d.get_distribution('cheese'))
+        self.assertIsNone(d.get_distribution('strawberry'))
+        self.assertIsNone(d.get_distribution('banana'))
 
         # Now check that it works well in both situations, when egg-info
         # is a file and directory respectively.
-        dist = get_distribution('cheese', use_egg_info=True)
-        self.assertIsInstance(dist, EggInfoDistribution)
-        self.assertEqual(dist.name, 'cheese')
-
-        dist = get_distribution('bacon', use_egg_info=True)
-        self.assertIsInstance(dist, EggInfoDistribution)
-        self.assertEqual(dist.name, 'bacon')
-
-        dist = get_distribution('banana', use_egg_info=True)
-        self.assertIsInstance(dist, EggInfoDistribution)
-        self.assertEqual(dist.name, 'banana')
-
-        dist = get_distribution('strawberry', use_egg_info=True)
-        self.assertIsInstance(dist, EggInfoDistribution)
-        self.assertEqual(dist.name, 'strawberry')
+        
+        for name in ('cheese', 'bacon', 'banana', 'strawberry'):
+            dist = ed.get_distribution(name)
+            self.assertIsInstance(dist, EggInfoDistribution)
+            self.assertEqual(dist.name, name)
 
     def test_get_file_users(self):
         # Test the iteration of distributions that use a file.
         name = 'towel_stuff-0.1'
         path = os.path.join(self.fake_dists_path, name,
                             'towel_stuff', '__init__.py')
-        for dist in get_file_users(path):
+        d = DistributionSet()
+        for dist in d.get_file_users(path):
             self.assertIsInstance(dist, Distribution)
             self.assertEqual(dist.name, name)
 
@@ -462,74 +454,60 @@ class TestDatabase(LoggingCatcher,
         # Test for looking up distributions by what they provide
         checkLists = lambda x, y: self.assertEqual(sorted(x), sorted(y))
 
-        l = [dist.name for dist in provides_distribution('truffles',
-                                                         use_egg_info=False)]
+        d = DistributionSet()
+        ed = DistributionSet(include_egg=True)
+
+        l = [dist.name for dist in d.provides_distribution('truffles')]
         checkLists(l, ['choxie', 'towel-stuff'])
 
-        l = [dist.name for dist in provides_distribution('truffles', '1.0',
-                                                         use_egg_info=False)]
+        l = [dist.name for dist in d.provides_distribution('truffles', '1.0')]
         checkLists(l, ['choxie'])
 
-        l = [dist.name for dist in provides_distribution('truffles', '1.0',
-                                                         use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('truffles', '1.0')]
         checkLists(l, ['choxie', 'cheese'])
 
-        l = [dist.name for dist in provides_distribution('truffles', '1.1.2',
-                                                         use_egg_info=False)]
+        l = [dist.name for dist in d.provides_distribution('truffles', '1.1.2')]
         checkLists(l, ['towel-stuff'])
 
-        l = [dist.name for dist in provides_distribution('truffles', '1.1',
-                                                         use_egg_info=False)]
+        l = [dist.name for dist in d.provides_distribution('truffles', '1.1')]
         checkLists(l, ['towel-stuff'])
 
-        l = [dist.name for dist in provides_distribution('truffles',
-                                                         '!=1.1,<=2.0',
-                                                         use_egg_info=False)]
+        l = [dist.name for dist in d.provides_distribution('truffles',
+                                                           '!=1.1,<=2.0')]
         checkLists(l, ['choxie'])
 
-        l = [dist.name for dist in provides_distribution('truffles',
-                                                         '!=1.1,<=2.0',
-                                                          use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('truffles',
+                                                            '!=1.1,<=2.0')]
         checkLists(l, ['choxie', 'bacon', 'cheese'])
 
-        l = [dist.name for dist in provides_distribution('truffles', '>1.0',
-                                                         use_egg_info=False)]
+        l = [dist.name for dist in d.provides_distribution('truffles', '>1.0')]
         checkLists(l, ['towel-stuff'])
 
-        l = [dist.name for dist in provides_distribution('truffles', '>1.5',
-                                                         use_egg_info=False)]
+        l = [dist.name for dist in d.provides_distribution('truffles', '>1.5')]
         checkLists(l, [])
 
-        l = [dist.name for dist in provides_distribution('truffles', '>1.5',
-                                                         use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('truffles', '>1.5')]
         checkLists(l, ['bacon'])
 
-        l = [dist.name for dist in provides_distribution('truffles', '>=1.0',
-                                                         use_egg_info=False)]
+        l = [dist.name for dist in d.provides_distribution('truffles', '>=1.0')]
         checkLists(l, ['choxie', 'towel-stuff'])
 
-        l = [dist.name for dist in provides_distribution('strawberry', '0.6',
-                                                         use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('strawberry', '0.6')]
         checkLists(l, ['coconuts-aster'])
 
-        l = [dist.name for dist in provides_distribution('strawberry', '>=0.5',
-                                                         use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('strawberry', '>=0.5')]
         checkLists(l, ['coconuts-aster'])
 
-        l = [dist.name for dist in provides_distribution('strawberry', '>0.6',
-                                                         use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('strawberry', '>0.6')]
         checkLists(l, [])
 
-        l = [dist.name for dist in provides_distribution('banana', '0.4',
-                                                         use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('banana', '0.4')]
         checkLists(l, ['coconuts-aster'])
 
-        l = [dist.name for dist in provides_distribution('banana', '>=0.3',
-                                                         use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('banana', '>=0.3')]
         checkLists(l, ['coconuts-aster'])
 
-        l = [dist.name for dist in provides_distribution('banana', '!=0.4',
-                                                         use_egg_info=True)]
+        l = [dist.name for dist in ed.provides_distribution('banana', '!=0.4')]
         checkLists(l, [])
 
     @requires_zlib
@@ -537,33 +515,29 @@ class TestDatabase(LoggingCatcher,
         # Test looking for distributions based on what they obsolete
         checkLists = lambda x, y: self.assertEqual(sorted(x), sorted(y))
 
-        l = [dist.name for dist in obsoletes_distribution('truffles', '1.0',
-                                                          use_egg_info=False)]
+        d = DistributionSet()
+        ed = DistributionSet(include_egg=True)
+
+        l = [dist.name for dist in d.obsoletes_distribution('truffles', '1.0')]
         checkLists(l, [])
 
-        l = [dist.name for dist in obsoletes_distribution('truffles', '1.0',
-                                                          use_egg_info=True)]
+        l = [dist.name for dist in ed.obsoletes_distribution('truffles', '1.0')]
         checkLists(l, ['cheese', 'bacon'])
 
-        l = [dist.name for dist in obsoletes_distribution('truffles', '0.8',
-                                                          use_egg_info=False)]
+        l = [dist.name for dist in d.obsoletes_distribution('truffles', '0.8')]
         checkLists(l, ['choxie'])
 
-        l = [dist.name for dist in obsoletes_distribution('truffles', '0.8',
-                                                          use_egg_info=True)]
+        l = [dist.name for dist in ed.obsoletes_distribution('truffles', '0.8')]
         checkLists(l, ['choxie', 'cheese'])
 
-        l = [dist.name for dist in obsoletes_distribution('truffles', '0.9.6',
-                                                          use_egg_info=False)]
+        l = [dist.name for dist in d.obsoletes_distribution('truffles', '0.9.6')]
         checkLists(l, ['choxie', 'towel-stuff'])
 
-        l = [dist.name for dist in obsoletes_distribution('truffles',
-                                                          '0.5.2.3',
-                                                          use_egg_info=False)]
+        l = [dist.name for dist in d.obsoletes_distribution('truffles',
+                                                          '0.5.2.3')]
         checkLists(l, ['choxie', 'towel-stuff'])
 
-        l = [dist.name for dist in obsoletes_distribution('truffles', '0.2',
-                                                          use_egg_info=False)]
+        l = [dist.name for dist in d.obsoletes_distribution('truffles', '0.2')]
         checkLists(l, ['towel-stuff'])
 
     @requires_zlib
@@ -577,20 +551,26 @@ class TestDatabase(LoggingCatcher,
         dists = [('choxie', '2.0.0.9'), ('grammar', '1.0a4'),
                  ('towel-stuff', '0.1'), ('babar', '0.1')]
 
-        checkLists([], _yield_distributions(False, False, sys.path))
+        d = DistributionSet(include_egg=False)
+        d._include_dist = False
+        checkLists([], d._yield_distributions())
 
+        d = DistributionSet(include_egg=True)
+        d._include_dist = False
         found = [(dist.name, dist.version)
-                 for dist in _yield_distributions(False, True, sys.path)
+                 for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(eggs, found)
 
+        d = DistributionSet()
         found = [(dist.name, dist.version)
-                 for dist in _yield_distributions(True, False, sys.path)
+                 for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(dists, found)
 
+        d = DistributionSet(include_egg=True)
         found = [(dist.name, dist.version)
-                 for dist in _yield_distributions(True, True, sys.path)
+                 for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(dists + eggs, found)
 
@@ -737,14 +717,12 @@ class DataFilesTestCase(GlobTestCaseBase):
         self.addCleanup(sys.path.remove, temp_site_packages)
         sys.path.insert(0, temp_site_packages)
 
-        # Force distlib.database to rescan the sys.path
-        self.addCleanup(enable_cache)
-        disable_cache()
-
         # Try to retrieve resources paths and files
-        self.assertEqual(get_file_path(dist_name, test_path),
+        d = DistributionSet()
+        self.assertEqual(d.get_file_path(dist_name, test_path),
                          test_resource_path)
-        self.assertRaises(KeyError, get_file_path, dist_name, 'i-dont-exist')
+        self.assertRaises(KeyError, d.get_file_path, dist_name,
+                          'i-dont-exist')
 
 
 def test_suite():

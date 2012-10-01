@@ -12,7 +12,7 @@ from compat import unittest
 
 from distlib import depgraph
 from distlib.compat import StringIO
-from distlib.database import get_distribution, enable_cache, disable_cache
+from distlib.database import DistributionSet
 
 from support import LoggingCatcher, requires_zlib
 
@@ -37,15 +37,18 @@ class DepGraphTestCase(LoggingCatcher,
         path = os.path.abspath(path)
         sys.path.insert(0, path)
         self.addCleanup(sys.path.remove, path)
-        self.addCleanup(enable_cache)
-        disable_cache()
 
-    def test_generate_graph(self):
+    def get_dists(self, names, include_egg=False):
         dists = []
-        for name in self.DISTROS_DIST:
-            dist = get_distribution(name)
+        d = DistributionSet(include_egg=include_egg)
+        for name in names:
+            dist = d.get_distribution(name)
             self.assertNotEqual(dist, None)
             dists.append(dist)
+        return dists
+    
+    def test_generate_graph(self):
+        dists = self.get_dists(self.DISTROS_DIST)
 
         choxie, grammar, towel = dists
 
@@ -66,11 +69,7 @@ class DepGraphTestCase(LoggingCatcher,
 
     @requires_zlib
     def test_generate_graph_egg(self):
-        dists = []
-        for name in self.DISTROS_DIST + self.DISTROS_EGG:
-            dist = get_distribution(name, use_egg_info=True)
-            self.assertNotEqual(dist, None)
-            dists.append(dist)
+        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG, True)
 
         choxie, grammar, towel, bacon, banana, strawberry, cheese = dists
 
@@ -109,11 +108,7 @@ class DepGraphTestCase(LoggingCatcher,
         self.checkLists(graph.missing[cheese], [])
 
     def test_dependent_dists(self):
-        dists = []
-        for name in self.DISTROS_DIST:
-            dist = get_distribution(name)
-            self.assertNotEqual(dist, None)
-            dists.append(dist)
+        dists = self.get_dists(self.DISTROS_DIST)
 
         choxie, grammar, towel = dists
 
@@ -128,11 +123,7 @@ class DepGraphTestCase(LoggingCatcher,
 
     @requires_zlib
     def test_dependent_dists_egg(self):
-        dists = []
-        for name in self.DISTROS_DIST + self.DISTROS_EGG:
-            dist = get_distribution(name, use_egg_info=True)
-            self.assertNotEqual(dist, None)
-            dists.append(dist)
+        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG, True)
 
         choxie, grammar, towel, bacon, banana, strawberry, cheese = dists
 
@@ -163,11 +154,7 @@ class DepGraphTestCase(LoggingCatcher,
             ('banana', 'strawberry', 'strawberry (>=0.5)'),
         )
 
-        dists = []
-        for name in self.DISTROS_DIST + self.DISTROS_EGG:
-            dist = get_distribution(name, use_egg_info=True)
-            self.assertNotEqual(dist, None)
-            dists.append(dist)
+        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG, True)
 
         graph = depgraph.generate_graph(dists)
         buf = StringIO()
@@ -194,11 +181,7 @@ class DepGraphTestCase(LoggingCatcher,
         )
         disconnected_expected = ('cheese', 'bacon', 'strawberry')
 
-        dists = []
-        for name in self.DISTROS_DIST + self.DISTROS_EGG:
-            dist = get_distribution(name, use_egg_info=True)
-            self.assertNotEqual(dist, None)
-            dists.append(dist)
+        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG, True)
 
         graph = depgraph.generate_graph(dists)
         buf = StringIO()
@@ -255,11 +238,8 @@ class DepGraphTestCase(LoggingCatcher,
             ('banana', 'strawberry', 'strawberry (>=0.5)'),
         )
 
-        dists = []
-        for name in self.DISTROS_DIST + self.DISTROS_EGG + self.BAD_EGGS:
-            dist = get_distribution(name, use_egg_info=True)
-            self.assertNotEqual(dist, None)
-            dists.append(dist)
+        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG +
+                               self.BAD_EGGS, True)
 
         graph = depgraph.generate_graph(dists)
         buf = StringIO()
@@ -278,11 +258,8 @@ class DepGraphTestCase(LoggingCatcher,
 
     @requires_zlib
     def test_repr(self):
-        dists = []
-        for name in self.DISTROS_DIST + self.DISTROS_EGG + self.BAD_EGGS:
-            dist = get_distribution(name, use_egg_info=True)
-            self.assertNotEqual(dist, None)
-            dists.append(dist)
+        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG +
+                               self.BAD_EGGS, True)
 
         graph = depgraph.generate_graph(dists)
         self.assertTrue(repr(graph))

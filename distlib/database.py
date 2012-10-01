@@ -20,11 +20,7 @@ from .metadata import Metadata
 from .util import parse_requires
 
 
-__all__ = [
-    'Distribution', 'EggInfoDistribution', 'DistributionSet',
-    'distinfo_dirname', 'get_distributions', 'get_distribution',
-    'get_file_users', 'provides_distribution', 'obsoletes_distribution',
-    'enable_cache', 'disable_cache', 'clear_cache', 'get_file_path']
+__all__ = ['Distribution', 'EggInfoDistribution', 'DistributionSet']
 
 
 logger = logging.getLogger(__name__)
@@ -33,98 +29,267 @@ logger = logging.getLogger(__name__)
 
 DIST_FILES = ('INSTALLER', 'METADATA', 'RECORD', 'REQUESTED', 'RESOURCES')
 
-# Cache
-_cache_name = {}  # maps names to Distribution instances
-_cache_name_egg = {}  # maps names to EggInfoDistribution instances
-_cache_path = {}  # maps paths to Distribution instances
-_cache_path_egg = {}  # maps paths to EggInfoDistribution instances
-_cache_generated = False  # indicates if .dist-info distributions are cached
-_cache_generated_egg = False  # indicates if .dist-info and .egg are cached
-_cache_enabled = True
+DISTINFO_EXT = '.dist-info'
 
+class Cache(object):
+    def __init__(self):
+        self.name = {}
+        self.path = {}
+        self.generated = False
 
-def enable_cache():
+    def clear(self):
+        self.name.clear()
+        self.path.clear()
+        self.generated = False
+
+    def add(self, dist):
+        if dist.path not in self.path:
+            self.path[dist.path] = dist
+            self.name.setdefault(dist.name, []).append(dist)
+        
+class DistributionSet(object):
     """
-    Enables the internal cache.
-
-    Note that this function will not clear the cache in any case, for that
-    functionality see :func:`clear_cache`.
+    Represents a set of distributions installed on a path (typically sys.path).
     """
-    global _cache_enabled
+    def __init__(self, path=None, include_egg=False):
+        if path is None:
+            path = sys.path
+        self.path = path
+        self._include_dist = True
+        self._include_egg = include_egg
 
-    _cache_enabled = True
+        self._cache = Cache()
+        self._cache_egg = Cache()
+        self._cache_enabled = True
 
+    def enable_cache(self):
+        """
+        Enables the internal cache.
 
-def disable_cache():
-    """
-    Disables the internal cache.
+        Note that this function will not clear the cache in any case, for that
+        functionality see :meth:`clear_cache`.
+        """
+        self._cache_enabled = True
 
-    Note that this function will not clear the cache in any case, for that
-    functionality see :func:`clear_cache`.
-    """
-    global _cache_enabled
+    def disable_cache(self):
+        """
+        Disables the internal cache.
 
-    _cache_enabled = False
-
-
-def clear_cache():
-    """ Clears the internal cache. """
-    global _cache_generated, _cache_generated_egg
-
-    _cache_name.clear()
-    _cache_name_egg.clear()
-    _cache_path.clear()
-    _cache_path_egg.clear()
-    _cache_generated = False
-    _cache_generated_egg = False
-
-
-def _yield_distributions(include_dist, include_egg, paths):
-    """
-    Yield .dist-info and .egg(-info) distributions, based on the arguments
-
-    :parameter include_dist: yield .dist-info distributions
-    :parameter include_egg: yield .egg(-info) distributions
-    """
-    for path in paths:
-        realpath = os.path.realpath(path)
-        if not os.path.isdir(realpath):
-            continue
-        for dir in os.listdir(realpath):
-            dist_path = os.path.join(realpath, dir)
-            if include_dist and dir.endswith('.dist-info'):
-                yield Distribution(dist_path)
-            elif include_egg and (dir.endswith('.egg-info') or
-                                  dir.endswith('.egg')):
-                yield EggInfoDistribution(dist_path)
+        Note that this function will not clear the cache in any case, for that
+        functionality see :meth:`clear_cache`.
+        """
+        self._cache_enabled = False
 
 
-def _generate_cache(use_egg_info, paths):
-    global _cache_generated, _cache_generated_egg
+    def clear_cache(self):
+        """ Clears the internal cache. """
+        self._cache.clear()
+        self._cache_egg.clear()
 
-    if _cache_generated_egg or (_cache_generated and not use_egg_info):
-        return
-    else:
-        gen_dist = not _cache_generated
-        gen_egg = use_egg_info
 
-        for dist in _yield_distributions(gen_dist, gen_egg, paths):
-            if isinstance(dist, Distribution):
-                _cache_path[dist.path] = dist
-                if dist.name not in _cache_name:
-                    _cache_name[dist.name] = []
-                _cache_name[dist.name].append(dist)
-            else:
-                _cache_path_egg[dist.path] = dist
-                if dist.name not in _cache_name_egg:
-                    _cache_name_egg[dist.name] = []
-                _cache_name_egg[dist.name].append(dist)
+    def _yield_distributions(self):
+        """
+        Yield .dist-info and/or .egg(-info) distributions
+        """
+        for path in self.path:
+            realpath = os.path.realpath(path)
+            if not os.path.isdir(realpath):
+                continue
+            for dir in os.listdir(realpath):
+                dist_path = os.path.join(realpath, dir)
+                if self._include_dist and dir.endswith(DISTINFO_EXT):
+                    yield Distribution(dist_path, self)
+                elif self._include_egg and dir.endswith(('.egg-info',
+                                                         '.egg')):
+                    yield EggInfoDistribution(dist_path, self)
 
-        if gen_dist:
-            _cache_generated = True
-        if gen_egg:
-            _cache_generated_egg = True
+    def _generate_cache(self):
+        gen_dist = not self._cache.generated
+        gen_egg = self._include_egg and not self._cache_egg.generated
+        if gen_dist or gen_egg:
+            for dist in self._yield_distributions():
+                if isinstance(dist, Distribution):
+                    self._cache.add(dist)
+                else:
+                    self._cache_egg.add(dist)
 
+            if gen_dist:
+                self._cache.generated = True
+            if gen_egg:
+                self._cache_egg.generated = True
+
+    @classmethod
+    def distinfo_dirname(self, name, version):
+        """
+        The *name* and *version* parameters are converted into their
+        filename-escaped form, i.e. any ``'-'`` characters are replaced
+        with ``'_'`` other than the one in ``'dist-info'`` and the one
+        separating the name from the version number.
+
+        :parameter name: is converted to a standard distribution name by replacing
+                         any runs of non- alphanumeric characters with a single
+                         ``'-'``.
+        :type name: string
+        :parameter version: is converted to a standard version string. Spaces
+                            become dots, and all other non-alphanumeric characters
+                            (except dots) become dashes, with runs of multiple
+                            dashes condensed to a single dash.
+        :type version: string
+        :returns: directory name
+        :rtype: string"""
+        name = name.replace('-', '_')
+        normalized_version = suggest_normalized_version(version)
+        # Because this is a lookup procedure, something will be returned even if
+        #   it is a version that cannot be normalized
+        if normalized_version is None:
+            # Unable to achieve normality?
+            normalized_version = version
+        return '-'.join([name, normalized_version]) + DISTINFO_EXT
+
+
+    def get_distributions(self):
+        """
+        Provides an iterator that looks for ``.dist-info`` directories
+        and returns :class:`Distribution` or :class:`EggInfoDistribution`
+        instances for each one of them.
+
+        :rtype: iterator of :class:`Distribution` and :class:`EggInfoDistribution`
+                instances
+        """
+        if not self._cache_enabled:
+            for dist in _yield_distributions(self):
+                yield dist
+        else:
+            self._generate_cache()
+
+            for dist in self._cache.path.values():
+                yield dist
+
+            if self._include_egg:
+                for dist in self._cache_egg.path.values():
+                    yield dist
+
+
+    def get_distribution(self, name):
+        """
+        Scans all distributions looking for a matching name.
+
+        This function only returns the first result found, as no more than one
+        value is expected. If nothing is found, ``None`` is returned.
+
+        :rtype: :class:`Distribution` or :class:`EggInfoDistribution` or None
+        """
+        result = None
+        if not self._cache_enabled:
+            for dist in self._yield_distributions():
+                if dist.name == name:
+                    result = dist
+                    break
+        else:
+            self._generate_cache()
+
+            if name in self._cache.name:
+                result = self._cache.name[name][0]
+            elif self._include_egg and name in self._cache_egg.name:
+                result = self._cache_egg.name[name][0]
+        return result
+
+
+    def obsoletes_distribution(self, name, version=None):
+        """
+        Iterates over all distributions to find which distributions obsolete
+        *name*.
+
+        If a *version* is provided, it will be used to filter the results.
+
+        :type name: string
+        :type version: string
+        :parameter name: The name to check for being obsoleted.
+        """
+        for dist in self.get_distributions():
+            obsoleted = (dist.metadata['Obsoletes-Dist'] +
+                         dist.metadata['Obsoletes'])
+            for obs in obsoleted:
+                o_components = obs.split(' ', 1)
+                if len(o_components) == 1 or version is None:
+                    if name == o_components[0]:
+                        yield dist
+                        break
+                else:
+                    try:
+                        predicate = VersionPredicate(obs)
+                    except ValueError:
+                        raise DistlibException(
+                            'distribution %r has ill-formed obsoletes field: '
+                            '%r' % (dist.name, obs))
+                    if name == o_components[0] and predicate.match(version):
+                        yield dist
+                        break
+
+
+    def provides_distribution(self, name, version=None):
+        """
+        Iterates over all distributions to find which distributions provide *name*.
+        If a *version* is provided, it will be used to filter the results.
+
+        This function only returns the first result found, since no more than
+        one values are expected. If the directory is not found, returns ``None``.
+
+        :parameter version: a version specifier that indicates the version
+                            required, conforming to the format in ``PEP-345``
+
+        :type name: string
+        :type version: string
+        """
+        predicate = None
+        if not version is None:
+            try:
+                predicate = VersionPredicate(name + ' (' + version + ')')
+            except ValueError:
+                raise DistlibException('invalid name or version: %r, %r' %
+                                      (name, version))
+
+        for dist in self.get_distributions():
+            provided = dist.metadata['Provides-Dist'] + dist.metadata['Provides']
+
+            for p in provided:
+                p_components = p.rsplit(' ', 1)
+                if len(p_components) == 1 or predicate is None:
+                    if name == p_components[0]:
+                        yield dist
+                        break
+                else:
+                    p_name, p_ver = p_components
+                    if len(p_ver) < 2 or p_ver[0] != '(' or p_ver[-1] != ')':
+                        raise DistlibException(
+                            'distribution %r has invalid Provides field: %r' %
+                            (dist.name, p))
+                    p_ver = p_ver[1:-1]  # trim off the parenthesis
+                    if p_name == name and predicate.match(p_ver):
+                        yield dist
+                        break
+
+    def get_file_users(self, path):
+        """
+        Iterates over all distributions to find out which distributions use
+        *path*.
+
+        :parameter path: can be a local absolute path or a relative
+                         ``'/'``-separated path.
+        :type path: string
+        :rtype: iterator of :class:`Distribution` instances
+        """
+        for dist in self.get_distributions():
+            if dist.uses(path):
+                yield dist
+
+
+    def get_file_path(self, name, relative_path):
+        """Return the path to a resource file."""
+        dist = self.get_distribution(name)
+        if dist is None:
+            raise LookupError('no distribution named %r found' % name)
+        return dist.get_resource_path(relative_path)
 
 class Distribution(object):
     """Created with the *path* of the ``.dist-info`` directory provided to the
@@ -148,9 +313,9 @@ class Distribution(object):
 
     hasher = None
 
-    def __init__(self, path):
-        if _cache_enabled and path in _cache_path:
-            self.metadata = _cache_path[path].metadata
+    def __init__(self, path, env=None):
+        if env and env._cache_enabled and path in env._cache.path:
+            self.metadata = env._cache.path[path].metadata
         else:
             metadata_path = os.path.join(path, 'METADATA')
             self.metadata = Metadata(path=metadata_path)
@@ -159,8 +324,8 @@ class Distribution(object):
         self.version = self.metadata['Version']
         self.path = path
 
-        if _cache_enabled and path not in _cache_path:
-            _cache_path[path] = self
+        if env and env._cache_enabled:
+            env._cache.add(self)
 
     def __repr__(self):
         return '<Distribution %r %s at %r>' % (
@@ -408,10 +573,10 @@ class EggInfoDistribution(object):
     """A :class:`distutils2.metadata.Metadata` instance loaded with
     the distribution's ``METADATA`` file."""
 
-    def __init__(self, path):
+    def __init__(self, path, env=None):
         self.path = path
-        if _cache_enabled and path in _cache_path_egg:
-            self.metadata = _cache_path_egg[path].metadata
+        if env._cache_enabled and path in env._cache_egg.path:
+            self.metadata = env._cache_egg.path[path].metadata
             self.name = self.metadata['Name']
             self.version = self.metadata['Version']
             return
@@ -458,8 +623,8 @@ class EggInfoDistribution(object):
                         del self.metadata[field]
             self.metadata['Requires-Dist'] += requires
 
-        if _cache_enabled:
-            _cache_path_egg[self.path] = self
+        if env and env._cache_enabled:
+            env._cache_egg.add(self)
 
     def __repr__(self):
         return '<EggInfoDistribution %r %s at %r>' % (
@@ -506,200 +671,4 @@ class EggInfoDistribution(object):
     # See http://docs.python.org/reference/datamodel#object.__hash__
     __hash__ = object.__hash__
 
-
-def distinfo_dirname(name, version):
-    """
-    The *name* and *version* parameters are converted into their
-    filename-escaped form, i.e. any ``'-'`` characters are replaced
-    with ``'_'`` other than the one in ``'dist-info'`` and the one
-    separating the name from the version number.
-
-    :parameter name: is converted to a standard distribution name by replacing
-                     any runs of non- alphanumeric characters with a single
-                     ``'-'``.
-    :type name: string
-    :parameter version: is converted to a standard version string. Spaces
-                        become dots, and all other non-alphanumeric characters
-                        (except dots) become dashes, with runs of multiple
-                        dashes condensed to a single dash.
-    :type version: string
-    :returns: directory name
-    :rtype: string"""
-    file_extension = '.dist-info'
-    name = name.replace('-', '_')
-    normalized_version = suggest_normalized_version(version)
-    # Because this is a lookup procedure, something will be returned even if
-    #   it is a version that cannot be normalized
-    if normalized_version is None:
-        # Unable to achieve normality?
-        normalized_version = version
-    return '-'.join([name, normalized_version]) + file_extension
-
-
-def get_distributions(use_egg_info=True, paths=None):
-    """
-    Provides an iterator that looks for ``.dist-info`` directories in
-    ``sys.path`` and returns :class:`Distribution` instances for each one of
-    them. If the parameters *use_egg_info* is ``True``, then the ``.egg-info``
-    files and directores are iterated as well.
-
-    :rtype: iterator of :class:`Distribution` and :class:`EggInfoDistribution`
-            instances
-    """
-    if paths is None:
-        paths = sys.path
-
-    if not _cache_enabled:
-        for dist in _yield_distributions(True, use_egg_info, paths):
-            yield dist
-    else:
-        _generate_cache(use_egg_info, paths)
-
-        for dist in _cache_path.values():
-            yield dist
-
-        if use_egg_info:
-            for dist in _cache_path_egg.values():
-                yield dist
-
-
-def get_distribution(name, use_egg_info=True, paths=None):
-    """
-    Scans all elements in ``sys.path`` and looks for all directories
-    ending with ``.dist-info``. Returns a :class:`Distribution`
-    corresponding to the ``.dist-info`` directory that contains the
-    ``METADATA`` that matches *name* for the *name* metadata field.
-    If no distribution exists with the given *name* and the parameter
-    *use_egg_info* is set to ``True``, then all files and directories ending
-    with ``.egg-info`` are scanned. A :class:`EggInfoDistribution` instance is
-    returned if one is found that has metadata that matches *name* for the
-    *name* metadata field.
-
-    This function only returns the first result found, as no more than one
-    value is expected. If the directory is not found, ``None`` is returned.
-
-    :rtype: :class:`Distribution` or :class:`EggInfoDistribution` or None
-    """
-    if paths is None:
-        paths = sys.path
-
-    if not _cache_enabled:
-        for dist in _yield_distributions(True, use_egg_info, paths):
-            if dist.name == name:
-                return dist
-    else:
-        _generate_cache(use_egg_info, paths)
-
-        if name in _cache_name:
-            return _cache_name[name][0]
-        elif use_egg_info and name in _cache_name_egg:
-            return _cache_name_egg[name][0]
-        else:
-            return None
-
-
-def obsoletes_distribution(name, version=None, use_egg_info=True):
-    """
-    Iterates over all distributions to find which distributions obsolete
-    *name*.
-
-    If a *version* is provided, it will be used to filter the results.
-    If the argument *use_egg_info* is set to ``True``, then ``.egg-info``
-    distributions will be considered as well.
-
-    :type name: string
-    :type version: string
-    :parameter name:
-    """
-    for dist in get_distributions(use_egg_info):
-        obsoleted = (dist.metadata['Obsoletes-Dist'] +
-                     dist.metadata['Obsoletes'])
-        for obs in obsoleted:
-            o_components = obs.split(' ', 1)
-            if len(o_components) == 1 or version is None:
-                if name == o_components[0]:
-                    yield dist
-                    break
-            else:
-                try:
-                    predicate = VersionPredicate(obs)
-                except ValueError:
-                    raise DistlibException(
-                        'distribution %r has ill-formed obsoletes field: '
-                        '%r' % (dist.name, obs))
-                if name == o_components[0] and predicate.match(version):
-                    yield dist
-                    break
-
-
-def provides_distribution(name, version=None, use_egg_info=True):
-    """
-    Iterates over all distributions to find which distributions provide *name*.
-    If a *version* is provided, it will be used to filter the results. Scans
-    all elements in ``sys.path``  and looks for all directories ending with
-    ``.dist-info``. Returns a :class:`Distribution`  corresponding to the
-    ``.dist-info`` directory that contains a ``METADATA`` that matches *name*
-    for the name metadata. If the argument *use_egg_info* is set to ``True``,
-    then all files and directories ending with ``.egg-info`` are considered
-    as well and returns an :class:`EggInfoDistribution` instance.
-
-    This function only returns the first result found, since no more than
-    one values are expected. If the directory is not found, returns ``None``.
-
-    :parameter version: a version specifier that indicates the version
-                        required, conforming to the format in ``PEP-345``
-
-    :type name: string
-    :type version: string
-    """
-    predicate = None
-    if not version is None:
-        try:
-            predicate = VersionPredicate(name + ' (' + version + ')')
-        except ValueError:
-            raise DistlibException('invalid name or version: %r, %r' %
-                                  (name, version))
-
-    for dist in get_distributions(use_egg_info):
-        provided = dist.metadata['Provides-Dist'] + dist.metadata['Provides']
-
-        for p in provided:
-            p_components = p.rsplit(' ', 1)
-            if len(p_components) == 1 or predicate is None:
-                if name == p_components[0]:
-                    yield dist
-                    break
-            else:
-                p_name, p_ver = p_components
-                if len(p_ver) < 2 or p_ver[0] != '(' or p_ver[-1] != ')':
-                    raise DistlibException(
-                        'distribution %r has invalid Provides field: %r' %
-                        (dist.name, p))
-                p_ver = p_ver[1:-1]  # trim off the parenthesis
-                if p_name == name and predicate.match(p_ver):
-                    yield dist
-                    break
-
-
-def get_file_users(path):
-    """
-    Iterates over all distributions to find out which distributions use
-    *path*.
-
-    :parameter path: can be a local absolute path or a relative
-                     ``'/'``-separated path.
-    :type path: string
-    :rtype: iterator of :class:`Distribution` instances
-    """
-    for dist in get_distributions():
-        if dist.uses(path):
-            yield dist
-
-
-def get_file_path(distribution_name, relative_path):
-    """Return the path to a resource file."""
-    dist = get_distribution(distribution_name)
-    if dist is None:
-        raise LookupError('no distribution named %r found' % distribution_name)
-    return dist.get_resource_path(relative_path)
 

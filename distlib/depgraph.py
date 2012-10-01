@@ -239,13 +239,14 @@ def dependent_dists(dists, dist):
 
 def main():
     # XXX move to run._graph
-    from .database import get_distributions
+    from .database import DistributionSet
     tempout = StringIO()
     try:
         old = sys.stderr
         sys.stderr = tempout
         try:
-            dists = list(get_distributions(use_egg_info=True))
+            d = DistributionSet(include_egg=True)
+            dists = list(d.get_distributions())
             graph = generate_graph(dists)
         finally:
             sys.stderr = old
