@@ -31,7 +31,7 @@ DIST_FILES = ('INSTALLER', 'METADATA', 'RECORD', 'REQUESTED', 'RESOURCES')
 
 DISTINFO_EXT = '.dist-info'
 
-class Cache(object):
+class _Cache(object):
     def __init__(self):
         self.name = {}
         self.path = {}
@@ -58,8 +58,8 @@ class DistributionSet(object):
         self._include_dist = True
         self._include_egg = include_egg
 
-        self._cache = Cache()
-        self._cache_egg = Cache()
+        self._cache = _Cache()
+        self._cache_egg = _Cache()
         self._cache_enabled = True
 
     def enable_cache(self):
