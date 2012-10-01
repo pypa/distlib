@@ -18,8 +18,7 @@ from . import DistlibException
 from .compat import StringIO
 from .version import VersionPredicate, IrrationalVersionError
 
-__all__ = ['DependencyGraph', 'generate_graph', 'dependent_dists',
-           'graph_to_dot']
+__all__ = ['DependencyGraph', 'make_graph', 'get_dependent_dists']
 
 logger = logging.getLogger(__name__)
 
@@ -136,8 +135,8 @@ class DependencyGraph:
         return '\n'.join(output)
 
 
-def generate_graph(dists):
-    """Generates a dependency graph from the given distributions.
+def make_graph(dists):
+    """Makes a dependency graph from the given distributions.
 
     :parameter dists: a list of distributions
     :type dists: list of :class:`distutils2.database.Distribution` and
@@ -160,7 +159,6 @@ def generate_graph(dists):
             version = None
             if len(comps) == 2:
                 version = comps[1]
-                logger.debug('dist: %r, version: %r', dist.name, version)
                 if len(version) < 3 or version[0] != '(' or version[-1] != ')':
                     logger.warning('distribution %r has ill-formed '
                                    'provides field: %r', dist.name, p)
@@ -210,7 +208,7 @@ def generate_graph(dists):
     return graph
 
 
-def dependent_dists(dists, dist):
+def get_dependent_dists(dists, dist):
     """Recursively generate a list of distributions from *dists* that are
     dependent on *dist*.
 
@@ -220,7 +218,7 @@ def dependent_dists(dists, dist):
     if dist not in dists:
         raise ValueError('given distribution %r is not a member of the list' %
                          dist.name)
-    graph = generate_graph(dists)
+    graph = make_graph(dists)
 
     dep = [dist]  # dependent distributions
     fringe = graph.reverse_list[dist]  # list of nodes we should inspect
@@ -235,6 +233,30 @@ def dependent_dists(dists, dist):
     dep.pop(0)  # remove dist from dep, was there to prevent infinite loops
     return dep
 
+def get_required_dists(dists, dist):
+    """Recursively generate a list of distributions from *dists* that are
+    required by *dist*.
+
+    :param dists: a list of distributions
+    :param dist: a distribution, member of *dists* for which we are interested
+    """
+    if dist not in dists:
+        raise ValueError('given distribution %r is not a member of the list' %
+                         dist.name)
+    graph = make_graph(dists)
+
+    req = []  # required distributions
+    fringe = graph.adjacency_list[dist]  # list of nodes we should inspect
+
+    while not len(fringe) == 0:
+        node = fringe.pop()[0]
+        req.append(node)
+        for next in graph.adjacency_list[node]:
+            if next not in req:
+                fringe.append(next)
+
+    return req
+
 
 def main():
     # XXX move to run._graph
@@ -246,7 +268,7 @@ def main():
         try:
             d = DistributionSet(include_egg=True)
             dists = list(d.get_distributions())
-            graph = generate_graph(dists)
+            graph = make_graph(dists)
         finally:
             sys.stderr = old
     except Exception as e:

@@ -4,18 +4,21 @@
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 """Tests for distutils2.depgraph """
+import logging
 import os
 import re
 import sys
 
 from compat import unittest
 
-from distlib import depgraph
 from distlib.compat import StringIO
 from distlib.database import DistributionSet
+from distlib.depgraph import (make_graph, get_dependent_dists,
+                              get_required_dists, main)
 
 from support import LoggingCatcher, requires_zlib
 
+logger = logging.getLogger(__name__)
 
 class DepGraphTestCase(LoggingCatcher,
                        unittest.TestCase):
@@ -47,12 +50,12 @@ class DepGraphTestCase(LoggingCatcher,
             dists.append(dist)
         return dists
 
-    def test_generate_graph(self):
+    def test_make_graph(self):
         dists = self.get_dists(self.DISTROS_DIST)
 
         choxie, grammar, towel = dists
 
-        graph = depgraph.generate_graph(dists)
+        graph = make_graph(dists)
 
         deps = [(x.name, y) for x, y in graph.adjacency_list[choxie]]
         self.checkLists([('towel-stuff', 'towel-stuff (0.1)')], deps)
@@ -68,12 +71,12 @@ class DepGraphTestCase(LoggingCatcher,
         self.checkLists(graph.missing[towel], ['bacon (<=0.2)'])
 
     @requires_zlib
-    def test_generate_graph_egg(self):
+    def test_make_graph_egg(self):
         dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG, True)
 
         choxie, grammar, towel, bacon, banana, strawberry, cheese = dists
 
-        graph = depgraph.generate_graph(dists)
+        graph = make_graph(dists)
 
         deps = [(x.name, y) for x, y in graph.adjacency_list[choxie]]
         self.checkLists([('towel-stuff', 'towel-stuff (0.1)')], deps)
@@ -112,14 +115,33 @@ class DepGraphTestCase(LoggingCatcher,
 
         choxie, grammar, towel = dists
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, choxie)]
+        deps = [d.name for d in get_dependent_dists(dists, choxie)]
         self.checkLists([], deps)
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, grammar)]
+        deps = [d.name for d in get_dependent_dists(dists, grammar)]
         self.checkLists([], deps)
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, towel)]
+        deps = [d.name for d in get_dependent_dists(dists, towel)]
         self.checkLists(['choxie'], deps)
+
+    def test_required_dists(self):
+        dists = self.get_dists(self.DISTROS_DIST +
+                               ('truffles', 'bacon', 'banana',
+                                'coconuts-aster'), True)
+
+        choxie, grammar, towel, truffles, bacon, banana, coco = dists
+
+        reqs = [d.name for d in get_required_dists(dists, choxie)]
+        self.checkLists(['bacon', 'towel-stuff'], reqs)
+
+        reqs = [d.name for d in get_required_dists(dists, grammar)]
+        self.checkLists(['truffles'], reqs)
+
+        reqs = [d.name for d in get_required_dists(dists, banana)]
+        self.checkLists(['coconuts-aster'], reqs)
+
+        reqs = [d.name for d in get_required_dists(dists, towel)]
+        self.checkLists(['bacon'], reqs)
 
     @requires_zlib
     def test_dependent_dists_egg(self):
@@ -127,22 +149,22 @@ class DepGraphTestCase(LoggingCatcher,
 
         choxie, grammar, towel, bacon, banana, strawberry, cheese = dists
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, choxie)]
+        deps = [d.name for d in get_dependent_dists(dists, choxie)]
         self.checkLists([], deps)
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, grammar)]
+        deps = [d.name for d in get_dependent_dists(dists, grammar)]
         self.checkLists([], deps)
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, towel)]
+        deps = [d.name for d in get_dependent_dists(dists, towel)]
         self.checkLists(['choxie'], deps)
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, bacon)]
+        deps = [d.name for d in get_dependent_dists(dists, bacon)]
         self.checkLists(['choxie', 'towel-stuff', 'grammar'], deps)
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, strawberry)]
+        deps = [d.name for d in get_dependent_dists(dists, strawberry)]
         self.checkLists(['banana'], deps)
 
-        deps = [d.name for d in depgraph.dependent_dists(dists, cheese)]
+        deps = [d.name for d in get_dependent_dists(dists, cheese)]
         self.checkLists([], deps)
 
     @requires_zlib
@@ -156,7 +178,7 @@ class DepGraphTestCase(LoggingCatcher,
 
         dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG, True)
 
-        graph = depgraph.generate_graph(dists)
+        graph = make_graph(dists)
         buf = StringIO()
         graph.to_dot(buf)
         buf.seek(0)
@@ -183,7 +205,7 @@ class DepGraphTestCase(LoggingCatcher,
 
         dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG, True)
 
-        graph = depgraph.generate_graph(dists)
+        graph = make_graph(dists)
         buf = StringIO()
         graph.to_dot(buf, skip_disconnected=False)
         buf.seek(0)
@@ -241,7 +263,7 @@ class DepGraphTestCase(LoggingCatcher,
         dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG +
                                self.BAD_EGGS, True)
 
-        graph = depgraph.generate_graph(dists)
+        graph = make_graph(dists)
         buf = StringIO()
         graph.to_dot(buf)
         buf.seek(0)
@@ -261,7 +283,7 @@ class DepGraphTestCase(LoggingCatcher,
         dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG +
                                self.BAD_EGGS, True)
 
-        graph = depgraph.generate_graph(dists)
+        graph = make_graph(dists)
         self.assertTrue(repr(graph))
 
     @requires_zlib
@@ -273,7 +295,7 @@ class DepGraphTestCase(LoggingCatcher,
         sys.argv[:] = ['script.py']
         try:
             try:
-                depgraph.main()
+                main()
             except SystemExit:
                 pass
         finally:

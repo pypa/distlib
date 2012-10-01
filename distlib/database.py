@@ -323,6 +323,7 @@ class Distribution(object):
         self.name = self.metadata['Name']
         self.version = self.metadata['Version']
         self.path = path
+        self.dist_set  = env
 
         if env and env._cache_enabled:
             env._cache.add(self)
@@ -575,6 +576,7 @@ class EggInfoDistribution(object):
 
     def __init__(self, path, env=None):
         self.path = path
+        self.dist_set  = env
         if env._cache_enabled and path in env._cache_egg.path:
             self.metadata = env._cache_egg.path[path].metadata
             self.name = self.metadata['Name']

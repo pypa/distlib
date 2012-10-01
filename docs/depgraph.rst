@@ -70,7 +70,7 @@ The :class:`DependencyGraph` class
 Auxiliary functions
 -------------------
 
-.. function:: dependent_dists(dists, dist)
+.. function:: get_dependent_dists(dists, dist)
 
    Recursively generate a list of distributions from *dists* that are dependent
    on *dist*.
@@ -78,22 +78,9 @@ Auxiliary functions
    .. XXX what does member mean here: "dist is a member of *dists* for which we
       are interested"
 
-.. function:: generate_graph(dists)
+.. function:: make_graph(dists)
 
    Generate a :class:`DependencyGraph` from the given list of distributions.
-
-   .. XXX make this alternate constructor a DepGraph classmethod or rename;
-      'generate' can suggest it creates a file or an image, use 'make'
-
-.. function:: graph_to_dot(graph, f, skip_disconnected=True)
-
-   Write a DOT output for the graph to the file-like object *f*.
-
-   If *skip_disconnected* is true, all distributions that are not dependent on
-   any other distribution are skipped.
-
-   .. XXX why is this not a DepGraph method?
-
 
 Example Usage
 -------------

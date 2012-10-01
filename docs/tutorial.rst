@@ -116,9 +116,26 @@ gives access to the distribution's metadata.
 Using the dependency API
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. currentmodule:: distlib.depgraph
+
 You can use the ``distlib.depgraph`` package to analyse the dependencies
 between various distributions and to create a graph representing these
-dependency relationships.
+dependency relationships. The main interface is through the following
+functions:
+
+* :func:`make_graph`, which generates a dependency graph from a list of
+  distributions.
+
+* :func:`get_dependent_dists`, which takes a list of distributions and a
+  specific distribution in that list, and returns the distributions that
+  are dependent on that specific distribution.
+
+* :func:`get_required_dists`, which takes a list of distributions and a
+  specific distribution in that list, and returns the distributions that
+  are required by that specific distribution.
+
+The graph returned by :func:`make_graph` is an instance of
+:class:`DependencyGraph`.
 
 Using the resource API
 ^^^^^^^^^^^^^^^^^^^^^^
