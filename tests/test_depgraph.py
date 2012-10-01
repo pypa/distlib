@@ -158,7 +158,7 @@ class DepGraphTestCase(LoggingCatcher,
 
         graph = depgraph.generate_graph(dists)
         buf = StringIO()
-        depgraph.graph_to_dot(graph, buf)
+        graph.to_dot(buf)
         buf.seek(0)
         matches = []
         lines = buf.readlines()
@@ -185,7 +185,7 @@ class DepGraphTestCase(LoggingCatcher,
 
         graph = depgraph.generate_graph(dists)
         buf = StringIO()
-        depgraph.graph_to_dot(graph, buf, skip_disconnected=False)
+        graph.to_dot(buf, skip_disconnected=False)
         buf.seek(0)
         lines = buf.readlines()
 
@@ -243,7 +243,7 @@ class DepGraphTestCase(LoggingCatcher,
 
         graph = depgraph.generate_graph(dists)
         buf = StringIO()
-        depgraph.graph_to_dot(graph, buf)
+        graph.to_dot(buf)
         buf.seek(0)
         matches = []
         lines = buf.readlines()

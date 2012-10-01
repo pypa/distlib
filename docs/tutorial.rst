@@ -30,6 +30,96 @@ First steps
 For now, we just list how to use particular parts of the API as they take
 shape.
 
+Using the database API
+^^^^^^^^^^^^^^^^^^^^^^
+
+You can use the ``distlib.database`` package to access information about
+installed distributions. This information is available through the
+following classes:
+
+* :class:`DistributionSet`, which represents a set of distributions installed
+  on a path.
+
+* :class:`Distribution`, which represents an individual distribution,
+  conforming to recent packaging PEPs (:pep:`386`, :pep:`376`, :pep:`345`,
+  :pep:`314` and :pep:`241`).
+* :class:`EggInfoDistribution`, which represents a legacy distribution in
+  egg format.
+
+The :class:`Distribution` and :class:`EggInfoDistribution` classes are normally
+not instantiated directly; rather, they are returned by querying
+:class:`DistributionSet` for distributions. To create a ``DistributionSet``
+instance, you can do ::
+
+    >>> from distlib.database import DistributionSet
+    >>> distset = DistributionSet()
+
+In this most basic form, ``distset`` will provide access to all non-legacy
+distributions on ``sys.path``. To get these distributions, you invoke the
+:meth:`get_distributions` method, which returns an iterable. Let's try it::
+
+    >>> list(distset.get_distributions())
+    []
+    >>>
+
+This may seem surprising, but that's only because, if you've just started
+looking at ``distlib``, you won't *have* any non-legacy distributions. To include
+distributions created and installed using ``setuptools`` or ``distribute``, you
+need to create the ``DistributionSet`` by specifying an additional keyword
+argument, like so::
+
+    >>> distset = DistributionSet(include_egg=True)
+
+and then you'll get a less surprising result::
+
+    >>> len(list(distset.get_distributions()))
+    77
+
+The exact number returned will be different for you, of course. You can ask
+for a particular distribution by name, using the :meth:`get_distribution`
+method::
+
+    >>> distset.get_distribution('setuptools')
+    <EggInfoDistribution u'setuptools' 0.6c11 at '/usr/lib/python2.7/dist-packages/setuptools.egg-info'>
+    >>>
+
+If you want to look at a specific path other than ``sys.path``, you specify it as a
+positional argument to the :class:`DistributionSet` constructor::
+
+    >>> from pprint import pprint
+    >>> special_dists = DistributionSet(['tests/fake_dists'], include_egg=True)
+    >>> pprint([d.name for d in special_dists.get_distributions()])
+    ['babar',
+     'choxie',
+     'towel-stuff',
+     'grammar',
+     'truffles',
+     'coconuts-aster',
+     'nut',
+     'bacon',
+     'banana',
+     'cheese',
+     'strawberry']
+    >>>
+
+or, if you leave out egg-based distributions::
+
+    >>> special_dists = DistributionSet(['tests/fake_dists'])
+    >>> pprint([d.name for d in special_dists.get_distributions()])
+    ['babar', 'choxie', 'towel-stuff', 'grammar']
+    >>>
+
+Once you have a :class:`Distribution` instance, you can use it to get more
+information about the distribution. For example, the ``metadata`` attribute
+gives access to the distribution's metadata.
+
+Using the dependency API
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can use the ``distlib.depgraph`` package to analyse the dependencies
+between various distributions and to create a graph representing these
+dependency relationships.
+
 Using the resource API
 ^^^^^^^^^^^^^^^^^^^^^^
 
