@@ -5,10 +5,7 @@
    :synopsis: Functions to query and manipulate installed distributions.
 
 
-This module provides an implementation of :PEP:`376`.  It was originally
-intended to land in :mod:`pkgutil`, but with the inclusion of Packaging in the
-standard library, it was thought best to include it in a submodule of
-:mod:`packaging`, leaving :mod:`pkgutil` to deal with imports.
+This module provides an implementation of :PEP:`376`.
 
 Installed Python distributions are represented by instances of
 :class:`Distribution`, or :class:`EggInfoDistribution` for legacy egg formats.
@@ -26,9 +23,7 @@ Classes representing installed distributions
 
 .. class:: Distribution(path)
 
-   Class representing an installed distribution.  It is different from
-   :class:`distlib.dist.Distribution` which holds the list of files, the
-   metadata and options during the run of a Packaging command.
+   Class representing an installed distribution.
 
    Instantiate with the *path* to a ``.dist-info`` directory.  Instances can be
    compared and sorted.  Other available methods are:
@@ -41,7 +36,8 @@ Classes representing installed distributions
       :file:`{project}-{version}.dist-info/{path}`.  *path* should be a
       ``'/'``-separated path relative to the ``.dist-info`` directory or an
       absolute path; if it is an absolute path and doesn't start with the path
-      to the :file:`.dist-info` directory, a :class:`PackagingError` is raised.
+      to the :file:`.dist-info` directory, a :class:`DistlibException` is
+      raised.
 
       If *binary* is ``True``, the file is opened in binary mode.
 

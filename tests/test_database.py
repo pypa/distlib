@@ -22,7 +22,7 @@ from distlib.database import (
     Distribution, EggInfoDistribution, get_distribution, get_distributions,
     provides_distribution, obsoletes_distribution, get_file_users,
     enable_cache, disable_cache, distinfo_dirname, _yield_distributions,
-    get_file, get_file_path)
+    get_file_path)
 from distlib.util import get_resources_dests
 
 from test_glob import GlobTestCaseBase
@@ -745,13 +745,6 @@ class DataFilesTestCase(GlobTestCaseBase):
         self.assertEqual(get_file_path(dist_name, test_path),
                          test_resource_path)
         self.assertRaises(KeyError, get_file_path, dist_name, 'i-dont-exist')
-
-        fp = get_file(dist_name, test_path)
-        try:
-            self.assertEqual(fp.read(), 'Config')
-        finally:
-            fp.close()
-        self.assertRaises(KeyError, get_file, dist_name, 'i-dont-exist')
 
 
 def test_suite():

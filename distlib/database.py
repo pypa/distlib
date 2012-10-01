@@ -21,11 +21,10 @@ from .util import parse_requires
 
 
 __all__ = [
-    'Distribution', 'EggInfoDistribution', 'distinfo_dirname',
-    'get_distributions', 'get_distribution', 'get_file_users',
-    'provides_distribution', 'obsoletes_distribution',
-    'enable_cache', 'disable_cache', 'clear_cache',
-    'get_file_path', 'get_file']
+    'Distribution', 'EggInfoDistribution', 'DistributionSet',
+    'distinfo_dirname', 'get_distributions', 'get_distribution',
+    'get_file_users', 'provides_distribution', 'obsoletes_distribution',
+    'enable_cache', 'disable_cache', 'clear_cache', 'get_file_path']
 
 
 logger = logging.getLogger(__name__)
@@ -488,16 +487,14 @@ class EggInfoDistribution(object):
 
         # XXX What about scripts and data files ?
         if os.path.isfile(path):
-            return [(path, _md5(path), _size(path))]
+            result = [(path, _md5(path), _size(path))]
         else:
-            files = []
-            for root, dir, files_ in os.walk(path):
-                for item in files_:
+            result = []
+            for root, dir, files in os.walk(path):
+                for item in files:
                     item = os.path.join(root, item)
-                    files.append((item, _md5(item), _size(item)))
-            return files
-
-        return []
+                    result.append((item, _md5(item), _size(item)))
+        return result
 
     def uses(self, path):
         return False
@@ -702,12 +699,7 @@ def get_file_users(path):
 def get_file_path(distribution_name, relative_path):
     """Return the path to a resource file."""
     dist = get_distribution(distribution_name)
-    if dist is not None:
-        return dist.get_resource_path(relative_path)
-    raise LookupError('no distribution named %r found' % distribution_name)
+    if dist is None:
+        raise LookupError('no distribution named %r found' % distribution_name)
+    return dist.get_resource_path(relative_path)
 
-
-def get_file(distribution_name, relative_path, *args, **kwargs):
-    """Open and return a resource file."""
-    return open(get_file_path(distribution_name, relative_path),
-                *args, **kwargs)
