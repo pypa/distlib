@@ -233,3 +233,11 @@ def skip_unless_symlink(test):
     ok = can_symlink()
     msg = "Requires functional symlink implementation"
     return test if ok else unittest.skip(msg)(test)
+
+def fake_dec(*args, **kw):
+    """Fake decorator"""
+    def _wrap(func):
+        def __wrap(*args, **kw):
+            return func(*args, **kw)
+        return __wrap
+    return _wrap

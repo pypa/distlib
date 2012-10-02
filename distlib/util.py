@@ -204,12 +204,12 @@ class FileOperator(object):
 
     set_executable_mode = lambda s, f: s.set_mode(0o555, 0o7777, f)
 
-DOTTED_CALLABLE_RE = re.compile(r'''(?P<name>(\w|-)+)
-                                    \s*=\s*(?P<callable>(\w+)([:\.]\w+)+)
-                                    \s*(\[(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\])?''', re.VERBOSE)
+CALLABLE_RE = re.compile(r'''(?P<name>(\w|[-.])+)
+                         \s*=\s*(?P<callable>(\w+)([:\.]\w+)*)
+                         \s*(\[(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\])?''', re.VERBOSE)
 
 def get_callable(specification):
-    m = DOTTED_CALLABLE_RE.search(specification)
+    m = CALLABLE_RE.search(specification)
     if not m:
         result = None
         if '[' in specification or ']' in specification:
@@ -220,10 +220,13 @@ def get_callable(specification):
         name = d['name']
         path = d['callable']
         colons = path.count(':')
-        if colons != 1:
-            raise DistlibException('Invalid specification '
-                                   '%r' % specification)
-        module, func = path.split(':')
+        if colons == 0:
+            module, func = path, None
+        else:
+            if colons != 1:
+                raise DistlibException('Invalid specification '
+                                       '%r' % specification)
+            module, func = path.split(':')
         flags = d['flags']
         if flags is None:
             if '[' in specification or ']' in specification:

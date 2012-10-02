@@ -7,7 +7,6 @@ class UtilTestCase(unittest.TestCase):
     def test_callable_format(self):
         self.assertIsNone(get_callable('foo.py'))
         self.assertIsNone(get_callable('foo.py='))
-        self.assertIsNone(get_callable('foo.py=abc'))
         for spec in ('foo=foo:main', 'foo =foo:main', 'foo= foo:main',
                      'foo = foo:main'):
             self.assertEqual(get_callable(spec),
@@ -24,6 +23,7 @@ class UtilTestCase(unittest.TestCase):
                                                          'e', 'f9=g8']))
         self.assertEqual(get_callable('foo=foo.bar:main[x]'),
                              ('foo', 'foo.bar', 'main', ['x']))
+        self.assertEqual(get_callable('foo=abc'), ('foo', 'abc', None, []))
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x:y')
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [')
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x ]')

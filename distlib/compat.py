@@ -16,6 +16,25 @@ if sys.version_info[0] < 3:
     import __builtin__ as builtins
     import ConfigParser as configparser
     from ._backport import shutil
+    from urlparse import urlparse, urlunparse, urljoin
+    from urllib import urlretrieve, unquote
+    import urllib2
+    from urllib2 import Request, urlopen, URLError, HTTPError
+    import httplib
+    import xmlrpclib
+
+    _userprog = None
+    def splituser(host):
+        """splituser('user[:passwd]@host[:port]') --> 'user[:passwd]', 'host[:port]'."""
+        global _userprog
+        if _userprog is None:
+            import re
+            _userprog = re.compile('^(.*)@(.*)$')
+
+        match = _userprog.match(host)
+        if match: return match.group(1, 2)
+        return None, host
+
 else:
     from io import StringIO
     string_types = str,
@@ -24,7 +43,12 @@ else:
     import builtins
     import configparser
     import shutil
-
+    from urllib.parse import urlparse, urlunparse, urljoin, splituser, unquote
+    from urllib.request import urlopen, urlretrieve, Request
+    from urllib.error import HTTPError, URLError
+    import http.client as httplib
+    import urllib.request as urllib2
+    import xmlrpc.client as xmlrpclib
 try:
     from platform import python_implementation
 except ImportError:

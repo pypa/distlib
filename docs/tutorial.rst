@@ -111,7 +111,8 @@ or, if you leave out egg-based distributions::
 
 Once you have a :class:`Distribution` instance, you can use it to get more
 information about the distribution. For example, the ``metadata`` attribute
-gives access to the distribution's metadata.
+gives access to the distribution's metadata (see :ref:`use-metadata` for more
+information).
 
 Using the dependency API
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -136,6 +137,13 @@ functions:
 
 The graph returned by :func:`make_graph` is an instance of
 :class:`DependencyGraph`.
+
+.. _use-metadata:
+
+Using the metadata API
+^^^^^^^^^^^^^^^^^^^^^^
+
+TBD
 
 Using the resource API
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -230,7 +238,7 @@ is slightly more involved than just copying files:
   and also in other situations where you may have multiple Python installations
   on a single computer.
 
-* On Windows, on systems where the PEP 397 launcher isn't installed, it is not
+* On Windows, on systems where the :pep:`397` launcher isn't installed, it is not
   easy to ensure that the correct Python interpreter is used for a script. You
   may wish to install native Windows executable launchers which run the correct
   interpreter, based on a shebang line in the script.
