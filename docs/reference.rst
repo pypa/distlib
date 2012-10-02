@@ -6,6 +6,170 @@ API Reference
 This is the place where the functions and classes in ``distlib's`` public API
 are described.
 
+The ``distlib.database`` package
+--------------------------------
+
+Classes
+^^^^^^^
+
+.. class:: DistributionSet
+
+   This class represents a set of distributions which are installed on a Python
+   path (like ``PYTHONPATH`` / ``sys.path``). Both new-style (``distlib``) and
+   legacy (egg) distibutions are catered for.
+
+   Methods:
+
+   .. method:: __init__(path=None, include_egg=False)
+
+      Initialise the instance using a particular path.
+
+      :param path: The path to use when looking for distributions.
+                   If ``None`` is specified, ``sys.path`` is used.
+      :type path: list of str
+      :param include_egg: If ``True``, legacy distributions (eggs)
+                          are included in the search; otherwise,
+                          they aren't.
+
+   .. method:: enable_cache()
+
+      Enables a cache, so that metadata information doesn't have to be fetched
+      from disk. The cache is per instance of the ``DistributionSet`` instance
+      and is enabled by default. It can be disabled using :meth:`disable_cache`
+      and cleared using :meth:`clear_cache` (disabling won't automatically
+      clear it).
+
+   .. method:: disable_cache()
+
+      Disables the cache, but doesn't clear it.
+
+   .. method:: clear_cache()
+
+      Clears the cache, but doesn't change its enabled/disabled status. If
+      enabled, the cache will be re-populated when querying for distributions.
+
+   .. method:: get_distributions()
+
+      The main querying method if you want to look at all the distributions. It
+      returns an iterator which returns :class:`Distribution` and, if
+      ``include_egg`` was specified as ``True`` for the instance, also
+      instances of any :class:`EggInfoDistribution` for any legacy
+      distributions found.
+
+   .. method:: get_distribution(name)
+
+      Looks for a distribution by name. It returns the first one found with
+      that name (there should only be one distribution with a given name on a
+      given search path). Returns ``None`` if no distrubution was found, or
+      else an instance of :class:`Distribution` (or, if ``include_egg`` was
+      specified as ``True`` for the instance, an instance of
+      :class:`EggInfoDistribution` if a legacy distribution was found with that
+      name).
+
+      :param name: The name of the distribution to search for.
+      :type name: str
+
+
+.. class:: Distribution
+
+   A class representing an installed distribution. This class is not
+   instantiated directly, except by packaging tools. Instances of it
+   are returned from querying a :class:`DistributionSet`.
+
+   Properties:
+
+   .. attribute:: name
+
+      The name of the distribution.
+
+   .. attribute:: version
+
+      The version of the distribution.
+
+   .. attribute:: metadata
+
+      The metadata for the distribution. This is a
+      :class:`distlib.metadata.Metadata` instance.
+
+   .. attribute:: requested
+
+      Whether the distribution was installed by user request (if not, it may
+      have been installed as a dependency of some other distribution).
+
+   Methods:
+
+   .. method:: list_installed_files(local=False)
+
+      Returns an iterator over all of the individual files installed as part of
+      the distribution, including metadata files. The iterator returns tuples
+      of the form (path, hash, size). The list of files is written by the
+      installer to the ``RECORD`` metadata file.
+
+      :param local: If ``True``, the paths returned are local absolute paths
+                    (i.e. with platform-specific directory separators as
+                    indicated by ``os.sep``); otherwise, they are the values
+                    stored in the ``RECORD`` metadata file.
+
+   .. method:: list_distinfo_files(local=False)
+
+      Similar to :meth:`list_installed_files`, but only returns metadata files.
+
+      :param local: As for :meth:`list_installed_files`.
+
+   .. method:: check_installed_files()
+
+      Runs over all the installed files to check that the size and checksum are
+      unchanged from the values in the ``RECORD`` file, written when the
+      distribution was installed. It returns a list of mismatches. If the files
+      in the distribution haven't been corrupted , an empty list will be
+      returned; otherwise, a list of mismatches will be returned.
+
+      :returns: A list which, if non-empty, will contain tuples with the
+                following elements:
+
+                * The path in ``RECORD`` which failed to match.
+                * One of the strings 'exists', 'size' or 'hash' according to
+                  what didn't match (existence is checked first, then size,
+                  then hash).
+                * The expected value of what didn't match (as obtained from
+                  ``RECORD``).
+                * The actual value of what didn't match (as obtained from the
+                  file system).
+
+.. class:: EggInfoDistribution
+
+   Analogous to :class:`Distribution`, but covering legacy distributions. This
+   class is not instantiated directly. Instances of it are returned from
+   querying a :class:`DistributionSet`.
+
+   Properties:
+
+   .. attribute:: name
+
+      The name of the distribution.
+
+   .. attribute:: version
+
+      The version of the distribution.
+
+   .. attribute:: metadata
+
+      The metadata for the distribution. This is a
+      :class:`distlib.metadata.Metadata` instance.
+
+   Methods:
+
+   .. method:: list_installed_files(local=False)
+
+      Returns a list all of the individual files installed as part of
+      the distribution.
+
+      :param local: If ``True``, the paths returned are local absolute paths
+                    (i.e. with platform-specific directory separators as
+                    indicated by ``os.sep``).
+
+
+
 The ``distlib.resources`` package
 ---------------------------------
 

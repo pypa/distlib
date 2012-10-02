@@ -303,7 +303,7 @@ class Distribution(object):
     """The version of the distribution."""
 
     metadata = None
-    """A :class:`distutils2.metadata.Metadata` instance loaded with
+    """A :class:`distlib.metadata.Metadata` instance loaded with
     the distribution's ``METADATA`` file."""
 
     requested = False
