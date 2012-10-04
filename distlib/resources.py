@@ -29,7 +29,7 @@ class Cache(object):
             # fail if there's a file with that name
             if not os.path.isdir(base):
                 os.makedirs(base)
-        self.base = base
+        self.base = os.path.abspath(os.path.normpath(base))
 
     def prefix_to_dir(self, prefix):
         d, p = os.path.splitdrive(prefix)
@@ -38,29 +38,27 @@ class Cache(object):
         p = p.replace(os.sep, '--')
         return d + p + '.cache'
 
+    def is_stale(self, resource, path):
+        # Cache invalidation is a hard problem :-)
+        return True
+
     def get(self, resource):
-        prefix = resource.finder.get_container_prefix()
+        prefix, path = resource.finder.get_cache_info(resource)
         if prefix is None:
-            result = resource.path
+            result = path
         else:
-            path = resource.path
-            if not path.startswith(prefix):
-                raise ValueError('Invalid container prefix %r for %r',
-                                 prefix, path)
-            path = path[len(prefix) + 1:]   # add one for the '/'
-            path = os.path.normpath(path)
-            if '.' + os.sep in path:
-                raise ValueError('invalid path: %r' % path)
             result = os.path.join(self.base, self.prefix_to_dir(prefix), path)
             dirname = os.path.dirname(result)
             if not os.path.isdir(dirname):
                 os.makedirs(dirname)
-            # could check here for staleness of existing data, if result
-            # exists
-
-            # write the bytes of the resource to the cache location
-            with open(result, 'wb') as f:
-                f.write(resource.bytes)
+            if not os.path.exists(result):
+                stale = True
+            else:
+                stale = self.is_stale(resource, path)
+            if stale:
+                # write the bytes of the resource to the cache location
+                with open(result, 'wb') as f:
+                    f.write(resource.bytes)
         return result
 
 cache = Cache()
@@ -123,8 +121,8 @@ class ResourceFinder(object):
     def _find(self, path):
         return os.path.exists(path)
 
-    def get_container_prefix(self):
-        return None
+    def get_cache_info(self, resource):
+        return None, resource.path
 
     def find(self, resource_name):
         path = self._make_path(resource_name)
@@ -179,8 +177,10 @@ class ZipResourceFinder(ResourceFinder):
             logger.debug('_find worked: %r %r', path, self.loader.prefix)
         return result
 
-    def get_container_prefix(self):
-        return os.path.abspath(self.loader.archive)
+    def get_cache_info(self, resource):
+        prefix = self.loader.archive
+        path = resource.path[1 + len(prefix):]
+        return prefix, path
 
     def get_bytes(self, resource):
         return self.loader.get_data(resource.path)
