@@ -17,6 +17,54 @@ from .util import cached_property
 
 logger = logging.getLogger(__name__)
 
+class Cache(object):
+    def __init__(self, base=None):
+        if base is None:
+            if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
+                base = os.path.expandvars('$localappdata')
+            else:   #assume posix, or old Windows
+                base = os.path.expanduser('~')
+            base = os.path.join(base, '.distlib', 'resource-cache')
+            # we use 'isdir' instead of 'exists', because we want to
+            # fail if there's a file with that name
+            if not os.path.isdir(base):
+                os.makedirs(base)
+        self.base = base
+
+    def prefix_to_dir(self, prefix):
+        d, p = os.path.splitdrive(prefix)
+        if d:
+            d = d.replace(':', '---')
+        p = p.replace(os.sep, '--')
+        return d + p + '.cache'
+
+    def get(self, resource):
+        prefix = resource.finder.get_container_prefix()
+        if prefix is None:
+            result = resource.path
+        else:
+            path = resource.path
+            if not path.startswith(prefix):
+                raise ValueError('Invalid container prefix %r for %r',
+                                 prefix, path)
+            path = path[len(prefix) + 1:]   # add one for the '/'
+            path = os.path.normpath(path)
+            if '.' + os.sep in path:
+                raise ValueError('invalid path: %r' % path)
+            result = os.path.join(self.base, self.prefix_to_dir(prefix), path)
+            dirname = os.path.dirname(result)
+            if not os.path.isdir(dirname):
+                os.makedirs(dirname)
+            # could check here for staleness of existing data, if result
+            # exists
+
+            # write the bytes of the resource to the cache location
+            with open(result, 'wb') as f:
+                f.write(resource.bytes)
+        return result
+
+cache = Cache()
+
 class Resource(object):
     def __init__(self, finder, name):
         self.finder = finder
@@ -27,6 +75,10 @@ class Resource(object):
             raise DistlibException("A container resource can't be returned as "
                                     "a stream")
         return self.finder.get_stream(self)
+
+    @cached_property
+    def file_path(self):
+        return cache.get(self)
 
     @cached_property
     def bytes(self):
@@ -60,7 +112,8 @@ class ResourceFinder(object):
     def __init__(self, module):
         self.module = module
         self.loader = getattr(module, '__loader__', None)
-        self.base = os.path.dirname(getattr(module, '__file__', ''))
+        self.base = os.path.dirname(os.path.abspath(getattr(module,
+                                                    '__file__', '')))
 
     def _make_path(self, resource_name):
         parts = resource_name.split('/')
@@ -69,6 +122,9 @@ class ResourceFinder(object):
 
     def _find(self, path):
         return os.path.exists(path)
+
+    def get_container_prefix(self):
+        return None
 
     def find(self, resource_name):
         path = self._make_path(resource_name)
@@ -122,6 +178,9 @@ class ZipResourceFinder(ResourceFinder):
         else:
             logger.debug('_find worked: %r %r', path, self.loader.prefix)
         return result
+
+    def get_container_prefix(self):
+        return os.path.abspath(self.loader.archive)
 
     def get_bytes(self, resource):
         return self.loader.get_data(resource.path)

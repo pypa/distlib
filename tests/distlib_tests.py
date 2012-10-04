@@ -9,7 +9,8 @@ from test_markers import MarkersTestCase
 from test_metadata import MetadataTestCase
 from test_database import DataFilesTestCase, TestDatabase, TestDistribution
 from test_depgraph import DepGraphTestCase
-from test_resources import ZipResourceTestCase, FileResourceTestCase
+from test_resources import (ZipResourceTestCase, FileResourceTestCase,
+                            CacheTestCase)
 from test_scripts import ScriptTestCase
 from test_shutil import TestCopyFile, TestMove, TestShutil
 from test_sysconfig import TestSysConfig, MakefileTests

@@ -12,7 +12,7 @@ import sys
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.resources import finder
+from distlib.resources import finder, Cache
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -147,3 +147,39 @@ class FileResourceTestCase(unittest.TestCase):
         self.assertTrue(r.is_container)
         self.assertTrue(r)
         self.assertEqual(r.resources, set(['nested_resource.bin']))
+
+class CacheTestCase(unittest.TestCase):
+    def test_base(self):
+        cache = Cache()
+        if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
+            expected = os.path.expandvars('$localappdata')
+        else:
+            expected = os.path.expanduser('~')
+        expected = os.path.join(expected, '.distlib', 'resource-cache')
+        self.assertEqual(expected, cache.base)
+        self.assertTrue(os.path.isdir(expected))
+
+    def test_filepath(self):
+        path = os.path.join(HERE, 'foo.zip')
+        sys.path.insert(0, path)
+        self.addCleanup(sys.path.remove, path)
+        sys.path.insert(0, HERE)
+        self.addCleanup(sys.path.remove, HERE)
+        path = '%s/lib' % os.path.join(HERE, 'bar.zip')
+        sys.path.insert(0, path)
+        self.addCleanup(sys.path.remove, path)
+
+        cases = (
+            ('foo', 'foo_resource.bin'),
+            ('foo', 'bar/bar_resource.bin'),
+            ('foofoo', 'bar/bar_resource.bin'),
+            ('barbar', 'bar_resource.bin'),
+            ('barbar.baz', 'baz_resource.bin')
+        )
+        for pkg, path in cases:
+            f = finder(pkg)
+            r = f.find(path)
+            fp = r.file_path
+            with open(fp, 'rb') as df:
+                data = df.read()
+            self.assertEqual(data, r.bytes)
