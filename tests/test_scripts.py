@@ -123,6 +123,7 @@ class ScriptTestCase(unittest.TestCase):
         self.assertIn(b'<H3>Current Working Directory:</H3>', stdout)
         self.assertIn(os.getcwd().encode('utf-8'), stdout)
 
+    @unittest.skipUnless(os.name == 'posix', 'Test only valid for POSIX')
     def test_mode(self):
         files = self.maker.make('foo = foo:main')
         self.assertEqual(len(files), 1)
