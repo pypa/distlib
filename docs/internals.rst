@@ -59,6 +59,11 @@ packages, we'll assume that the requirements are as follows:
   in packages contained in .zip files, and third parties should be able to
   extend the facilities to work with other storage formats which support import
   of Python packages.
+* It should be possible to access the contents of any resource through a
+  file on the file system. This is to cater for any external APIs which need to
+  access the resource data as files (examples would be a shared library for
+  linking using ``dlopen()`` on POSIX, or any APIs which need access to
+  resource data via OS-level file handles rather than Python streams.
 
 
 A minimal solution
@@ -203,6 +208,58 @@ What a finder needs to do can be exemplified by the following skeleton for
         def get_resources(self, resource):
             # return the resources contained in this resource as a set of
             # (relative) resource names
+
+
+Dealing with the requirement for access via file system files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To cater for the requirement that the contents of some resources be made
+available via a file on the file system, we'll assume a simple caching
+solution that saves any such resources to a local file system cache, and
+returns the filename of the resource in the cache. We need to divide the
+work between the finder and the cache. We'll deliver the cache function
+through a :class:`Cache` class, which will have the following methods:
+
+* A constructor which takes an optional base directory for the cache. If
+  none is provided, we'll construct a base directory of the form::
+
+  <rootdir>/.distlib/resource-cache
+
+  where ``<rootdir>`` is the user's home directory. On Windows, if the
+  environment specifies a variable named ``LOCALAPPDATA``, its value
+  will be used as ``<rootdir>``; otherwise, the user's home directory
+  will be used.
+
+* A :meth:`get` method which takes a ``Resource`` and returns a file system
+  filename, such that the contents of that named file will be the contents
+  of the resource.
+
+* An :meth:`is_stale` method which takes a ``Resource`` and its corresponding
+  file system filename, and returns whether the file system file is stale
+  when compared with the resource. Knowing that cache invalidation is hard,
+  the default implementation just returns ``True``.
+
+* A :meth:`prefix_to_dir` method which converts a prefix to a directory name.
+  We'll assume that for the cache, a resource path can be divided into two
+  parts: the *prefix* and the *subpath*. For resources in a .zip file, the
+  prefix would be the pathname of the archive, while the subpath would be the
+  path inside the archive. For a file system resource, since it is already in
+  the file system, the prefix would be ``None`` and the subpath would be the
+  absolute path name of the resource. The :meth:`prefix_to_dir` method's job
+  is to convert a prefix (if not ``None``) to a subdirectory in the cache
+  that holds the cached files for all resources with that prefix. We'll
+  delegate the determination of a resource's prefix and subpath to its finder,
+  using a :meth:`get_cache_info` method on finders, which takes a ``Resource``
+  and returns a (``prefix``, ``subpath``) tuple.
+
+  The default implementation will use :func:`os.splitdrive` to see if there's
+  a Windows drive, and convert its ``':'`` to ``'---'``. The rest of the
+  prefix will be converted by replacing ``'/'`` by ``'--'``, and appending
+  ``'.cache'`` to the result.
+
+The cache will be activated when the ``file_path`` property of a ``Resource``
+is accessed. This will be a cached property, and will call the cache's
+:meth:`get` method to obtain the file system path.
 
 
 The ``scripts`` API
