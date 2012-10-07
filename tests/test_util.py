@@ -1,7 +1,7 @@
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.util import get_callable
+from distlib.util import get_callable, resolve
 
 class UtilTestCase(unittest.TestCase):
     def test_callable_format(self):
@@ -33,3 +33,11 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [a,]')
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [a,,b]')
         self.assertRaises(DistlibException, get_callable, 'foo=foo.bar:x [a b]')
+
+    def test_resolve(self):
+        import logging
+        import logging.handlers
+        self.assertIs(resolve('logging', None), logging)
+        self.assertIs(resolve('logging.handlers', None), logging.handlers)
+        self.assertIs(resolve('logging', 'root'), logging.root)
+        self.assertEqual(resolve('logging', 'root.debug'), logging.root.debug)

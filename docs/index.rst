@@ -22,3 +22,6 @@ and consistency of user experience across those tools which use the library.
    tutorial
    internals
    reference
+   migration
+
+

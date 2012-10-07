@@ -175,6 +175,14 @@ The ``distlib.resources`` package
 
 .. currentmodule:: distlib.resources
 
+Attributes
+^^^^^^^^^^
+
+.. attribute:: cache
+
+   An instance of :class:`Cache`, which uses the default base location for the
+   cache (as descibed in the documentation for :meth:`Cache.__init__`).
+
 Functions
 ^^^^^^^^^
 
@@ -245,6 +253,14 @@ Classes
       appropriate thing to do in this package, as a resource is already
       made available to callers either as a stream or a string of bytes.
 
+   .. attribute:: file_path
+
+      This attribute is the same as the path for file-based resource.
+      For resources in a .zip file, the relevant resource is extracted
+      to a file in a cache in the file system, and the name of the cached
+      file is returned. This is for use with APIs that need file names
+      or to be able to access data through OS-level file handles.
+
    Methods:
 
    .. method:: as_stream()
@@ -310,6 +326,49 @@ Classes
 .. class:: ZipResourceFinder
 
    This has the same interface as :class:`ResourceFinder`.
+
+.. class:: Cache
+
+   This class implements a cache for resources which must be accessible as
+   files in the file system.
+
+   .. method:: __init__(base=None)
+
+      Initialise a cache instance with a specific directory which holds the
+      cache. If ``base`` is specified but does not exist, it is created.
+      If ``base`` is not specified, it defaults to
+      ``os.expanduser('~/.distlib/resource-cache') on
+      POSIX platforms (``os.name == 'posix'``). On Windows, if the environment
+      contains ``LOCALAPPDATA``, the cache will be placed in
+
+          ``os.path.expandvars(r'$localappdata\.distlib\resource-cache')``
+
+      Otherwise, the location will be
+
+          ``os.path.expanduser(r'~\.distlib\resource-cache')``
+
+   .. method:: get(resource)
+
+      Ensures that the resource is available as a file in the file system,
+      and returns the name of that file. This method calls the resource's
+      finder's :meth:`get_cache_info` method.
+
+   .. method:: is_stale(resource, path)
+
+      Returns whether the data in the resource which is cached in the file
+      system is stale compared to the resource's current data. The default
+      implementation returns ``True``, causing the resource's data to be
+      re-written to the file every time.
+
+   .. method:: prefix_to_dir(prefix)
+
+      Converts a prefix for a resource (e.g. the name of its containing
+      .zip) into a directory name in the cache. The following algorithm
+      is used:
+
+      #. On Windows, any ``':'`` in the drive is replaced with ``'---'``.
+      #. Any occurrence of ``os.sep`` is replaced with ``'--'``.
+      #. ``'.cache'`` is appended.
 
 
 The ``distlib.scripts`` package
@@ -442,6 +501,24 @@ Functions
              * the name the callable is bound to
              * a (possibly empty) list of flags.
 
+.. function:: resolve(module_name, dotted_path)
+
+   Given a ``module name`` and a ``dotted_path`` representing an object in that
+   module, resolve the passed parameters to an object and return that object.
+
+   If the module has not already been imported, this function attempts to
+   import it, then access the object represented by ``dotted_path`` in the
+   module's namespace. If ``dotted_path`` is ``None``, the module is returned.
+   If import or attribute access fails, an ``ImportError`` or
+   ``AttributeError`` will be raised.
+
+   :param module_name: The name of a Python module or package, e.g. ``os`` or
+                       ``os.path``.
+   :type module_name: str
+   :param dotted_path: The path of an object expected to be in the module's
+                       namespace, e.g. ``'environ'``, ``'sep'`` or
+                       ``'path.supports_unicode_filenames'``.
+   :type dotted_path: str
 
 Next steps
 ----------

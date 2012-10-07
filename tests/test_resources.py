@@ -47,6 +47,7 @@ class ZipResourceTestCase(unittest.TestCase):
         self.assertTrue(r.is_container)
         self.assertRaises(DistlibException, attrgetter('bytes'), r)
         self.assertRaises(DistlibException, attrgetter('size'), r)
+        self.assertRaises(DistlibException, attrgetter('file_path'), r)
         f = finder('foo.bar')
         r = f.find('bar_resource.bin')
         self.assertTrue(r)

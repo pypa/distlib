@@ -9,6 +9,7 @@ import bisect
 import io
 import logging
 import os
+import shutil
 import sys
 import zipimport
 
@@ -61,6 +62,19 @@ class Cache(object):
                     f.write(resource.bytes)
         return result
 
+    def clear(self):
+        not_removed = []
+        for fn in os.listdir(self.base):
+            fn = os.path.join(self.base, fn)
+            try:
+                if os.path.islink(fn) or os.path.isfile(fn):
+                    os.remove(fn)
+                elif os.path.isdir(fn):
+                    shutil.rmtree(fn)
+            except Exception:
+                not_removed.append(fn)
+        return not_removed
+
 cache = Cache()
 
 class Resource(object):
@@ -76,6 +90,9 @@ class Resource(object):
 
     @cached_property
     def file_path(self):
+        if self.is_container:
+            raise DistlibException("A container resource can't be returned as "
+                                   "a file in the file system")
         return cache.get(self)
 
     @cached_property
