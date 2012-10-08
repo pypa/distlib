@@ -374,6 +374,13 @@ class Distribution(object):
         result = {}
         rf = self.get_distinfo_file('REGISTRY')
         if os.path.exists(rf):
+            result = self.read_registry(rf)
+        return result
+
+    def read_registry(self, filename=None):
+        result = {}
+        rf = filename or self.get_distinfo_file('REGISTRY')
+        if os.path.exists(rf):
             cp = configparser.ConfigParser()
             cp.read(rf)
             for key in cp.sections():
@@ -384,6 +391,23 @@ class Distribution(object):
                     assert entry is not None
                     entries[name] = entry
         return result
+
+    def write_registry(self, registry, filename=None):
+        rf = filename or self.get_distinfo_file('REGISTRY')
+        cp = configparser.ConfigParser()
+        for k, v in registry.items():
+            # TODO check k, v for valid values
+            cp.add_section(k)
+            for entry in v.values():
+                if entry.suffix is None:
+                    s = entry.prefix
+                else:
+                    s = '%s:%s' % (entry.prefix, entry.suffix)
+                if entry.flags:
+                    s = '%s [%s]' % (s, ', '.join(entry.flags))
+                cp.set(k, entry.name, s)
+        with open(rf, 'w') as f:
+            cp.write(f)
 
     def get_resource_path(self, relative_path):
         resources_file = self.open_distinfo_file('RESOURCES',

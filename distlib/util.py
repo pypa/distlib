@@ -236,10 +236,22 @@ class RegistryEntry(object):
         return '<RegistryEntry %s = %s:%s %s>' % (self.name, self.prefix,
                                                   self.suffix, self.flags)
 
+    def __eq__(self, other):
+        if not isinstance(other, RegistryEntry):
+            result = False
+        else:
+            result = (self.name == other.name and
+                      self.prefix == other.prefix and
+                      self.suffix == other.suffix and
+                      self.flags == other.flags)
+        return result
+
+    __hash__ = object.__hash__
+
 
 ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.])+)
                       \s*=\s*(?P<callable>(\w+)([:\.]\w+)*)
-                      \s*(\[(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\])?''',
+                      \s*(\[\s*(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\s*\])?''',
                       re.VERBOSE)
 
 def get_registry_entry(specification):

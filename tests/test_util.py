@@ -21,6 +21,8 @@ class UtilTestCase(unittest.TestCase):
                          'foo', 'foo.bar', 'main', [])
         self.check_entry(get_registry_entry('foo=foo.bar:main [a]'),
                          'foo', 'foo.bar', 'main', ['a'])
+        self.check_entry(get_registry_entry('foo=foo.bar:main [ a ]'),
+                         'foo', 'foo.bar', 'main', ['a'])
         self.check_entry(get_registry_entry('foo=foo.bar:main [a=b, c=d,e, f=g]'),
                          'foo', 'foo.bar', 'main', ['a=b', 'c=d', 'e', 'f=g'])
         self.check_entry(get_registry_entry('foo=foo.bar:main [a=9, 9=8,e, f9=g8]'),

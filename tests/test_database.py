@@ -23,7 +23,7 @@ from distlib.metadata import Metadata
 from distlib.database import (Distribution, EggInfoDistribution,
                               DistributionPath, make_graph,
                               get_required_dists, get_dependent_dists)
-from distlib.util import get_resources_dests
+from distlib.util import get_resources_dests, RegistryEntry
 
 from test_glob import GlobTestCaseBase
 from support import LoggingCatcher, requires_zlib
@@ -587,7 +587,7 @@ class TestDatabase(LoggingCatcher,
         self.assertEqual(entry.suffix, suffix)
         self.assertEqual(entry.flags, flags)
 
-    def test_registry(self):
+    def test_read_registry(self):
         d = DistributionPath().get_distribution('babar')
         r = d.registry
         self.assertIn('foo', r)
@@ -603,6 +603,28 @@ class TestDatabase(LoggingCatcher,
         self.check_entry(e, 'real', 'cgi', 'print_directory', [])
         import cgi
         self.assertIs(e.value, cgi.print_directory)
+
+    def test_write_registry(self):
+        registry = {
+            'foo': {
+                'v1': RegistryEntry('v1', 'p1', 's1', []),
+                'v2': RegistryEntry('v2', 'p2', 's2', ['f2=a', 'g2']),
+            },
+            'bar': {
+                'v3': RegistryEntry('v3', 'p3', 's3', ['f3', 'g3=h']),
+                'v4': RegistryEntry('v4', 'p4', 's4', ['f4', 'g4']),
+            },
+        }
+
+        fd, fn = tempfile.mkstemp()
+        try:
+            os.close(fd)
+            d = DistributionPath().get_distribution('babar')    # any one will do
+            d.write_registry(registry, fn)
+            actual = d.read_registry(fn)
+            self.assertEqual(actual, registry)
+        finally:
+            os.remove(fn)
 
     def test_registry_iteration(self):
         d = DistributionPath()

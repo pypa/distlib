@@ -89,9 +89,8 @@ Distlib currently offers the following features:
 * The package ``distlib.markers``, which implements environment markers as
   defined by :pep:`345`.
 * The package ``distlib.database``, which implements a database of installed
-  distributions, as defined by :pep:`376`.
-* The package ``distlib.depgraph``, which implements distribution dependency
-  graph logic.
+  distributions, as defined by :pep:`376`, and distribution dependency graph
+  logic.
 * The package ``distlib.glob``, which implements globbing functionality
   such as the ability to use ``**`` in patterns to specify recursing into
   subdirectories.

@@ -5,6 +5,8 @@ Distutils2 Contributors
 The Distutils2 project was started by Tarek Ziadé and is currently
 maintained by Éric Araujo.  Many people have contributed to the project.
 
+distlib has started off using some of the code from distutil2.
+
 If you're making a patch, please add your name below in alphabetical order,
 and welcome into the Fellowship of the Packaging!
 
@@ -59,6 +61,7 @@ Thanks to:
 - Julien Miotte
 - Zubin Mithra
 - Derek McTavish Mounce
+- Paul Moore
 - Michael Mulich
 - Louis Munro
 - Gaël Pasgrimaud
