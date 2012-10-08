@@ -100,9 +100,10 @@ in ``distlib``. In cases where the ``pkg_resources`` functions take
 distribution names, in ``distlib`` you get the corresponding
 :class:`Distribution` instance, using::
 
-    dist = dist_set.get_distribution(distname)
+    dist = dist_path.get_distribution(distname)
 
-and then ask that instance for the things you need.
+and then ask that instance (or the ``dist_path`` instance) for the things you
+need.
 
 ``load_entry_point(distname, groupname, name)``
     ``dist.registry[groupname][name].value``
@@ -111,7 +112,7 @@ and then ask that instance for the things you need.
     ``dist.registry[groupname][name]``
 
 ``get_entry_map(distname, groupname=None)``
-    ``dist.registry[groupname]``
+    ``dist.registry`` or ``dist.registry[groupname]``
 
 ``iter_entry_points(groupname, name=None)``
-    ``dist_set.get_registered_entries(groupname, name=None)``
+    ``dist_path.get_registered_entries(groupname, name=None)``
