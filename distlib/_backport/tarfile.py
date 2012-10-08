@@ -357,7 +357,7 @@ class SubsequentHeaderError(HeaderError):
 #---------------------------
 # internal stream interface
 #---------------------------
-class _LowLevelFile:
+class _LowLevelFile(object):
     """Low-level file object. Supports reading and writing.
        It is used instead of a regular file object for streaming
        access.
@@ -381,7 +381,7 @@ class _LowLevelFile:
     def write(self, s):
         os.write(self.fd, s)
 
-class _Stream:
+class _Stream(object):
     """Class that serves as an adapter between TarFile and
        a stream-like object.  The stream-like object only
        needs to have a read() or write() method and is accessed
@@ -613,7 +613,7 @@ class _Stream:
         return buf
 # class _Stream
 
-class _StreamProxy:
+class _StreamProxy(object):
     """Small proxy class that enables transparent compression
        detection for the Stream interface (mode 'r|*').
     """
@@ -637,7 +637,7 @@ class _StreamProxy:
         self.fileobj.close()
 # class StreamProxy
 
-class _BZ2Proxy:
+class _BZ2Proxy(object):
     """Small proxy class that enables external file object
        support for "r:bz2" and "w:bz2" modes. This is actually
        a workaround for a limitation in bz2 module's BZ2File
@@ -700,7 +700,7 @@ class _BZ2Proxy:
 #------------------------
 # Extraction file object
 #------------------------
-class _FileInFile:
+class _FileInFile(object):
     """A thin wrapper around an existing file object that
        provides a part of its data as an individual file
        object.
@@ -775,7 +775,7 @@ class _FileInFile:
 #class _FileInFile
 
 
-class ExFileObject:
+class ExFileObject(object):
     """File-like object for reading an archive member.
        Is returned by TarFile.extractfile().
     """
@@ -916,7 +916,7 @@ class ExFileObject:
 #------------------
 # Exported Classes
 #------------------
-class TarInfo:
+class TarInfo(object):
     """Informational class which holds the details about an
        archive member given by a tar header block.
        TarInfo objects are returned by TarFile.getmember(),
@@ -1573,7 +1573,7 @@ class TarInfo:
         return self.type in (CHRTYPE, BLKTYPE, FIFOTYPE)
 # class TarInfo
 
-class TarFile:
+class TarFile(object):
     """The TarFile Class provides an interface to tar archives.
     """
 
@@ -2546,7 +2546,7 @@ class TarFile:
             self.closed = True
 # class TarFile
 
-class TarIter:
+class TarIter(object):
     """Iterator Class.
 
        for tarinfo in TarFile(...):

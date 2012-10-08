@@ -42,7 +42,7 @@ def switch_index_if_fails(func, wrapper):
     return decorator
 
 
-class ClientWrapper:
+class ClientWrapper(object):
     """Wrapper around simple and xmlrpc clients,
 
     Choose the best implementation to use depending the needs, using the given

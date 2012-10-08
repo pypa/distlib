@@ -388,7 +388,7 @@ class MockDist(object):
         }
 
 
-class XMLRPCMockIndex:
+class XMLRPCMockIndex(object):
     """Mock XMLRPC server"""
 
     def __init__(self, dists=[]):
