@@ -16,12 +16,10 @@ and consistency of user experience across those tools which use the library.
 **Please note:** this documentation is *work in progress*.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
 
    overview
    tutorial
    internals
    reference
    migration
-
-

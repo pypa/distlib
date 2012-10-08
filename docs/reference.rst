@@ -96,6 +96,11 @@ Classes
       Whether the distribution was installed by user request (if not, it may
       have been installed as a dependency of some other distribution).
 
+   .. attribute:: registry
+
+      The distribution's registry, as described in :ref:`dist-registry`. This
+      is a cached property.
+
    Methods:
 
    .. method:: list_installed_files(local=False)
@@ -135,6 +140,37 @@ Classes
                   ``RECORD``).
                 * The actual value of what didn't match (as obtained from the
                   file system).
+
+   .. method:: read_registry(filename=None)
+
+      Read registry information from a file.
+
+      Normal access to a distribution's registry should be through its
+      :attr:`registry` attribute. This method is called from there as needed.
+      If no filename is specified, the ``REGISTRY`` file in the ``.dist-info``
+      directory is read (it is expected to be present).
+
+      :param filename: The filename to read from, or ``None`` to read from the
+                       default location.
+      :type filename: str
+      :returns: The registry read from the file.
+      :rtype: dict
+
+   .. method:: write_registry(registry, filename=None)
+
+      Write registry information to a file.
+
+      If no filename is specified, the ``REGISTRY`` file in the ``.dist-info``
+      directory is written.
+
+      :param registry: A dictionary whose keys are categories and whose values
+                       are dictionaries which contain :class:`RegistryEntry`
+                       instances keyed on their name.
+      :type registry: dict
+      :param filename: The filename to read from, or ``None`` to read from the
+                       default location.
+      :type filename: str
+
 
 .. class:: EggInfoDistribution
 
