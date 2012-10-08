@@ -83,12 +83,12 @@ The ``pkg_resources`` entry point API
 
 Entry points in ``pkg_resources`` are equivalent to a per-distribution registry
 (see :ref:`dist-registry`). The keys to the registry are just names in a
-hierarchical namespace delineated with periods (like Python packages, so we'll
-refer to them as *pkgnames* in the following discussion). These keys are called
-*groups* in ``pkg_resources`` documentation, though that term is a little
-ambiguous. In Eclipse, for example, they are called *extension point IDs*,
-which is a little closer to the intended usage, but a bit of a mouthful.
-In ``distlib``, we'll use the term ``category`` or ``registry category``.
+hierarchical namespace delineated with periods (like Python packages). These
+keys are called *groups* in ``pkg_resources`` documentation, though that term
+is a little ambiguous. In Eclipse, for example, they are called *extension
+point IDs*, which is a little closer to the intended usage, but a bit of a
+mouthful. In ``distlib``, we'll use the term ``category`` or
+``registry category``.
 
 In ``distlib``, the implementation of the registry is slightly different from
 that of ``pkg_resources``. A :class:`Distribution` instance has a ``registry``
