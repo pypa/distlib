@@ -259,14 +259,13 @@ def get_required_dists(dists, dist):
 
 
 def main():
-    # XXX move to run._graph
-    from .database import DistributionSet
+    from .database import DistributionPath
     tempout = StringIO()
     try:
         old = sys.stderr
         sys.stderr = tempout
         try:
-            d = DistributionSet(include_egg=True)
+            d = DistributionPath(include_egg=True)
             dists = list(d.get_distributions())
             graph = make_graph(dists)
         finally:

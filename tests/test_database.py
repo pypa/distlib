@@ -18,7 +18,8 @@ from distlib import DistlibException
 from distlib.compat import text_type, file_type
 import distlib.database
 from distlib.metadata import Metadata
-from distlib.database import Distribution, EggInfoDistribution, DistributionSet
+from distlib.database import (Distribution, EggInfoDistribution,
+                              DistributionPath)
 from distlib.util import get_resources_dests
 
 from test_glob import GlobTestCaseBase
@@ -238,7 +239,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         self.assertFalse(dist.uses(false_path), 'dist %r is not supposed to '
                          'use %r' % (dist, true_path))
 
-    def test_get_distinfo_file(self):
+    def test_open_distinfo_file(self):
         # Test the retrieval of dist-info file objects.
         distinfo_name = 'choxie-2.0.0.9'
         other_distinfo_name = 'grammar-1.0a4'
@@ -255,7 +256,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         ]
 
         for distfile in distinfo_files:
-            value = dist.get_distinfo_file(distfile)
+            value = dist.open_distinfo_file(distfile)
             try:
                 self.assertIsInstance(value, file_type)
                 # Is it the correct file?
@@ -268,7 +269,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         other_distinfo_file = os.path.join(
             self.fake_dists_path, other_distinfo_name + '.dist-info',
             'REQUESTED')
-        self.assertRaises(DistlibException, dist.get_distinfo_file,
+        self.assertRaises(DistlibException, dist.open_distinfo_file,
                           other_distinfo_file)
         # Test for a file that should not exist
         self.assertRaises(DistlibException, dist.get_distinfo_file,
@@ -341,7 +342,7 @@ class TestDatabase(LoggingCatcher,
 
     def test_caches(self):
         # sanity check for internal caches
-        d = DistributionSet()
+        d = DistributionPath()
         for name in ('_cache', '_cache_egg'):
             self.assertEqual(getattr(d, name).name, {})
             self.assertEqual(getattr(d, name).path, {})
@@ -364,7 +365,7 @@ class TestDatabase(LoggingCatcher,
 
         # Loop through the items to validate the results
         for name, version, standard_dirname in items:
-            dirname = DistributionSet.distinfo_dirname(name, version)
+            dirname = DistributionPath.distinfo_dirname(name, version)
             self.assertEqual(dirname, standard_dirname)
 
     @requires_zlib
@@ -380,8 +381,8 @@ class TestDatabase(LoggingCatcher,
 
         all_dists = non_egg_dists + egg_dists
 
-        d = DistributionSet()
-        ed = DistributionSet(include_egg=True)
+        d = DistributionPath()
+        ed = DistributionPath(include_egg=True)
 
         cases = ((d, non_egg_dists, (Distribution,)),
                  (ed, all_dists, (Distribution, EggInfoDistribution)))
@@ -410,8 +411,8 @@ class TestDatabase(LoggingCatcher,
         # Test the lookup of the towel-stuff distribution
         name = 'towel-stuff'  # Note: This is different from the directory name
 
-        d = DistributionSet()
-        ed = DistributionSet(include_egg=True)
+        d = DistributionPath()
+        ed = DistributionPath(include_egg=True)
 
         # Lookup the distribution
         dist = d.get_distribution(name)
@@ -444,7 +445,7 @@ class TestDatabase(LoggingCatcher,
         name = 'towel_stuff-0.1'
         path = os.path.join(self.fake_dists_path, name,
                             'towel_stuff', '__init__.py')
-        d = DistributionSet()
+        d = DistributionPath()
         for dist in d.get_file_users(path):
             self.assertIsInstance(dist, Distribution)
             self.assertEqual(dist.name, name)
@@ -454,8 +455,8 @@ class TestDatabase(LoggingCatcher,
         # Test for looking up distributions by what they provide
         checkLists = lambda x, y: self.assertEqual(sorted(x), sorted(y))
 
-        d = DistributionSet()
-        ed = DistributionSet(include_egg=True)
+        d = DistributionPath()
+        ed = DistributionPath(include_egg=True)
 
         l = [dist.name for dist in d.provides_distribution('truffles')]
         checkLists(l, ['choxie', 'towel-stuff'])
@@ -515,8 +516,8 @@ class TestDatabase(LoggingCatcher,
         # Test looking for distributions based on what they obsolete
         checkLists = lambda x, y: self.assertEqual(sorted(x), sorted(y))
 
-        d = DistributionSet()
-        ed = DistributionSet(include_egg=True)
+        d = DistributionPath()
+        ed = DistributionPath(include_egg=True)
 
         l = [dist.name for dist in d.obsoletes_distribution('truffles', '1.0')]
         checkLists(l, [])
@@ -551,29 +552,51 @@ class TestDatabase(LoggingCatcher,
         dists = [('choxie', '2.0.0.9'), ('grammar', '1.0a4'),
                  ('towel-stuff', '0.1'), ('babar', '0.1')]
 
-        d = DistributionSet(include_egg=False)
+        d = DistributionPath(include_egg=False)
         d._include_dist = False
         checkLists([], d._yield_distributions())
 
-        d = DistributionSet(include_egg=True)
+        d = DistributionPath(include_egg=True)
         d._include_dist = False
         found = [(dist.name, dist.version)
                  for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(eggs, found)
 
-        d = DistributionSet()
+        d = DistributionPath()
         found = [(dist.name, dist.version)
                  for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(dists, found)
 
-        d = DistributionSet(include_egg=True)
+        d = DistributionPath(include_egg=True)
         found = [(dist.name, dist.version)
                  for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(dists + eggs, found)
 
+    def check_entry(self, entry, name, prefix, suffix, flags):
+        self.assertEqual(entry.name, name)
+        self.assertEqual(entry.prefix, prefix)
+        self.assertEqual(entry.suffix, suffix)
+        self.assertEqual(entry.flags, flags)
+
+    def test_registry(self):
+        d = DistributionPath().get_distribution('babar')
+        r = d.registry
+        self.assertIn('foo', r)
+        d = r['foo']
+        self.assertIn('bar', d)
+        self.check_entry(d['bar'], 'bar', 'baz', 'barbaz', ['a=10', 'b'])
+        self.assertIn('bar', r)
+        d = r['bar']
+        self.assertIn('foofoo', d)
+        self.check_entry(d['foofoo'], 'foofoo', 'baz.foo', 'bazbar', [])
+        self.assertIn('real', d)
+        e = d['real']
+        self.check_entry(e, 'real', 'cgi', 'print_directory', [])
+        import cgi
+        self.assertIs(e.value, cgi.print_directory)
 
 class DataFilesTestCase(GlobTestCaseBase):
 
@@ -718,7 +741,7 @@ class DataFilesTestCase(GlobTestCaseBase):
         sys.path.insert(0, temp_site_packages)
 
         # Try to retrieve resources paths and files
-        d = DistributionSet()
+        d = DistributionPath()
         self.assertEqual(d.get_file_path(dist_name, test_path),
                          test_resource_path)
         self.assertRaises(KeyError, d.get_file_path, dist_name,

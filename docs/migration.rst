@@ -81,7 +81,9 @@ finders, to deal with custom requirements which aren't catered for.
 The ``pkg_resources`` entry point API
 -------------------------------------
 
-Entry points in ``pkg_resources`` are equivalent to a registry. The keys to
+Entry points in ``pkg_resources`` are equivalent to a distribution registry.
+
+ The keys to
 the registry are just names in a hierarchical namespace delineated with periods
 (like Python packages, so we'll refer to them as *pkgnames* in the following
 discussion). These keys are called *groups* in ``pkg_resources`` documentation,
@@ -102,11 +104,11 @@ Any installed distribution can offer up values for any extension point ID, and
 a set of distributions (such as the set of installed distributions on
 ``sys.path``) conceptually has an aggregation of these values.
 
+
 In ``distlib``, the implementation of the registry is slightly different from
 that of ``pkg_resources``. A :class:`Distribution` instance has a ``registry``
 attribute, which is a dictionary keyed by extension point ID and whose values
 are :class:`Registry` objects.
-
 
 Here are the ``pkg_resources`` functions, and how to achieve the equivalent
 in ``distlib``. In cases where the ``pkg_resources`` functions take

@@ -11,7 +11,7 @@ import sys
 
 from . import DistlibException
 from .compat import sysconfig, fsencode, detect_encoding
-from .util import FileOperator, get_callable
+from .util import FileOperator, get_registry_entry
 
 logger = logging.getLogger(__name__)
 
@@ -93,16 +93,17 @@ class ScriptMaker(object):
                     'from the script encoding (%r)' % (shebang, encoding))
         return shebang
 
-    def _get_script_text(self, shebang, module, func):
-        return self.script_template % dict(shebang=shebang, module=module,
-                                           func=func)
+    def _get_script_text(self, shebang, entry):
+        return self.script_template % dict(shebang=shebang,
+                                           module=entry.prefix,
+                                           func=entry.suffix)
 
-    def _make_script(self, name, module, func, flags, filenames):
+    def _make_script(self, entry, filenames):
         shebang = self._get_shebang('utf-8').decode('utf-8')
-        if 'gui' in flags and os.name == 'nt':
+        if 'gui' in entry.flags and os.name == 'nt':
             shebang = shebang.replace('python', 'pythonw')
-        script = self._get_script_text(shebang, module, func)
-        outname = os.path.join(self.target_dir, name)
+        script = self._get_script_text(shebang, entry)
+        outname = os.path.join(self.target_dir, entry.name)
         use_launcher = self.add_launchers and os.name == 'nt'
         if use_launcher:
             exename = '%s.exe' % outname
@@ -211,12 +212,11 @@ class ScriptMaker(object):
 
     def make(self, specification):
         filenames = []
-        can_call = get_callable(specification)
-        if can_call is None:
+        entry = get_registry_entry(specification)
+        if entry is None:
             self._copy_script(specification, filenames)
         else:
-            name, module, func, flags = can_call
-            self._make_script(name, module, func, flags, filenames)
+            self._make_script(entry, filenames)
         return filenames
 
     def make_multiple(self, specifications):

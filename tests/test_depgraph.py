@@ -12,7 +12,7 @@ import sys
 from compat import unittest
 
 from distlib.compat import StringIO
-from distlib.database import DistributionSet
+from distlib.database import DistributionPath
 from distlib.depgraph import (make_graph, get_dependent_dists,
                               get_required_dists, main)
 
@@ -43,7 +43,7 @@ class DepGraphTestCase(LoggingCatcher,
 
     def get_dists(self, names, include_egg=False):
         dists = []
-        d = DistributionSet(include_egg=include_egg)
+        d = DistributionPath(include_egg=include_egg)
         for name in names:
             dist = d.get_distribution(name)
             self.assertNotEqual(dist, None)

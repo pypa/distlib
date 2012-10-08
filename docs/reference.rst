@@ -12,7 +12,7 @@ The ``distlib.database`` package
 Classes
 ^^^^^^^
 
-.. class:: DistributionSet
+.. class:: DistributionPath
 
    This class represents a set of distributions which are installed on a Python
    path (like ``PYTHONPATH`` / ``sys.path``). Both new-style (``distlib``) and
@@ -34,7 +34,7 @@ Classes
    .. method:: enable_cache()
 
       Enables a cache, so that metadata information doesn't have to be fetched
-      from disk. The cache is per instance of the ``DistributionSet`` instance
+      from disk. The cache is per instance of the ``DistributionPath`` instance
       and is enabled by default. It can be disabled using :meth:`disable_cache`
       and cleared using :meth:`clear_cache` (disabling won't automatically
       clear it).
@@ -74,7 +74,7 @@ Classes
 
    A class representing an installed distribution. This class is not
    instantiated directly, except by packaging tools. Instances of it
-   are returned from querying a :class:`DistributionSet`.
+   are returned from querying a :class:`DistributionPath`.
 
    Properties:
 
@@ -140,7 +140,7 @@ Classes
 
    Analogous to :class:`Distribution`, but covering legacy distributions. This
    class is not instantiated directly. Instances of it are returned from
-   querying a :class:`DistributionSet`.
+   querying a :class:`DistributionPath`.
 
    Properties:
 
@@ -482,24 +482,55 @@ The ``distlib.util`` package
 .. currentmodule:: distlib.util
 
 
+Classes
+^^^^^^^^
+
+.. class:: RegistryEntry
+
+   Attributes:
+
+   A class holding information about a registry entry.
+
+   .. attribute:: name
+
+      The name of the entry.
+
+   .. attribute:: prefix
+
+      The prefix part of the entry. For a callable or data item in a module,
+      this is the name of the package or module containing the item.
+
+   .. attribute:: suffix
+
+      The suffix part of the entry. For a callable or data item in a module,
+      this is a dotted path which points to the item in the module.
+
+   .. attribute:: flags
+
+      A list of flags. See :ref:`flag-formats` for more information.
+
+   .. attribute:: value
+
+      The actual value of the entry (a callable or data item in a module, or
+      perhaps just a module). This is a cached property of the instance, and
+      is determined by calling :func:`resolve` with the ``prefix`` and
+      ``suffix`` properties.
+
+
 Functions
 ^^^^^^^^^
 
-.. function:: get_callable(specification)
+.. function:: get_registry_entry(specification)
 
-   Return the callable information from a specification, if it matches the
+   Return a registry entry from a specification, if it matches the
    expected format, or else ``None``.
 
    :param specification: A specification, as documented for the
                          :meth:`distlib.scripts.ScriptMaker.make` method.
    :type specification: str
    :returns: ``None`` if the specification didn't match the expected form
-             for a callable, or else a tuple of::
-
-             * script name in target directory
-             * module name which contains the callable
-             * the name the callable is bound to
-             * a (possibly empty) list of flags.
+             for an entry, or else an instance of :class:`RegistryEntry`
+             holding information about the entry.
 
 .. function:: resolve(module_name, dotted_path)
 
@@ -519,6 +550,8 @@ Functions
                        namespace, e.g. ``'environ'``, ``'sep'`` or
                        ``'path.supports_unicode_filenames'``.
    :type dotted_path: str
+
+
 
 Next steps
 ----------

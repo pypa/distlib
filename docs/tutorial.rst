@@ -37,7 +37,7 @@ You can use the ``distlib.database`` package to access information about
 installed distributions. This information is available through the
 following classes:
 
-* :class:`DistributionSet`, which represents a set of distributions installed
+* :class:`DistributionPath`, which represents a set of distributions installed
   on a path.
 
 * :class:`Distribution`, which represents an individual distribution,
@@ -48,11 +48,11 @@ following classes:
 
 The :class:`Distribution` and :class:`EggInfoDistribution` classes are normally
 not instantiated directly; rather, they are returned by querying
-:class:`DistributionSet` for distributions. To create a ``DistributionSet``
+:class:`DistributionPath` for distributions. To create a ``DistributionPath``
 instance, you can do ::
 
-    >>> from distlib.database import DistributionSet
-    >>> distset = DistributionSet()
+    >>> from distlib.database import DistributionPath
+    >>> distset = DistributionPath()
 
 In this most basic form, ``distset`` will provide access to all non-legacy
 distributions on ``sys.path``. To get these distributions, you invoke the
@@ -65,10 +65,10 @@ distributions on ``sys.path``. To get these distributions, you invoke the
 This may seem surprising, but that's only because, if you've just started
 looking at ``distlib``, you won't *have* any non-legacy distributions. To include
 distributions created and installed using ``setuptools`` or ``distribute``, you
-need to create the ``DistributionSet`` by specifying an additional keyword
+need to create the ``DistributionPath`` by specifying an additional keyword
 argument, like so::
 
-    >>> distset = DistributionSet(include_egg=True)
+    >>> distset = DistributionPath(include_egg=True)
 
 and then you'll get a less surprising result::
 
@@ -84,10 +84,10 @@ method::
     >>>
 
 If you want to look at a specific path other than ``sys.path``, you specify it as a
-positional argument to the :class:`DistributionSet` constructor::
+positional argument to the :class:`DistributionPath` constructor::
 
     >>> from pprint import pprint
-    >>> special_dists = DistributionSet(['tests/fake_dists'], include_egg=True)
+    >>> special_dists = DistributionPath(['tests/fake_dists'], include_egg=True)
     >>> pprint([d.name for d in special_dists.get_distributions()])
     ['babar',
      'choxie',
@@ -104,7 +104,7 @@ positional argument to the :class:`DistributionSet` constructor::
 
 or, if you leave out egg-based distributions::
 
-    >>> special_dists = DistributionSet(['tests/fake_dists'])
+    >>> special_dists = DistributionPath(['tests/fake_dists'])
     >>> pprint([d.name for d in special_dists.get_distributions()])
     ['babar', 'choxie', 'towel-stuff', 'grammar']
     >>>
@@ -113,6 +113,59 @@ Once you have a :class:`Distribution` instance, you can use it to get more
 information about the distribution. For example, the ``metadata`` attribute
 gives access to the distribution's metadata (see :ref:`use-metadata` for more
 information).
+
+.. _dist-registry:
+
+The distribution registry
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each distribution has a *registry*. The registry is functionally equivalent to
+"entry points" in ``distribute`` / ``setuptools``.
+
+The keys to the registry are just names in a hierarchical namespace delineated
+with periods (like Python packages, so we'll refer to them as *pkgnames* in the
+following discussion). The keys indicate categories of information which the
+distribution's author wishes to publish. In each such category, a distribution
+may publish one or more entries.
+
+The entries can be used for many purposes, and can point to callable code or
+data. A common purpose is for publishing callables in the distribution which
+adhere to a particular protocol.
+
+To give a concrete example, the `Babel <http://babel.edgewall.org/>`_ library
+for internationalisation support provides a mechanism for extracting, from a
+variety of sources, message text to be internationalised. Babel itself provides
+functionality to extract messages from e.g. Python and JavaScript source code,
+but helpfully provides a mechanism whereby providers of other sources of
+message text can provide their own extractors. It does this by providing a
+category ``'babel.extractors'``, under which other software can register
+extractors for their sources. The `Jinja2 <http://jinja2.pocoo.org/>`_ template
+engine, for example, makes use of this to provide a message extractor for
+Jinja2 templates. Babel itself registers its own extractors under the same
+category, so that a unified view of all extractors in a given Python
+environment can be obtained, and Babel's extractors are treated by other parts
+of Babel in exactly the same way as extractors from third parties.
+
+The values associated with a category are a list of strings with the format::
+
+    name = prefix [ ":" suffix ] [ "[" flags "]" ]
+
+where ``name``, ``prefix`` and ``suffix`` are ``pkgnames``, ``suffix`` and
+``flags`` are optional, and ``flags`` follow the description in
+:ref:`flag-formats`.
+
+Any installed distribution can offer up values for any category, and
+a set of distributions (such as the set of installed distributions on
+``sys.path``) conceptually has an aggregation of these values.
+
+For callables, the ``prefix`` is the package or module name which contains the
+callable, ``suffix`` is the path to the callable in the module, and flags can
+be used for any purpose determined by the distribution author (for example, the
+``extras`` feature in ``distribute`` / ``setuptools``).
+
+This entry format is used in the :mod:`distlib.scripts` package for installing
+scripts based on Python callables.
+
 
 Using the dependency API
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -268,6 +321,9 @@ The string passed to make can take one of the following forms:
   (This only applies if ``add_launchers`` is true.)
 
   For more information about flags, see :ref:`flag-formats`.
+
+  Note that this format is exactly the same as for registry entries in a
+  distribution (see :ref:`dist-registry`).
 
   When this form is passed to the :meth:`~distlib.script.ScriptMaker.make`
   method, a Python stub script is created with the appropriate shebang line

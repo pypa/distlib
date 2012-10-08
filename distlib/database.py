@@ -14,20 +14,21 @@ import sys
 import zipimport
 
 from . import DistlibException
-from .compat import StringIO
+from .compat import StringIO, configparser
 from .version import suggest_normalized_version, VersionPredicate
 from .metadata import Metadata
-from .util import parse_requires
+from .util import parse_requires, cached_property, get_registry_entry
 
 
-__all__ = ['Distribution', 'EggInfoDistribution', 'DistributionSet']
+__all__ = ['Distribution', 'EggInfoDistribution', 'DistributionPath']
 
 
 logger = logging.getLogger(__name__)
 
 # TODO update docs
 
-DIST_FILES = ('INSTALLER', 'METADATA', 'RECORD', 'REQUESTED', 'RESOURCES')
+DIST_FILES = ('INSTALLER', 'METADATA', 'RECORD', 'REQUESTED', 'RESOURCES',
+              'REGISTRY')
 
 DISTINFO_EXT = '.dist-info'
 
@@ -47,7 +48,7 @@ class _Cache(object):
             self.path[dist.path] = dist
             self.name.setdefault(dist.name, []).append(dist)
 
-class DistributionSet(object):
+class DistributionPath(object):
     """
     Represents a set of distributions installed on a path (typically sys.path).
     """
@@ -337,7 +338,7 @@ class Distribution(object):
 
     def _get_records(self, local=False):
         results = []
-        record = self.get_distinfo_file('RECORD', preserve_newline=True)
+        record = self.open_distinfo_file('RECORD', preserve_newline=True)
         try:
             record_reader = csv.reader(record, delimiter=',',
                                        lineterminator='\n')
@@ -352,8 +353,24 @@ class Distribution(object):
             record.close()
         return results
 
+    @cached_property
+    def registry(self):
+        result = {}
+        rf = self.get_distinfo_file('REGISTRY')
+        if os.path.exists(rf):
+            cp = configparser.ConfigParser()
+            cp.read(rf)
+            for key in cp.sections():
+                result[key] = entries = {}
+                for name, value in cp.items(key):
+                    s = '%s = %s' % (name, value)
+                    entry = get_registry_entry(s)
+                    assert entry is not None
+                    entries[name] = entry
+        return result
+
     def get_resource_path(self, relative_path):
-        resources_file = self.get_distinfo_file('RESOURCES',
+        resources_file = self.open_distinfo_file('RESOURCES',
                 preserve_newline=True)
         try:
             resources_reader = csv.reader(resources_file, delimiter=',',
@@ -479,7 +496,36 @@ class Distribution(object):
                 return True
         return False
 
-    def get_distinfo_file(self, path, binary=False, preserve_newline=False):
+    def get_distinfo_file(self, path):
+        """
+        Returns a path located under the ``.dist-info`` directory. Returns a
+        string representing the path.
+
+        :parameter path: a ``'/'``-separated path relative to the
+                         ``.dist-info`` directory or an absolute path;
+                         If *path* is an absolute path and doesn't start
+                         with the ``.dist-info`` directory path,
+                         a :class:`DistlibException` is raised
+        :type path: string
+        :rtype: str
+        """
+        # Check if it is an absolute path  # XXX use relpath, add tests
+        if path.find(os.sep) >= 0:
+            # it's an absolute path?
+            distinfo_dirname, path = path.split(os.sep)[-2:]
+            if distinfo_dirname != self.path.split(os.sep)[-1]:
+                raise DistlibException(
+                    'dist-info file %r does not belong to the %r %s '
+                    'distribution' % (path, self.name, self.version))
+
+        # The file must be relative
+        if path not in DIST_FILES:
+            raise DistlibException('invalid path for a dist-info file: %r' %
+                                  path)
+
+        return os.path.join(self.path, path)
+
+    def open_distinfo_file(self, path, binary=False, preserve_newline=False):
         """
         Returns a file located under the ``.dist-info`` directory. Returns a
         ``file`` instance for the file pointed by *path*.
@@ -505,6 +551,7 @@ class Distribution(object):
         # written in UTF8 (see write_installed_files) and that isn't the
         # default on Windows, there is the potential for bugs here with
         # Unicode filenames.
+        path = self.get_distinfo_file(path)
         open_flags = 'r'
 
         nl_arg = {}
@@ -517,21 +564,6 @@ class Distribution(object):
         if binary:
             open_flags += 'b'
 
-        # Check if it is an absolute path  # XXX use relpath, add tests
-        if path.find(os.sep) >= 0:
-            # it's an absolute path?
-            distinfo_dirname, path = path.split(os.sep)[-2:]
-            if distinfo_dirname != self.path.split(os.sep)[-1]:
-                raise DistlibException(
-                    'dist-info file %r does not belong to the %r %s '
-                    'distribution' % (path, self.name, self.version))
-
-        # The file must be relative
-        if path not in DIST_FILES:
-            raise DistlibException('invalid path for a dist-info file: %r' %
-                                  path)
-
-        path = os.path.join(self.path, path)
         return open(path, open_flags, **nl_arg)
 
     def list_distinfo_files(self, local=False):
