@@ -1,0 +1,5 @@
+[foo]
+bar = crunchie
+
+[bar.baz]
+foofoo = ferrero:rocher

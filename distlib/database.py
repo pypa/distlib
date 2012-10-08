@@ -292,6 +292,19 @@ class DistributionPath(object):
             raise LookupError('no distribution named %r found' % name)
         return dist.get_resource_path(relative_path)
 
+    def get_registered_entries(self, category, name=None):
+        for dist in self.get_distributions():
+            r = dist.registry
+            if category in r:
+                d = r[category]
+                if name is not None:
+                    if name in d:
+                        yield d[name]
+                else:
+                    for v in d.values():
+                        yield v
+
+
 class Distribution(object):
     """Created with the *path* of the ``.dist-info`` directory provided to the
     constructor. It reads the metadata contained in ``METADATA`` when it is

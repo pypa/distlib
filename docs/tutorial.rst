@@ -146,6 +146,10 @@ category, so that a unified view of all extractors in a given Python
 environment can be obtained, and Babel's extractors are treated by other parts
 of Babel in exactly the same way as extractors from third parties.
 
+Any installed distribution can offer up values for any category, and a set of
+distributions (such as the set of installed distributions on ``sys.path``)
+conceptually has an aggregation of these values.
+
 The values associated with a category are a list of strings with the format::
 
     name = prefix [ ":" suffix ] [ "[" flags "]" ]

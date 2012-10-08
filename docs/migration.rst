@@ -81,36 +81,21 @@ finders, to deal with custom requirements which aren't catered for.
 The ``pkg_resources`` entry point API
 -------------------------------------
 
-Entry points in ``pkg_resources`` are equivalent to a distribution registry.
-
- The keys to
-the registry are just names in a hierarchical namespace delineated with periods
-(like Python packages, so we'll refer to them as *pkgnames* in the following
-discussion). These keys are called *groups* in ``pkg_resources`` documentation,
-though that term is a little ambiguous. In Eclipse, for example, they are
-called *extension point IDs*, which is a little closer to the intended usage.
-In ``distlib``, we'll use the term ``extension point ID`` for this reason.
-
-The values associated in the registry with an extension point ID are a list of
-strings with the format::
-
-    name = prefix [ ":" suffix ] [ "[" flags "]" ]
-
-where ``name``, ``prefix`` and ``suffix`` are ``pkgnames``, ``suffix`` and
-``flags`` are optional, and ``flags`` follow the description in
-:ref:`flag-formats`.
-
-Any installed distribution can offer up values for any extension point ID, and
-a set of distributions (such as the set of installed distributions on
-``sys.path``) conceptually has an aggregation of these values.
-
+Entry points in ``pkg_resources`` are equivalent to a per-distribution registry
+(see :ref:`dist-registry`). The keys to the registry are just names in a
+hierarchical namespace delineated with periods (like Python packages, so we'll
+refer to them as *pkgnames* in the following discussion). These keys are called
+*groups* in ``pkg_resources`` documentation, though that term is a little
+ambiguous. In Eclipse, for example, they are called *extension point IDs*,
+which is a little closer to the intended usage, but a bit of a mouthful.
+In ``distlib``, we'll use the term ``category`` or ``registry category``.
 
 In ``distlib``, the implementation of the registry is slightly different from
 that of ``pkg_resources``. A :class:`Distribution` instance has a ``registry``
-attribute, which is a dictionary keyed by extension point ID and whose values
-are :class:`Registry` objects.
+attribute, which is a dictionary keyed by category and whose values
+are dictionaries which map names to :class:`RegistryEntry` instances.
 
-Here are the ``pkg_resources`` functions, and how to achieve the equivalent
+Below are the ``pkg_resources`` functions, and how to achieve the equivalent
 in ``distlib``. In cases where the ``pkg_resources`` functions take
 distribution names, in ``distlib`` you get the corresponding
 :class:`Distribution` instance, using::
@@ -120,15 +105,13 @@ distribution names, in ``distlib`` you get the corresponding
 and then ask that instance for the things you need.
 
 ``load_entry_point(distname, groupname, name)``
-    ``dist.registry[groupname].resolve(name)``
+    ``dist.registry[groupname][name].value``
 
 ``get_entry_info(distname, groupname, name)``
-    ``dist.registry[groupname, name]``
+    ``dist.registry[groupname][name]``
 
 ``get_entry_map(distname, groupname=None)``
     ``dist.registry[groupname]``
 
 ``iter_entry_points(groupname, name=None)``
-    ``dist_set.get_registered_entries(groupname)``
-
-
+    ``dist_set.get_registered_entries(groupname, name=None)``

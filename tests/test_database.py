@@ -183,8 +183,10 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
     def setUp(self):
         def get_files(location):
-            for path in ('REQUESTED', 'INSTALLER', 'METADATA'):
-                yield os.path.join(location + '.dist-info', path)
+            for path in ('REQUESTED', 'INSTALLER', 'METADATA', 'REGISTRY'):
+                p = os.path.join(location + '.dist-info', path)
+                if os.path.exists(p):
+                    yield p
             for path, dirs, files in os.walk(location):
                 for f in files:
                     yield os.path.join(path, f)
@@ -588,8 +590,8 @@ class TestDatabase(LoggingCatcher,
         d = r['foo']
         self.assertIn('bar', d)
         self.check_entry(d['bar'], 'bar', 'baz', 'barbaz', ['a=10', 'b'])
-        self.assertIn('bar', r)
-        d = r['bar']
+        self.assertIn('bar.baz', r)
+        d = r['bar.baz']
         self.assertIn('foofoo', d)
         self.check_entry(d['foofoo'], 'foofoo', 'baz.foo', 'bazbar', [])
         self.assertIn('real', d)
@@ -597,6 +599,45 @@ class TestDatabase(LoggingCatcher,
         self.check_entry(e, 'real', 'cgi', 'print_directory', [])
         import cgi
         self.assertIs(e.value, cgi.print_directory)
+
+    def test_registry_iteration(self):
+        d = DistributionPath()
+        expected = set((
+            ('bar', 'baz', 'barbaz', ('a=10', 'b')),
+            ('bar', 'crunchie', None, ()),
+            ('bar', 'towel', 'towel', ()),
+            ('baz', 'towel', 'beach_towel', ()),
+        ))
+        entries = list(d.get_registered_entries('foo'))
+        for e in entries:
+            t = e.name, e.prefix, e.suffix, tuple(e.flags)
+            self.assertIn(t, expected)
+            expected.remove(t)
+        self.assertFalse(expected)   # nothing left
+        expected = set((
+            ('bar', 'baz', 'barbaz', ('a=10', 'b')),
+            ('bar', 'crunchie', None, ()),
+            ('bar', 'towel', 'towel', ()),
+        ))
+        entries = list(d.get_registered_entries('foo', 'bar'))
+        for e in entries:
+            t = e.name, e.prefix, e.suffix, tuple(e.flags)
+            self.assertIn(t, expected)
+            expected.remove(t)
+        self.assertFalse(expected)   # nothing left
+
+        expected = set((
+            ('foofoo', 'baz.foo', 'bazbar', ()),
+            ('real', 'cgi', 'print_directory', ()),
+            ('foofoo', 'ferrero', 'rocher', ()),
+            ('foobar', 'hoopy', 'frood', ('dent',)),
+        ))
+        entries = list(d.get_registered_entries('bar.baz'))
+        for e in entries:
+            t = e.name, e.prefix, e.suffix, tuple(e.flags)
+            self.assertIn(t, expected)
+            expected.remove(t)
+        self.assertFalse(expected)   # nothing left
 
 class DataFilesTestCase(GlobTestCaseBase):
 

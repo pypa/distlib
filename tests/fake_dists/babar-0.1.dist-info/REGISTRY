@@ -1,6 +1,6 @@
 [foo]
 bar = baz:barbaz [a=10, b]
 
-[bar]
+[bar.baz]
 foofoo = baz.foo:bazbar
 real = cgi:print_directory

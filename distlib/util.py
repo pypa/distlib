@@ -232,6 +232,11 @@ class RegistryEntry(object):
     def value(self):
         return resolve(self.prefix, self.suffix)
 
+    def __repr__(self):
+        return '<RegistryEntry %s = %s:%s %s>' % (self.name, self.prefix,
+                                                  self.suffix, self.flags)
+
+
 ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.])+)
                       \s*=\s*(?P<callable>(\w+)([:\.]\w+)*)
                       \s*(\[(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\])?''',
