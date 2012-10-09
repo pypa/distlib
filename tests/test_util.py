@@ -1,7 +1,10 @@
+import os
+
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.util import get_registry_entry, RegistryEntry, resolve
+from distlib.util import (get_registry_entry, RegistryEntry, resolve,
+                          get_cache_base)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -47,3 +50,13 @@ class UtilTestCase(unittest.TestCase):
         self.assertIs(resolve('logging.handlers', None), logging.handlers)
         self.assertIs(resolve('logging', 'root'), logging.root)
         self.assertEqual(resolve('logging', 'root.debug'), logging.root.debug)
+
+    def test_cache_base(self):
+        actual = get_cache_base()
+        if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
+            expected = os.path.expandvars('$localappdata')
+        else:
+            expected = os.path.expanduser('~')
+        expected = os.path.join(expected, '.distlib')
+        self.assertEqual(expected, actual)
+        self.assertTrue(os.path.isdir(expected))

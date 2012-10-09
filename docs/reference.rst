@@ -556,6 +556,20 @@ Classes
 Functions
 ^^^^^^^^^
 
+.. function:: get_cache_base()
+
+   Return the base directory which will hold distlib caches. If the directory
+   does not exist, it is created.
+
+   On Windows, if ``LOCALAPPDATA`` is defined in the environment, then it is
+   assumed to be a directory, and will be the parent directory of the result.
+   On POSIX, and on Windows if ``LOCALAPPDATA`` is not defined, the user's home
+   directory -- as determined using ``os.expanduser('~')`` -- will be the
+   parent directory of the result.
+
+   The result is just the directory ``'.distlib'`` in the parent directory as
+   determined above.
+
 .. function:: get_registry_entry(specification)
 
    Return a registry entry from a specification, if it matches the

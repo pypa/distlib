@@ -16,11 +16,13 @@ from compat import unittest
 from distlib.compat import StringIO
 from distlib.metadata import (Metadata, PKG_INFO_PREFERRED_VERSION,
                              MetadataConflictError, MetadataMissingError,
-                             MetadataUnrecognizedVersionError)
+                             MetadataUnrecognizedVersionError, _ATTR2FIELD)
 
 from support import (LoggingCatcher, TempdirManager, EnvironRestorer,
                       requires_docutils)
 
+
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 class MetadataTestCase(LoggingCatcher, TempdirManager,
                        EnvironRestorer, unittest.TestCase):
@@ -39,8 +41,17 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
     ####  Test various methods of the Metadata class
 
+    def get_file_contents(self, name):
+        name = os.path.join(HERE, name)
+        f = codecs.open(name, 'r', encoding='utf-8')
+        try:
+            contents = f.read() % sys.platform
+        finally:
+            f.close()
+        return contents
+
     def test_instantiation(self):
-        PKG_INFO = os.path.join(os.path.dirname(__file__), 'PKG-INFO')
+        PKG_INFO = os.path.join(HERE, 'PKG-INFO')
         f = codecs.open(PKG_INFO, 'r', encoding='utf-8')
         try:
             contents = f.read()
@@ -73,12 +84,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
     def test_metadata_markers(self):
         # see if we can be platform-aware
-        PKG_INFO = os.path.join(os.path.dirname(__file__), 'PKG-INFO')
-        f = codecs.open(PKG_INFO, 'r', encoding='utf-8')
-        try:
-            content = f.read() % sys.platform
-        finally:
-            f.close()
+        content = self.get_file_contents('PKG-INFO')
         metadata = Metadata(platform_dependent=True)
 
         metadata.read_file(StringIO(content))
@@ -95,12 +101,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(metadata['Requires-Dist'], ['foo'])
 
     def test_mapping_api(self):
-        PKG_INFO = os.path.join(os.path.dirname(__file__), 'PKG-INFO')
-        f = codecs.open(PKG_INFO, 'r', encoding='utf-8')
-        try:
-            content = f.read() % sys.platform
-        finally:
-            f.close()
+        content = self.get_file_contents('PKG-INFO')
         metadata = Metadata(fileobj=StringIO(content))
         self.assertIn('Version', metadata.keys())
         self.assertIn('0.5', metadata.values())
@@ -116,6 +117,12 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(len(self.get_logs()), 1)
 
         self.assertEqual(list(metadata), metadata.keys())
+
+    def test_attribute_access(self):
+        content = self.get_file_contents('PKG-INFO')
+        metadata = Metadata(fileobj=StringIO(content))
+        for attr in _ATTR2FIELD:
+            self.assertEqual(getattr(metadata, attr), metadata[attr])
 
     def test_read_metadata(self):
         fields = {'name': 'project',
@@ -184,7 +191,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
             fp.close()
 
     def test_metadata_read_write(self):
-        PKG_INFO = os.path.join(os.path.dirname(__file__), 'PKG-INFO')
+        PKG_INFO = os.path.join(HERE, 'PKG-INFO')
         metadata = Metadata(PKG_INFO)
         out = StringIO()
         metadata.write_file(out)
@@ -308,13 +315,11 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         metadata.set_metadata_version()
         self.assertEqual(metadata['Metadata-Version'], '1.2')
 
-        PKG_INFO = os.path.join(os.path.dirname(__file__),
-                                'SETUPTOOLS-PKG-INFO')
+        PKG_INFO = os.path.join(HERE, 'SETUPTOOLS-PKG-INFO')
         metadata = Metadata(PKG_INFO)
         self.assertEqual(metadata['Metadata-Version'], '1.1')
 
-        PKG_INFO = os.path.join(os.path.dirname(__file__),
-                                'SETUPTOOLS-PKG-INFO2')
+        PKG_INFO = os.path.join(HERE, 'SETUPTOOLS-PKG-INFO2')
         metadata = Metadata(PKG_INFO)
         self.assertEqual(metadata['Metadata-Version'], '1.1')
 
@@ -339,17 +344,12 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertIn('not a valid version', logs[0])
 
     def test_description(self):
-        PKG_INFO = os.path.join(os.path.dirname(__file__), 'PKG-INFO')
-        f = codecs.open(PKG_INFO, 'r', encoding='utf-8')
-        try:
-            content = f.read() % sys.platform
-        finally:
-            f.close()
+        content = self.get_file_contents('PKG-INFO')
         metadata = Metadata()
         metadata.read_file(StringIO(content))
 
         # see if we can read the description now
-        DESC = os.path.join(os.path.dirname(__file__), 'LONG_DESC.txt')
+        DESC = os.path.join(HERE, 'LONG_DESC.txt')
         f = open(DESC)
         try:
             wanted = f.read()

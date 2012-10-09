@@ -13,6 +13,7 @@ from compat import unittest
 
 from distlib import DistlibException
 from distlib.resources import finder, Cache
+from distlib.util import get_cache_base
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -152,11 +153,7 @@ class FileResourceTestCase(unittest.TestCase):
 class CacheTestCase(unittest.TestCase):
     def test_base(self):
         cache = Cache()
-        if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
-            expected = os.path.expandvars('$localappdata')
-        else:
-            expected = os.path.expanduser('~')
-        expected = os.path.join(expected, '.distlib', 'resource-cache')
+        expected = os.path.join(get_cache_base(), 'resource-cache')
         self.assertEqual(expected, cache.base)
         self.assertTrue(os.path.isdir(expected))
 
@@ -177,6 +174,7 @@ class CacheTestCase(unittest.TestCase):
             ('barbar', 'bar_resource.bin'),
             ('barbar.baz', 'baz_resource.bin')
         )
+
         for pkg, path in cases:
             f = finder(pkg)
             r = f.find(path)

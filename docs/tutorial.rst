@@ -46,40 +46,50 @@ following classes:
 * :class:`EggInfoDistribution`, which represents a legacy distribution in
   egg format.
 
+Distribution paths
+~~~~~~~~~~~~~~~~~~
+
 The :class:`Distribution` and :class:`EggInfoDistribution` classes are normally
 not instantiated directly; rather, they are returned by querying
 :class:`DistributionPath` for distributions. To create a ``DistributionPath``
 instance, you can do ::
 
     >>> from distlib.database import DistributionPath
-    >>> distset = DistributionPath()
+    >>> dist_path = DistributionPath()
 
-In this most basic form, ``distset`` will provide access to all non-legacy
+Querying a path for distributions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this most basic form, ``dist_path`` will provide access to all non-legacy
 distributions on ``sys.path``. To get these distributions, you invoke the
 :meth:`get_distributions` method, which returns an iterable. Let's try it::
 
-    >>> list(distset.get_distributions())
+    >>> list(dist_path.get_distributions())
     []
     >>>
 
 This may seem surprising, but that's only because, if you've just started
-looking at ``distlib``, you won't *have* any non-legacy distributions. To include
-distributions created and installed using ``setuptools`` or ``distribute``, you
-need to create the ``DistributionPath`` by specifying an additional keyword
-argument, like so::
+looking at ``distlib``, you won't *have* any non-legacy distributions.
 
-    >>> distset = DistributionPath(include_egg=True)
+Including legacy distributions in the search results
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To include distributions created and installed using ``setuptools`` or
+``distribute``, you need to create the ``DistributionPath`` by specifying an
+additional keyword argument, like so::
+
+    >>> dist_path = DistributionPath(include_egg=True)
 
 and then you'll get a less surprising result::
 
-    >>> len(list(distset.get_distributions()))
+    >>> len(list(dist_path.get_distributions()))
     77
 
 The exact number returned will be different for you, of course. You can ask
 for a particular distribution by name, using the :meth:`get_distribution`
 method::
 
-    >>> distset.get_distribution('setuptools')
+    >>> dist_path.get_distribution('setuptools')
     <EggInfoDistribution u'setuptools' 0.6c11 at '/usr/lib/python2.7/dist-packages/setuptools.egg-info'>
     >>>
 
@@ -108,6 +118,9 @@ or, if you leave out egg-based distributions::
     >>> pprint([d.name for d in special_dists.get_distributions()])
     ['babar', 'choxie', 'towel-stuff', 'grammar']
     >>>
+
+Distribution properties
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Once you have a :class:`Distribution` instance, you can use it to get more
 information about the distribution. For example, the ``metadata`` attribute
@@ -219,6 +232,9 @@ which contains data alongside Python code::
     └── nested
         └── nested_resource.bin
 
+Access to resources in the file system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 You can access these resources like so::
 
     >>> from distlib.resources import finder
@@ -252,7 +268,10 @@ You can access these resources like so::
     b'data\n'
     >>>
 
-This works the same if the package is in a .zip file. Given the zip file
+Access to resources in the ``.zip`` files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It works the same way if the package is in a .zip file. Given the zip file
 ``foo.zip``::
 
     $ unzip -l foo.zip
@@ -300,6 +319,9 @@ is slightly more involved than just copying files:
   may wish to install native Windows executable launchers which run the correct
   interpreter, based on a shebang line in the script.
 
+Specifying scripts to install
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 To install scripts, create a :class:`~distlib.scripts.ScriptMaker` instance,
 giving it
 the source and target directories for scripts::
@@ -333,6 +355,9 @@ The string passed to make can take one of the following forms:
   method, a Python stub script is created with the appropriate shebang line
   and with code to load and call the specified callable with no arguments,
   returning its value as the return code from the script.
+
+Wrapping callables with scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's see how wrapping a callable works. Consider the following file::
 

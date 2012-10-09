@@ -249,6 +249,25 @@ class RegistryEntry(object):
     __hash__ = object.__hash__
 
 
+class Distribution(object):
+    """
+    A base class for distributions, whether installed or from indexes.
+    Either way, it must have some metadata, so that's all that's needed
+    for construction.
+    """
+
+    def __init__(self, metadata):
+        self.metadata = metadata
+
+    @cached_property
+    def name(self):
+        return self.metadata.name
+
+    @cached_property
+    def version(self):
+        return self.metadata.version
+
+
 ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.])+)
                       \s*=\s*(?P<callable>(\w+)([:\.]\w+)*)
                       \s*(\[\s*(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\s*\])?''',
@@ -282,4 +301,29 @@ def get_registry_entry(specification):
         else:
             flags = [f.strip() for f in flags.split(',')]
         result = RegistryEntry(name, prefix, suffix, flags)
+    return result
+
+def get_cache_base():
+    """
+    Return the default base location for distlib caches. If the directory does
+    not exist, it is created.
+
+    On Windows, if LOCALAPPDATA is defined in the environment, then it is
+    assumed to be a directory, and will be the parent directory of the result.
+    On POSIX, and on Windows if LOCALAPPDATA is not defined, the user's home
+    directory - using os.expanduser('~') - will be the parent directory of
+    the result.
+
+    The result is just the directory '.distlib' in the parent directory as
+    determined above.
+    """
+    if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
+        result = os.path.expandvars('$localappdata')
+    else:   #assume posix, or old Windows
+        result = os.path.expanduser('~')
+    result = os.path.join(result, '.distlib')
+    # we use 'isdir' instead of 'exists', because we want to
+    # fail if there's a file with that name
+    if not os.path.isdir(result):
+        os.makedirs(result)
     return result

@@ -311,6 +311,11 @@ class Metadata(object):
     def _remove_line_prefix(self, value):
         return _LINE_PREFIX.sub('\n', value)
 
+    def __getattr__(self, name):
+        if name in _ATTR2FIELD:
+            return self[name]
+        raise AttributeError(name)
+
     #
     # Public API
     #

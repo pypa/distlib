@@ -20,7 +20,8 @@ from .compat import StringIO, configparser
 from .version import (suggest_normalized_version, VersionPredicate,
                       IrrationalVersionError)
 from .metadata import Metadata
-from .util import parse_requires, cached_property, get_registry_entry
+from .util import (parse_requires, cached_property, get_registry_entry,
+                   Distribution as BaseDistribution)
 
 
 __all__ = ['Distribution', 'EggInfoDistribution', 'DistributionPath']
@@ -308,20 +309,10 @@ class DistributionPath(object):
                         yield v
 
 
-class Distribution(object):
+class Distribution(BaseDistribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
     constructor. It reads the metadata contained in ``METADATA`` when it is
     instantiated."""
-
-    name = ''
-    """The name of the distribution."""
-
-    version = ''
-    """The version of the distribution."""
-
-    metadata = None
-    """A :class:`distlib.metadata.Metadata` instance loaded with
-    the distribution's ``METADATA`` file."""
 
     requested = False
     """A boolean that indicates whether the ``REQUESTED`` metadata file is
@@ -332,13 +323,12 @@ class Distribution(object):
 
     def __init__(self, path, env=None):
         if env and env._cache_enabled and path in env._cache.path:
-            self.metadata = env._cache.path[path].metadata
+            metadata = env._cache.path[path].metadata
         else:
             metadata_path = os.path.join(path, 'METADATA')
-            self.metadata = Metadata(path=metadata_path)
+            metadata = Metadata(path=metadata_path)
 
-        self.name = self.metadata['Name']
-        self.version = self.metadata['Version']
+        super(Distribution, self).__init__(metadata)
         self.path = path
         self.dist_set  = env
 

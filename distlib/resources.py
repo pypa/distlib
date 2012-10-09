@@ -14,18 +14,14 @@ import sys
 import zipimport
 
 from . import DistlibException
-from .util import cached_property
+from .util import cached_property, get_cache_base
 
 logger = logging.getLogger(__name__)
 
 class Cache(object):
     def __init__(self, base=None):
         if base is None:
-            if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
-                base = os.path.expandvars('$localappdata')
-            else:   #assume posix, or old Windows
-                base = os.path.expanduser('~')
-            base = os.path.join(base, '.distlib', 'resource-cache')
+            base = os.path.join(get_cache_base(), 'resource-cache')
             # we use 'isdir' instead of 'exists', because we want to
             # fail if there's a file with that name
             if not os.path.isdir(base):
