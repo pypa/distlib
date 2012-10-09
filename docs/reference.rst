@@ -399,12 +399,8 @@ Classes
    .. method:: prefix_to_dir(prefix)
 
       Converts a prefix for a resource (e.g. the name of its containing
-      .zip) into a directory name in the cache. The following algorithm
-      is used:
-
-      #. On Windows, any ``':'`` in the drive is replaced with ``'---'``.
-      #. Any occurrence of ``os.sep`` is replaced with ``'--'``.
-      #. ``'.cache'`` is appended.
+      .zip) into a directory name in the cache. This implementation
+      delegates the work to :func:`~distlib.util.path_to_cache_dir`.
 
 
 The ``distlib.scripts`` package
@@ -569,6 +565,15 @@ Functions
 
    The result is just the directory ``'.distlib'`` in the parent directory as
    determined above.
+
+.. function:: path_to_cache_dir(path)
+
+   Converts a path (e.g. the name of an archive) into a directory name
+   suitable for use in a cache. The following algorithm is used:
+
+   #. On Windows, any ``':'`` in the drive is replaced with ``'---'``.
+   #. Any occurrence of ``os.sep`` is replaced with ``'--'``.
+   #. ``'.cache'`` is appended.
 
 .. function:: get_registry_entry(specification)
 

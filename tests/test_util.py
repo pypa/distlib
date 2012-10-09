@@ -4,7 +4,7 @@ from compat import unittest
 
 from distlib import DistlibException
 from distlib.util import (get_registry_entry, RegistryEntry, resolve,
-                          get_cache_base)
+                          get_cache_base, path_to_cache_dir)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -60,3 +60,13 @@ class UtilTestCase(unittest.TestCase):
         expected = os.path.join(expected, '.distlib')
         self.assertEqual(expected, actual)
         self.assertTrue(os.path.isdir(expected))
+
+    @unittest.skipIf(os.name != 'posix', 'Test is only valid for POSIX')
+    def test_path_to_cache_dir_posix(self):
+        self.assertEqual(path_to_cache_dir('/home/user/some-file.zip'),
+                        '--home--user--some-file.zip.cache')
+
+    @unittest.skipIf(os.name != 'nt', 'Test is only valid for Windows')
+    def test_path_to_cache_dir_nt(self):
+        self.assertEqual(path_to_cache_dir(r'c:\Users\User\Some-File.zip'),
+                        'c---Users--User--Some-File.zip.cache')

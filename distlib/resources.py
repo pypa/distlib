@@ -14,7 +14,7 @@ import sys
 import zipimport
 
 from . import DistlibException
-from .util import cached_property, get_cache_base
+from .util import cached_property, get_cache_base, path_to_cache_dir
 
 logger = logging.getLogger(__name__)
 
@@ -29,11 +29,7 @@ class Cache(object):
         self.base = os.path.abspath(os.path.normpath(base))
 
     def prefix_to_dir(self, prefix):
-        d, p = os.path.splitdrive(prefix)
-        if d:
-            d = d.replace(':', '---')
-        p = p.replace(os.sep, '--')
-        return d + p + '.cache'
+        return path_to_cache_dir(prefix)
 
     def is_stale(self, resource, path):
         # Cache invalidation is a hard problem :-)

@@ -327,3 +327,19 @@ def get_cache_base():
     if not os.path.isdir(result):
         os.makedirs(result)
     return result
+
+def path_to_cache_dir(path):
+    """
+    Convert an absolute path to a directory name for use in a cache.
+
+    The algorithm used is:
+
+    #. On Windows, any ``':'`` in the drive is replaced with ``'---'``.
+    #. Any occurrence of ``os.sep`` is replaced with ``'--'``.
+    #. ``'.cache'`` is appended.
+    """
+    d, p = os.path.splitdrive(path)
+    if d:
+        d = d.replace(':', '---')
+    p = p.replace(os.sep, '--')
+    return d + p + '.cache'
