@@ -69,4 +69,4 @@ class UtilTestCase(unittest.TestCase):
     @unittest.skipIf(os.name != 'nt', 'Test is only valid for Windows')
     def test_path_to_cache_dir_nt(self):
         self.assertEqual(path_to_cache_dir(r'c:\Users\User\Some-File.zip'),
-                        'c---Users--User--Some-File.zip.cache')
+                        'c-----Users--User--Some-File.zip.cache')
