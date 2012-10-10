@@ -51,7 +51,13 @@ distutils.core.setup(
         'Topic :: Software Development',
     ],
     platforms='any',
-    packages=['distlib'],
+    packages=[
+        'distlib',
+        'distlib.compat',
+        'distlib.util',
+        'distlib.database',
+        'distlib.resources',
+    ],
     cmdclass={
         'test': TestCommand,
     },

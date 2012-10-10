@@ -338,8 +338,28 @@ def path_to_cache_dir(path):
     #. Any occurrence of ``os.sep`` is replaced with ``'--'``.
     #. ``'.cache'`` is appended.
     """
-    d, p = os.path.splitdrive(path)
+    d, p = os.path.splitdrive(os.path.abspath(path))
     if d:
         d = d.replace(':', '---')
     p = p.replace(os.sep, '--')
     return d + p + '.cache'
+
+def ensure_slash(s):
+    if not s.endswith('/'):
+        return s + '/'
+    return s
+
+def parse_credentials(netloc):
+    username = password = None
+    if '@' in netloc:
+        prefix, netloc = netloc.split('@', 1)
+        if ':' not in prefix:
+            username = prefix
+        else:
+            username, password = prefix.split(':', 1)
+    return username, password, netloc
+
+def get_process_umask():
+    result = os.umask(0o22)
+    os.umask(result)
+    return result

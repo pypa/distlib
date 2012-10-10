@@ -4,7 +4,8 @@ from compat import unittest
 
 from distlib import DistlibException
 from distlib.util import (get_registry_entry, RegistryEntry, resolve,
-                          get_cache_base, path_to_cache_dir)
+                          get_cache_base, path_to_cache_dir,
+                          parse_credentials)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -70,3 +71,11 @@ class UtilTestCase(unittest.TestCase):
     def test_path_to_cache_dir_nt(self):
         self.assertEqual(path_to_cache_dir(r'c:\Users\User\Some-File.zip'),
                         'c-----Users--User--Some-File.zip.cache')
+
+    def test_parse_credentials(self):
+        self.assertEqual(parse_credentials('example.com', ),
+                         (None, None, 'example.com'))
+        self.assertEqual(parse_credentials('user@example.com', ),
+                         ('user', None, 'example.com'))
+        self.assertEqual(parse_credentials('user:pwd@example.com', ),
+                         ('user', 'pwd', 'example.com'))
