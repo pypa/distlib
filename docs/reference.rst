@@ -508,6 +508,100 @@ Classes
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
 
+The ``distlib.locators`` package
+--------------------------------
+
+.. currentmodule:: distlib.locators
+
+
+Classes
+^^^^^^^^
+
+.. class:: Locator
+
+   The base class for locators. Implements logic common to multiple locators.
+
+   .. method:: get_project(name)
+
+      This method should be implemented in subclasses. It returns a
+      (potentially empty) dictionary whose keys are the versions located
+      for the project named by ``name``, and whose values are metadata and
+      lists of dictionaries holding information about located archives to
+      download for the corresponding version of the named project. These
+      dictionaries will contain at least an ``url`` key indicating where
+      the distribution archive is to be found, and a ``filename`` key
+      indicating a suitable filename to store the archive locally.
+
+   .. method:: convert_url_to_download_info(url, project_name)
+
+      Extract information from a URL about the name and version of a
+      distribution.
+
+      :param url: The URL potentially of an archive (though it needn't be).
+      :type url: str
+      :param project_name: This must match the project name determined from the
+                           archive (case-insensitive matching is used).
+      :type project_name: str
+      :returns: ``None`` if the URL does not appear to be that of a
+                distribution archive for the named project. Otherwise, a
+                dictionary is returned with the following keys at a minimum:
+
+                * url -- the URL passed in, minus any fragment portion.
+                * filename -- a suitable filename to use for the archive
+                  locally.
+
+                Optional keys returned are:
+
+                * md5_digest -- the MD5 hash of the archive, for verification
+                  after downloading. This is extracted from the fragment
+                  portion, if any, of the passed-in URL.
+      :rtype: dict
+
+
+.. class:: DirectoryLocator
+
+   This locator scans the file system under a base directory, looking for
+   distribution archives.
+
+   .. method:: __init__(base_dir)
+
+      :param base_dir: The base directory to scan for distribution archives.
+      :type base_dir: str
+
+    .. method:: get_project(name)
+
+       See :meth:`Locator.get_project`.
+
+.. class:: PyPIRPCLocator
+
+   This locator uses the PyPI XML-RPC interface to locate distribution
+   archives and other data about downloads.
+
+   .. method:: __init__(url)
+
+      :param url: The base URL to use for the XML-RPC service.
+      :type url: str
+
+    .. method:: get_project(name)
+
+       See :meth:`Locator.get_project`.
+
+
+.. class:: SimpleScrapingLocator
+
+   This locator uses the PyPI 'simple' interface -- a Web scraping interface --
+   to locate distribution archives.
+
+   .. method:: __init__(url)
+
+      :param url: The base URL to use for the simple service HTML pages.
+      :type url: str
+
+    .. method:: get_project(name)
+
+       See :meth:`Locator.get_project`.
+
+
 The ``distlib.util`` package
 -------------------------------
 

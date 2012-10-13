@@ -411,6 +411,127 @@ The other script, ``bar``, is different only in the essentials::
     ---
     >         func = _resolve('foo', 'other_main')
 
+Using the locators API
+^^^^^^^^^^^^^^^^^^^^^^
+
+Locators are a mechanism for finding distributions from a range of sources.
+Although the ``pypi`` subpackage has been copied from ``distutils2`` to
+``distlib``, there may be benefits in a higher-level API, and so the
+``distlib.locators`` package has been created as an experiment. This implements
+*locators* -- objects which locate distributions. A locator instance's
+:meth:`get_project` method is called, passing in a project name: The method
+returns a dictionary containing information about distributions found for that
+project. The keys of the returned dictionary are versions, and the values are
+lists of information pertaining to downloads available for those versions.
+Each element of the list is a dictionary containing information about a
+download. At the very least, there will be a key ``'url'`` which indicates a
+location where an archive of the distribution can be found, and a key
+``'filename'`` which indicates a suitable local filename for the archive.
+
+The following locators are provided:
+
+* :class:`DirectoryLocator` -- this is instantiated with a base directory and
+  will look for archives in the file system tree under that directory. Name
+  and version information is inferred from the filenames of archives, and the
+  amount of information returned about the download is minimal.
+
+* :class:`PyPIRPCLocator`. -- This takes a base URL for the RPC service and
+  will locate packages using PyPI's XML-RPC API. This locator is a little slow
+  (the scraping interface seems to work faster) and case-sensitive. For
+  example, searching for ``'flask'`` will throw up no results, but you get the
+  expected results when searching from ``'Flask'``. This appears to be a
+  limitation of the underlying XML-RPC API. For example, 20 versions of a
+  project necessitate 41 network calls (one to get the versions, and
+  two more for each version -- one to get the metadata, and another to get the
+  downloads information).
+
+* :class:`SimpleScrapingLocator` -- this takes a base URL for the site to
+  scrape, and locates packages using a similar approach to the
+  ``PackageFinder`` class in ``pip``, or as documented in the ``setuptools``
+  documentation as the approach used by ``easy_install``.
+
+An example of usage is given below::
+
+    >>> from distlib.locators import SimpleScrapingLocator
+    >>> from pprint import pprint
+    >>> locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
+    >>> pprint(locator.get_project('python-gnupg'))
+    {'0.2.3': (<Metadata python-gnupg 0.2.3>,
+               [{'filename': 'python-gnupg-0.2.3.tar.gz',
+                 'packagetype': 'sdist',
+                 'python-version': 'source',
+                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.2.3.tar.gz'}]),
+     '0.2.4': (<Metadata python-gnupg 0.2.4>,
+               [{'filename': 'python-gnupg-0.2.4.tar.gz',
+                 'packagetype': 'sdist',
+                 'python-version': 'source',
+                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.2.4.tar.gz'}]),
+     '0.2.9': (<Metadata python-gnupg 0.2.9>,
+               [{'filename': 'python-gnupg-0.2.9.tar.gz',
+                 'packagetype': 'sdist',
+                 'python-version': 'source',
+                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.2.9.tar.gz'}]),
+     '0.3.0': (<Metadata python-gnupg 0.3.0>,
+               [{'filename': 'python-gnupg-0.3.0.tar.gz',
+                 'packagetype': 'sdist',
+                 'python-version': 'source',
+                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.3.0.tar.gz'}]),
+     '0.3.1': (<Metadata python-gnupg 0.3.1>,
+               [{'filename': 'python-gnupg-0.3.1.tar.gz',
+                 'packagetype': 'sdist',
+                 'python-version': 'source',
+                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.3.1.tar.gz'}])}
+    >>>
+
+Now the same project, using the XML-RPC API, is not quite so helpful::
+
+    >>> from distlib.locators import PyPIRPCLocator
+    >>> locator = PyPIRPCLocator('http://python.org/pypi')
+    >>> result = locator.get_project('python-gnupg')
+    >>> pprint(result)
+    {'0.2.3': (<Metadata python-gnupg 0.2.3>, []),
+     '0.2.4': (<Metadata python-gnupg 0.2.4>, []),
+     '0.2.6': (<Metadata python-gnupg 0.2.6>, []),
+     '0.2.7': (<Metadata python-gnupg 0.2.7>, []),
+     '0.2.8': (<Metadata python-gnupg 0.2.8>, []),
+     '0.2.9': (<Metadata python-gnupg 0.2.9>, []),
+     '0.3.0': (<Metadata python-gnupg 0.3.0>, []),
+     '0.3.1': (<Metadata python-gnupg 0.3.1>, [])}
+    >>>
+
+Note that no downloads information is available, because the downloads for this
+project are not hosted on PyPI. However, though the information is not
+available via the XML-RPC ``package_releases`` API, it's available in the
+returned metadata::
+
+    >>> result = locator.get_project('python-gnupg')
+    >>> md = result['0.3.1'][0]
+    >>> md['download_url']
+    'http://python-gnupg.googlecode.com/files/python-gnupg-0.3.1.tar.gz'
+    >>>
+
+
+The Locator API is very bare-bones at the moment, but additional features will
+be added in due course. A very bare-bones command-line script which exercises
+these locators is to be found `here <https://gist.github.com/3886402>`_, and
+feedback will be gratefully received from anyone who tries it out.
+
+None of the locators currently returns enough metadata to allow dependency
+resolution to be carried out, but that is a function of the fact that metadata
+relating to dependencies is not indexed, and would require not just downloading
+the distribution archives and inspection of contained metadata files, but
+potentially also introspecting setup.py! This is the downside of having vital
+information only available via keyword arguments to the :func:`setup` call:
+hopefully, a move to fully declarative metadata will facilitate indexing it and
+allowing the provision of features currently provided by ``setuptools`` (e.g.
+hints for downloads -- ``'dependency _links'``).
+
+The accessors skip binary distributions (``.egg`` files are currently treated
+as binary distributions).
+
+The PyPI accessor classes don't yet support the use of mirrors, but that can be
+added in due course -- once the basic functionality is working satisfactorily.
+
 Next steps
 ----------
 

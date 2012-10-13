@@ -99,6 +99,8 @@ Distlib currently offers the following features:
 * The package ``distlib.scripts``, which allows installing of scripts with
   adjustment of shebang lines and support for native Windows executable
   launchers.
+* The package ``distlib.locators``, which allows finding distributions on
+  PyPI (XML-RPC or via the "simple" interface) or local directories.
 
 Python version and platform compatibility
 -----------------------------------------
@@ -112,7 +114,9 @@ Project status
 --------------
 
 The project has reached alpha status in its development: there is a test
-suite and it has been exercised on Windows, Ubuntu and Mac OS X.
+suite and it has been exercised on Windows, Ubuntu and Mac OS X. No release
+has yet been made: to work with the proejct, you need to clone the source
+repository or download a tarball from it.
 
 The source repository for the project is on BitBucket:
 

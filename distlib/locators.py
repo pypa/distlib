@@ -25,6 +25,9 @@ PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_.-]+)-([0-9][0-9_.-]*)', re.I)
 PYTHON_VERSION = re.compile(r'-py(\d\.?\d?)$')
 
 class Locator(object):
+    def get_project(self, name):
+        raise NotImplementedError('Please implement in the subclass')
+
     def convert_url_to_download_info(self, url, project_name):
         scheme, netloc, path, params, query, frag = urlparse(url)
         result = None
@@ -63,7 +66,7 @@ class Locator(object):
                     break
         return result
 
-    def update_version_data(self, result, info):
+    def _update_version_data(self, result, info):
         name = info.pop('name')
         version = info.pop('version')
         if version in result:
@@ -163,7 +166,7 @@ class SimpleScrapingLocator(Locator):
     def _process_download(self, url):
         info = self.convert_url_to_download_info(url, self.project_name)
         if info:
-            self.update_version_data(self.result, info)
+            self._update_version_data(self.result, info)
         return info
 
     def _fetch(self):
@@ -246,5 +249,5 @@ class DirectoryLocator(Locator):
                     url = pathname2url(os.path.abspath(fn))
                     info = self.convert_url_to_download_info(url, name)
                     if info:
-                        self.update_version_data(result, info)
+                        self._update_version_data(result, info)
         return result
