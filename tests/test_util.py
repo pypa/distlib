@@ -5,7 +5,7 @@ from compat import unittest
 from distlib import DistlibException
 from distlib.util import (get_registry_entry, RegistryEntry, resolve,
                           get_cache_base, path_to_cache_dir,
-                          parse_credentials)
+                          parse_credentials, ensure_slash)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -79,3 +79,9 @@ class UtilTestCase(unittest.TestCase):
                          ('user', None, 'example.com'))
         self.assertEqual(parse_credentials('user:pwd@example.com', ),
                          ('user', 'pwd', 'example.com'))
+
+    def test_ensure_slash(self):
+        self.assertEqual(ensure_slash(''), '/')
+        self.assertEqual(ensure_slash('/'), '/')
+        self.assertEqual(ensure_slash('abc'), 'abc/')
+        self.assertEqual(ensure_slash('def/'), 'def/')

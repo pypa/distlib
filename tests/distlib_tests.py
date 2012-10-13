@@ -19,3 +19,4 @@ from test_pypi_dist import TestDistInfo, TestReleaseInfo, TestReleasesList
 from test_pypi_server import PyPIServerTest
 from test_pypi_simple import SimpleCrawlerTestCase
 from test_pypi_xmlrpc import TestXMLRPCClient
+from test_locators import LocatorTestCase

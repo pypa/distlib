@@ -12,7 +12,7 @@ from .compat import string_types
 __all__ = ['NormalizedVersion', 'suggest_normalized_version',
            'VersionPredicate', 'is_valid_version', 'is_valid_versions',
            'is_valid_predicate', 'IrrationalVersionError',
-           'HugeMajorVersionNumError']
+           'HugeMajorVersionNumError', 'legacy_version_key']
 
 class IrrationalVersionError(Exception):
     """This is an irrational version."""
@@ -471,3 +471,37 @@ def get_version_predicate(requirements):
     if isinstance(requirements, string_types):
         requirements = VersionPredicate(requirements)
     return requirements
+
+_VERSION_PART = re.compile(r'([a-z]+|[\d]+|[\.-])', re.I)
+_VERSION_REPLACE = {
+    'pre':'c',
+    'preview':'c',
+    '-':'final-',
+    'rc':'c',
+    'dev':'@',
+    '': None,
+    '.': None,
+}
+
+
+def legacy_version_key(s):
+    def get_parts(s):
+        result = []
+        for p in _VERSION_PART.split(s.lower()):
+            p = _VERSION_REPLACE.get(p, p)
+            if p:
+                if '0' <= p[:1]  <= '9':
+                    p = p.zfill(8)
+                else:
+                    p = '*' + p
+                result.append(p)
+        result.append('*final')
+        return result
+
+    result = []
+    for p in get_parts(s):
+        if p.startswith('*'):
+            while result and result[-1] == '00000000':
+                result.pop()
+        result.append(p)
+    return tuple(result)
