@@ -422,11 +422,7 @@ Although the ``pypi`` subpackage has been copied from ``distutils2`` to
 :meth:`get_project` method is called, passing in a project name: The method
 returns a dictionary containing information about distributions found for that
 project. The keys of the returned dictionary are versions, and the values are
-lists of information pertaining to downloads available for those versions.
-Each element of the list is a dictionary containing information about a
-download. At the very least, there will be a key ``'url'`` which indicates a
-location where an archive of the distribution can be found, and a key
-``'filename'`` which indicates a suitable local filename for the archive.
+instances of :class:`distlib.util.Distribution`.
 
 The following locators are provided:
 
@@ -455,61 +451,33 @@ An example of usage is given below::
     >>> from distlib.locators import SimpleScrapingLocator
     >>> from pprint import pprint
     >>> locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
-    >>> pprint(locator.get_project('python-gnupg'))
-    {'0.2.3': (<Metadata python-gnupg 0.2.3>,
-               [{'filename': 'python-gnupg-0.2.3.tar.gz',
-                 'packagetype': 'sdist',
-                 'python-version': 'source',
-                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.2.3.tar.gz'}]),
-     '0.2.4': (<Metadata python-gnupg 0.2.4>,
-               [{'filename': 'python-gnupg-0.2.4.tar.gz',
-                 'packagetype': 'sdist',
-                 'python-version': 'source',
-                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.2.4.tar.gz'}]),
-     '0.2.9': (<Metadata python-gnupg 0.2.9>,
-               [{'filename': 'python-gnupg-0.2.9.tar.gz',
-                 'packagetype': 'sdist',
-                 'python-version': 'source',
-                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.2.9.tar.gz'}]),
-     '0.3.0': (<Metadata python-gnupg 0.3.0>,
-               [{'filename': 'python-gnupg-0.3.0.tar.gz',
-                 'packagetype': 'sdist',
-                 'python-version': 'source',
-                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.3.0.tar.gz'}]),
-     '0.3.1': (<Metadata python-gnupg 0.3.1>,
-               [{'filename': 'python-gnupg-0.3.1.tar.gz',
-                 'packagetype': 'sdist',
-                 'python-version': 'source',
-                 'url': 'http://python-gnupg.googlecode.com/files/python-gnupg-0.3.1.tar.gz'}])}
+    >>> result = locator.get_project('python-gnupg')
+    >>> pprint(result)
+    {u'0.2.3': <Distribution python-gnupg (0.2.3) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.3.tar.gz]>,
+     u'0.2.4': <Distribution python-gnupg (0.2.4) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.4.tar.gz]>,
+     u'0.2.9': <Distribution python-gnupg (0.2.9) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.9.tar.gz]>,
+     u'0.3.0': <Distribution python-gnupg (0.3.0) [http://python-gnupg.googlecode.com/files/python-gnupg-0.3.0.tar.gz]>,
+     u'0.3.1': <Distribution python-gnupg (0.3.1) [http://python-gnupg.googlecode.com/files/python-gnupg-0.3.1.tar.gz]>}
     >>>
 
-Now the same project, using the XML-RPC API, is not quite so helpful::
+Now the same project, using the XML-RPC API::
 
     >>> from distlib.locators import PyPIRPCLocator
     >>> locator = PyPIRPCLocator('http://python.org/pypi')
     >>> result = locator.get_project('python-gnupg')
     >>> pprint(result)
-    {'0.2.3': (<Metadata python-gnupg 0.2.3>, []),
-     '0.2.4': (<Metadata python-gnupg 0.2.4>, []),
-     '0.2.6': (<Metadata python-gnupg 0.2.6>, []),
-     '0.2.7': (<Metadata python-gnupg 0.2.7>, []),
-     '0.2.8': (<Metadata python-gnupg 0.2.8>, []),
-     '0.2.9': (<Metadata python-gnupg 0.2.9>, []),
-     '0.3.0': (<Metadata python-gnupg 0.3.0>, []),
-     '0.3.1': (<Metadata python-gnupg 0.3.1>, [])}
+    {'0.2.3': <Distribution python-gnupg (0.2.3) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.3.tar.gz]>,
+     '0.2.4': <Distribution python-gnupg (0.2.4) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.4.tar.gz]>,
+     '0.2.6': <Distribution python-gnupg (0.2.6) [UNKNOWN]>,
+     '0.2.7': <Distribution python-gnupg (0.2.7) [UNKNOWN]>,
+     '0.2.8': <Distribution python-gnupg (0.2.8) [UNKNOWN]>,
+     '0.2.9': <Distribution python-gnupg (0.2.9) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.9.tar.gz]>,
+     '0.3.0': <Distribution python-gnupg (0.3.0) [http://python-gnupg.googlecode.com/files/python-gnupg-0.3.0.tar.gz]>,
+     '0.3.1': <Distribution python-gnupg (0.3.1) [http://python-gnupg.googlecode.com/files/python-gnupg-0.3.1.tar.gz]>}
     >>>
 
-Note that no downloads information is available, because the downloads for this
-project are not hosted on PyPI. However, though the information is not
-available via the XML-RPC ``package_releases`` API, it's available in the
-returned metadata::
-
-    >>> result = locator.get_project('python-gnupg')
-    >>> md = result['0.3.1'][0]
-    >>> md['download_url']
-    'http://python-gnupg.googlecode.com/files/python-gnupg-0.3.1.tar.gz'
-    >>>
-
+The reason why some of the download URLs come up as UNKNOWN is that some of
+the PyPI metadata is incomplete.
 
 The Locator API is very bare-bones at the moment, but additional features will
 be added in due course. A very bare-bones command-line script which exercises

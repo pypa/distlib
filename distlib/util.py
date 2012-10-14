@@ -258,6 +258,8 @@ class Distribution(object):
 
     def __init__(self, metadata):
         self.metadata = metadata
+        self.locator = None
+        self.md5_digest = None
 
     @cached_property
     def name(self):
@@ -267,6 +269,16 @@ class Distribution(object):
     def version(self):
         return self.metadata.version
 
+    @cached_property
+    def download_url(self):
+        return self.metadata.download_url
+
+    def __repr__(self):
+        if self.download_url:
+            suffix = ' [%s]' % self.download_url
+        else:
+            suffix = ''
+        return '<Distribution %s (%s)%s>' % (self.name, self.version, suffix)
 
 ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.])+)
                       \s*=\s*(?P<callable>(\w+)([:\.]\w+)*)

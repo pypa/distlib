@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 EXTENSIONS = tuple(".tar.gz .tar.bz2 .tar .zip .tgz .egg".split())
 MD5_HASH = re.compile('^md5=([a-f0-9]+)$')
-DIST_TYPES = ['bdist', 'sdist']
 CHARSET = re.compile(r';\s*charset\s*=\s*(.*)\s*$', re.I)
 HTML_CONTENT_TYPE = re.compile('text/html|application/xhtml')
 PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_.-]+)-([0-9][0-9_.-]*)', re.I)
@@ -36,7 +35,7 @@ class Locator(object):
             path = filename = posixpath.basename(path)
             for ext in EXTENSIONS:
                 if ext == '.egg':
-                    continue    # for now
+                    continue    # for now, at least
                 if path.endswith(ext):
                     path = path[:-len(ext)]
                     pyver = None
@@ -57,9 +56,10 @@ class Locator(object):
                                 'filename': filename,
                                 'url': urlunparse((scheme, netloc, origpath,
                                                    params, query, '')),
-                                'python-version': pyver or 'source',
-                                'packagetype': 'sdist',
+                                #'packagetype': 'sdist',
                             }
+                            if pyver:
+                                result['python-version'] = pyver
                             m = MD5_HASH.match(frag)
                             if m:
                                 result['md5_digest'] = m.group(1)
@@ -70,16 +70,21 @@ class Locator(object):
         name = info.pop('name')
         version = info.pop('version')
         if version in result:
-            metadata, urls = result[version]
+            dist = result[version]
+            md = dist.metadata
         else:
-            metadata = Metadata()
-            metadata['Name'] = name
-            metadata['Version'] = version
-            if info['python-version'] != 'source':
-                metadata['Requires-Python'] = info['python-version']
-            urls = []
-        urls.append(info)
-        result[version] = (metadata, urls)
+            md = Metadata()
+            md['Name'] = name
+            md['Version'] = version
+            dist = Distribution(md)
+        if 'md5_digest' in info:
+            dist.md5_digest = info['md5_digest']
+        if 'python-version' in info:
+            md['Requires-Python'] = info['python-version']
+        if md['Download-URL'] != info['url']:
+            md['Download-URL'] = info['url']
+        dist.locator = self
+        result[version] = dist
 
 class PyPIRPCLocator(Locator):
     def __init__(self, url):
@@ -94,7 +99,13 @@ class PyPIRPCLocator(Locator):
             data = self.client.release_data(name, v)
             metadata = Metadata()
             metadata.update(data)
-            result[v] = (metadata, urls)
+            dist = Distribution(metadata)
+            if urls:
+                info = urls[0]
+                metadata['Download-URL'] = info['url']
+                if 'md5_digest' in info:
+                    dist.md5_digest = info['md5_digest']
+            result[v] = dist
         return result
 
 class Page(object):
@@ -109,17 +120,14 @@ class Page(object):
         if m:
             self.base_url = m.group(1)
 
-    def _get_link_url(self, url):
-        url = urljoin(self.base_url, url)
-        # do any required cleanup of URL here
-        return url
-
     @cached_property
     def links(self):
         result = set()
         for match in self._href.finditer(self.data):
             url = match.group(1) or match.group(2) or match.group(3)
-            result.add(self._get_link_url(url))
+            url = urljoin(self.base_url, url)
+            # do any required cleanup of URL here (e.g. converting spaces)
+            result.add(url)
         return result
 
 class SimpleScrapingLocator(Locator):
@@ -172,23 +180,23 @@ class SimpleScrapingLocator(Locator):
     def _fetch(self):
         while True:
             url = self._to_fetch.get()
-            if url is None:
-                logger.debug('Sentinel seen, quitting')
-                self._to_fetch.task_done()
-                break
             try:
-                page = self.get_page(url)
-                if page is None:    # e.g. after an error
-                    continue
-                for link in page.links:
-                    if link not in self._seen:
-                        self._seen.add(link)
-                        if (not self._process_download(link) and
-                            url.startswith(self.base_url)):
-                            logger.debug('Queueing %s from %s', link, url)
-                            self._to_fetch.put(link)
+                if url:
+                    page = self.get_page(url)
+                    if page is None:    # e.g. after an error
+                        continue
+                    for link in page.links:
+                        if link not in self._seen:
+                            self._seen.add(link)
+                            if (not self._process_download(link) and
+                                url.startswith(self.base_url)):
+                                logger.debug('Queueing %s from %s', link, url)
+                                self._to_fetch.put(link)
             finally:
                 self._to_fetch.task_done()
+            if not url:
+                logger.debug('Sentinel seen, quitting.')
+                break
 
     def get_page(self, url):
         # http://peak.telecommunity.com/DevCenter/EasyInstall#package-index-api
