@@ -83,7 +83,8 @@ class SimpleCrawlerTestCase(TempdirManager,
         try:
             crawler._open_url(url)
         except Exception as v:
-            self.assertIn('nonnumeric', str(v))
+            s = str(v)
+            self.assertTrue('nonnumeric' in s or ' not known' in s)
 
         # issue #160
         url = server.full_address
