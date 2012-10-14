@@ -133,25 +133,6 @@ class TempdirManager(object):
         finally:
             f.close()
 
-    def create_dist(self, **kw):
-        """Create a stub distribution object and files.
-
-        This function creates a Distribution instance (use keyword arguments
-        to customize it) and a temporary directory with a project structure
-        (currently an empty directory).
-
-        It returns the path to the directory and the Distribution instance.
-        You can use self.write_file to write any file in that
-        directory, e.g. setup scripts or Python modules.
-        """
-        if 'name' not in kw:
-            kw['name'] = 'foo'
-        tmp_dir = self.mkdtemp()
-        project_dir = os.path.join(tmp_dir, kw['name'])
-        os.mkdir(project_dir)
-        dist = Distribution(attrs=kw)
-        return project_dir, dist
-
     def assertIsFile(self, *args):
         path = os.path.join(*args)
         dirname = os.path.dirname(path)

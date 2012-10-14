@@ -20,11 +20,11 @@ from .compat import StringIO, configparser
 from .version import (suggest_normalized_version, VersionPredicate,
                       IrrationalVersionError)
 from .metadata import Metadata
-from .util import (parse_requires, cached_property, get_registry_entry,
-                   Distribution as BaseDistribution)
+from .util import parse_requires, cached_property, get_registry_entry
 
 
-__all__ = ['Distribution', 'EggInfoDistribution', 'DistributionPath']
+__all__ = ['Distribution', 'InstalledDistribution', 'EggInfoDistribution',
+           'DistributionPath']
 
 
 logger = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ class DistributionPath(object):
             for dir in os.listdir(realpath):
                 dist_path = os.path.join(realpath, dir)
                 if self._include_dist and dir.endswith(DISTINFO_EXT):
-                    yield Distribution(dist_path, self)
+                    yield InstalledDistribution(dist_path, self)
                 elif self._include_egg and dir.endswith(('.egg-info',
                                                          '.egg')):
                     yield EggInfoDistribution(dist_path, self)
@@ -113,7 +113,7 @@ class DistributionPath(object):
         gen_egg = self._include_egg and not self._cache_egg.generated
         if gen_dist or gen_egg:
             for dist in self._yield_distributions():
-                if isinstance(dist, Distribution):
+                if isinstance(dist, InstalledDistribution):
                     self._cache.add(dist)
                 else:
                     self._cache_egg.add(dist)
@@ -155,11 +155,11 @@ class DistributionPath(object):
     def get_distributions(self):
         """
         Provides an iterator that looks for ``.dist-info`` directories
-        and returns :class:`Distribution` or :class:`EggInfoDistribution`
-        instances for each one of them.
+        and returns :class:`InstalledDistribution` or
+        :class:`EggInfoDistribution` instances for each one of them.
 
-        :rtype: iterator of :class:`Distribution` and :class:`EggInfoDistribution`
-                instances
+        :rtype: iterator of :class:`InstalledDistribution` and
+                :class:`EggInfoDistribution` instances
         """
         if not self._cache_enabled:
             for dist in _yield_distributions(self):
@@ -182,7 +182,8 @@ class DistributionPath(object):
         This function only returns the first result found, as no more than one
         value is expected. If nothing is found, ``None`` is returned.
 
-        :rtype: :class:`Distribution` or :class:`EggInfoDistribution` or None
+        :rtype: :class:`InstalledDistribution` or :class:`EggInfoDistribution`
+                or ``None``
         """
         result = None
         if not self._cache_enabled:
@@ -282,7 +283,7 @@ class DistributionPath(object):
         :parameter path: can be a local absolute path or a relative
                          ``'/'``-separated path.
         :type path: string
-        :rtype: iterator of :class:`Distribution` instances
+        :rtype: iterator of :class:`InstalledDistribution` instances
         """
         for dist in self.get_distributions():
             if dist.uses(path):
@@ -308,8 +309,38 @@ class DistributionPath(object):
                     for v in d.values():
                         yield v
 
+class Distribution(object):
+    """
+    A base class for distributions, whether installed or from indexes.
+    Either way, it must have some metadata, so that's all that's needed
+    for construction.
+    """
 
-class Distribution(BaseDistribution):
+    def __init__(self, metadata):
+        self.metadata = metadata
+        self.locator = None
+        self.md5_digest = None
+
+    @cached_property
+    def name(self):
+        return self.metadata.name
+
+    @cached_property
+    def version(self):
+        return self.metadata.version
+
+    @cached_property
+    def download_url(self):
+        return self.metadata.download_url
+
+    def __repr__(self):
+        if self.download_url:
+            suffix = ' [%s]' % self.download_url
+        else:
+            suffix = ''
+        return '<Distribution %s (%s)%s>' % (self.name, self.version, suffix)
+
+class InstalledDistribution(Distribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
     constructor. It reads the metadata contained in ``METADATA`` when it is
     instantiated."""
@@ -328,7 +359,7 @@ class Distribution(BaseDistribution):
             metadata_path = os.path.join(path, 'METADATA')
             metadata = Metadata(path=metadata_path)
 
-        super(Distribution, self).__init__(metadata)
+        super(InstalledDistribution, self).__init__(metadata)
         self.path = path
         self.dist_set  = env
 
@@ -336,7 +367,7 @@ class Distribution(BaseDistribution):
             env._cache.add(self)
 
     def __repr__(self):
-        return '<Distribution %r %s at %r>' % (
+        return '<InstalledDistribution %r %s at %r>' % (
             self.name, self.version, self.path)
 
     def __str__(self):
@@ -444,9 +475,9 @@ class Distribution(BaseDistribution):
                        or ``None``. Examples of valid values are ``'sha1'``,
                        ``'sha224'``, ``'sha384'``, '``sha256'``, ``'md5'`` and
                        ``'sha512'``. If no hasher is specified, the ``hasher``
-                       attribute of the :class:`Distribution` instance is used.
-                       If the hasher is determined to be ``None``, MD5 is used
-                       as the hashing algorithm.
+                       attribute of the :class:`InstalledDistribution` instance
+                       is used. If the hasher is determined to be ``None``, MD5
+                       is used as the hashing algorithm.
         :returns: The hash of the data. If a hasher was explicitly specified,
                   the returned hash will be prefixed with the specified hasher
                   followed by '='.
@@ -614,7 +645,8 @@ class Distribution(BaseDistribution):
                 yield path
 
     def __eq__(self, other):
-        return isinstance(other, Distribution) and self.path == other.path
+        return (isinstance(other, InstalledDistribution) and
+                self.path == other.path)
 
     # See http://docs.python.org/reference/datamodel#object.__hash__
     __hash__ = object.__hash__
@@ -759,8 +791,8 @@ class DependencyGraph(object):
     def add_distribution(self, distribution):
         """Add the *distribution* to the graph.
 
-        :type distribution: :class:`distutils2.database.Distribution` or
-                            :class:`distutils2.database.EggInfoDistribution`
+        :type distribution: :class:`distutils2.database.InstalledDistribution`
+                            or :class:`distutils2.database.EggInfoDistribution`
         """
         self.adjacency_list[distribution] = []
         self.reverse_list[distribution] = []
@@ -770,9 +802,9 @@ class DependencyGraph(object):
         """Add an edge from distribution *x* to distribution *y* with the given
         *label*.
 
-        :type x: :class:`distutils2.database.Distribution` or
+        :type x: :class:`distutils2.database.InstalledDistribution` or
                  :class:`distutils2.database.EggInfoDistribution`
-        :type y: :class:`distutils2.database.Distribution` or
+        :type y: :class:`distutils2.database.InstalledDistribution` or
                  :class:`distutils2.database.EggInfoDistribution`
         :type label: ``str`` or ``None``
         """
@@ -785,8 +817,8 @@ class DependencyGraph(object):
         """
         Add a missing *requirement* for the given *distribution*.
 
-        :type distribution: :class:`distutils2.database.Distribution` or
-                            :class:`distutils2.database.EggInfoDistribution`
+        :type distribution: :class:`distutils2.database.InstalledDistribution`
+                            or :class:`distutils2.database.EggInfoDistribution`
         :type requirement: ``str``
         """
         self.missing[distribution].append(requirement)
@@ -852,7 +884,7 @@ def make_graph(dists):
     """Makes a dependency graph from the given distributions.
 
     :parameter dists: a list of distributions
-    :type dists: list of :class:`distutils2.database.Distribution` and
+    :type dists: list of :class:`distutils2.database.InstalledDistribution` and
                  :class:`distutils2.database.EggInfoDistribution` instances
     :rtype: a :class:`DependencyGraph` instance
     """

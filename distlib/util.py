@@ -249,37 +249,6 @@ class RegistryEntry(object):
     __hash__ = object.__hash__
 
 
-class Distribution(object):
-    """
-    A base class for distributions, whether installed or from indexes.
-    Either way, it must have some metadata, so that's all that's needed
-    for construction.
-    """
-
-    def __init__(self, metadata):
-        self.metadata = metadata
-        self.locator = None
-        self.md5_digest = None
-
-    @cached_property
-    def name(self):
-        return self.metadata.name
-
-    @cached_property
-    def version(self):
-        return self.metadata.version
-
-    @cached_property
-    def download_url(self):
-        return self.metadata.download_url
-
-    def __repr__(self):
-        if self.download_url:
-            suffix = ' [%s]' % self.download_url
-        else:
-            suffix = ''
-        return '<Distribution %s (%s)%s>' % (self.name, self.version, suffix)
-
 ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.])+)
                       \s*=\s*(?P<callable>(\w+)([:\.]\w+)*)
                       \s*(\[\s*(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\s*\])?''',

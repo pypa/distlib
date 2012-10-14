@@ -20,7 +20,7 @@ from distlib import DistlibException
 from distlib.compat import text_type, file_type, StringIO
 import distlib.database
 from distlib.metadata import Metadata
-from distlib.database import (Distribution, EggInfoDistribution,
+from distlib.database import (InstalledDistribution, EggInfoDistribution,
                               DistributionPath, make_graph,
                               get_required_dists, get_dependent_dists)
 from distlib.util import get_resources_dests, RegistryEntry
@@ -63,7 +63,8 @@ class FakeDistsMixin(object):
 
 
 class CommonDistributionTests(FakeDistsMixin):
-    """Mixin used to test the interface common to both Distribution classes.
+    """Mixin used to test the interface common to InstalledDistribution
+    and EggInfoDistribution classes.
 
     Derived classes define cls, sample_dist, dirs and records.  These
     attributes are used in test methods.  See source code for details.
@@ -181,7 +182,7 @@ class CommonDistributionTests(FakeDistsMixin):
 
 class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
-    cls = Distribution
+    cls = InstalledDistribution
     sample_dist = 'choxie', '2.0.0.9', 'choxie-2.0.0.9.dist-info'
     expected_str_output = 'choxie 2.0.0.9'
 
@@ -239,7 +240,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         false_path = os.path.join(*false_path)
 
         # Test if the distribution uses the file in question
-        dist = Distribution(distinfo_dir)
+        dist = InstalledDistribution(distinfo_dir)
         self.assertTrue(dist.uses(true_path), 'dist %r is supposed to use %r' %
                         (dist, true_path))
         self.assertFalse(dist.uses(false_path), 'dist %r is not supposed to '
@@ -251,7 +252,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         other_distinfo_name = 'grammar-1.0a4'
         distinfo_dir = os.path.join(self.fake_dists_path,
                                     distinfo_name + '.dist-info')
-        dist = Distribution(distinfo_dir)
+        dist = InstalledDistribution(distinfo_dir)
         # Test for known good file matches
         distinfo_files = [
             # Relative paths
@@ -285,7 +286,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         distinfo_name = 'towel_stuff-0.1'
         distinfo_dir = os.path.join(self.fake_dists_path,
                                     distinfo_name + '.dist-info')
-        dist = Distribution(distinfo_dir)
+        dist = InstalledDistribution(distinfo_dir)
         # Test for the iteration of the raw path
         distinfo_files = [os.path.join(distinfo_dir, filename) for filename in
                           os.listdir(distinfo_dir)]
@@ -304,7 +305,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         distinfo_name = 'babar-0.1'
         distinfo_dir = os.path.join(self.fake_dists_path,
                                     distinfo_name + '.dist-info')
-        dist = Distribution(distinfo_dir)
+        dist = InstalledDistribution(distinfo_dir)
         resource_path = dist.get_resource_path('babar.png')
         self.assertEqual(resource_path, 'babar.png')
         self.assertRaises(KeyError, dist.get_resource_path, 'notexist')
@@ -390,8 +391,8 @@ class TestDatabase(LoggingCatcher,
         d = DistributionPath()
         ed = DistributionPath(include_egg=True)
 
-        cases = ((d, non_egg_dists, (Distribution,)),
-                 (ed, all_dists, (Distribution, EggInfoDistribution)))
+        cases = ((d, non_egg_dists, (InstalledDistribution,)),
+                 (ed, all_dists, (InstalledDistribution, EggInfoDistribution)))
 
         for distset, fake_dists, allowed_classes in cases:
             found_dists = []
@@ -422,7 +423,7 @@ class TestDatabase(LoggingCatcher,
 
         # Lookup the distribution
         dist = d.get_distribution(name)
-        self.assertIsInstance(dist, Distribution)
+        self.assertIsInstance(dist, InstalledDistribution)
         self.assertEqual(dist.name, name)
 
         # Verify that an unknown distribution returns None
@@ -453,7 +454,7 @@ class TestDatabase(LoggingCatcher,
                             'towel_stuff', '__init__.py')
         d = DistributionPath()
         for dist in d.get_file_users(path):
-            self.assertIsInstance(dist, Distribution)
+            self.assertIsInstance(dist, InstalledDistribution)
             self.assertEqual(dist.name, name)
 
     @requires_zlib

@@ -10,9 +10,9 @@ import zlib
 from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
                      url2pathname, pathname2url, queue,
                      Request, HTTPError, URLError)
+from .database import Distribution
 from .metadata import Metadata
-from .util import (cached_property, Distribution, parse_credentials,
-                   ensure_slash)
+from .util import cached_property, parse_credentials, ensure_slash
 
 logger = logging.getLogger(__name__)
 
