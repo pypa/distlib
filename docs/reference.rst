@@ -69,10 +69,24 @@ Classes
       :param name: The name of the distribution to search for.
       :type name: str
 
+   .. method:: get_exported_entries(category, name=None)
+
+      Returns an iterator for entries exported by distributions on the path.
+
+      :param category: The export category to look in.
+      :type category: str
+      :param name: A specific name to search for. If not specified, all
+                   entries in the category are returned.
+      :type name: str
+      :returns: An iterator which iterates over exported entries (instances of
+                :class:`ExportEntry`).
+
+
 .. class:: Distribution
 
    A class representing a distribution, typically one which hasn't been
-   installed.
+   installed (most likely, one which has been obtained from an index like
+   PyPI).
 
    Properties:
 
@@ -677,6 +691,10 @@ Classes
       is determined by calling :func:`resolve` with the ``prefix`` and
       ``suffix`` properties.
 
+   .. attribute:: dist
+
+      The distribution which exports this entry. This is normally an
+      instance of :class:`InstalledDistribution`.
 
 Functions
 ^^^^^^^^^

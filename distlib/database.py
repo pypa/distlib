@@ -410,6 +410,7 @@ class InstalledDistribution(Distribution):
                     s = '%s = %s' % (name, value)
                     entry = get_export_entry(s)
                     assert entry is not None
+                    entry.dist = self
                     entries[name] = entry
         return result
 
