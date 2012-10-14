@@ -358,10 +358,9 @@ In addition, other methods suggest themselves for :class:`ScriptMaker`:
   analysis tool, over all the installed files.
 
 * The details of the callable specification can be encapsulated in a utility
-  function, :func:`~distlib.util.get_registry_entry`. This would take a specification
+  function, :func:`~distlib.util.get_exports_entry`. This would take a specification
   and return ``None``, if the specification didn't match the callable format,
-  or the various components (name, module name, callable name and flags) if it
-  did match.
+  or an instance of :class:`ExportEntry` if it did match.
 
 In addition, the following attributes on a ``ScriptMaker`` could be further used
 to refine its behaviour:

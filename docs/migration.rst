@@ -81,19 +81,19 @@ finders, to deal with custom requirements which aren't catered for.
 The ``pkg_resources`` entry point API
 -------------------------------------
 
-Entry points in ``pkg_resources`` are equivalent to a per-distribution registry
-(see :ref:`dist-registry`). The keys to the registry are just names in a
-hierarchical namespace delineated with periods (like Python packages). These
-keys are called *groups* in ``pkg_resources`` documentation, though that term
-is a little ambiguous. In Eclipse, for example, they are called *extension
+Entry points in ``pkg_resources`` are equivalent to per-distribution exports
+dictionary (see :ref:`dist-exports`). The keys to the dictionary are just names
+in a hierarchical namespace delineated with periods (like Python packages).
+These keys are called *groups* in ``pkg_resources`` documentation, though that
+term is a little ambiguous. In Eclipse, for example, they are called *extension
 point IDs*, which is a little closer to the intended usage, but a bit of a
 mouthful. In ``distlib``, we'll use the term ``category`` or
-``registry category``.
+``export category``.
 
-In ``distlib``, the implementation of the registry is slightly different from
-that of ``pkg_resources``. A :class:`Distribution` instance has a ``registry``
-attribute, which is a dictionary keyed by category and whose values
-are dictionaries which map names to :class:`RegistryEntry` instances.
+In ``distlib``, the implementation of exports is slightly different from
+entry points of ``pkg_resources``. A :class:`Distribution` instance has an
+ ``exports`` attribute, which is a dictionary keyed by category and whose values
+are dictionaries which map names to :class:`ExportEntry` instances.
 
 Below are the ``pkg_resources`` functions, and how to achieve the equivalent
 in ``distlib``. In cases where the ``pkg_resources`` functions take
@@ -106,13 +106,13 @@ and then ask that instance (or the ``dist_path`` instance) for the things you
 need.
 
 ``load_entry_point(distname, groupname, name)``
-    ``dist.registry[groupname][name].value``
+    ``dist.exports[groupname][name].value``
 
 ``get_entry_info(distname, groupname, name)``
-    ``dist.registry[groupname][name]``
+    ``dist.exports[groupname][name]``
 
 ``get_entry_map(distname, groupname=None)``
-    ``dist.registry`` or ``dist.registry[groupname]``
+    ``dist.exports`` or ``dist.exports[groupname]``
 
 ``iter_entry_points(groupname, name=None)``
-    ``dist_path.get_registered_entries(groupname, name=None)``
+    ``dist_path.get_exported_entries(groupname, name=None)``

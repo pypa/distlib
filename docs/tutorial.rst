@@ -127,19 +127,19 @@ information about the distribution. For example, the ``metadata`` attribute
 gives access to the distribution's metadata (see :ref:`use-metadata` for more
 information).
 
-.. _dist-registry:
+.. _dist-exports:
 
-The distribution registry
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Exporting things from Distributions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each distribution has a *registry*. The registry is functionally equivalent to
-"entry points" in ``distribute`` / ``setuptools``.
+Each distribution has a dictionary of *exports*. The exports dictionary is
+functionally equivalent to "entry points" in ``distribute`` / ``setuptools``.
 
-The keys to the registry are just names in a hierarchical namespace delineated
-with periods (like Python packages, so we'll refer to them as *pkgnames* in the
-following discussion). The keys indicate categories of information which the
-distribution's author wishes to publish. In each such category, a distribution
-may publish one or more entries.
+The keys to the dictionary are just names in a hierarchical namespace
+delineated with periods (like Python packages, so we'll refer to them as
+*pkgnames* in the following discussion). The keys indicate categories of
+information which the distribution's author wishes to export. In each such
+category, a distribution may publish one or more entries.
 
 The entries can be used for many purposes, and can point to callable code or
 data. A common purpose is for publishing callables in the distribution which
@@ -348,8 +348,8 @@ The string passed to make can take one of the following forms:
 
   For more information about flags, see :ref:`flag-formats`.
 
-  Note that this format is exactly the same as for registry entries in a
-  distribution (see :ref:`dist-registry`).
+  Note that this format is exactly the same as for export entries in a
+  distribution (see :ref:`dist-exports`).
 
   When this form is passed to the :meth:`~distlib.script.ScriptMaker.make`
   method, a Python stub script is created with the appropriate shebang line
