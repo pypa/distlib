@@ -20,7 +20,7 @@ from .compat import StringIO, configparser
 from .version import (suggest_normalized_version, VersionPredicate,
                       IrrationalVersionError)
 from .metadata import Metadata
-from .util import parse_requires, cached_property, get_registry_entry
+from .util import parse_requires, cached_property, get_export_entry
 
 
 __all__ = ['Distribution', 'InstalledDistribution', 'EggInfoDistribution',
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # TODO update docs
 
 DIST_FILES = ('INSTALLER', 'METADATA', 'RECORD', 'REQUESTED', 'RESOURCES',
-              'REGISTRY')
+              'EXPORTS')
 
 DISTINFO_EXT = '.dist-info'
 
@@ -297,9 +297,9 @@ class DistributionPath(object):
             raise LookupError('no distribution named %r found' % name)
         return dist.get_resource_path(relative_path)
 
-    def get_registered_entries(self, category, name=None):
+    def get_exported_entries(self, category, name=None):
         for dist in self.get_distributions():
-            r = dist.registry
+            r = dist.exports
             if category in r:
                 d = r[category]
                 if name is not None:
@@ -391,16 +391,16 @@ class InstalledDistribution(Distribution):
         return results
 
     @cached_property
-    def registry(self):
+    def exports(self):
         result = {}
-        rf = self.get_distinfo_file('REGISTRY')
+        rf = self.get_distinfo_file('EXPORTS')
         if os.path.exists(rf):
-            result = self.read_registry(rf)
+            result = self.read_exports(rf)
         return result
 
-    def read_registry(self, filename=None):
+    def read_exports(self, filename=None):
         result = {}
-        rf = filename or self.get_distinfo_file('REGISTRY')
+        rf = filename or self.get_distinfo_file('EXPORTS')
         if os.path.exists(rf):
             cp = configparser.ConfigParser()
             cp.read(rf)
@@ -408,15 +408,15 @@ class InstalledDistribution(Distribution):
                 result[key] = entries = {}
                 for name, value in cp.items(key):
                     s = '%s = %s' % (name, value)
-                    entry = get_registry_entry(s)
+                    entry = get_export_entry(s)
                     assert entry is not None
                     entries[name] = entry
         return result
 
-    def write_registry(self, registry, filename=None):
-        rf = filename or self.get_distinfo_file('REGISTRY')
+    def write_exports(self, exports, filename=None):
+        rf = filename or self.get_distinfo_file('EXPORTS')
         cp = configparser.ConfigParser()
-        for k, v in registry.items():
+        for k, v in exports.items():
             # TODO check k, v for valid values
             cp.add_section(k)
             for entry in v.values():

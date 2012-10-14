@@ -69,12 +69,10 @@ Classes
       :param name: The name of the distribution to search for.
       :type name: str
 
-
 .. class:: Distribution
 
-   A class representing an installed distribution. This class is not
-   instantiated directly, except by packaging tools. Instances of it
-   are returned from querying a :class:`DistributionPath`.
+   A class representing a distribution, typically one which hasn't been
+   installed.
 
    Properties:
 
@@ -91,14 +89,32 @@ Classes
       The metadata for the distribution. This is a
       :class:`distlib.metadata.Metadata` instance.
 
+   .. attribute:: download_url
+
+      The download URL for the distribution.
+
+   .. attribute:: locator
+
+      The locator for an instance which has been retrieved through a locator.
+      This is ``None`` for an installed distribution.
+
+
+.. class:: InstalledDistribution(Distribution)
+
+   A class representing an installed distribution. This class is not
+   instantiated directly, except by packaging tools. Instances of it
+   are returned from querying a :class:`DistributionPath`.
+
+   Properties:
+
    .. attribute:: requested
 
       Whether the distribution was installed by user request (if not, it may
       have been installed as a dependency of some other distribution).
 
-   .. attribute:: registry
+   .. attribute:: exports
 
-      The distribution's registry, as described in :ref:`dist-registry`. This
+      The distribution's exports, as described in :ref:`dist-exports`. This
       is a cached property.
 
    Methods:
@@ -141,32 +157,32 @@ Classes
                 * The actual value of what didn't match (as obtained from the
                   file system).
 
-   .. method:: read_registry(filename=None)
+   .. method:: read_exports(filename=None)
 
-      Read registry information from a file.
+      Read exports information from a file.
 
-      Normal access to a distribution's registry should be through its
-      :attr:`registry` attribute. This method is called from there as needed.
-      If no filename is specified, the ``REGISTRY`` file in the ``.dist-info``
+      Normal access to a distribution's exports should be through its
+      :attr:`exports` attribute. This method is called from there as needed.
+      If no filename is specified, the ``EXPORTS`` file in the ``.dist-info``
       directory is read (it is expected to be present).
 
       :param filename: The filename to read from, or ``None`` to read from the
                        default location.
       :type filename: str
-      :returns: The registry read from the file.
+      :returns: The exports read from the file.
       :rtype: dict
 
-   .. method:: write_registry(registry, filename=None)
+   .. method:: write_exports(exports, filename=None)
 
-      Write registry information to a file.
+      Write exports information to a file.
 
-      If no filename is specified, the ``REGISTRY`` file in the ``.dist-info``
+      If no filename is specified, the ``EXPORTS`` file in the ``.dist-info``
       directory is written.
 
-      :param registry: A dictionary whose keys are categories and whose values
-                       are dictionaries which contain :class:`RegistryEntry`
-                       instances keyed on their name.
-      :type registry: dict
+      :param exports: A dictionary whose keys are categories and whose values
+                      are dictionaries which contain :class:`ExportEntry`
+                      instances keyed on their name.
+      :type exports: dict
       :param filename: The filename to read from, or ``None`` to read from the
                        default location.
       :type filename: str
@@ -630,11 +646,11 @@ The ``distlib.util`` package
 Classes
 ^^^^^^^^
 
-.. class:: RegistryEntry
+.. class:: ExportEntry
 
    Attributes:
 
-   A class holding information about a registry entry.
+   A class holding information about a exports entry.
 
    .. attribute:: name
 
@@ -688,16 +704,16 @@ Functions
    #. Any occurrence of ``os.sep`` is replaced with ``'--'``.
    #. ``'.cache'`` is appended.
 
-.. function:: get_registry_entry(specification)
+.. function:: get_export_entry(specification)
 
-   Return a registry entry from a specification, if it matches the
+   Return a export entry from a specification, if it matches the
    expected format, or else ``None``.
 
    :param specification: A specification, as documented for the
                          :meth:`distlib.scripts.ScriptMaker.make` method.
    :type specification: str
    :returns: ``None`` if the specification didn't match the expected form
-             for an entry, or else an instance of :class:`RegistryEntry`
+             for an entry, or else an instance of :class:`ExportEntry`
              holding information about the entry.
 
 .. function:: resolve(module_name, dotted_path)

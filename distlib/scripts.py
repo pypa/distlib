@@ -11,7 +11,7 @@ import sys
 
 from . import DistlibException
 from .compat import sysconfig, fsencode, detect_encoding
-from .util import FileOperator, get_registry_entry
+from .util import FileOperator, get_export_entry
 
 logger = logging.getLogger(__name__)
 
@@ -212,7 +212,7 @@ class ScriptMaker(object):
 
     def make(self, specification):
         filenames = []
-        entry = get_registry_entry(specification)
+        entry = get_export_entry(specification)
         if entry is None:
             self._copy_script(specification, filenames)
         else:

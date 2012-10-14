@@ -23,7 +23,7 @@ from distlib.metadata import Metadata
 from distlib.database import (InstalledDistribution, EggInfoDistribution,
                               DistributionPath, make_graph,
                               get_required_dists, get_dependent_dists)
-from distlib.util import get_resources_dests, RegistryEntry
+from distlib.util import get_resources_dests, ExportEntry
 
 from test_glob import GlobTestCaseBase
 from support import LoggingCatcher, requires_zlib
@@ -188,7 +188,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
     def setUp(self):
         def get_files(location):
-            for path in ('REQUESTED', 'INSTALLER', 'METADATA', 'REGISTRY'):
+            for path in ('REQUESTED', 'INSTALLER', 'METADATA', 'EXPORTS'):
                 p = os.path.join(location + '.dist-info', path)
                 if os.path.exists(p):
                     yield p
@@ -588,9 +588,9 @@ class TestDatabase(LoggingCatcher,
         self.assertEqual(entry.suffix, suffix)
         self.assertEqual(entry.flags, flags)
 
-    def test_read_registry(self):
+    def test_read_exports(self):
         d = DistributionPath().get_distribution('babar')
-        r = d.registry
+        r = d.exports
         self.assertIn('foo', r)
         d = r['foo']
         self.assertIn('bar', d)
@@ -605,15 +605,15 @@ class TestDatabase(LoggingCatcher,
         import cgi
         self.assertIs(e.value, cgi.print_directory)
 
-    def test_write_registry(self):
-        registry = {
+    def test_write_exports(self):
+        exports = {
             'foo': {
-                'v1': RegistryEntry('v1', 'p1', 's1', []),
-                'v2': RegistryEntry('v2', 'p2', 's2', ['f2=a', 'g2']),
+                'v1': ExportEntry('v1', 'p1', 's1', []),
+                'v2': ExportEntry('v2', 'p2', 's2', ['f2=a', 'g2']),
             },
             'bar': {
-                'v3': RegistryEntry('v3', 'p3', 's3', ['f3', 'g3=h']),
-                'v4': RegistryEntry('v4', 'p4', 's4', ['f4', 'g4']),
+                'v3': ExportEntry('v3', 'p3', 's3', ['f3', 'g3=h']),
+                'v4': ExportEntry('v4', 'p4', 's4', ['f4', 'g4']),
             },
         }
 
@@ -621,13 +621,13 @@ class TestDatabase(LoggingCatcher,
         try:
             os.close(fd)
             d = DistributionPath().get_distribution('babar')    # any one will do
-            d.write_registry(registry, fn)
-            actual = d.read_registry(fn)
-            self.assertEqual(actual, registry)
+            d.write_exports(exports, fn)
+            actual = d.read_exports(fn)
+            self.assertEqual(actual, exports)
         finally:
             os.remove(fn)
 
-    def test_registry_iteration(self):
+    def test_exports_iteration(self):
         d = DistributionPath()
         expected = set((
             ('bar', 'baz', 'barbaz', ('a=10', 'b')),
@@ -635,7 +635,7 @@ class TestDatabase(LoggingCatcher,
             ('bar', 'towel', 'towel', ()),
             ('baz', 'towel', 'beach_towel', ()),
         ))
-        entries = list(d.get_registered_entries('foo'))
+        entries = list(d.get_exported_entries('foo'))
         for e in entries:
             t = e.name, e.prefix, e.suffix, tuple(e.flags)
             self.assertIn(t, expected)
@@ -646,7 +646,7 @@ class TestDatabase(LoggingCatcher,
             ('bar', 'crunchie', None, ()),
             ('bar', 'towel', 'towel', ()),
         ))
-        entries = list(d.get_registered_entries('foo', 'bar'))
+        entries = list(d.get_exported_entries('foo', 'bar'))
         for e in entries:
             t = e.name, e.prefix, e.suffix, tuple(e.flags)
             self.assertIn(t, expected)
@@ -659,7 +659,7 @@ class TestDatabase(LoggingCatcher,
             ('foofoo', 'ferrero', 'rocher', ()),
             ('foobar', 'hoopy', 'frood', ('dent',)),
         ))
-        entries = list(d.get_registered_entries('bar.baz'))
+        entries = list(d.get_exported_entries('bar.baz'))
         for e in entries:
             t = e.name, e.prefix, e.suffix, tuple(e.flags)
             self.assertIn(t, expected)

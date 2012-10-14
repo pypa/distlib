@@ -221,7 +221,7 @@ def resolve(module_name, dotted_path):
     return result
 
 
-class RegistryEntry(object):
+class ExportEntry(object):
     def __init__(self, name, prefix, suffix, flags):
         self.name = name
         self.prefix = prefix
@@ -233,11 +233,11 @@ class RegistryEntry(object):
         return resolve(self.prefix, self.suffix)
 
     def __repr__(self):
-        return '<RegistryEntry %s = %s:%s %s>' % (self.name, self.prefix,
+        return '<ExportEntry %s = %s:%s %s>' % (self.name, self.prefix,
                                                   self.suffix, self.flags)
 
     def __eq__(self, other):
-        if not isinstance(other, RegistryEntry):
+        if not isinstance(other, ExportEntry):
             result = False
         else:
             result = (self.name == other.name and
@@ -254,7 +254,7 @@ ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.])+)
                       \s*(\[\s*(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\s*\])?''',
                       re.VERBOSE)
 
-def get_registry_entry(specification):
+def get_export_entry(specification):
     m = ENTRY_RE.search(specification)
     if not m:
         result = None
@@ -281,7 +281,7 @@ def get_registry_entry(specification):
             flags = []
         else:
             flags = [f.strip() for f in flags.split(',')]
-        result = RegistryEntry(name, prefix, suffix, flags)
+        result = ExportEntry(name, prefix, suffix, flags)
     return result
 
 def get_cache_base():
