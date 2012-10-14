@@ -2,6 +2,7 @@ import os
 
 from compat import unittest
 
+from distlib.compat import url2pathname
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               DirectoryLocator, AggregatingLocator)
 
@@ -46,7 +47,7 @@ class LocatorTestCase(unittest.TestCase):
             dist = result['0.9']
             self.assertEqual(dist.name, 'Flask')
             self.assertEqual(dist.version, '0.9')
-            self.assertEqual(dist.download_url, expected)
+            self.assertEqual(url2pathname(dist.download_url), expected)
 
     def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
@@ -62,7 +63,7 @@ class LocatorTestCase(unittest.TestCase):
         dist = result['0.9']
         self.assertEqual(dist.name, 'Flask')
         self.assertEqual(dist.version, '0.9')
-        self.assertEqual(dist.download_url, exp1)
+        self.assertEqual(url2pathname(dist.download_url), exp1)
         locator.merge = True
         result = locator.get_project('flask')
         self.assertGreater(len(result), 1)
