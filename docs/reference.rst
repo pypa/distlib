@@ -525,12 +525,8 @@ Classes
 
       This method should be implemented in subclasses. It returns a
       (potentially empty) dictionary whose keys are the versions located
-      for the project named by ``name``, and whose values are metadata and
-      lists of dictionaries holding information about located archives to
-      download for the corresponding version of the named project. These
-      dictionaries will contain at least an ``url`` key indicating where
-      the distribution archive is to be found, and a ``filename`` key
-      indicating a suitable filename to store the archive locally.
+      for the project named by ``name``, and whose values are instances of
+      :class:`distlib.util.Distribution`.
 
    .. method:: convert_url_to_download_info(url, project_name)
 
@@ -596,6 +592,29 @@ Classes
 
       :param url: The base URL to use for the simple service HTML pages.
       :type url: str
+
+    .. method:: get_project(name)
+
+       See :meth:`Locator.get_project`.
+
+
+.. class:: AggregatingLocator
+
+   This locator uses a list of other aggregators and delegates finding projects
+   to them. It can either return the first result found (i.e. from the first
+   aggregator in the list provided which returns a non-empty result), or a
+   merged result from all the aggregators in the list.
+
+   .. method:: __init__(*locators, merge=False)
+
+      :param locators: A list of aggregators to delegate finding projects to.
+      :type locators: sequence of locators
+      :param merge: If ``True``, each aggregator in the list is asked to
+                    provide results, which are aggregated into a results
+                    dictionary. If ``False``, the first non-empty return value
+                    from the list of aggregators is returned. The aggregators
+                    are consulted in the order in which they're passed in.
+      :type merge: bool
 
     .. method:: get_project(name)
 

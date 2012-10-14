@@ -3,7 +3,7 @@ import os
 from compat import unittest
 
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
-                              DirectoryLocator)
+                              DirectoryLocator, AggregatingLocator)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -38,12 +38,36 @@ class LocatorTestCase(unittest.TestCase):
     def test_dir(self):
         d = os.path.join(HERE, 'fake_archives')
         locator = DirectoryLocator(d)
+        expected = os.path.join(HERE, 'fake_archives', 'subdir',
+                                'subsubdir', 'Flask-0.9.tar.gz')
         for name in ('flask', 'Flask'):
             result = locator.get_project(name)
             self.assertIn('0.9', result)
             dist = result['0.9']
             self.assertEqual(dist.name, 'Flask')
             self.assertEqual(dist.version, '0.9')
-            expected = os.path.join(HERE, 'fake_archives', 'subdir',
-                                    'subsubdir', 'Flask-0.9.tar.gz')
             self.assertEqual(dist.download_url, expected)
+
+    def test_aggregation(self):
+        d = os.path.join(HERE, 'fake_archives')
+        loc1 = DirectoryLocator(d)
+        loc2 = SimpleScrapingLocator('http://pypi.python.org/simple/')
+        locator = AggregatingLocator(loc1, loc2)
+        exp1 = os.path.join(HERE, 'fake_archives', 'subdir',
+                            'subsubdir', 'Flask-0.9.tar.gz')
+        exp2 = 'http://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz'
+        result = locator.get_project('flask')
+        self.assertEqual(len(result), 1)
+        self.assertIn('0.9', result)
+        dist = result['0.9']
+        self.assertEqual(dist.name, 'Flask')
+        self.assertEqual(dist.version, '0.9')
+        self.assertEqual(dist.download_url, exp1)
+        locator.merge = True
+        result = locator.get_project('flask')
+        self.assertGreater(len(result), 1)
+        self.assertIn('0.9', result)
+        dist = result['0.9']
+        self.assertEqual(dist.name, 'Flask')
+        self.assertEqual(dist.version, '0.9')
+        self.assertEqual(dist.download_url, exp2)

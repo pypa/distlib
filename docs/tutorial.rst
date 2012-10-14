@@ -446,6 +446,11 @@ The following locators are provided:
   ``PackageFinder`` class in ``pip``, or as documented in the ``setuptools``
   documentation as the approach used by ``easy_install``.
 
+* :class:`AggregatingLocator` -- this takes a list of other aggregators and
+  delegates finding projects to them. It can either return the first result
+  found (i.e. from the first aggregator in the list provided which returns a
+  non-empty result), or a merged result from all the aggregators in the list.
+
 An example of usage is given below::
 
     >>> from distlib.locators import SimpleScrapingLocator

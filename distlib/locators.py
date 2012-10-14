@@ -259,3 +259,20 @@ class DirectoryLocator(Locator):
                     if info:
                         self._update_version_data(result, info)
         return result
+
+class AggregatingLocator(Locator):
+    def __init__(self, *locators, **kwargs):
+        self.locators = locators
+        self.merge = kwargs.get('merge', False)
+
+    def get_project(self, name):
+        result = {}
+        for locator in self.locators:
+            r = locator.get_project(name)
+            if r:
+                if self.merge:
+                    result.update(r)
+                else:
+                    result = r
+                    break
+        return result
