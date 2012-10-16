@@ -45,7 +45,7 @@ class Locator(object):
                         path = path[:m.start()]
                     m = PROJECT_NAME_AND_VERSION.match(path)
                     if not m:
-                        logger.debug('No match: %s', path)
+                        logger.debug('No match for project/version: %s', path)
                     else:
                         name, version = m.group(1), m.group(2)
                         if (not project_name or
@@ -134,7 +134,7 @@ class SimpleScrapingLocator(Locator):
 
     decoders = {
         'deflate': zlib.decompress,
-        'gzip': lambda b: gzip.GZipFile(fileobj=BytesIO(d)).read(),
+        'gzip': lambda b: gzip.GzipFile(fileobj=BytesIO(d)).read(),
     }
 
     def __init__(self, url, timeout=None, num_workers=1):
@@ -177,6 +177,16 @@ class SimpleScrapingLocator(Locator):
             self._update_version_data(self.result, info)
         return info
 
+    def _should_queue(self, link):
+        scheme, _, path, _, _, _ = urlparse(link)
+        if path.endswith(EXTENSIONS + ('.exe', '.pdf')):
+            result = False
+        elif scheme not in (('http:', 'https:')):
+            result = False
+        else:
+            result = True
+        return result
+
     def _fetch(self):
         while True:
             url = self._to_fetch.get()
@@ -189,6 +199,7 @@ class SimpleScrapingLocator(Locator):
                         if link not in self._seen:
                             self._seen.add(link)
                             if (not self._process_download(link) and
+                                self._should_queue(link) and
                                 url.startswith(self.base_url)):
                                 logger.debug('Queueing %s from %s', link, url)
                                 self._to_fetch.put(link)
@@ -233,10 +244,10 @@ class SimpleScrapingLocator(Locator):
                     self._cache[url] = self._cache[final_url] = result
             except HTTPError as e:
                 if e.code != 404:
-                    raise
+                    logger.exception('Fetch failed: %s: %s', url, e)
             except URLError as e:
                 logger.exception('Fetch failed: %s: %s', url, e)
-            except Exception:
+            except Exception as e:
                 logger.exception('Fetch failed: %s: %s', url, e)
         return result
 
