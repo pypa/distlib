@@ -340,6 +340,18 @@ class Distribution(object):
             suffix = ''
         return '<Distribution %s (%s)%s>' % (self.name, self.version, suffix)
 
+    def __eq__(self, other):
+        if type(other) is not type(self):
+            result = False
+        else:
+            result = (self.name == other.name and
+                      self.version == other.version and
+                      self.download_url == other.download_url)
+        return result
+
+    __hash__ = object.__hash__
+
+
 class InstalledDistribution(Distribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
     constructor. It reads the metadata contained in ``METADATA`` when it is
@@ -361,7 +373,7 @@ class InstalledDistribution(Distribution):
 
         super(InstalledDistribution, self).__init__(metadata)
         self.path = path
-        self.dist_set  = env
+        self.dist_path  = env
 
         if env and env._cache_enabled:
             env._cache.add(self)
@@ -671,7 +683,7 @@ class EggInfoDistribution(object):
 
     def __init__(self, path, env=None):
         self.path = path
-        self.dist_set  = env
+        self.dist_path  = env
         if env._cache_enabled and path in env._cache_egg.path:
             self.metadata = env._cache_egg.path[path].metadata
             self.name = self.metadata['Name']
