@@ -667,6 +667,20 @@ Classes
 
        See :meth:`Locator.get_project`.
 
+Functions
+^^^^^^^^^
+
+.. function:: get_all_distribution_names(url=None)
+
+   Retrieve the names of all distributions registered on an index.
+
+   :param url: The XML-RPC service URL of the node to query. If not specified,
+               The main PyPI index is queried.
+   :type url: str
+   :returns: A list of the names of distributions registered on the index.
+             Note that some of the names may be Unicode.
+   :rtype: list
+
 
 The ``distlib.util`` package
 -------------------------------

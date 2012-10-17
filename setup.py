@@ -56,6 +56,7 @@ distutils.core.setup(
         'distlib.compat',
         'distlib.util',
         'distlib.database',
+        'distlib.locators',
         'distlib.resources',
     ],
     cmdclass={

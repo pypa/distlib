@@ -9,7 +9,7 @@ import threading
 import zlib
 
 from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
-                     url2pathname, pathname2url, queue,
+                     url2pathname, pathname2url, queue, quote,
                      Request, HTTPError, URLError)
 from .database import Distribution
 from .metadata import Metadata
@@ -23,6 +23,12 @@ CHARSET = re.compile(r';\s*charset\s*=\s*(.*)\s*$', re.I)
 HTML_CONTENT_TYPE = re.compile('text/html|application/xhtml')
 PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_.-]+)-([0-9][0-9_.-]*)', re.I)
 PYTHON_VERSION = re.compile(r'-py(\d\.?\d?)$')
+
+def get_all_distribution_names(url=None):
+    if url is None:
+        url = 'http://python.org/pypi'
+    client = xmlrpclib.ServerProxy(url)
+    return client.list_packages()
 
 class Locator(object):
     def get_project(self, name):
@@ -115,7 +121,7 @@ class PyPIJSONLocator(Locator):
 
     def get_project(self, name):
         result = {}
-        url = urljoin(self.base_url, '%s/json' % name)
+        url = urljoin(self.base_url, '%s/json' % quote(name))
         try:
             resp = urlopen(url)
             data = resp.read().decode() # for now
@@ -187,7 +193,7 @@ class SimpleScrapingLocator(Locator):
     def get_project(self, name):
         self.result = result = {}
         self.project_name = name
-        url = urljoin(self.base_url, '%s/' % name)
+        url = urljoin(self.base_url, '%s/' % quote(name))
         self._seen.clear()
         self._prepare_threads()
         logger.debug('Queueing %s', url)

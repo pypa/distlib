@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import os
 
 from compat import unittest
@@ -49,6 +50,15 @@ class LocatorTestCase(unittest.TestCase):
                              'sarge-0.1.tar.gz')
             self.assertEqual(dist.md5_digest,
                              '961ddd9bc085fdd8b248c6dd96ceb1c8')
+
+    def test_unicode_project_name(self):
+        NAME = '\u2603'
+        locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
+        result = locator.get_project(NAME)
+        self.assertFalse(result)
+        locator = PyPIJSONLocator('http://pypi.python.org/pypi/')
+        result = locator.get_project(NAME)
+        self.assertIn('0.1.12', result)
 
     def test_dir(self):
         d = os.path.join(HERE, 'fake_archives')

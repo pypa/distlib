@@ -491,6 +491,18 @@ Now the same project, using the XML-RPC API::
 The reason why some of the download URLs come up as UNKNOWN is that some of
 the PyPI metadata is incomplete.
 
+The ``locators`` package also contains a function,
+:func:`get_all_distribution_names`, which retrieves the names of all
+distributions registered on PyPI::
+
+    >>> from distlib.locators import get_all_distribution_names
+    >>> names = get_all_package_names()
+    >>> len(names)
+    24801
+    >>>
+
+This is done using the XML-RPC API.
+
 The Locator API is very bare-bones at the moment, but additional features will
 be added in due course. A very bare-bones command-line script which exercises
 these locators is to be found `here <https://gist.github.com/3886402>`_, and

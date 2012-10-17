@@ -17,7 +17,14 @@ if sys.version_info[0] < 3:
     import ConfigParser as configparser
     from ._backport import shutil
     from urlparse import urlparse, urlunparse, urljoin, urlsplit, urlunsplit
-    from urllib import urlretrieve, unquote, url2pathname, pathname2url
+    from urllib import (urlretrieve, quote as _quote, unquote, url2pathname,
+                        pathname2url)
+
+    def quote(s):
+        if isinstance(s, unicode):
+            s = s.encode('utf-8')
+        return _quote(s)
+
     import urllib2
     from urllib2 import Request, urlopen, URLError, HTTPError
     import httplib
@@ -44,8 +51,8 @@ else:
     import builtins
     import configparser
     import shutil
-    from urllib.parse import (urlparse, urlunparse, urljoin, splituser, unquote,
-                              urlsplit, urlunsplit)
+    from urllib.parse import (urlparse, urlunparse, urljoin, splituser, quote,
+                              unquote, urlsplit, urlunsplit)
     from urllib.request import (urlopen, urlretrieve, Request, url2pathname,
                                 pathname2url)
     from urllib.error import HTTPError, URLError
