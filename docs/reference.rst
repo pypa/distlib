@@ -613,6 +613,23 @@ Classes
        See :meth:`Locator.get_project`.
 
 
+.. class:: PyPIJSONLocator
+
+   This locator uses the PyPI JSON interface to locate distribution
+   archives and other data about downloads. It gets the metadata and URL
+   information in a single call, so it should perform better than the
+   XML-RPC locator.
+
+   .. method:: __init__(url)
+
+      :param url: The base URL to use for the JSON service.
+      :type url: str
+
+    .. method:: get_project(name)
+
+       See :meth:`Locator.get_project`.
+
+
 .. class:: SimpleScrapingLocator
 
    This locator uses the PyPI 'simple' interface -- a Web scraping interface --

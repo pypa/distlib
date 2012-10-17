@@ -436,10 +436,17 @@ The following locators are provided:
   (the scraping interface seems to work faster) and case-sensitive. For
   example, searching for ``'flask'`` will throw up no results, but you get the
   expected results when searching from ``'Flask'``. This appears to be a
-  limitation of the underlying XML-RPC API. For example, 20 versions of a
+  limitation of the underlying XML-RPC API. Note that 20 versions of a
   project necessitate 41 network calls (one to get the versions, and
   two more for each version -- one to get the metadata, and another to get the
   downloads information).
+
+* :class:`PyPIJSONLocator`. -- This takes a base URL for the JSON service and
+  will locate packages using PyPI's JSON API. This locator is case-sensitive. For
+  example, searching for ``'flask'`` will throw up no results, but you get the
+  expected results when searching from ``'Flask'``. This appears to be a
+  limitation of the underlying JSON API. Note that unlike the XML-RPC service,
+  only non-hidden releases will be returned.
 
 * :class:`SimpleScrapingLocator` -- this takes a base URL for the site to
   scrape, and locates packages using a similar approach to the
