@@ -4,13 +4,27 @@ from compat import unittest
 
 from distlib.compat import url2pathname
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
-                              DirectoryLocator, AggregatingLocator)
+                              PyPIJSONLocator, DirectoryLocator,
+                              AggregatingLocator)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 class LocatorTestCase(unittest.TestCase):
     def test_xmlrpc(self):
         locator = PyPIRPCLocator('http://python.org/pypi')
+        result = locator.get_project('sarge')
+        self.assertIn('0.1', result)
+        dist = result['0.1']
+        self.assertEqual(dist.name, 'sarge')
+        self.assertEqual(dist.version, '0.1')
+        self.assertEqual(dist.download_url,
+                         'http://pypi.python.org/packages/source/s/sarge/'
+                         'sarge-0.1.tar.gz')
+        self.assertEqual(dist.md5_digest,
+                         '961ddd9bc085fdd8b248c6dd96ceb1c8')
+
+    def test_json(self):
+        locator = PyPIJSONLocator('http://python.org/pypi')
         result = locator.get_project('sarge')
         self.assertIn('0.1', result)
         dist = result['0.1']

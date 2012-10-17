@@ -1,5 +1,6 @@
 import gzip
 from io import BytesIO
+import json
 import logging
 import os
 import posixpath
@@ -106,6 +107,31 @@ class PyPIRPCLocator(Locator):
                 if 'md5_digest' in info:
                     dist.md5_digest = info['md5_digest']
             result[v] = dist
+        return result
+
+class PyPIJSONLocator(Locator):
+    def __init__(self, url):
+        self.base_url = ensure_slash(url)
+
+    def get_project(self, name):
+        result = {}
+        url = urljoin(self.base_url, '%s/json' % name)
+        try:
+            resp = urlopen(url)
+            data = resp.read().decode() # for now
+            d = json.loads(data)
+            md = Metadata()
+            md.update(d['info'])
+            dist = Distribution(md)
+            urls = d['urls']
+            if urls:
+                info = urls[0]
+                md['Download-URL'] = info['url']
+                if 'md5_digest' in info:
+                    dist.md5_digest = info['md5_digest']
+            result[md.version] = dist
+        except Exception as e:
+            logger.exception('JSON fetch failed: %s', e)
         return result
 
 class Page(object):
