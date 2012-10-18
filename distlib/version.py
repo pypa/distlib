@@ -474,6 +474,10 @@ def get_version_predicate(requirements):
         requirements = VersionPredicate(requirements)
     return requirements
 
+#
+#   Legacy version processing (distribute-compatible)
+#
+
 _VERSION_PART = re.compile(r'([a-z]+|[\d]+|[\.-])', re.I)
 _VERSION_REPLACE = {
     'pre':'c',
@@ -525,6 +529,8 @@ def semver_key(s):
             result = (absent,)
         else:
             parts = s[1:].split('.')
+            # We can't compare ints and strings on Python 3, so fudge it
+            # by zero-filling numeric values so simulate a numeric comparison
             result = tuple([p.zfill(8) if p.isdigit() else p for p in parts])
         return result
 
@@ -534,5 +540,6 @@ def semver_key(s):
         raise ValueError('Not a semantic version: %r' % s)
     groups = m.groups()
     major, minor, patch = [int(i) for i in groups[:3]]
+    # choose the '|' and '*' so that versions sort correctly
     pre, build = make_tuple(groups[3], '|'), make_tuple(groups[5], '*')
     return ((major, minor, patch), pre, build)

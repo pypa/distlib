@@ -682,6 +682,32 @@ Functions
    :rtype: list
 
 
+.. function:: locate(requirement)
+
+   This convenience function returns the latest version of a potentially
+   downloadable distribution which matches a requirement (name and version
+   predicates). If a potentially downloadable distribution (i.e. one with
+   a download URL) is not found, ``None`` is returned; otherwise, an
+   instance of :class:`~distlib.database.Distribution` is returned. The
+   returned instance will have, at a minimum, ``name``, ``version`` and
+   ``download_url``.
+
+   :param requirement: The name and optional version constraints of the
+                       distribution to locate, e.g. ``'Flask'`` or
+                       ``'Flask (>= 0.7, < 0.9)'``.
+   :type requirement: str
+   :returns: A matching instance of :class:`~distlib.database.Distribution`,
+             or ``None``.
+
+Variables
+^^^^^^^^^
+
+.. attribute:: default_locator
+
+   This attribute holds a locator which is used by :func:`locate` to locate
+   distributions.
+
+
 The ``distlib.util`` package
 -------------------------------
 

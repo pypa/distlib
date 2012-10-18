@@ -21,7 +21,7 @@ available in the database.
 Classes representing installed distributions
 --------------------------------------------
 
-.. class:: Distribution(path)
+.. class:: InstalledDistribution(path)
 
    Class representing an installed distribution.
 

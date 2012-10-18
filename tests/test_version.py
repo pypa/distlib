@@ -364,8 +364,8 @@ class SemanticVersionTestCase(unittest.TestCase):
             ka, kb = semver_key(a), semver_key(b)
             self.assertLess(ka, kb)
 
+        # From the semver.org home page
         versions = [
-
             '1.0.0-alpha',
             '1.0.0-alpha.1',
             '1.0.0-beta.2',

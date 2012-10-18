@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2012 The Python Software Foundation.
+# See LICENSE.txt and CONTRIBUTORS.txt.
+#
 import gzip
 from io import BytesIO
 import json
@@ -35,6 +40,9 @@ class Locator(object):
     def get_project(self, name):
         raise NotImplementedError('Please implement in the subclass')
 
+    def _name_matches(self, wanted, seen):
+        return wanted.lower() == seen.lower()
+
     def convert_url_to_download_info(self, url, project_name):
         scheme, netloc, path, params, query, frag = urlparse(url)
         result = None
@@ -57,7 +65,7 @@ class Locator(object):
                     else:
                         name, version = m.group(1), m.group(2)
                         if (not project_name or
-                            project_name.lower() == name.lower()):
+                            self._name_matches(project_name, name)):
                             result = {
                                 'name': name,
                                 'version': version,
@@ -191,6 +199,17 @@ class SimpleScrapingLocator(Locator):
             self._to_fetch.put(None)    # sentinel
             t.join()
 
+    def _name_matches(self, wanted, seen):
+        wanted == wanted.lower()
+        seen = seen.lower()
+        if wanted == seen:
+            result = True
+        elif wanted == 'pil' and seen == 'imaging': # could generalise
+            result = True
+        else:
+            result = False
+        return result
+
     def get_project(self, name):
         self.result = result = {}
         self.project_name = name
@@ -214,7 +233,7 @@ class SimpleScrapingLocator(Locator):
         scheme, _, path, _, _, _ = urlparse(link)
         if path.endswith(EXTENSIONS + ('.exe', '.pdf')):
             result = False
-        elif scheme not in (('http:', 'https:')):
+        elif scheme not in ('http', 'https'):
             result = False
         else:
             result = True
@@ -330,8 +349,16 @@ def locate(predicate):
     vp = VersionPredicate(predicate)
     versions = default_locator.get_project(vp.name)
     if versions:
-        slist = [k for k in versions if vp.match(k)]
+        # sometimes, versions are invalid
+        slist = []
+        for k in versions:
+            try:
+                if vp.match(k):
+                    slist.append(k)
+            except Exception:
+                pass
         if len(slist) > 1:
             slist = sorted(slist, key=legacy_version_key)
-        result = versions[slist[-1]]
+        if slist:
+            result = versions[slist[-1]]
     return result

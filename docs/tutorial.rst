@@ -33,6 +33,8 @@ shape.
 Using the database API
 ^^^^^^^^^^^^^^^^^^^^^^
 
+.. currentmodule:: distlib.database
+
 You can use the ``distlib.database`` package to access information about
 installed distributions. This information is available through the
 following classes:
@@ -187,8 +189,6 @@ scripts based on Python callables.
 Using the dependency API
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. currentmodule:: distlib.depgraph
-
 You can use the ``distlib.depgraph`` package to analyse the dependencies
 between various distributions and to create a graph representing these
 dependency relationships. The main interface is through the following
@@ -306,6 +306,9 @@ and so on.
 Using the scripts API
 ^^^^^^^^^^^^^^^^^^^^^
 
+.. currentmodule:: distlib.scripts
+
+
 You can use the ``distlib.scripts`` API to install scripts. Installing scripts
 is slightly more involved than just copying files:
 
@@ -322,7 +325,7 @@ is slightly more involved than just copying files:
 Specifying scripts to install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To install scripts, create a :class:`~distlib.scripts.ScriptMaker` instance,
+To install scripts, create a :class:`ScriptMaker` instance,
 giving it
 the source and target directories for scripts::
 
@@ -351,7 +354,7 @@ The string passed to make can take one of the following forms:
   Note that this format is exactly the same as for export entries in a
   distribution (see :ref:`dist-exports`).
 
-  When this form is passed to the :meth:`~distlib.script.ScriptMaker.make`
+  When this form is passed to the :meth:`ScriptMaker.make`
   method, a Python stub script is created with the appropriate shebang line
   and with code to load and call the specified callable with no arguments,
   returning its value as the return code from the script.
@@ -414,15 +417,59 @@ The other script, ``bar``, is different only in the essentials::
 Using the locators API
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Locators are a mechanism for finding distributions from a range of sources.
-Although the ``pypi`` subpackage has been copied from ``distutils2`` to
-``distlib``, there may be benefits in a higher-level API, and so the
-``distlib.locators`` package has been created as an experiment. This implements
-*locators* -- objects which locate distributions. A locator instance's
-:meth:`get_project` method is called, passing in a project name: The method
-returns a dictionary containing information about distributions found for that
-project. The keys of the returned dictionary are versions, and the values are
-instances of :class:`distlib.util.Distribution`.
+.. currentmodule:: distlib.locators
+
+Overview
+~~~~~~~~
+
+To locate a distribution in an index, we can use the :func:`locate` function.
+This returns a potentially downloadable distribution (in the sense that it
+has a download URL - of course, there are no guarantees that there will
+actually be a downloadable resource at that URL). The return value is an
+instance of :class:`distlib.database.Distribution` which can be queried for
+any distributions it requires, so that they can also be located if desired.
+Here is a basic example::
+
+    >>> from distlib.locators import locate
+    >>> flask = locate('flask')
+    >>> flask
+    <Distribution Flask (0.9) [http://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz]>
+    >>> dependencies = [locate(r) for r in flask.get_requirements('install')]
+    >>> from pprint import pprint
+    >>> pprint(dependencies)
+    [<Distribution Werkzeug (0.8.3) [http://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.8.3.tar.gz]>,
+     <Distribution Jinja2 (2.6) [http://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.6.tar.gz]>]
+    >>>
+
+The values returned by :meth:`get_requirements` are just strings. Here's another example,
+showing a little more detail::
+
+    >>> authy = locate('authy')
+    >>> authy.get_requirements('install')
+    [u'httplib2 (>= 0.7, < 0.8)', u'simplejson']
+    >>> authy
+    <Distribution authy (0.0.4) [http://pypi.python.org/packages/source/a/authy/authy-0.0.4.tar.gz]>
+    >>> deps = [locate(r) for r in authy.get_requirements('install')]
+    >>> pprint(deps)
+    [<Distribution httplib2 (0.7.6) [http://pypi.python.org/packages/source/h/httplib2/httplib2-0.7.6.tar.gz]>,
+     <Distribution simplejson (2.6.2) [http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.2.tar.gz]>]
+    >>>
+
+Note that the constraints on the dependencies were honoured by :func:`locate`.
+
+
+Under the hood
+~~~~~~~~~~~~~~
+
+Under the hood, :func:`locate` uses *locators*. Locators are a mechanism for
+finding distributions from a range of sources. Although the ``pypi`` subpackage
+has been copied from ``distutils2`` to ``distlib``, there may be benefits in a
+higher-level API, and so the ``distlib.locators`` package has been created as
+an experiment. Locators are objects which locate distributions. A locator
+instance's :meth:`get_project` method is called, passing in a project name: The
+method returns a dictionary containing information about distribution releases
+found for that project. The keys of the returned dictionary are versions, and
+the values are instances of :class:`distlib.database.Distribution`.
 
 The following locators are provided:
 
@@ -458,7 +505,9 @@ The following locators are provided:
   found (i.e. from the first aggregator in the list provided which returns a
   non-empty result), or a merged result from all the aggregators in the list.
 
-An example of usage is given below::
+There is a default locator, available at :attr:`distlib.locators.default_locator`.
+
+An example of usage of locator instances is given below::
 
     >>> from distlib.locators import SimpleScrapingLocator
     >>> from pprint import pprint
