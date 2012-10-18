@@ -934,12 +934,13 @@ class DependencyGraph(object):
                     to_remove.append(k)
                     del alist[k]
             if not to_remove:
+                # What's left in alist (if anything) is a cycle.
                 break
             # Remove from the adjacency list of others
             for k, v in alist.items():
                 alist[k] = [(d, r) for d, r in v if d not in to_remove]
             result.extend(to_remove)
-        return result
+        return result, list(alist.keys())
 
     def __repr__(self):
         """Representation of the graph"""
