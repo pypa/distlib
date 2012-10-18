@@ -843,7 +843,7 @@ class DependencyGraph(object):
         """
         self.adjacency_list[distribution] = []
         self.reverse_list[distribution] = []
-        self.missing[distribution] = []
+        #self.missing[distribution] = []
 
     def add_edge(self, x, y, label=None):
         """Add an edge from distribution *x* to distribution *y* with the given
@@ -869,10 +869,10 @@ class DependencyGraph(object):
         :type requirement: ``str``
         """
         logger.debug('%s missing %r', distribution, requirement)
-        self.missing[distribution].append(requirement)
+        self.missing.setdefault(distribution, []).append(requirement)
 
     def _repr_dist(self, dist):
-        return '%r %s' % (dist.name, dist.version)
+        return '%s %s' % (dist.name, dist.version)
 
     def repr_node(self, dist, level=1):
         """Prints only a subgraph"""
