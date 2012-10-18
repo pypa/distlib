@@ -30,6 +30,7 @@ if sys.version_info[0] < 3:
     import httplib
     import xmlrpclib
     import Queue as queue
+    from HTMLParser import HTMLParser
 
     _userprog = None
     def splituser(host):
@@ -60,6 +61,8 @@ else:
     import urllib.request as urllib2
     import xmlrpc.client as xmlrpclib
     import queue
+    from html.parser import HTMLParser
+
 try:
     from platform import python_implementation
 except ImportError:
@@ -196,3 +199,7 @@ except ImportError:
             return encoding, [first, second]
 
         return default, [first, second]
+
+# For converting & <-> &amp; etc.
+from cgi import escape
+unescape = HTMLParser().unescape

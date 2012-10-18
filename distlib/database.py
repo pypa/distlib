@@ -348,6 +348,14 @@ class Distribution(object):
             else:
                 data = resp.read().decode('utf-8')
                 result = json.loads(data)
+                # put relevant things in base metadata.
+                reqts = result.get('requirements', {})
+                deps = []
+                deps.extend(reqts.get('install', []))
+                if self.metadata['Requires']:
+                    pass # import pdb; pdb.set_trace()
+                else:
+                    self.metadata['Requires'] = deps
         except Exception:
             pass
         return result
@@ -860,6 +868,8 @@ class DependencyGraph(object):
                             or :class:`distutils2.database.EggInfoDistribution`
         :type requirement: ``str``
         """
+        logger.debug('%s missing %r', distribution, requirement)
+        #import pdb; pdb.set_trace()
         self.missing[distribution].append(requirement)
 
     def _repr_dist(self, dist):
@@ -952,9 +962,8 @@ def make_graph(dists):
                     #raise DistlibException('distribution %r has ill-formed '
                     #                       'provides field: %r' % (dist.name, p))
                 version = version[1:-1]  # trim off parenthesis
-            if name not in provided:
-                provided[name] = []
-            provided[name].append((version, dist))
+            logger.debug('Adding to provided: %s, %s, %s', name, version, dist)
+            provided.setdefault(name, []).append((version, dist))
 
     # now make the edges
     for dist in dists:

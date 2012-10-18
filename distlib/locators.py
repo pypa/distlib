@@ -15,6 +15,7 @@ import zlib
 
 from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
                      url2pathname, pathname2url, queue, quote,
+                     unescape,
                      Request, HTTPError, URLError)
 from .database import Distribution
 from .metadata import Metadata
@@ -40,9 +41,6 @@ class Locator(object):
     def get_project(self, name):
         raise NotImplementedError('Please implement in the subclass')
 
-    def _name_matches(self, wanted, seen):
-        return wanted.lower() == seen.lower()
-
     def convert_url_to_download_info(self, url, project_name):
         scheme, netloc, path, params, query, frag = urlparse(url)
         result = None
@@ -65,7 +63,7 @@ class Locator(object):
                     else:
                         name, version = m.group(1), m.group(2)
                         if (not project_name or
-                            self._name_matches(project_name, name)):
+                            project_name.lower() == name.lower()):
                             result = {
                                 'name': name,
                                 'version': version,
@@ -167,7 +165,8 @@ class Page(object):
         for match in self._href.finditer(self.data):
             url = match.group(1) or match.group(2) or match.group(3)
             url = urljoin(self.base_url, url)
-            # do any required cleanup of URL here (e.g. converting spaces)
+            url = unescape(url)
+            # do any other required cleanup of URL here
             result.add(url)
         return result
 
@@ -195,20 +194,13 @@ class SimpleScrapingLocator(Locator):
             self._threads.append(t)
 
     def _wait_threads(self):
+        # Note that you need two loops, since you can't say which
+        # thread will get each sentinel
         for t in self._threads:
             self._to_fetch.put(None)    # sentinel
+        for t in self._threads:
             t.join()
-
-    def _name_matches(self, wanted, seen):
-        wanted = wanted.lower()
-        seen = seen.lower()
-        if wanted == seen:
-            result = True
-        elif wanted == 'pil' and seen == 'imaging': # could generalise
-            result = True
-        else:
-            result = False
-        return result
+        self._threads = []
 
     def get_project(self, name):
         self.result = result = {}
@@ -216,10 +208,12 @@ class SimpleScrapingLocator(Locator):
         url = urljoin(self.base_url, '%s/' % quote(name))
         self._seen.clear()
         self._prepare_threads()
-        logger.debug('Queueing %s', url)
-        self._to_fetch.put(url)
-        self._to_fetch.join()
-        self._wait_threads()
+        try:
+            logger.debug('Queueing %s', url)
+            self._to_fetch.put(url)
+            self._to_fetch.join()
+        finally:
+            self._wait_threads()
         del self.result
         return result
 
@@ -229,14 +223,20 @@ class SimpleScrapingLocator(Locator):
             self._update_version_data(self.result, info)
         return info
 
-    def _should_queue(self, link):
-        scheme, _, path, _, _, _ = urlparse(link)
+    def _should_queue(self, link, referrer):
+        scheme, netloc, path, _, _, _ = urlparse(link)
         if path.endswith(EXTENSIONS + ('.exe', '.pdf')):
             result = False
         elif scheme not in ('http', 'https'):
             result = False
         else:
-            result = True
+            host = netloc.split(':', 1)[0]
+            if host.lower() == 'localhost':
+                result = False
+            else:
+                result = True
+        if not result:
+            logger.debug('Not queueing %s from %s', link, referrer)
         return result
 
     def _fetch(self):
@@ -251,14 +251,14 @@ class SimpleScrapingLocator(Locator):
                         if link not in self._seen:
                             self._seen.add(link)
                             if (not self._process_download(link) and
-                                self._should_queue(link) and
+                                self._should_queue(link, url) and
                                 url.startswith(self.base_url)):
                                 logger.debug('Queueing %s from %s', link, url)
                                 self._to_fetch.put(link)
             finally:
                 self._to_fetch.task_done()
             if not url:
-                logger.debug('Sentinel seen, quitting.')
+                #logger.debug('Sentinel seen, quitting.')
                 break
 
     def get_page(self, url):
@@ -269,6 +269,7 @@ class SimpleScrapingLocator(Locator):
 
         if url in self._cache:
             result = self._cache[url]
+            logger.debug('Returning %s from cache: %s', url, result)
         else:
             result = None
             req = Request(url, headers={'Accept-encoding': 'identity'})
@@ -293,7 +294,7 @@ class SimpleScrapingLocator(Locator):
                         encoding = m.group(1)
                     data = data.decode(encoding)
                     result = Page(data, final_url)
-                    self._cache[url] = self._cache[final_url] = result
+                    self._cache[final_url] = result
             except HTTPError as e:
                 if e.code != 404:
                     logger.exception('Fetch failed: %s: %s', url, e)
@@ -301,6 +302,8 @@ class SimpleScrapingLocator(Locator):
                 logger.exception('Fetch failed: %s: %s', url, e)
             except Exception as e:
                 logger.exception('Fetch failed: %s: %s', url, e)
+            finally:
+                self._cache[url] = result   # even if None (failure)
         return result
 
 

@@ -53,11 +53,7 @@ distutils.core.setup(
     platforms='any',
     packages=[
         'distlib',
-        'distlib.compat',
-        'distlib.util',
-        'distlib.database',
-        'distlib.locators',
-        'distlib.resources',
+        'distlib.pypi',
     ],
     cmdclass={
         'test': TestCommand,
