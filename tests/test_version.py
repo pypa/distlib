@@ -343,12 +343,21 @@ class LegacyVersionTestCase(unittest.TestCase):
 
 class SemanticVersionTestCase(unittest.TestCase):
     def test_basic(self):
-        self.assertFalse(is_semver('a'))
-        self.assertFalse(is_semver('1'))
-        self.assertFalse(is_semver('1.'))
-        self.assertFalse(is_semver('1.2'))
-        self.assertFalse(is_semver('1.2.'))
-        self.assertTrue(is_semver('1.2.3'))
+        bad = [
+            'a', '1', '1.', '1.2' , '1.2.',
+            '1.2.a', '1.2.3.a',
+        ]
+        good = [
+            '1.2.3', '1.2.3-pre.1.abc.2.def',
+            '1.2.3+post.1.abc.2.def',
+            '1.2.3-pre.1.abc.2.def+post.1.abc.2.def',
+        ]
+        for s in bad:
+            self.assertFalse(is_semver(s))
+            self.assertRaises(ValueError, semver_key, s)
+
+        for s in good:
+            self.assertTrue(is_semver(s))
 
     def test_ordering(self):
         def compare(a, b):
