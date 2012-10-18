@@ -345,7 +345,8 @@ class AggregatingLocator(Locator):
 
 default_locator = AggregatingLocator(
                     #PyPIJSONLocator('http://python.org/pypi'),
-                    SimpleScrapingLocator('http://pypi.python.org/simple/'))
+                    SimpleScrapingLocator('http://pypi.python.org/simple/',
+                                          timeout=2.0))
 
 def locate(predicate):
     result = None
