@@ -869,7 +869,6 @@ class DependencyGraph(object):
         :type requirement: ``str``
         """
         logger.debug('%s missing %r', distribution, requirement)
-        #import pdb; pdb.set_trace()
         self.missing[distribution].append(requirement)
 
     def _repr_dist(self, dist):
@@ -962,7 +961,9 @@ def make_graph(dists):
                     #raise DistlibException('distribution %r has ill-formed '
                     #                       'provides field: %r' % (dist.name, p))
                 version = version[1:-1]  # trim off parenthesis
-            logger.debug('Adding to provided: %s, %s, %s', name, version, dist)
+            # Add name in lower case for case-insensitivity
+            name = name.lower()
+            logger.debug('Add to provided: %s, %s, %s', name, version, dist)
             provided.setdefault(name, []).append((version, dist))
 
     # now make the edges
@@ -976,7 +977,7 @@ def make_graph(dists):
                 name = req.split()[0]
                 predicate = VersionPredicate(name)
 
-            name = predicate.name
+            name = predicate.name.lower()   # case-insensitive
 
             if name not in provided:
                 graph.add_missing(dist, req)
