@@ -177,7 +177,7 @@ class SimpleScrapingLocator(Locator):
         'gzip': lambda b: gzip.GzipFile(fileobj=BytesIO(d)).read(),
     }
 
-    def __init__(self, url, timeout=None, num_workers=1):
+    def __init__(self, url, timeout=None, num_workers=10):
         self.base_url = ensure_slash(url)
         self.timeout = timeout
         self._cache = {}
