@@ -200,7 +200,7 @@ class SimpleScrapingLocator(Locator):
             t.join()
 
     def _name_matches(self, wanted, seen):
-        wanted == wanted.lower()
+        wanted = wanted.lower()
         seen = seen.lower()
         if wanted == seen:
             result = True
