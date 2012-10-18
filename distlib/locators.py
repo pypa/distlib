@@ -183,6 +183,7 @@ class SimpleScrapingLocator(Locator):
         self._cache = {}
         self._seen = set()
         self._to_fetch = queue.Queue()
+        self._bad_hosts = set()
         self.num_workers = num_workers
 
     def _prepare_threads(self):
@@ -263,7 +264,7 @@ class SimpleScrapingLocator(Locator):
 
     def get_page(self, url):
         # http://peak.telecommunity.com/DevCenter/EasyInstall#package-index-api
-        scheme, _, path, _, _, _ = urlparse(url)
+        scheme, netloc, path, _, _, _ = urlparse(url)
         if scheme == 'file' and os.path.isdir(url2pathname(path)):
             url = urljoin(ensure_slash(url), 'index.html')
 
@@ -271,39 +272,42 @@ class SimpleScrapingLocator(Locator):
             result = self._cache[url]
             logger.debug('Returning %s from cache: %s', url, result)
         else:
+            host = netloc.split(':', 1)[0]
             result = None
-            req = Request(url, headers={'Accept-encoding': 'identity'})
-            try:
-                logger.debug('Fetching %s', url)
-                resp = urlopen(req, timeout=self.timeout)
-                logger.debug('Fetched %s', url)
-                headers = resp.info()
-                content_type = headers.get('Content-Type', '')
-                if not HTML_CONTENT_TYPE.match(content_type):
-                    result = None
-                else:
-                    final_url = resp.geturl()
-                    data = resp.read()
-                    encoding = headers.get('Content-Encoding')
-                    if encoding:
-                        decoder = self.decoders[encoding]   # fail if not found
-                        data = decoder(data)
-                    encoding = 'utf-8'
-                    m = CHARSET.search(content_type)
-                    if m:
-                        encoding = m.group(1)
-                    data = data.decode(encoding)
-                    result = Page(data, final_url)
-                    self._cache[final_url] = result
-            except HTTPError as e:
-                if e.code != 404:
+            if host in self._bad_hosts:
+                logger.debug('Skipping %s due to bad host %s', url, host)
+            else:
+                req = Request(url, headers={'Accept-encoding': 'identity'})
+                try:
+                    logger.debug('Fetching %s', url)
+                    resp = urlopen(req, timeout=self.timeout)
+                    logger.debug('Fetched %s', url)
+                    headers = resp.info()
+                    content_type = headers.get('Content-Type', '')
+                    if HTML_CONTENT_TYPE.match(content_type):
+                        final_url = resp.geturl()
+                        data = resp.read()
+                        encoding = headers.get('Content-Encoding')
+                        if encoding:
+                            decoder = self.decoders[encoding]   # fail if not found
+                            data = decoder(data)
+                        encoding = 'utf-8'
+                        m = CHARSET.search(content_type)
+                        if m:
+                            encoding = m.group(1)
+                        data = data.decode(encoding)
+                        result = Page(data, final_url)
+                        self._cache[final_url] = result
+                except HTTPError as e:
+                    if e.code != 404:
+                        logger.exception('Fetch failed: %s: %s', url, e)
+                except URLError as e:
                     logger.exception('Fetch failed: %s: %s', url, e)
-            except URLError as e:
-                logger.exception('Fetch failed: %s: %s', url, e)
-            except Exception as e:
-                logger.exception('Fetch failed: %s: %s', url, e)
-            finally:
-                self._cache[url] = result   # even if None (failure)
+                    self._bad_hosts.add(host)
+                except Exception as e:
+                    logger.exception('Fetch failed: %s: %s', url, e)
+                finally:
+                    self._cache[url] = result   # even if None (failure)
         return result
 
 
