@@ -54,6 +54,7 @@ distutils.core.setup(
     packages=[
         'distlib',
         'distlib.pypi',
+        'distlib._backport',
     ],
     cmdclass={
         'test': TestCommand,
