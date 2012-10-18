@@ -14,6 +14,7 @@ from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
 from .database import Distribution
 from .metadata import Metadata
 from .util import cached_property, parse_credentials, ensure_slash
+from .version import legacy_version_key, VersionPredicate
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,7 @@ class PyPIRPCLocator(Locator):
                 metadata['Download-URL'] = info['url']
                 if 'md5_digest' in info:
                     dist.md5_digest = info['md5_digest']
-            result[v] = dist
+                result[v] = dist
         return result
 
 class PyPIJSONLocator(Locator):
@@ -135,7 +136,7 @@ class PyPIJSONLocator(Locator):
                 md['Download-URL'] = info['url']
                 if 'md5_digest' in info:
                     dist.md5_digest = info['md5_digest']
-            result[md.version] = dist
+                result[md.version] = dist
         except Exception as e:
             logger.exception('JSON fetch failed: %s', e)
         return result
@@ -319,3 +320,18 @@ class AggregatingLocator(Locator):
                     result = r
                     break
         return result
+
+default_locator = AggregatingLocator(
+                    #PyPIJSONLocator('http://python.org/pypi'),
+                    SimpleScrapingLocator('http://pypi.python.org/simple/'))
+
+def locate(predicate):
+    result = None
+    vp = VersionPredicate(predicate)
+    versions = default_locator.get_project(vp.name)
+    if versions:
+        slist = [k for k in versions if vp.match(k)]
+        if len(slist) > 1:
+            slist = sorted(slist, key=legacy_version_key)
+        result = versions[slist[-1]]
+    return result

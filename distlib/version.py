@@ -369,6 +369,8 @@ def _split_predicate(predicate):
 class VersionPredicate(object):
     """Defines a predicate: ProjectName (>ver1,ver2, ..)"""
 
+    version_maker = NormalizedVersion
+
     _operators = {"<": lambda x, y: x < y,
                   ">": lambda x, y: x > y,
                   "<=": lambda x, y: str(x).startswith(str(y)) or x < y,
@@ -409,7 +411,7 @@ class VersionPredicate(object):
     def match(self, version):
         """Check if the provided version matches the predicates."""
         if isinstance(version, string_types):
-            version = NormalizedVersion(version)
+            version = self.version_maker(version)
         for operator, predicate in self.predicates:
             if not self._operators[operator](version, predicate):
                 return False

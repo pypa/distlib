@@ -11,12 +11,13 @@ import os
 import codecs
 import csv
 import hashlib
+import json
 import logging
 import sys
 import zipimport
 
 from . import DistlibException
-from .compat import StringIO, configparser
+from .compat import StringIO, configparser, urlopen
 from .version import (suggest_normalized_version, VersionPredicate,
                       IrrationalVersionError)
 from .metadata import Metadata
@@ -332,6 +333,31 @@ class Distribution(object):
     @cached_property
     def download_url(self):
         return self.metadata.download_url
+
+    @cached_property
+    def extended_metadata(self):
+        result = {}
+        url = ('http://www.red-dove.com/pypi/results/'
+               '%s/%s/%s/info/package.json' % (self.name[0].upper(), self.name,
+                                               self.version))
+        try:
+            resp = urlopen(url)
+            headers = resp.info()
+            if headers.get('Content-Type') != 'application/json':
+                logger.debug('Unexpected response for metadata JSON request')
+            else:
+                data = resp.read().decode('utf-8')
+                result = json.loads(data)
+        except Exception:
+            pass
+        return result
+
+    def get_requirements(self, key):
+        result = []
+        emd = self.extended_metadata
+        if 'requirements' in emd and key in emd['requirements']:
+            result = emd['requirements'][key]
+        return result
 
     def __repr__(self):
         if self.download_url:
