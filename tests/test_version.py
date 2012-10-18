@@ -12,6 +12,8 @@ from distlib.version import NormalizedVersion as V
 from distlib.version import HugeMajorVersionNumError, IrrationalVersionError
 from distlib.version import suggest_normalized_version as suggest
 from distlib.version import VersionPredicate
+from distlib.version import legacy_version_key
+from distlib.version import is_semver, semver_key
 
 
 class VersionTestCase(unittest.TestCase):
@@ -272,11 +274,113 @@ class VersionWhiteBoxTestCase(unittest.TestCase):
             [1, 0, 0])
 
 
+class LegacyVersionTestCase(unittest.TestCase):
+    # These tests are the same as distribute's
+    def test_equality(self):
+        def compare(a, b):
+            ka, kb = legacy_version_key(a), legacy_version_key(b)
+            self.assertEqual(ka, kb)
+
+        compare('0.4', '0.4.0')
+        compare('0.4.0.0', '0.4.0')
+        compare('0.4.0-0', '0.4-0')
+        compare('0pl1', '0.0pl1')
+        compare('0pre1', '0.0c1')
+        compare('0.0.0preview1', '0c1')
+        compare('0.0c1', '0rc1')
+        compare('1.2a1', '1.2.a.1')
+        compare('1.2...a', '1.2a')
+
+    def test_ordering(self):
+        def compare(a, b):
+            ka, kb = legacy_version_key(a), legacy_version_key(b)
+            self.assertLess(ka, kb)
+
+        compare('2.1','2.1.1')
+        compare('2.1.0','2.10')
+        compare('2a1','2b0')
+        compare('2b1','2c0')
+        compare('2a1','2.1')
+        compare('2.3a1', '2.3')
+        compare('2.1-1', '2.1-2')
+        compare('2.1-1', '2.1.1')
+        compare('2.1', '2.1.1-1')
+        compare('2.1', '2.1pl4')
+        compare('2.1a0-20040501', '2.1')
+        compare('1.1', '02.1')
+        compare('A56','B27')
+        compare('3.2', '3.2.pl0')
+        compare('3.2-1', '3.2pl1')
+        compare('3.2pl1', '3.2pl1-1')
+        compare('0.4', '4.0')
+        compare('0.0.4', '0.4.0')
+        compare('0pl1', '0.4pl1')
+        compare('2.1dev','2.1a0')
+        compare('2.1.0rc1','2.1.0')
+        compare('2.1.0','2.1.0-rc0')
+        compare('2.1.0','2.1.0-a')
+        compare('2.1.0','2.1.0-alpha')
+        compare('2.1.0','2.1.0-foo')
+        compare('1.0','1.0-1')
+        compare('1.0-1','1.0.1')
+        compare('1.0a','1.0b')
+        compare('1.0dev','1.0rc1')
+        compare('1.0pre','1.0')
+        compare('1.0pre','1.0')
+        compare('1.0a','1.0-a')
+        compare('1.0rc1','1.0-rc1')
+
+        versions = """
+        0.80.1-3 0.80.1-2 0.80.1-1 0.79.9999+0.80.0pre4-1
+        0.79.9999+0.80.0pre2-3 0.79.9999+0.80.0pre2-2
+        0.77.2-1 0.77.1-1 0.77.0-1
+        """.split()
+
+        for i, v1 in enumerate(versions):
+            for v2 in versions[i+1:]:
+                compare(v2, v1)
+
+
+class SemanticVersionTestCase(unittest.TestCase):
+    def test_basic(self):
+        self.assertFalse(is_semver('a'))
+        self.assertFalse(is_semver('1'))
+        self.assertFalse(is_semver('1.'))
+        self.assertFalse(is_semver('1.2'))
+        self.assertFalse(is_semver('1.2.'))
+        self.assertTrue(is_semver('1.2.3'))
+
+    def test_ordering(self):
+        def compare(a, b):
+            ka, kb = semver_key(a), semver_key(b)
+            self.assertLess(ka, kb)
+
+        versions = [
+
+            '1.0.0-alpha',
+            '1.0.0-alpha.1',
+            '1.0.0-beta.2',
+            '1.0.0-beta.11',
+            '1.0.0-rc.1',
+            '1.0.0-rc.1+build.1',
+            '1.0.0',
+            '1.0.0+0.3.7',
+            '1.3.7+build',
+            '1.3.7+build.2.b8f12d7',
+            '1.3.7+build.11.e0f985a',
+        ]
+
+        for i, v1 in enumerate(versions):
+            for v2 in versions[i+1:]:
+                compare(v1, v2)
+
 def test_suite():
     #README = os.path.join(os.path.dirname(__file__), 'README.txt')
     #suite = [doctest.DocFileSuite(README), unittest.makeSuite(VersionTestCase)]
     suite = [unittest.makeSuite(VersionTestCase),
-             unittest.makeSuite(VersionWhiteBoxTestCase)]
+             unittest.makeSuite(VersionWhiteBoxTestCase),
+             unittest.makeSuite(LegacyVersionTestCase),
+             unittest.makeSuite(SemanticVersionTestCase)]
     return unittest.TestSuite(suite)
 
 if __name__ == "__main__":

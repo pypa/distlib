@@ -507,3 +507,32 @@ def legacy_version_key(s):
                 result.pop()
         result.append(p)
     return tuple(result)
+
+#
+#   Semantic versioning
+#
+
+_SEMVER_RE = re.compile(r'^(\d+)\.(\d+)\.(\d+)'
+                        r'(-[a-z0-9]+(\.[a-z0-9-]+)*)?'
+                        r'(\+[a-z0-9]+(\.[a-z0-9-]+)*)?$', re.I)
+
+def is_semver(s):
+    return _SEMVER_RE.match(s)
+
+def semver_key(s):
+    def make_tuple(s, absent):
+        if s is None:
+            result = (absent,)
+        else:
+            parts = s[1:].split('.')
+            result = tuple([p.zfill(8) if p.isdigit() else p for p in parts])
+        return result
+
+    result = None
+    m = is_semver(s)
+    if not m:
+        raise ValueError('Not a semantic version: %r' % s)
+    groups = m.groups()
+    major, minor, patch = [int(i) for i in groups[:3]]
+    pre, build = make_tuple(groups[3], '|'), make_tuple(groups[5], '*')
+    return ((major, minor, patch), pre, build)

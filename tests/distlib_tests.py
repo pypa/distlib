@@ -4,7 +4,8 @@
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 from test_glob import GlobTestCase
-from test_version import VersionTestCase, VersionWhiteBoxTestCase
+from test_version import (VersionTestCase, VersionWhiteBoxTestCase,
+                          LegacyVersionTestCase, SemanticVersionTestCase)
 from test_markers import MarkersTestCase
 from test_metadata import MetadataTestCase
 from test_database import (DataFilesTestCase, TestDatabase, TestDistribution,

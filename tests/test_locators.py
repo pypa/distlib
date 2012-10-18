@@ -52,13 +52,14 @@ class LocatorTestCase(unittest.TestCase):
                              '961ddd9bc085fdd8b248c6dd96ceb1c8')
 
     def test_unicode_project_name(self):
+        # Just checking to see that no exceptions are raised.
         NAME = '\u2603'
         locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
         result = locator.get_project(NAME)
         self.assertFalse(result)
         locator = PyPIJSONLocator('http://pypi.python.org/pypi/')
         result = locator.get_project(NAME)
-        self.assertIn('0.1.12', result)
+        self.assertFalse(result)
 
     def test_dir(self):
         d = os.path.join(HERE, 'fake_archives')
