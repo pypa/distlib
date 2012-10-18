@@ -920,6 +920,27 @@ class DependencyGraph(object):
             f.write('}\n')
         f.write('}\n')
 
+    def topological_sort(self):
+        result = []
+        # Make a shallow copy of the adjacency list
+        alist = {}
+        for k, v in self.adjacency_list.items():
+            alist[k] = v[:]
+        while True:
+            # See what we can remove in this run
+            to_remove = []
+            for k, v in list(alist.items())[:]:
+                if not v:
+                    to_remove.append(k)
+                    del alist[k]
+            if not to_remove:
+                break
+            # Remove from the adjacency list of others
+            for k, v in alist.items():
+                alist[k] = [(d, r) for d, r in v if d not in to_remove]
+            result.extend(to_remove)
+        return result
+
     def __repr__(self):
         """Representation of the graph"""
         output = []
