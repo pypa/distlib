@@ -92,3 +92,5 @@ class UtilTestCase(unittest.TestCase):
                          ('abl.jquery', '1.4.2-2', None))
         self.assertEqual(examine_filename('python-gnupg-0.1'),
                          ('python-gnupg', '0.1', None))
+        self.assertEqual(examine_filename('baklabel-1.0.3-2729-py3.2'),
+                         ('baklabel', '1.0.3-2729', '3.2'))
