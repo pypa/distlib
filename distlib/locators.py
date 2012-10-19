@@ -348,7 +348,7 @@ class AggregatingLocator(Locator):
         return result
 
 default_locator = AggregatingLocator(
-                    #PyPIJSONLocator('http://python.org/pypi'),
+                    PyPIJSONLocator('http://pypi.python.org/pypi'),
                     SimpleScrapingLocator('http://pypi.python.org/simple/',
                                           timeout=2.0))
 
