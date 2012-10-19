@@ -61,7 +61,6 @@ class VersionTestCase(unittest.TestCase):
                       '1.2.dev2.post2', '1.2.post2.dev3.post4')
 
         for s in irrational:
-            print(s)
             self.assertRaises(IrrationalVersionError, V, s)
 
     def test_huge_version(self):
