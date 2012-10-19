@@ -8,7 +8,7 @@ import os
 
 from compat import unittest
 
-from distlib.compat import url2pathname
+from distlib.compat import url2pathname, urlparse
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
                               AggregatingLocator)
@@ -71,13 +71,17 @@ class LocatorTestCase(unittest.TestCase):
         locator = DirectoryLocator(d)
         expected = os.path.join(HERE, 'fake_archives', 'subdir',
                                 'subsubdir', 'Flask-0.9.tar.gz')
+        def get_path(url):
+            t = urlparse(url)
+            return url2pathname(t.path)
+
         for name in ('flask', 'Flask'):
             result = locator.get_project(name)
             self.assertIn('0.9', result)
             dist = result['0.9']
             self.assertEqual(dist.name, 'Flask')
             self.assertEqual(dist.version, '0.9')
-            self.assertEqual(url2pathname(dist.download_url), expected)
+            self.assertEqual(get_path(dist.download_url), expected)
 
     def ztest_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')

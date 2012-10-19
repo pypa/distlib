@@ -51,8 +51,10 @@ class Locator(object):
             elif ('pypi.python.org' in p1.netloc and
                 'pypi.python.org' not in p2.netloc):
                 result = True
-            elif p1.path > p2.path:   # .zip > .tar.gz > .tar.bz2
-                result = True
+            else:
+                fn1, fn2 = [posixpath.basename(p.path) for p in p1, p2]
+                if fn1 > fn2:   # .zip > .tar.gz > .tar.bz2
+                    result = True
             return result
 
         if url1 == 'UNKNOWN':
@@ -351,7 +353,9 @@ class DirectoryLocator(Locator):
             for fn in files:
                 if fn.endswith(self.downloadable_extensions):
                     fn = os.path.join(root, fn)
-                    url = pathname2url(os.path.abspath(fn))
+                    url = urlunparse(('file', '',
+                                      pathname2url(os.path.abspath(fn)),
+                                      '', '', ''))
                     info = self.convert_url_to_download_info(url, name)
                     if info:
                         self._update_version_data(result, info)
