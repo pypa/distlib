@@ -25,7 +25,6 @@ from .version import legacy_version_key, VersionPredicate
 
 logger = logging.getLogger(__name__)
 
-EXTENSIONS = tuple(".tar.gz .tar.bz2 .tar .zip .tgz .egg .exe".split())
 MD5_HASH = re.compile('^md5=([a-f0-9]+)$')
 CHARSET = re.compile(r';\s*charset\s*=\s*(.*)\s*$', re.I)
 HTML_CONTENT_TYPE = re.compile('text/html|application/xhtml')
@@ -37,8 +36,12 @@ def get_all_distribution_names(url=None):
     return client.list_packages()
 
 class Locator(object):
-    downloadable_extensions = EXTENSIONS
+    source_extensions = ('.tar.gz', '.tar.bz2', '.tar', '.zip', '.tgz')
     binary_extensions = ('.egg', '.exe')
+    excluded_extensions = ('.pdf',)
+
+    # Leave out binaries from downloadables, for now.
+    downloadable_extensions = source_extensions
 
     def __init__(self):
         self._cache = {}
@@ -83,8 +86,6 @@ class Locator(object):
             origpath = path
             path = filename = posixpath.basename(path)
             for ext in self.downloadable_extensions:
-                if ext in self.binary_extensions:
-                    continue    # for now, at least
                 if path.endswith(ext):
                     path = path[:-len(ext)]
                     t = examine_filename(path)
@@ -265,7 +266,8 @@ class SimpleScrapingLocator(Locator):
 
     def _should_queue(self, link, referrer):
         scheme, netloc, path, _, _, _ = urlparse(link)
-        if path.endswith(EXTENSIONS + ('.pdf',)):
+        if path.endswith(self.source_extensions + self.binary_extensions +
+                         self.excluded_extensions):
             result = False
         elif scheme not in ('http', 'https'):
             result = False
