@@ -166,9 +166,9 @@ class NormalizedVersion(object):
         """
         nums = []
         for n in s.split("."):
-            if len(n) > 1 and n[0] == '0':
-                raise IrrationalVersionError("cannot have leading zero in "
-                    "version number segment: '%s' in %r" % (n, full_ver_str))
+            #if len(n) > 1 and n[0] == '0':
+            #    raise IrrationalVersionError("cannot have leading zero in "
+            #        "version number segment: '%s' in %r" % (n, full_ver_str))
             nums.append(int(n))
         if self.drop_trailing_zeros:
             while nums and nums[-1] == 0:
