@@ -5,7 +5,7 @@ from compat import unittest
 from distlib import DistlibException
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
-                          parse_credentials, ensure_slash)
+                          parse_credentials, ensure_slash, examine_filename)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -85,3 +85,10 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(ensure_slash('/'), '/')
         self.assertEqual(ensure_slash('abc'), 'abc/')
         self.assertEqual(ensure_slash('def/'), 'def/')
+
+    def test_examine_filename(self):
+        self.assertIsNone(examine_filename('abl.jquery'))
+        self.assertEqual(examine_filename('abl.jquery-1.4.2-2'),
+                         ('abl.jquery', '1.4.2-2', None))
+        self.assertEqual(examine_filename('python-gnupg-0.1'),
+                         ('python-gnupg', '0.1', None))

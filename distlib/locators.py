@@ -19,17 +19,16 @@ from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
                      Request, HTTPError, URLError)
 from .database import Distribution
 from .metadata import Metadata
-from .util import cached_property, parse_credentials, ensure_slash
+from .util import (cached_property, parse_credentials, ensure_slash,
+                   examine_filename)
 from .version import legacy_version_key, VersionPredicate
 
 logger = logging.getLogger(__name__)
 
-EXTENSIONS = tuple(".tar.gz .tar.bz2 .tar .zip .tgz .egg".split())
+EXTENSIONS = tuple(".tar.gz .tar.bz2 .tar .zip .tgz .egg .exe".split())
 MD5_HASH = re.compile('^md5=([a-f0-9]+)$')
 CHARSET = re.compile(r';\s*charset\s*=\s*(.*)\s*$', re.I)
 HTML_CONTENT_TYPE = re.compile('text/html|application/xhtml')
-PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_.-]+)-([0-9][0-9_.-]*)', re.I)
-PYTHON_VERSION = re.compile(r'-py(\d\.?\d?)$')
 
 def get_all_distribution_names(url=None):
     if url is None:
@@ -38,30 +37,54 @@ def get_all_distribution_names(url=None):
     return client.list_packages()
 
 class Locator(object):
+    downloadable_extensions = EXTENSIONS
+    binary_extensions = ('.egg', '.exe')
+
     def get_project(self, name):
         raise NotImplementedError('Please implement in the subclass')
+
+    def prefer_url(self, url1, url2):
+        def prefer_first(p1, p2):
+            result = False
+            if p1.scheme != p2.scheme and p2.scheme == 'https':
+                result = True
+            elif ('pypi.python.org' in p1.netloc and
+                'pypi.python.org' not in p2.netloc):
+                result = True
+            elif p1.path > p2.path:   # .zip > .tar.gz > .tar.bz2
+                result = True
+            return result
+
+        if url1 == 'UNKNOWN':
+            result = url2
+        else:
+            result = url2
+            p1 = urlparse(url1)
+            p2 = urlparse(url2)
+            if prefer_first(p1, p2):
+                result = url1
+            if result != url2:
+                logger.debug('Not replacing %r with %r', url1, url2)
+            else:
+                logger.debug('Replacing %r with %r', url1, url2)
+        return result
 
     def convert_url_to_download_info(self, url, project_name):
         scheme, netloc, path, params, query, frag = urlparse(url)
         result = None
-        if path.endswith(EXTENSIONS):
+        if path.endswith(self.downloadable_extensions):
             origpath = path
             path = filename = posixpath.basename(path)
-            for ext in EXTENSIONS:
-                if ext == '.egg':
+            for ext in self.downloadable_extensions:
+                if ext in self.binary_extensions:
                     continue    # for now, at least
                 if path.endswith(ext):
                     path = path[:-len(ext)]
-                    pyver = None
-                    m = PYTHON_VERSION.search(path)
-                    if m:
-                        pyver = m.group(1)
-                        path = path[:m.start()]
-                    m = PROJECT_NAME_AND_VERSION.match(path)
-                    if not m:
+                    t = examine_filename(path)
+                    if not t:
                         logger.debug('No match for project/version: %s', path)
                     else:
-                        name, version = m.group(1), m.group(2)
+                        name, version, pyver = t
                         if (not project_name or
                             project_name.lower() == name.lower()):
                             result = {
@@ -96,7 +119,8 @@ class Locator(object):
         if 'python-version' in info:
             md['Requires-Python'] = info['python-version']
         if md['Download-URL'] != info['url']:
-            md['Download-URL'] = info['url']
+            md['Download-URL'] = self.prefer_url(md['Download-URL'],
+                                                 info['url'])
         dist.locator = self
         result[version] = dist
 
@@ -119,6 +143,7 @@ class PyPIRPCLocator(Locator):
                 metadata['Download-URL'] = info['url']
                 if 'md5_digest' in info:
                     dist.md5_digest = info['md5_digest']
+                dist.locator = self
                 result[v] = dist
         return result
 
@@ -142,6 +167,7 @@ class PyPIJSONLocator(Locator):
                 md['Download-URL'] = info['url']
                 if 'md5_digest' in info:
                     dist.md5_digest = info['md5_digest']
+                dist.locator = self
                 result[md.version] = dist
         except Exception as e:
             logger.exception('JSON fetch failed: %s', e)
@@ -222,11 +248,12 @@ class SimpleScrapingLocator(Locator):
         info = self.convert_url_to_download_info(url, self.project_name)
         if info:
             self._update_version_data(self.result, info)
+        logger.debug('process_download: %s -> %s', url, info)
         return info
 
     def _should_queue(self, link, referrer):
         scheme, netloc, path, _, _, _ = urlparse(link)
-        if path.endswith(EXTENSIONS + ('.exe', '.pdf')):
+        if path.endswith(EXTENSIONS + ('.pdf',)):
             result = False
         elif scheme not in ('http', 'https'):
             result = False
@@ -322,7 +349,7 @@ class DirectoryLocator(Locator):
         result = {}
         for root, dirs, files in os.walk(self.base_dir):
             for fn in files:
-                if fn.endswith(EXTENSIONS):
+                if fn.endswith(self.downloadable_extensions):
                     fn = os.path.join(root, fn)
                     url = pathname2url(os.path.abspath(fn))
                     info = self.convert_url_to_download_info(url, name)
@@ -348,7 +375,7 @@ class AggregatingLocator(Locator):
         return result
 
 default_locator = AggregatingLocator(
-                    PyPIJSONLocator('http://pypi.python.org/pypi'),
+                    #PyPIJSONLocator('http://pypi.python.org/pypi'),
                     SimpleScrapingLocator('http://pypi.python.org/simple/',
                                           timeout=2.0))
 
@@ -363,8 +390,8 @@ def locate(predicate):
             try:
                 if vp.match(k):
                     slist.append(k)
-            except Exception:
-                pass
+            except Exception:   # legacy versions :-(
+                slist.append(k)
         if len(slist) > 1:
             slist = sorted(slist, key=legacy_version_key)
         if slist:

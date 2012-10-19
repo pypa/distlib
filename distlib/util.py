@@ -344,3 +344,24 @@ def get_process_umask():
     result = os.umask(0o22)
     os.umask(result)
     return result
+
+PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_]+([.-][a-z_][a-z0-9_]*)*)-'
+                                      '([0-9][a-z0-9_.+-]*)', re.I)
+PYTHON_VERSION = re.compile(r'-py(\d\.?\d?)$')
+
+def examine_filename(filename):
+    """
+    Extract name, version, python version from a filename (no extension)
+
+    Return name, version, pyver or None
+    """
+    result = None
+    pyver = None
+    m = PYTHON_VERSION.search(filename)
+    if m:
+        pyver = m.group(1)
+        filename = filename[:m.start()]
+    m = PROJECT_NAME_AND_VERSION.match(filename)
+    if m:
+        result = m.group(1), m.group(3), pyver
+    return result

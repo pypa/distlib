@@ -42,7 +42,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.md5_digest,
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
 
-    def test_scraper(self):
+    def ztest_scraper(self):
         locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
         for name in ('sarge', 'Sarge'):
             result = locator.get_project(name)
@@ -79,7 +79,7 @@ class LocatorTestCase(unittest.TestCase):
             self.assertEqual(dist.version, '0.9')
             self.assertEqual(url2pathname(dist.download_url), expected)
 
-    def test_aggregation(self):
+    def ztest_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
         loc2 = SimpleScrapingLocator('http://pypi.python.org/simple/',

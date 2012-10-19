@@ -881,30 +881,30 @@ class DepGraphTestCase(LoggingCatcher,
 
         deps = [(x.name, y) for x, y in graph.adjacency_list[grammar]]
         self.checkLists([('bacon', 'truffles (>=1.2)')], deps)
-        self.checkLists(graph.missing[grammar], [])
+        self.checkLists(graph.missing.get(grammar, []), [])
         self.assertIn(grammar, graph.reverse_list[bacon])
 
         deps = [(x.name, y) for x, y in graph.adjacency_list[towel]]
         self.checkLists([('bacon', 'bacon (<=0.2)')], deps)
-        self.checkLists(graph.missing[towel], [])
+        self.checkLists(graph.missing.get(towel, []), [])
         self.assertIn(towel, graph.reverse_list[bacon])
 
         deps = [(x.name, y) for x, y in graph.adjacency_list[bacon]]
         self.checkLists([], deps)
-        self.checkLists(graph.missing[bacon], [])
+        self.checkLists(graph.missing.get(bacon, []), [])
 
         deps = [(x.name, y) for x, y in graph.adjacency_list[banana]]
         self.checkLists([('strawberry', 'strawberry (>=0.5)')], deps)
-        self.checkLists(graph.missing[banana], [])
+        self.checkLists(graph.missing.get(banana, []), [])
         self.assertIn(banana, graph.reverse_list[strawberry])
 
         deps = [(x.name, y) for x, y in graph.adjacency_list[strawberry]]
         self.checkLists([], deps)
-        self.checkLists(graph.missing[strawberry], [])
+        self.checkLists(graph.missing.get(strawberry, []), [])
 
         deps = [(x.name, y) for x, y in graph.adjacency_list[cheese]]
         self.checkLists([], deps)
-        self.checkLists(graph.missing[cheese], [])
+        self.checkLists(graph.missing.get(cheese, []), [])
 
     def test_dependent_dists(self):
         dists = self.get_dists(self.DISTROS_DIST)

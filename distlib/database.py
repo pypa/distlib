@@ -330,7 +330,7 @@ class Distribution(object):
     def version(self):
         return self.metadata.version
 
-    @cached_property
+    @property
     def download_url(self):
         return self.metadata.download_url
 
