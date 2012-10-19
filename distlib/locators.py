@@ -256,8 +256,17 @@ class SimpleScrapingLocator(Locator):
         del self.result
         return result
 
+    platform_dependent = re.compile(r'\b(linux-(i\d86|x86_64)|'
+                                    r'win(32|-amd64)|macosx-\d+)\b', re.I)
+
+    def _is_platform_dependent(self, url):
+        return self.platform_dependent.search(url)
+
     def _process_download(self, url):
-        info = self.convert_url_to_download_info(url, self.project_name)
+        if self._is_platform_dependent(url):
+            info = None
+        else:
+            info = self.convert_url_to_download_info(url, self.project_name)
         logger.debug('process_download: %s -> %s', url, info)
         if info:
             with self._lock:    # needed because self.result is shared
@@ -269,7 +278,9 @@ class SimpleScrapingLocator(Locator):
         if path.endswith(self.source_extensions + self.binary_extensions +
                          self.excluded_extensions):
             result = False
-        elif scheme not in ('http', 'https'):
+        elif scheme not in ('http', 'https', 'ftp'):
+            result = False
+        elif self._is_platform_dependent(link):
             result = False
         else:
             host = netloc.split(':', 1)[0]
