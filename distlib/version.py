@@ -12,7 +12,7 @@ from .compat import string_types
 __all__ = ['NormalizedVersion', 'suggest_normalized_version',
            'VersionPredicate', 'is_valid_version', 'is_valid_versions',
            'is_valid_predicate', 'IrrationalVersionError',
-           'HugeMajorVersionNumError', 'legacy_version_key']
+           'HugeMajorVersionNumError', 'legacy_version_key', 'is_predicate']
 
 class IrrationalVersionError(Exception):
     """This is an irrational version."""
@@ -349,7 +349,7 @@ def suggest_normalized_version(s):
 
 
 # A predicate is: "ProjectName (VERSION1, VERSION2, ..)
-_PREDICATE = re.compile(r"(?i)^\s*(\w[\s\w-]*(?:\.\w*)*)(.*)")
+_PREDICATE = re.compile(r"^\s*(\w[\s\w-]*(?:\.\w*)*)(.*)", re.I)
 _VERSIONS = re.compile(r"^\s*\((?P<versions>.*)\)\s*$|^\s*"
                         "(?P<versions2>.*)\s*$")
 _PLAIN_VERSIONS = re.compile(r"^\s*(.*)\s*$")
@@ -365,6 +365,8 @@ def _split_predicate(predicate):
         comp, version = match.groups()
     return comp, NormalizedVersion(version)
 
+def is_predicate(s):
+    return _PREDICATE.match(s)
 
 class VersionPredicate(object):
     """Defines a predicate: ProjectName (>ver1,ver2, ..)"""
