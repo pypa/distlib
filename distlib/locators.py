@@ -221,6 +221,7 @@ class SimpleScrapingLocator(Locator):
         self._to_fetch = queue.Queue()
         self._bad_hosts = set()
         self.num_workers = num_workers
+        self._lock = threading.RLock()
 
     def _prepare_threads(self):
         self._threads = []
@@ -256,9 +257,10 @@ class SimpleScrapingLocator(Locator):
 
     def _process_download(self, url):
         info = self.convert_url_to_download_info(url, self.project_name)
-        if info:
-            self._update_version_data(self.result, info)
         logger.debug('process_download: %s -> %s', url, info)
+        if info:
+            with self._lock:    # needed because self.result is shared
+                self._update_version_data(self.result, info)
         return info
 
     def _should_queue(self, link, referrer):
