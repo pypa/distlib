@@ -44,26 +44,18 @@ class Locator(object):
         raise NotImplementedError('Please implement in the subclass')
 
     def prefer_url(self, url1, url2):
-        def prefer_first(p1, p2):
-            result = False
-            if p1.scheme != p2.scheme and p2.scheme == 'https':
-                result = True
-            elif ('pypi.python.org' in p1.netloc and
-                'pypi.python.org' not in p2.netloc):
-                result = True
-            else:
-                fn1, fn2 = [posixpath.basename(p.path) for p in p1, p2]
-                if fn1 > fn2:   # .zip > .tar.gz > .tar.bz2
-                    result = True
-            return result
+        def score(url):
+            t = urlparse(url)
+            return (t.scheme != 'https', 'pypi.python.org' in t.netloc,
+                    posixpath.basename(t.path))
 
         if url1 == 'UNKNOWN':
             result = url2
         else:
             result = url2
-            p1 = urlparse(url1)
-            p2 = urlparse(url2)
-            if prefer_first(p1, p2):
+            s1 = score(url1)
+            s2 = score(url2)
+            if s1 > s2:
                 result = url1
             if result != url2:
                 logger.debug('Not replacing %r with %r', url1, url2)
