@@ -40,8 +40,21 @@ class Locator(object):
     downloadable_extensions = EXTENSIONS
     binary_extensions = ('.egg', '.exe')
 
-    def get_project(self, name):
+    def __init__(self):
+        self._cache = {}
+
+    def _get_project(self, name):
         raise NotImplementedError('Please implement in the subclass')
+
+    def get_project(self, name):
+        if self._cache is None:
+            result = self._get_project(name)
+        elif name in self._cache:
+            result = self._cache[name]
+        else:
+            result = self._get_project(name)
+            self._cache[name] = result
+        return result
 
     def prefer_url(self, url1, url2):
         def score(url):
@@ -120,10 +133,11 @@ class Locator(object):
 
 class PyPIRPCLocator(Locator):
     def __init__(self, url):
+        super(PyPIRPCLocator, self).__init__()
         self.base_url = url
         self.client = xmlrpclib.ServerProxy(url)
 
-    def get_project(self, name):
+    def _get_project(self, name):
         result = {}
         versions = self.client.package_releases(name, True)
         for v in versions:
@@ -143,9 +157,10 @@ class PyPIRPCLocator(Locator):
 
 class PyPIJSONLocator(Locator):
     def __init__(self, url):
+        super(PyPIJSONLocator, self).__init__()
         self.base_url = ensure_slash(url)
 
-    def get_project(self, name):
+    def _get_project(self, name):
         result = {}
         url = urljoin(self.base_url, '%s/json' % quote(name))
         try:
@@ -198,9 +213,10 @@ class SimpleScrapingLocator(Locator):
     }
 
     def __init__(self, url, timeout=None, num_workers=10):
+        super(SimpleScrapingLocator, self).__init__()
         self.base_url = ensure_slash(url)
         self.timeout = timeout
-        self._cache = {}
+        self._page_cache = {}
         self._seen = set()
         self._to_fetch = queue.Queue()
         self._bad_hosts = set()
@@ -223,7 +239,7 @@ class SimpleScrapingLocator(Locator):
             t.join()
         self._threads = []
 
-    def get_project(self, name):
+    def _get_project(self, name):
         self.result = result = {}
         self.project_name = name
         url = urljoin(self.base_url, '%s/' % quote(name))
@@ -289,8 +305,8 @@ class SimpleScrapingLocator(Locator):
         if scheme == 'file' and os.path.isdir(url2pathname(path)):
             url = urljoin(ensure_slash(url), 'index.html')
 
-        if url in self._cache:
-            result = self._cache[url]
+        if url in self._page_cache:
+            result = self._page_cache[url]
             logger.debug('Returning %s from cache: %s', url, result)
         else:
             host = netloc.split(':', 1)[0]
@@ -318,7 +334,7 @@ class SimpleScrapingLocator(Locator):
                             encoding = m.group(1)
                         data = data.decode(encoding)
                         result = Page(data, final_url)
-                        self._cache[final_url] = result
+                        self._page_cache[final_url] = result
                 except HTTPError as e:
                     if e.code != 404:
                         logger.exception('Fetch failed: %s: %s', url, e)
@@ -328,18 +344,19 @@ class SimpleScrapingLocator(Locator):
                 except Exception as e:
                     logger.exception('Fetch failed: %s: %s', url, e)
                 finally:
-                    self._cache[url] = result   # even if None (failure)
+                    self._page_cache[url] = result   # even if None (failure)
         return result
 
 
 class DirectoryLocator(Locator):
     def __init__(self, path):
+        super(DirectoryLocator, self).__init__()
         path = os.path.abspath(path)
         if not os.path.isdir(path):
             raise ValueError('Not a directory: %r' % path)
         self.base_dir = path
 
-    def get_project(self, name):
+    def _get_project(self, name):
         result = {}
         for root, dirs, files in os.walk(self.base_dir):
             for fn in files:
@@ -355,10 +372,11 @@ class DirectoryLocator(Locator):
 
 class AggregatingLocator(Locator):
     def __init__(self, *locators, **kwargs):
+        super(AggregatingLocator, self).__init__()
         self.locators = locators
         self.merge = kwargs.get('merge', False)
 
-    def get_project(self, name):
+    def _get_project(self, name):
         result = {}
         for locator in self.locators:
             r = locator.get_project(name)
