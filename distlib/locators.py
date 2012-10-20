@@ -21,7 +21,7 @@ from .database import Distribution
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
                    examine_filename)
-from .version import legacy_version_key, NormalizedMatcher
+from .version import legacy_key, NormalizedMatcher
 
 logger = logging.getLogger(__name__)
 

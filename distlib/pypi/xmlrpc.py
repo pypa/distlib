@@ -9,7 +9,7 @@ implementation at http://wiki.python.org/moin/PyPiXmlRpc).
 import logging
 
 from ..compat import xmlrpclib
-from ..version import get_version_predicate, UnsupportedVersionError
+from ..version import get_matcher, UnsupportedVersionError
 from .base import BaseClient
 from .errors import ProjectNotFound, InvalidSearchField, ReleaseNotFound
 from .dist import ReleaseInfo
@@ -40,26 +40,24 @@ class Client(BaseClient):
         'http://someurl/'
     """
 
-    def __init__(self, server_url=DEFAULT_XMLRPC_INDEX_URL, prefer_final=False,
+    def __init__(self, server_url=DEFAULT_XMLRPC_INDEX_URL,
                  prefer_source=True):
-        super(Client, self).__init__(prefer_final, prefer_source)
+        super(Client, self).__init__(prefer_source)
         self.server_url = server_url
         self._projects = {}
 
-    def get_release(self, requirements, prefer_final=False):
+    def get_release(self, requirements):
         """Return a release with all complete metadata and distribution
         related informations.
         """
-        prefer_final = self._get_prefer_final(prefer_final)
-        predicate = get_version_predicate(requirements)
+        predicate = get_matcher(requirements)
         releases = self.get_releases(predicate.name)
-        release = releases.get_last(predicate, prefer_final)
+        release = releases.get_last(predicate)
         self.get_metadata(release.name, str(release.version))
         self.get_distributions(release.name, str(release.version))
         return release
 
-    def get_releases(self, requirements, prefer_final=None, show_hidden=True,
-                     force_update=False):
+    def get_releases(self, requirements, show_hidden=True, force_update=False):
         """Return the list of existing releases for a specific project.
 
         Cache the results from one call to another.
@@ -82,8 +80,7 @@ class Client(BaseClient):
         def get_versions(project_name, show_hidden):
             return self.proxy.package_releases(project_name, show_hidden)
 
-        predicate = get_version_predicate(requirements)
-        prefer_final = self._get_prefer_final(prefer_final)
+        predicate = get_matcher(requirements)
         project_name = predicate.name
         if not force_update and (project_name.lower() in self._projects):
             project = self._projects[project_name.lower()]
@@ -107,7 +104,7 @@ class Client(BaseClient):
         project = project.filter(predicate)
         if len(project) == 0:
             raise ReleaseNotFound("%s" % predicate)
-        project.sort_releases(prefer_final)
+        project.sort_releases()
         return project
 
 

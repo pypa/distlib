@@ -265,8 +265,8 @@ is accessed. This will be a cached property, and will call the cache's
 The ``scripts`` API
 -------------------
 
-This section describes the design of the ``distlib`` API relating to
-installing scripts.
+This section describes the design of the ``distlib`` API relating to installing
+scripts.
 
 The problem we're trying to solve
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -391,6 +391,203 @@ whereas the following would be invalid::
  [a,]
  [a,,b]
  [a=,b,c]
+
+
+The ``version`` API
+-------------------
+
+This section describes the design of the ``distlib`` API relating to versions.
+
+The problem we're trying to solve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Distribution releases are named by versions, and versions have two principal
+uses:
+
+* Identifying a particular release, and determining whether or not it is
+  earlier or later than some other release.
+
+* When specifying other distributions that a distribution release depends on,
+  specifying constraints governing the releases of those distributions that are
+  depended upon.
+
+In addition, qualitative information may be given by the version format about
+the quality of the release: e.g. alpha versions, beta versions, stable
+releases, hot-fixes following a stable release. The following excerpt from
+:pep:`386` defines the requirements for versions:
+
+* It should be possible to express more than one versioning level (usually this
+  is expressed as major and minor revision and, sometimes, also a micro
+  revision).
+* A significant number of projects need special meaning versions for
+  "pre-releases" (such as "alpha", "beta", "rc"), and these have widely used
+  aliases ("a" stands for "alpha", "b" for "beta" and "c" for "rc"). And these
+  pre-release versions make it impossible to use a simple alphanumerical
+  ordering of the version string components. (e.g. 3.1a1 < 3.1)
+* Some projects also need "post-releases" of regular versions, mainly for
+  maintenance purposes, which can't be clearly expressed otherwise.
+* Development versions allow packagers of unreleased work to avoid version
+  clashes with later stable releases.
+
+There are a number of version schemes in use. The ones of most interest in the
+Python ecosystem are:
+
+* Loose versioning in ``distutils``. *Any* version number is allowed, with
+  lexicographical ordering. No support exists for pre- and post-releases,
+  and lexicographical ordering can be unintuitive (e.g. '1.10' < '1.2.1')
+
+* Strict versioning in ``distutils``, which supports slightly more
+  structure. It allows for up to three dot-separated numeric components, and
+  support for multiple alpha and beta releases. However, there is no support
+  for release candidates, nor for post-release versions.
+
+* Versioning in ``setuptools``/``distribute``. This is described in
+  :pep:`386` in `this section
+  http://www.python.org/dev/peps/pep-0386/#setuptools\`_ -- it's perhaps the
+  most widely used Python version scheme, but since it tries to be very
+  lexible and work with a wide range of conventions, it ends up allowing a
+  very chaotic mess of version conventions in the Python community as a whole.
+
+* The proposed versioning scheme described in :pep:`386`, in `this section
+  <http://www.python.org/dev/peps/pep-0386/#the-new-versioning-algorithm>`_.
+
+* `Semantic versioning <http://semver.org/>`_, which is rational, simple and
+  well-regarded in the software community in general. However, for reasons
+  not immediately apparent, it has not been mentioned in :pep:`386` and not
+  compared with the new versioning scheme proposed therein.
+
+Although the new versioning scheme mentioned in PEP 386 was implemented in
+``distutils2`` and that code has been copied over to ``distlib``, there are
+many projects on PyPI which do not conform to it, but rather to the "legacy"
+versioning schemes in ``distutils``/``setuptools``/``distribute``. These
+schemes are deserving of some support not because of their intrinsic qualities,
+but due to their ubiquity in projects registered on PyPI.
+
+A minimal solution
+^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: distlib.version
+
+Since ``distlib`` is a low-level library which might be used by tools which
+work with existing projects, the internal implementation of versions has
+changed slightly from ``distutils2`` to allow better support for legacy
+version numbering. Since the re-implementation facilitated adding semantic
+version support at minimal cost, this has also been provided.
+
+The basic scheme is as follows. The differences between versioning schemes
+is catered for by having a single function for each scheme which converts
+a string version to an appropriate tuple which acts as a key for sorting
+and comparison of versions. We have a base class, ``Version``, which defines
+any common code. Then we can have subclasses ``NormalizedVersion`` (PEP-386),
+``LegacyVersion`` (``distribute``/``setuptools``) and ``SemanticVersion``.
+
+To compare versions, we just check type compatibility and then compare the
+corresponding tuples.
+
+Matchers take a name followed by a set of constraints in parentheses.
+Each constraint is an operation together with a version string which
+needs to be converted to the corresponding version instance.
+
+In summary, the following attributes can be identified for ``Version`` and
+``Matcher``:
+
+Version:
+   - version string passed in to constructor (stripped)
+   - parser to convert string string to tuple
+   - compare functions to compare with other versions of same type
+
+Matcher:
+   - version string passed in to constructor (stripped)
+   - name of distribution
+   - list of constraints
+   - parser to convert string to name and set of constraints,
+     using the same function as for ``Version`` to convert the version
+     strings in the constraints to version instances
+   - method to match version to constraints and return True/False
+
+Given the above, it appears that all the functionality *could* be provided
+with a single class per versioning scheme, with the *only* difference
+between them being the function to convert from version string to tuple.
+Any instance would act as either version or predicate, would display itself
+differently according to which it is, and raise exceptions if the wrong
+type of operation is performed on it (matching only allowed for predicate
+instances; <=, <, >=, > comparisons only allowed for version instances;
+and == and != allowed for either.
+
+However, the use of the same class to implement versions and predicates leads
+to ambiguity, because of the very loose project naming and versioning schemes
+allowed by PyPI. For example, "Hello 2.0" could be a valid project name, and
+"5" is a project name actually registered on PyPI. If distribution names can
+look like versions, it's hard to discern the developer's intent when creating
+an instance with the string "5". So, we make separate classes for Version
+and Matcher.
+
+For ease of testing, the module will define, for each of the supported
+schemes, a function to do the parsing (as no information is needed other than
+the string), and the parse method of the class will call that function::
+
+    def normalized_key(s):
+        # parse using PEP-386 logic
+
+    def legacy_key(s):
+        # parse using distribute/setuptools logic
+
+    def semantic_key(s):
+        # parse using semantic versioning logic
+
+    class Version:
+        # defines all common code
+
+        def parse(self, s):
+            raise NotImplementedError('Please implement in a subclass')
+
+and then::
+
+    class NormalizedVersion(Version):
+        def parse(self, s): return normalized_key(s)
+
+    class LegacyVersion(Version):
+        def parse(self, s): return legacy_key(s)
+
+    class SemanticVersion(Version):
+        def parse(self, s): return semantic_key(s)
+
+And a custom versioning scheme can be devised to work in the same way::
+
+    def custom_key(s):
+        # convert s to tuple using custom logic, raise UnsupportedVersionError
+        # on problems
+
+    class CustomVersion(Version):
+        def parse(self, s): return custom_key(s)
+
+The matcher classes are pretty minimal, too::
+
+    class Matcher(object):
+        version_class = None
+
+        def match(self, string_or_version):
+            # If passed a string, convert to version using version_class,
+            # then do matching in a way independent of version scheme in use
+
+and then:
+
+    class NormalizedMatcher(Matcher):
+        version_class = NormalizedVersion
+
+    class LegacyMatcher(Matcher):
+        version_class = LegacyVersion
+
+    class SemanticMatcher(Matcher):
+        version_class = SemanticVersion
+
+The reimplemented ``distlib.version`` module is shorter than the corresponding
+module in ``distutils2``, but the entire test suite passes, and there is support
+for working with three versioning schemes as opposed to just one. However, the
+concept of "final" versions, which is not in the PEP but which was in the
+``distutils2`` implementation, has been removed because it appears of little
+value (there's no way to determine the "final" status of versions for many of
+the project releases registered on PyPI).
 
 
 Next steps

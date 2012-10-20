@@ -8,31 +8,32 @@ import doctest
 
 from compat import unittest
 
-from distlib.version import NormalizedVersion as V
-from distlib.version import HugeMajorVersionNumError, UnsupportedVersionError
-from distlib.version import suggest_normalized_version as suggest
-from distlib.version import NormalizedMatcher
-from distlib.version import legacy_version_key
-from distlib.version import is_semver, semver_key
+from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
+                             UnlimitedMajorVersion as UV,
+                             HugeMajorVersionError, UnsupportedVersionError,
+                             suggest_normalized_version as suggest,
+                             LegacyVersion as LV, LegacyMatcher as LM,
+                             SemanticVersion as SV, SemanticMatcher as SM,
+                             legacy_key, is_semver, semantic_key)
 
 
 class VersionTestCase(unittest.TestCase):
 
-    versions = ((V('1.0'), '1.0'),
-                (V('1.1'), '1.1'),
-                (V('1.2.3'), '1.2.3'),
-                (V('1.2'), '1.2'),
-                (V('1.2.3a4'), '1.2.3a4'),
-                (V('1.2c4'), '1.2c4'),
-                (V('4.17rc2'), '4.17rc2'),
-                (V('1.2.3.4'), '1.2.3.4'),
-                (V('1.2.3.4.0b3', drop_trailing_zeros=True), '1.2.3.4b3'),
-                (V('1.2.0.0.0', drop_trailing_zeros=True), '1.2'),
-                (V('1.0.dev345'), '1.0.dev345'),
-                (V('1.0.post456.dev623'), '1.0.post456.dev623'))
+    versions = ((NV('1.0'), '1.0'),
+                (NV('1.1'), '1.1'),
+                (NV('1.2.3'), '1.2.3'),
+                (NV('1.2'), '1.2'),
+                (NV('1.2.3a4'), '1.2.3a4'),
+                (NV('1.2c4'), '1.2c4'),
+                (NV('4.17rc2'), '4.17rc2'),
+                (NV('1.2.3.4'), '1.2.3.4'),
+                #(NV('1.2.3.4.0b3', drop_trailing_zeros=True), '1.2.3.4b3'),
+                #(NV('1.2.0.0.0', drop_trailing_zeros=True), '1.2'),
+                (NV('1.0.dev345'), '1.0.dev345'),
+                (NV('1.0.post456.dev623'), '1.0.post456.dev623'))
 
     def test_repr(self):
-        self.assertEqual(repr(V('1.0')), "NormalizedVersion('1.0')")
+        self.assertEqual(repr(NV('1.0')), "NormalizedVersion('1.0')")
 
     def test_basic_versions(self):
         for v, s in self.versions:
@@ -40,123 +41,116 @@ class VersionTestCase(unittest.TestCase):
 
     def test_hash(self):
         for v, s in self.versions:
-            self.assertEqual(hash(v), hash(V(s)))
+            self.assertEqual(hash(v), hash(NV(s)))
 
         versions = set([v for v, s in self.versions])
         for v, s in self.versions:
             self.assertIn(v, versions)
 
-        self.assertEqual(set([V('1.0')]), set([V('1.0'), V('1.0')]))
+        self.assertEqual(set([NV('1.0')]), set([NV('1.0'), NV('1.0')]))
 
-    def test_from_parts(self):
-        for v, s in self.versions:
-            v2 = V.from_parts(*v.parts)
-            self.assertEqual(v, v2)
-            self.assertEqual(str(v), str(v2))
-
-    def test_irrational_versions(self):
-        irrational = ('1', '1.2a', '1.2.3b',
+    def test_unsupported_versions(self):
+        unsupported = ('1', '1.2a', '1.2.3b',
                       #'1.02', '1.2a03', '1.2a3.04',
                       '1.2.dev.2', '1.2dev', '1.2.dev',
                       '1.2.dev2.post2', '1.2.post2.dev3.post4')
 
-        for s in irrational:
-            self.assertRaises(UnsupportedVersionError, V, s)
+        for s in unsupported:
+            self.assertRaises(UnsupportedVersionError, NV, s)
 
     def test_huge_version(self):
-        self.assertEqual(str(V('1980.0')), '1980.0')
-        self.assertRaises(HugeMajorVersionNumError, V, '1981.0')
-        self.assertEqual(str(V('1981.0', error_on_huge_major_num=False)),
-                         '1981.0')
+        self.assertEqual(str(NV('1980.0')), '1980.0')
+        self.assertRaises(HugeMajorVersionError, NV, '1981.0')
+        self.assertEqual(str(UV('1981.0')), '1981.0')
 
     def test_comparison(self):
         comparison_doctest_string = r"""
-        >>> V('1.2.0') == '1.2'
+        >>> NV('1.2.0') == '1.2'
         Traceback (most recent call last):
         ...
         TypeError: cannot compare NormalizedVersion and str
 
-        >>> V('1.2') < '1.3'
+        >>> NV('1.2') < '1.3'
         Traceback (most recent call last):
         ...
         TypeError: cannot compare NormalizedVersion and str
 
-        >>> V('1.2.0') == V('1.2')
+        >>> NV('1.2.0') == NV('1.2')
         True
-        >>> V('1.2.0') == V('1.2.3')
+        >>> NV('1.2.0') == NV('1.2.3')
         False
-        >>> V('1.2.0') != V('1.2.3')
+        >>> NV('1.2.0') != NV('1.2.3')
         True
-        >>> V('1.2.0') < V('1.2.3')
+        >>> NV('1.2.0') < NV('1.2.3')
         True
-        >>> V('1.2.0') < V('1.2.0')
+        >>> NV('1.2.0') < NV('1.2.0')
         False
-        >>> V('1.2.0') <= V('1.2.0')
+        >>> NV('1.2.0') <= NV('1.2.0')
         True
-        >>> V('1.2.0') <= V('1.2.3')
+        >>> NV('1.2.0') <= NV('1.2.3')
         True
-        >>> V('1.2.3') <= V('1.2.0')
+        >>> NV('1.2.3') <= NV('1.2.0')
         False
-        >>> V('1.2.0') >= V('1.2.0')
+        >>> NV('1.2.0') >= NV('1.2.0')
         True
-        >>> V('1.2.3') >= V('1.2.0')
+        >>> NV('1.2.3') >= NV('1.2.0')
         True
-        >>> V('1.2.0') >= V('1.2.3')
+        >>> NV('1.2.0') >= NV('1.2.3')
         False
-        >>> V('1.2.0rc1') >= V('1.2.0')
+        >>> NV('1.2.0rc1') >= NV('1.2.0')
         False
-        >>> V('1.0') > V('1.0b2')
+        >>> NV('1.0') > NV('1.0b2')
         True
-        >>> V('1.0') > V('1.0c2')
+        >>> NV('1.0') > NV('1.0c2')
         True
-        >>> V('1.0') > V('1.0rc2')
+        >>> NV('1.0') > NV('1.0rc2')
         True
-        >>> V('1.0rc2') > V('1.0rc1')
+        >>> NV('1.0rc2') > NV('1.0rc1')
         True
-        >>> V('1.0c4') > V('1.0c1')
+        >>> NV('1.0c4') > NV('1.0c1')
         True
-        >>> (V('1.0') > V('1.0c2') > V('1.0c1') > V('1.0b2') > V('1.0b1')
-        ...  > V('1.0a2') > V('1.0a1'))
+        >>> (NV('1.0') > NV('1.0c2') > NV('1.0c1') > NV('1.0b2') > NV('1.0b1')
+        ...  > NV('1.0a2') > NV('1.0a1'))
         True
-        >>> (V('1.0.0') > V('1.0.0c2') > V('1.0.0c1') > V('1.0.0b2') > V('1.0.0b1')
-        ...  > V('1.0.0a2') > V('1.0.0a1'))
+        >>> (NV('1.0.0') > NV('1.0.0c2') > NV('1.0.0c1') > NV('1.0.0b2') > NV('1.0.0b1')
+        ...  > NV('1.0.0a2') > NV('1.0.0a1'))
         True
 
-        >>> V('1.0') < V('1.0.post456.dev623')
+        >>> NV('1.0') < NV('1.0.post456.dev623')
         True
 
-        >>> V('1.0.post456.dev623') < V('1.0.post456')  < V('1.0.post1234')
+        >>> NV('1.0.post456.dev623') < NV('1.0.post456')  < NV('1.0.post1234')
         True
 
-        >>> (V('1.0a1')
-        ...  < V('1.0a2.dev456')
-        ...  < V('1.0a2')
-        ...  < V('1.0a2.1.dev456')  # e.g. need to do a quick post release on 1.0a2
-        ...  < V('1.0a2.1')
-        ...  < V('1.0b1.dev456')
-        ...  < V('1.0b2')
-        ...  < V('1.0c1.dev456')
-        ...  < V('1.0c1')
-        ...  < V('1.0.dev7')
-        ...  < V('1.0.dev18')
-        ...  < V('1.0.dev456')
-        ...  < V('1.0.dev1234')
-        ...  < V('1.0rc1')
-        ...  < V('1.0rc2')
-        ...  < V('1.0')
-        ...  < V('1.0.post456.dev623')  # development version of a post release
-        ...  < V('1.0.post456'))
+        >>> (NV('1.0a1')
+        ...  < NV('1.0a2.dev456')
+        ...  < NV('1.0a2')
+        ...  < NV('1.0a2.1.dev456')  # e.g. need to do a quick post release on 1.0a2
+        ...  < NV('1.0a2.1')
+        ...  < NV('1.0b1.dev456')
+        ...  < NV('1.0b2')
+        ...  < NV('1.0c1.dev456')
+        ...  < NV('1.0c1')
+        ...  < NV('1.0.dev7')
+        ...  < NV('1.0.dev18')
+        ...  < NV('1.0.dev456')
+        ...  < NV('1.0.dev1234')
+        ...  < NV('1.0rc1')
+        ...  < NV('1.0rc2')
+        ...  < NV('1.0')
+        ...  < NV('1.0.post456.dev623')  # development version of a post release
+        ...  < NV('1.0.post456'))
         True
         """
         doctest.script_from_examples(comparison_doctest_string)
 
         # the doctest above is never run, so temporarily add real unit
         # tests until the doctest is rewritten
-        self.assertLessEqual(V('1.2.0rc1'), V('1.2.0'))
-        self.assertGreater(V('1.0'), V('1.0c2'))
-        self.assertGreater(V('1.0'), V('1.0rc2'))
-        self.assertGreater(V('1.0rc2'), V('1.0rc1'))
-        self.assertGreater(V('1.0c4'), V('1.0c1'))
+        self.assertLessEqual(NV('1.2.0rc1'), NV('1.2.0'))
+        self.assertGreater(NV('1.0'), NV('1.0c2'))
+        self.assertGreater(NV('1.0'), NV('1.0rc2'))
+        self.assertGreater(NV('1.0rc2'), NV('1.0rc1'))
+        self.assertGreater(NV('1.0c4'), NV('1.0c1'))
 
     def test_suggest_normalized_version(self):
         self.assertEqual(suggest('1.0'), '1.0')
@@ -201,78 +195,59 @@ class VersionTestCase(unittest.TestCase):
                       'Hey (>=2.5,<2.7)')
 
         for predicate in predicates:
-            NormalizedMatcher(predicate)
+            NM(predicate)
 
-        self.assertTrue(NormalizedMatcher('Hey (>=2.5,<2.7)').match('2.6'))
-        self.assertTrue(NormalizedMatcher('Ho').match('2.6'))
-        self.assertFalse(NormalizedMatcher('Hey (>=2.5,!=2.6,<2.7)').match('2.6'))
-        self.assertTrue(NormalizedMatcher('Ho (<3.0)').match('2.6'))
-        self.assertTrue(NormalizedMatcher('Ho (<3.0,!=2.5)').match('2.6.0'))
-        self.assertFalse(NormalizedMatcher('Ho (<3.0,!=2.6)').match('2.6.0'))
-        self.assertTrue(NormalizedMatcher('Ho (2.5)').match('2.5.4'))
-        self.assertFalse(NormalizedMatcher('Ho (!=2.5)').match('2.5.2'))
-        self.assertTrue(NormalizedMatcher('Hey (<=2.5)').match('2.5.9'))
-        self.assertFalse(NormalizedMatcher('Hey (<=2.5)').match('2.6.0'))
-        self.assertTrue(NormalizedMatcher('Hey (>=2.5)').match('2.5.1'))
+        self.assertTrue(NM('Hey (>=2.5,<2.7)').match('2.6'))
+        self.assertTrue(NM('Ho').match('2.6'))
+        self.assertFalse(NM('Hey (>=2.5,!=2.6,<2.7)').match('2.6'))
+        self.assertTrue(NM('Ho (<3.0)').match('2.6'))
+        self.assertTrue(NM('Ho (<3.0,!=2.5)').match('2.6.0'))
+        self.assertFalse(NM('Ho (<3.0,!=2.6)').match('2.6.0'))
+        self.assertTrue(NM('Ho (2.5)').match('2.5.4'))
+        self.assertFalse(NM('Ho (!=2.5)').match('2.5.2'))
+        self.assertTrue(NM('Hey (<=2.5)').match('2.5.9'))
+        self.assertFalse(NM('Hey (<=2.5)').match('2.6.0'))
+        self.assertTrue(NM('Hey (>=2.5)').match('2.5.1'))
 
-        self.assertRaises(ValueError, NormalizedMatcher, '')
+        self.assertRaises(ValueError, NM, '')
 
-        self.assertTrue(NormalizedMatcher('Hey 2.5').match('2.5.1'))
+        # We don't allow
+        #self.assertTrue(NM('Hey 2.5').match('2.5.1'))
+        #self.assertTrue(NM('vi5two 1.0').match('1.0'))
+        #self.assertTrue(NM('5two 1.0').match('1.0'))
 
         # XXX need to silent the micro version in this case
-        self.assertFalse(NormalizedMatcher('Ho (<3.0,!=2.6)').match('2.6.3'))
+        self.assertFalse(NM('Ho (<3.0,!=2.6)').match('2.6.3'))
 
         # Make sure a predicate that ends with a number works
-        self.assertTrue(NormalizedMatcher('virtualenv5 (1.0)').match('1.0'))
-        self.assertTrue(NormalizedMatcher('virtualenv5').match('1.0'))
-        self.assertTrue(NormalizedMatcher('vi5two').match('1.0'))
-        self.assertTrue(NormalizedMatcher('5two').match('1.0'))
-        self.assertTrue(NormalizedMatcher('vi5two 1.0').match('1.0'))
-        self.assertTrue(NormalizedMatcher('5two 1.0').match('1.0'))
+        self.assertTrue(NM('virtualenv5 (1.0)').match('1.0'))
+        self.assertTrue(NM('virtualenv5').match('1.0'))
+        self.assertTrue(NM('vi5two').match('1.0'))
+        self.assertTrue(NM('5two').match('1.0'))
 
         # test repr
         for predicate in predicates:
-            self.assertEqual(str(NormalizedMatcher(predicate)), predicate)
+            self.assertEqual(str(NM(predicate)), predicate)
 
     def test_predicate_name(self):
         # Test that names are parsed the right way
 
-        self.assertEqual('Hey', NormalizedMatcher('Hey (<1.1)').name)
-        self.assertEqual('Foo-Bar', NormalizedMatcher('Foo-Bar (1.1)').name)
-        self.assertEqual('Foo Bar', NormalizedMatcher('Foo Bar (1.1)').name)
-
-    def test_is_final(self):
-        # NormalizedMatcher knows is a distribution is a final one or not.
-        final_versions = ('1.0', '1.0.post456')
-        other_versions = ('1.0.dev1', '1.0a2', '1.0c3')
-
-        for version in final_versions:
-            self.assertTrue(V(version).is_final)
-        for version in other_versions:
-            self.assertFalse(V(version).is_final)
+        self.assertEqual('Hey', NM('Hey (<1.1)').name)
+        self.assertEqual('Foo-Bar', NM('Foo-Bar (1.1)').name)
+        self.assertEqual('Foo Bar', NM('Foo Bar (1.1)').name)
 
     def test_micro_predicate(self):
-        self.assertNotEqual(V('3.4.0'), V('3.4'))
-        predicate = NormalizedMatcher('zope.event (3.4.0)')
+        self.assertNotEqual(NV('3.4.0'), NV('3.4'))
+        predicate = NM('zope.event (3.4.0)')
         self.assertTrue(predicate.match('3.4.0'))
         self.assertFalse(predicate.match('3.4.1'))
-
-
-class VersionWhiteBoxTestCase(unittest.TestCase):
-
-    def test_parse_numdots(self):
-        # For code coverage completeness, as pad_zeros_length can't be set or
-        # influenced from the public interface
-        self.assertEqual(
-            V('1.0')._parse_numdots('1.0', '1.0', pad_zeros_length=3),
-            [1, 0, 0])
 
 
 class LegacyVersionTestCase(unittest.TestCase):
     # These tests are the same as distribute's
     def test_equality(self):
         def compare(a, b):
-            ka, kb = legacy_version_key(a), legacy_version_key(b)
+            ka, kb = legacy_key(a), legacy_key(b)
             self.assertEqual(ka, kb)
 
         compare('0.4', '0.4.0')
@@ -287,7 +262,7 @@ class LegacyVersionTestCase(unittest.TestCase):
 
     def test_ordering(self):
         def compare(a, b):
-            ka, kb = legacy_version_key(a), legacy_version_key(b)
+            ka, kb = legacy_key(a), legacy_key(b)
             self.assertLess(ka, kb)
 
         compare('2.1','2.1.1')
@@ -348,14 +323,14 @@ class SemanticVersionTestCase(unittest.TestCase):
         ]
         for s in bad:
             self.assertFalse(is_semver(s))
-            self.assertRaises(ValueError, semver_key, s)
+            self.assertRaises(ValueError, semantic_key, s)
 
         for s in good:
             self.assertTrue(is_semver(s))
 
     def test_ordering(self):
         def compare(a, b):
-            ka, kb = semver_key(a), semver_key(b)
+            ka, kb = semantic_key(a), semantic_key(b)
             self.assertLess(ka, kb)
 
         # From the semver.org home page
@@ -377,11 +352,32 @@ class SemanticVersionTestCase(unittest.TestCase):
             for v2 in versions[i+1:]:
                 compare(v1, v2)
 
+class CompatibilityTestCase(unittest.TestCase):
+    def test_basic(self):
+        def are_equal(v1, v2):
+            return v1 == v2
+
+        def is_less(v1, v2):
+            return v1 < v2
+
+        self.assertRaises(TypeError, are_equal, NV('3.3.0'),
+                          SV('3.3.0'))
+        self.assertRaises(TypeError, are_equal, NV('3.3.0'),
+                          LV('3.3.0'))
+        self.assertRaises(TypeError, are_equal, LV('3.3.0'),
+                          SV('3.3.0'))
+        self.assertRaises(TypeError, are_equal, NM('foo'),
+                          LV('foo'))
+        self.assertRaises(TypeError, are_equal, NM('foo'),
+                          NM('bar'))
+
+
+
 def test_suite():
     #README = os.path.join(os.path.dirname(__file__), 'README.txt')
     #suite = [doctest.DocFileSuite(README), unittest.makeSuite(VersionTestCase)]
     suite = [unittest.makeSuite(VersionTestCase),
-             unittest.makeSuite(VersionWhiteBoxTestCase),
+             unittest.makeSuite(CompatibilityTestCase),
              unittest.makeSuite(LegacyVersionTestCase),
              unittest.makeSuite(SemanticVersionTestCase)]
     return unittest.TestSuite(suite)

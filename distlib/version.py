@@ -3,7 +3,10 @@
 # Copyright (C) 2012 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
-"""Implementation of the versioning scheme defined in PEP 386."""
+"""
+Implementation of a flexible versioning scheme providing support for PEP-386,
+distribute-compatible and semantic versioning.
+"""
 
 import re
 
@@ -12,14 +15,17 @@ from .compat import string_types
 __all__ = ['NormalizedVersion', 'suggest_normalized_version',
            'NormalizedMatcher', 'is_valid_version', 'is_valid_versions',
            'is_valid_predicate', 'UnsupportedVersionError',
-           'HugeMajorVersionNumError', 'legacy_version_key', 'is_predicate']
+           'HugeMajorVersionError',
+           'SemanticVersion', 'SemanticMatcher',
+           'LegacyVersion', 'LegacyMatcher',
+           'normalized_key', 'legacy_key', 'semantic_key']
 
 class UnsupportedVersionError(Exception):
-    """This is an irrational version."""
+    """This is an unsupported version."""
     pass
 
 
-class HugeMajorVersionNumError(UnsupportedVersionError):
+class HugeMajorVersionError(UnsupportedVersionError):
     """An irrational version because the major version number is huge
     (often because a year or date was used).
 
@@ -27,6 +33,112 @@ class HugeMajorVersionNumError(UnsupportedVersionError):
     This guard can be disabled by setting that option False.
     """
     pass
+
+
+class _Common(object):
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self._string)
+
+    def __str__(self):
+        return self._string
+
+
+class Version(_Common):
+    def __init__(self, s):
+        self._string = s = s.strip()
+        self._parts = parts = self.parse(s)
+        assert isinstance(parts, tuple)
+        assert len(parts) > 0
+
+    def parse(self, s):
+        raise NotImplementedError('please implement in a subclass')
+
+    def _check_compatible(self, other):
+        if type(self) != type(other):
+            raise TypeError('cannot compare %r and %r' % (self, other))
+
+    def __eq__(self, other):
+        self._check_compatible(other)
+        return self._parts == other._parts
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        self._check_compatible(other)
+        return self._parts < other._parts
+
+    def __gt__(self, other):
+        return not (self.__lt__(other) or self.__eq__(other))
+
+    def __le__(self, other):
+        return self.__lt__(other) or self.__eq__(other)
+
+    def __ge__(self, other):
+        return self.__gt__(other) or self.__eq__(other)
+
+    # See http://docs.python.org/reference/datamodel#object.__hash__
+    def __hash__(self):
+        return hash(self._parts)
+
+class Matcher(_Common):
+    version_class = None
+
+    predicate_re = re.compile(r"^(\w[\s\w'.-]*)(\((.*)\))?")
+    constraint_re = re.compile(r'^(<=|>=|<|>|!=|==)?\s*([^\s,]+)$')
+
+    _operators = {
+        "<": lambda x, y: x < y,
+        ">": lambda x, y: x > y,
+        "<=": lambda x, y: str(x).startswith(str(y)) or x < y,
+        ">=": lambda x, y: str(x).startswith(str(y)) or x > y,
+        "==": lambda x, y: str(x).startswith(str(y)),
+        "!=": lambda x, y: not str(x).startswith(str(y)),
+    }
+
+    def __init__(self, s):
+        if self.version_class is None:
+            raise ValueError('Please specify a version class')
+        self._string = s = s.strip()
+        m = self.predicate_re.match(s)
+        if not m:
+            raise ValueError('Not a valid predicate: %r' % s)
+        groups = m.groups('')
+        self.name = groups[0].strip()
+        predicates = []
+        if groups[2]:
+            constraints = [c.strip() for c in groups[2].split(',')]
+            for c in constraints:
+                m = self.constraint_re.match(c)
+                if not m:
+                    raise ValueError('Invalid %r in predicate %r' % (c, s))
+                groups = m.groups('==')
+                predicates.append((groups[0], self.version_class(groups[1])))
+        self._parts = tuple(predicates)
+
+    def match(self, version):
+        """Check if the provided version matches the constraints."""
+        if isinstance(version, string_types):
+            version = self.version_class(version)
+        for operator, predicate in self._parts:
+            if not self._operators[operator](version, predicate):
+                return False
+        return True
+
+    def _check_compatible(self, other):
+        if type(self) != type(other) or self.name != other.name:
+            raise TypeError('cannot compare %s and %s' % (self, other))
+
+    def __eq__(self, other):
+        self._check_compatible(other)
+        return self.name == other.name and self._parts == other._parts
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    # See http://docs.python.org/reference/datamodel#object.__hash__
+    def __hash__(self):
+        return hash(self.name) + hash(self._parts)
 
 # A marker used in the second and third parts of the `parts` tuple, for
 # versions that don't have those segments, to sort properly. An example
@@ -48,8 +160,7 @@ _FINAL_MARKER = ('z',)
 
 _VERSION_RE = re.compile(r'''
     ^
-    (?P<version>\d+\.\d+)          # minimum 'N.N'
-    (?P<extraversion>(?:\.\d+)*)   # any number of extra '.N' segments
+    (?P<version>\d+\.\d+(\.\d+)*)          # minimum 'N.N'
     (?:
         (?P<prerel>[abc]|rc)       # 'a'=alpha, 'b'=beta, 'c'=release candidate
                                    # 'rc'= alias for release candidate
@@ -59,7 +170,70 @@ _VERSION_RE = re.compile(r'''
     $''', re.VERBOSE)
 
 
-class NormalizedVersion(object):
+def _parse_numdots(s, full_ver, drop_zeroes=False, min_length=0):
+    """Parse 'N.N.N' sequences, return a list of ints.
+
+    @param s {str} 'N.N.N...' sequence to be parsed
+    @param full_ver_str {str} The full version string from which this
+           comes. Used for error strings.
+    @param min_length {int} The length to which to pad the
+           returned list with zeros, if necessary. Default 0.
+    """
+    result = []
+    for n in s.split("."):
+        #if len(n) > 1 and n[0] == '0':
+        #    raise UnsupportedVersionError("cannot have leading zero in "
+        #        "version number segment: '%s' in %r" % (n, full_ver))
+        result.append(int(n))
+    if drop_zeroes:
+        while (result and result[-1] == 0 and
+               (1 + len(result)) > min_length):
+            result.pop()
+    return result
+
+def normalized_key(s, fail_on_huge_major_ver=True):
+    """Parses a string version into parts using PEP-386 logic."""
+
+    match = _VERSION_RE.search(s)
+    if not match:
+        raise UnsupportedVersionError(s)
+
+    groups = match.groupdict()
+    parts = []
+
+    # main version
+    block = _parse_numdots(groups['version'], s, min_length=2)
+    parts.append(tuple(block))
+
+    # prerelease
+    prerel = groups.get('prerel')
+    if prerel is not None:
+        block = [prerel]
+        block += _parse_numdots(groups.get('prerelversion'), s, min_length=1)
+        parts.append(tuple(block))
+    else:
+        parts.append(_FINAL_MARKER)
+
+    # postdev
+    if groups.get('postdev'):
+        post = groups.get('post')
+        dev = groups.get('dev')
+        postdev = []
+        if post is not None:
+            postdev.extend((_FINAL_MARKER[0], 'post', int(post)))
+            if dev is None:
+                postdev.append(_FINAL_MARKER[0])
+        if dev is not None:
+            postdev.extend(('dev', int(dev)))
+        parts.append(tuple(postdev))
+    else:
+        parts.append(_FINAL_MARKER)
+    if fail_on_huge_major_ver and parts[0][0] > 1980:
+        raise HugeMajorVersionError("huge major version number, %r, "
+           "which might cause future problems: %r" % (parts[0][0], s))
+    return tuple(parts)
+
+class NormalizedVersion(Version):
     """A rational version.
 
     Good:
@@ -77,164 +251,13 @@ class NormalizedVersion(object):
         1.2a        # release level must have a release serial
         1.2.3b
     """
-    def __init__(self, s, error_on_huge_major_num=True,
-                 drop_trailing_zeros=False):
-        """Create a NormalizedVersion instance from a version string.
+    def parse(self, s): return normalized_key(s)
 
-        @param s {str} The version string.
-        @param error_on_huge_major_num {bool} Whether to consider an
-            apparent use of a year or full date as the major version number
-            an error. Default True. One of the observed patterns on PyPI before
-            the introduction of `NormalizedVersion` was version numbers like
-            this:
-                2009.01.03
-                20040603
-                2005.01
-            This guard is here to strongly encourage the package author to
-            use an alternate version, because a release deployed into PyPI
-            and, e.g. downstream Linux package managers, will forever remove
-            the possibility of using a version number like "1.0" (i.e.
-            where the major number is less than that huge major number).
-        @param drop_trailing_zeros {bool} Whether to drop trailing zeros
+class UnlimitedMajorVersion(Version):
+    def parse(self, s): return normalized_key(s, False)
 
-            from the returned list. Default True.
-        """
-        self.is_final = True  # by default, consider a version as final.
-        self.drop_trailing_zeros = drop_trailing_zeros
-        self._parse(s, error_on_huge_major_num)
-
-    @classmethod
-    def from_parts(cls, version, prerelease=_FINAL_MARKER,
-                   devpost=_FINAL_MARKER):
-        return cls(cls.parts_to_str((version, prerelease, devpost)))
-
-    def _parse(self, s, error_on_huge_major_num=True):
-        """Parses a string version into parts."""
-        match = _VERSION_RE.search(s)
-        if not match:
-            raise UnsupportedVersionError(s)
-
-        groups = match.groupdict()
-        parts = []
-
-        # main version
-        block = self._parse_numdots(groups['version'], s, 2)
-        extraversion = groups.get('extraversion')
-        if extraversion not in ('', None):
-            block += self._parse_numdots(extraversion[1:], s)
-        parts.append(tuple(block))
-
-        # prerelease
-        prerel = groups.get('prerel')
-        if prerel is not None:
-            block = [prerel]
-            block += self._parse_numdots(groups.get('prerelversion'), s,
-                                         pad_zeros_length=1)
-            parts.append(tuple(block))
-            self.is_final = False
-        else:
-            parts.append(_FINAL_MARKER)
-
-        # postdev
-        if groups.get('postdev'):
-            post = groups.get('post')
-            dev = groups.get('dev')
-            postdev = []
-            if post is not None:
-                postdev.extend((_FINAL_MARKER[0], 'post', int(post)))
-                if dev is None:
-                    postdev.append(_FINAL_MARKER[0])
-            if dev is not None:
-                postdev.extend(('dev', int(dev)))
-                self.is_final = False
-            parts.append(tuple(postdev))
-        else:
-            parts.append(_FINAL_MARKER)
-        self.parts = tuple(parts)
-        if error_on_huge_major_num and self.parts[0][0] > 1980:
-            raise HugeMajorVersionNumError("huge major version number, %r, "
-               "which might cause future problems: %r" % (self.parts[0][0], s))
-
-    def _parse_numdots(self, s, full_ver_str, pad_zeros_length=0):
-        """Parse 'N.N.N' sequences, return a list of ints.
-
-        @param s {str} 'N.N.N...' sequence to be parsed
-        @param full_ver_str {str} The full version string from which this
-            comes. Used for error strings.
-                @param pad_zeros_length {int} The length to which to pad the
-            returned list with zeros, if necessary. Default 0.
-        """
-        nums = []
-        for n in s.split("."):
-            #if len(n) > 1 and n[0] == '0':
-            #    raise UnsupportedVersionError("cannot have leading zero in "
-            #        "version number segment: '%s' in %r" % (n, full_ver_str))
-            nums.append(int(n))
-        if self.drop_trailing_zeros:
-            while nums and nums[-1] == 0:
-                nums.pop()
-        while len(nums) < pad_zeros_length:
-            nums.append(0)
-        return nums
-
-    def __str__(self):
-        return self.parts_to_str(self.parts)
-
-    @classmethod
-    def parts_to_str(cls, parts):
-        """Transforms a version expressed in tuple into its string
-        representation."""
-        # XXX This doesn't check for invalid tuples
-        main, prerel, postdev = parts
-        s = '.'.join(str(v) for v in main)
-        if prerel is not _FINAL_MARKER:
-            s += prerel[0]
-            s += '.'.join(str(v) for v in prerel[1:])
-        # XXX clean up: postdev is always true; code is obscure
-        if postdev and postdev is not _FINAL_MARKER:
-            if postdev[0] == _FINAL_MARKER[0]:
-                postdev = postdev[1:]
-            i = 0
-            while i < len(postdev):
-                if i % 2 == 0:
-                    s += '.'
-                s += str(postdev[i])
-                i += 1
-        return s
-
-    def __repr__(self):
-        return "%s('%s')" % (self.__class__.__name__, self)
-
-    def _cannot_compare(self, other):
-        raise TypeError("cannot compare %s and %s"
-                % (type(self).__name__, type(other).__name__))
-
-    def __eq__(self, other):
-        if not isinstance(other, NormalizedVersion):
-            self._cannot_compare(other)
-        return self.parts == other.parts
-
-    def __lt__(self, other):
-        if not isinstance(other, NormalizedVersion):
-            self._cannot_compare(other)
-        return self.parts < other.parts
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __gt__(self, other):
-        return not (self.__lt__(other) or self.__eq__(other))
-
-    def __le__(self, other):
-        return self.__eq__(other) or self.__lt__(other)
-
-    def __ge__(self, other):
-        return self.__eq__(other) or self.__gt__(other)
-
-    # See http://docs.python.org/reference/datamodel#object.__hash__
-    def __hash__(self):
-        return hash(self.parts)
-
+class NormalizedMatcher(Matcher):
+    version_class = NormalizedVersion
 
 def suggest_normalized_version(s):
     """Suggest a normalized version close to the given version string.
@@ -254,7 +277,7 @@ def suggest_normalized_version(s):
     @returns A rational version string, or None, if couldn't determine one.
     """
     try:
-        NormalizedVersion(s)
+        normalized_key(s)
         return s   # already rational
     except UnsupportedVersionError:
         pass
@@ -341,140 +364,41 @@ def suggest_normalized_version(s):
     rs = re.sub(r"p(\d+)$", r".post\1", rs)
 
     try:
-        NormalizedVersion(rs)
-        return rs   # already rational
+        normalized_key(rs)
     except UnsupportedVersionError:
-        pass
-    return None
-
-
-# A predicate is: "ProjectName (VERSION1, VERSION2, ..)
-_PREDICATE = re.compile(r"^\s*(\w[\s\w'-]*(?:\.\w*)*)(.*)", re.I)
-_VERSIONS = re.compile(r"^\s*\((?P<versions>.*)\)\s*$|^\s*"
-                        "(?P<versions2>.*)\s*$")
-_PLAIN_VERSIONS = re.compile(r"^\s*(.*)\s*$")
-_SPLIT_CMP = re.compile(r"^\s*(<=|>=|<|>|!=|==)\s*([^\s,]+)\s*$")
-
-
-def _split_predicate(predicate):
-    match = _SPLIT_CMP.match(predicate)
-    if match is None:
-        # probably no op, we'll use "=="
-        comp, version = '==', predicate
-    else:
-        comp, version = match.groups()
-    return comp, NormalizedVersion(version)
-
-def is_predicate(s):
-    return _PREDICATE.match(s)
-
-class NormalizedMatcher(object):
-    """Defines a predicate: ProjectName (>ver1,ver2, ..)"""
-
-    version_maker = NormalizedVersion
-
-    _operators = {"<": lambda x, y: x < y,
-                  ">": lambda x, y: x > y,
-                  "<=": lambda x, y: str(x).startswith(str(y)) or x < y,
-                  ">=": lambda x, y: str(x).startswith(str(y)) or x > y,
-                  "==": lambda x, y: str(x).startswith(str(y)),
-                  "!=": lambda x, y: not str(x).startswith(str(y)),
-                  }
-
-    def __init__(self, predicate):
-        self._string = predicate
-        predicate = predicate.strip()
-        match = _PREDICATE.match(predicate)
-        if match is None:
-            raise ValueError('Bad predicate "%s"' % predicate)
-
-        name, predicates = match.groups()
-        self.name = name.strip()
-        self.predicates = []
-        if predicates is None:
-            return
-
-        predicates = _VERSIONS.match(predicates.strip())
-        if predicates is None:
-            return
-
-        predicates = predicates.groupdict()
-        if predicates['versions'] is not None:
-            versions = predicates['versions']
-        else:
-            versions = predicates.get('versions2')
-
-        if versions is not None:
-            for version in versions.split(','):
-                if version.strip() == '':
-                    continue
-                self.predicates.append(_split_predicate(version))
-
-    def match(self, version):
-        """Check if the provided version matches the predicates."""
-        if isinstance(version, string_types):
-            version = self.version_maker(version)
-        for operator, predicate in self.predicates:
-            if not self._operators[operator](version, predicate):
-                return False
-        return True
-
-    def __repr__(self):
-        return self._string
-
-
-class _Versions(NormalizedMatcher):
-    def __init__(self, predicate):
-        predicate = predicate.strip()
-        match = _PLAIN_VERSIONS.match(predicate)
-        self.name = None
-        predicates = match.groups()[0]
-        self.predicates = [_split_predicate(pred.strip())
-                           for pred in predicates.split(',')]
-
-
-class _Version(NormalizedMatcher):
-    def __init__(self, predicate):
-        predicate = predicate.strip()
-        match = _PLAIN_VERSIONS.match(predicate)
-        self.name = None
-        self.predicates = _split_predicate(match.groups()[0])
+        rs = None
+    return rs
 
 
 def is_valid_predicate(predicate):
     try:
-        NormalizedMatcher(predicate)
+        v = NormalizedMatcher(predicate)
+        result = True
     except (ValueError, UnsupportedVersionError):
-        return False
-    else:
-        return True
+        result = False
+    return result
 
+def get_matcher(s):
+    if isinstance(s, string_types):
+        s = NormalizedMatcher(s)
+    return s
 
-def is_valid_versions(predicate):
+def is_valid_versions(s):
+    s = 'dummy (%s)' % s
     try:
-        _Versions(predicate)
-    except (ValueError, UnsupportedVersionError):
-        return False
-    else:
-        return True
+        DefaultMatcher(s)
+        result = True
+    except UnsupportedVersionError:
+        result = False
+    return result
 
-
-def is_valid_version(predicate):
+def is_valid_version(s):
     try:
-        _Version(predicate)
-    except (ValueError, UnsupportedVersionError):
-        return False
-    else:
-        return True
-
-
-def get_version_predicate(requirements):
-    """Return a NormalizedMatcher object, from a string or an already
-    existing object.
-    """
-    if isinstance(requirements, string_types):
-        requirements = NormalizedMatcher(requirements)
-    return requirements
+        DefaultVersion(s)
+        result = True
+    except UnsupportedVersionError:
+        result = False
+    return result
 
 #
 #   Legacy version processing (distribute-compatible)
@@ -492,7 +416,7 @@ _VERSION_REPLACE = {
 }
 
 
-def legacy_version_key(s):
+def legacy_key(s):
     def get_parts(s):
         result = []
         for p in _VERSION_PART.split(s.lower()):
@@ -514,6 +438,12 @@ def legacy_version_key(s):
         result.append(p)
     return tuple(result)
 
+class LegacyVersion(Version):
+    def parse(self, s): return legacy_key(s)
+
+class LegacyMatcher(Matcher):
+    version_class = LegacyVersion
+
 #
 #   Semantic versioning
 #
@@ -525,7 +455,7 @@ _SEMVER_RE = re.compile(r'^(\d+)\.(\d+)\.(\d+)'
 def is_semver(s):
     return _SEMVER_RE.match(s)
 
-def semver_key(s):
+def semantic_key(s):
     def make_tuple(s, absent):
         if s is None:
             result = (absent,)
@@ -545,3 +475,12 @@ def semver_key(s):
     # choose the '|' and '*' so that versions sort correctly
     pre, build = make_tuple(groups[3], '|'), make_tuple(groups[5], '*')
     return ((major, minor, patch), pre, build)
+
+class SemanticVersion(Version):
+    def parse(self, s): return semantic_key(s)
+
+class SemanticMatcher(Matcher):
+    version_class = SemanticVersion
+
+DefaultVersion = NormalizedVersion
+DefaultMatcher = NormalizedMatcher

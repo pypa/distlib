@@ -239,20 +239,6 @@ class TestReleasesList(unittest.TestCase):
         self.assertEqual(2, len(releases))
         self.assertEqual(2, len(releases[1].dists))
 
-    def test_prefer_final(self):
-        # Can order the distributions using prefer_final
-        fb10 = ReleaseInfo("FooBar", "1.0")  # final distribution
-        fb11a = ReleaseInfo("FooBar", "1.1a1")  # alpha
-        fb12a = ReleaseInfo("FooBar", "1.2a1")  # alpha
-        fb12b = ReleaseInfo("FooBar", "1.2b1")  # beta
-        dists = ReleasesList("FooBar", [fb10, fb11a, fb12a, fb12b])
-
-        dists.sort_releases(prefer_final=True)
-        self.assertEqual(fb10, dists[0])
-
-        dists.sort_releases(prefer_final=False)
-        self.assertEqual(fb12b, dists[0])
-
     @unittest.skip('method not implemented yet')
     def test_prefer_source(self):
         # Ordering supports prefer_source

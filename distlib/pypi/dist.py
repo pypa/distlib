@@ -13,7 +13,7 @@ import tempfile
 
 from ..compat import urlparse, urlretrieve, shutil
 from ..version import (suggest_normalized_version, NormalizedVersion,
-                       get_version_predicate, UnsupportedVersionError)
+                       get_matcher, UnsupportedVersionError)
 from ..metadata import Metadata
 from .errors import (HashDoesNotMatch, UnsupportedHashName,
                      CantParseArchiveName)
@@ -361,17 +361,16 @@ class ReleasesList(IndexReference):
                                         if predicate.match(release.version)],
                                         index=self._index)
 
-    def get_last(self, requirements, prefer_final=None):
+    def get_last(self, requirements):
         """Return the "last" release, that satisfy the given predicates.
 
-        "last" is defined by the version number of the releases, you also could
-        set prefer_final parameter to True or False to change the order results
+        "last" is defined by the version number of the releases
         """
-        predicate = get_version_predicate(requirements)
+        predicate = get_matcher(requirements)
         releases = self.filter(predicate)
         if len(releases) == 0:
             return None
-        releases.sort_releases(prefer_final, reverse=True)
+        releases.sort_releases(reverse=True)
         return releases[0]
 
     def add_releases(self, releases):
@@ -417,11 +416,8 @@ class ReleasesList(IndexReference):
 
             release.add_distribution(dist_type=dist_type, **dist_args)
 
-    def sort_releases(self, prefer_final=False, reverse=True, *args, **kwargs):
+    def sort_releases(self, reverse=True, *args, **kwargs):
         """Sort the results with the given properties.
-
-        The `prefer_final` argument can be used to specify if final
-        distributions (eg. not dev, beta or alpha) would be preferred or not.
 
         Results can be inverted by using `reverse`.
 
@@ -431,8 +427,6 @@ class ReleasesList(IndexReference):
         """
 
         sort_by = []
-        if prefer_final:
-            sort_by.append("is_final")
         sort_by.append("version")
 
         self.releases.sort(

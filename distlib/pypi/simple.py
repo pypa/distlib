@@ -18,7 +18,7 @@ from .. import DistlibException, __version__ as distlib_version
 from ..compat import (urlparse, urlunparse, urljoin, splituser, unquote,
                       urllib2, Request, URLError, HTTPError, httplib)
 from ..metadata import Metadata
-from ..version import get_version_predicate
+from ..version import get_matcher
 from .base import BaseClient
 from .dist import (ReleasesList, EXTENSIONS, get_infos_from_url, MD5_HASH)
 from .errors import (DownloadError, UnableToDownload, CantParseArchiveName,
@@ -94,9 +94,6 @@ class Crawler(BaseClient):
     used if mirrors is set to None.
 
     :param index_url: the url of the simple index to search on.
-    :param prefer_final: if the version is not mentioned, and the last
-                         version is not a "final" one (alpha, beta, etc.),
-                         pick up the last final version.
     :param prefer_source: if the distribution type is not mentioned, pick up
                           the source one if available.
     :param follow_externals: tell if following external links is needed or
@@ -114,11 +111,11 @@ class Crawler(BaseClient):
                                on mirrors before switching.
     """
 
-    def __init__(self, index_url=DEFAULT_SIMPLE_INDEX_URL, prefer_final=False,
+    def __init__(self, index_url=DEFAULT_SIMPLE_INDEX_URL,
                  prefer_source=True, hosts=DEFAULT_HOSTS,
                  follow_externals=False, mirrors_url=None, mirrors=None,
                  timeout=SOCKET_TIMEOUT, mirrors_max_tries=0):
-        super(Crawler, self).__init__(prefer_final, prefer_source)
+        super(Crawler, self).__init__(prefer_source)
         self.follow_externals = follow_externals
 
         # mirroring attributes.
@@ -172,15 +169,13 @@ class Crawler(BaseClient):
             matching_projects.append(self._get_project(project_name))
         return matching_projects
 
-    def get_releases(self, requirements, prefer_final=None,
-                     force_update=False):
+    def get_releases(self, requirements, force_update=False):
         """Search for releases and return a ReleasesList object containing
         the results.
         """
-        predicate = get_version_predicate(requirements)
+        predicate = get_matcher(requirements)
         if predicate.name.lower() in self._projects and not force_update:
             return self._projects.get(predicate.name.lower())
-        prefer_final = self._get_prefer_final(prefer_final)
         logger.debug('Reading info on PyPI about %s', predicate.name)
         self._process_index_page(predicate.name)
 
@@ -188,13 +183,13 @@ class Crawler(BaseClient):
             raise ProjectNotFound
 
         releases = self._projects.get(predicate.name.lower())
-        releases.sort_releases(prefer_final=prefer_final)
+        releases.sort_releases()
         return releases
 
-    def get_release(self, requirements, prefer_final=None):
+    def get_release(self, requirements):
         """Return only one release that fulfill the given requirements"""
-        predicate = get_version_predicate(requirements)
-        release = self.get_releases(predicate, prefer_final)\
+        predicate = get_matcher(requirements)
+        release = self.get_releases(predicate)\
                       .get_last(predicate)
         if not release:
             raise ReleaseNotFound("No release matches the given criterias")
