@@ -2,7 +2,7 @@
 
 import os
 from distlib.compat import shutil
-from distlib.version import VersionPredicate
+from distlib.version import NormalizedMatcher
 from distlib.pypi.dist import (ReleaseInfo, ReleasesList, DistInfo,
                                split_archive_name, get_infos_from_url)
 from distlib.pypi.errors import HashDoesNotMatch, UnsupportedHashName
@@ -203,7 +203,7 @@ class TestReleasesList(unittest.TestCase):
             ReleaseInfo("FooBar", "1.2"),
             ReleaseInfo("FooBar", "1.2.1"),
         ))
-        filtered = releases.filter(VersionPredicate("FooBar (<1.2)"))
+        filtered = releases.filter(NormalizedMatcher("FooBar (<1.2)"))
         self.assertNotIn(releases[2], filtered)
         self.assertNotIn(releases[3], filtered)
         self.assertIn(releases[0], filtered)

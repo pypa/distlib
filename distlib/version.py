@@ -10,16 +10,16 @@ import re
 from .compat import string_types
 
 __all__ = ['NormalizedVersion', 'suggest_normalized_version',
-           'VersionPredicate', 'is_valid_version', 'is_valid_versions',
-           'is_valid_predicate', 'IrrationalVersionError',
+           'NormalizedMatcher', 'is_valid_version', 'is_valid_versions',
+           'is_valid_predicate', 'UnsupportedVersionError',
            'HugeMajorVersionNumError', 'legacy_version_key', 'is_predicate']
 
-class IrrationalVersionError(Exception):
+class UnsupportedVersionError(Exception):
     """This is an irrational version."""
     pass
 
 
-class HugeMajorVersionNumError(IrrationalVersionError):
+class HugeMajorVersionNumError(UnsupportedVersionError):
     """An irrational version because the major version number is huge
     (often because a year or date was used).
 
@@ -112,7 +112,7 @@ class NormalizedVersion(object):
         """Parses a string version into parts."""
         match = _VERSION_RE.search(s)
         if not match:
-            raise IrrationalVersionError(s)
+            raise UnsupportedVersionError(s)
 
         groups = match.groupdict()
         parts = []
@@ -167,7 +167,7 @@ class NormalizedVersion(object):
         nums = []
         for n in s.split("."):
             #if len(n) > 1 and n[0] == '0':
-            #    raise IrrationalVersionError("cannot have leading zero in "
+            #    raise UnsupportedVersionError("cannot have leading zero in "
             #        "version number segment: '%s' in %r" % (n, full_ver_str))
             nums.append(int(n))
         if self.drop_trailing_zeros:
@@ -256,7 +256,7 @@ def suggest_normalized_version(s):
     try:
         NormalizedVersion(s)
         return s   # already rational
-    except IrrationalVersionError:
+    except UnsupportedVersionError:
         pass
 
     rs = s.lower()
@@ -343,7 +343,7 @@ def suggest_normalized_version(s):
     try:
         NormalizedVersion(rs)
         return rs   # already rational
-    except IrrationalVersionError:
+    except UnsupportedVersionError:
         pass
     return None
 
@@ -368,7 +368,7 @@ def _split_predicate(predicate):
 def is_predicate(s):
     return _PREDICATE.match(s)
 
-class VersionPredicate(object):
+class NormalizedMatcher(object):
     """Defines a predicate: ProjectName (>ver1,ver2, ..)"""
 
     version_maker = NormalizedVersion
@@ -423,7 +423,7 @@ class VersionPredicate(object):
         return self._string
 
 
-class _Versions(VersionPredicate):
+class _Versions(NormalizedMatcher):
     def __init__(self, predicate):
         predicate = predicate.strip()
         match = _PLAIN_VERSIONS.match(predicate)
@@ -433,7 +433,7 @@ class _Versions(VersionPredicate):
                            for pred in predicates.split(',')]
 
 
-class _Version(VersionPredicate):
+class _Version(NormalizedMatcher):
     def __init__(self, predicate):
         predicate = predicate.strip()
         match = _PLAIN_VERSIONS.match(predicate)
@@ -443,8 +443,8 @@ class _Version(VersionPredicate):
 
 def is_valid_predicate(predicate):
     try:
-        VersionPredicate(predicate)
-    except (ValueError, IrrationalVersionError):
+        NormalizedMatcher(predicate)
+    except (ValueError, UnsupportedVersionError):
         return False
     else:
         return True
@@ -453,7 +453,7 @@ def is_valid_predicate(predicate):
 def is_valid_versions(predicate):
     try:
         _Versions(predicate)
-    except (ValueError, IrrationalVersionError):
+    except (ValueError, UnsupportedVersionError):
         return False
     else:
         return True
@@ -462,18 +462,18 @@ def is_valid_versions(predicate):
 def is_valid_version(predicate):
     try:
         _Version(predicate)
-    except (ValueError, IrrationalVersionError):
+    except (ValueError, UnsupportedVersionError):
         return False
     else:
         return True
 
 
 def get_version_predicate(requirements):
-    """Return a VersionPredicate object, from a string or an already
+    """Return a NormalizedMatcher object, from a string or an already
     existing object.
     """
     if isinstance(requirements, string_types):
-        requirements = VersionPredicate(requirements)
+        requirements = NormalizedMatcher(requirements)
     return requirements
 
 #

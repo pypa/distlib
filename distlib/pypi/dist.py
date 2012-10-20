@@ -13,7 +13,7 @@ import tempfile
 
 from ..compat import urlparse, urlretrieve, shutil
 from ..version import (suggest_normalized_version, NormalizedVersion,
-                       get_version_predicate, IrrationalVersionError)
+                       get_version_predicate, UnsupportedVersionError)
 from ..metadata import Metadata
 from .errors import (HashDoesNotMatch, UnsupportedHashName,
                      CantParseArchiveName)
@@ -67,12 +67,12 @@ class ReleaseInfo(IndexReference):
     def set_version(self, version):
         try:
             self._version = NormalizedVersion(version)
-        except IrrationalVersionError:
+        except UnsupportedVersionError:
             suggestion = suggest_normalized_version(version)
             if suggestion:
                 self.version = suggestion
             else:
-                raise IrrationalVersionError(version)
+                raise UnsupportedVersionError(version)
 
     def get_version(self):
         return self._version

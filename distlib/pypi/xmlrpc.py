@@ -9,7 +9,7 @@ implementation at http://wiki.python.org/moin/PyPiXmlRpc).
 import logging
 
 from ..compat import xmlrpclib
-from ..version import get_version_predicate, IrrationalVersionError
+from ..version import get_version_predicate, UnsupportedVersionError
 from .base import BaseClient
 from .errors import ProjectNotFound, InvalidSearchField, ReleaseNotFound
 from .dist import ReleaseInfo
@@ -171,7 +171,7 @@ class Client(BaseClient):
                 project.add_release(release=ReleaseInfo(p['name'],
                     p['version'], metadata={'summary': p['summary']},
                     index=self._index))
-            except IrrationalVersionError as e:
+            except UnsupportedVersionError as e:
                 logger.warning("Irrational version error found: %s", e)
         return [self._projects[p['name'].lower()] for p in projects]
 

@@ -18,8 +18,8 @@ import zipimport
 
 from . import DistlibException
 from .compat import StringIO, configparser, urlopen
-from .version import (suggest_normalized_version, VersionPredicate,
-                      IrrationalVersionError)
+from .version import (suggest_normalized_version, NormalizedMatcher,
+                      UnsupportedVersionError)
 from .metadata import Metadata
 from .util import parse_requires, cached_property, get_export_entry
 
@@ -224,7 +224,7 @@ class DistributionPath(object):
                         break
                 else:
                     try:
-                        predicate = VersionPredicate(obs)
+                        predicate = NormalizedMatcher(obs)
                     except ValueError:
                         raise DistlibException(
                             'distribution %r has ill-formed obsoletes field: '
@@ -251,7 +251,7 @@ class DistributionPath(object):
         predicate = None
         if not version is None:
             try:
-                predicate = VersionPredicate(name + ' (' + version + ')')
+                predicate = NormalizedMatcher(name + ' (' + version + ')')
             except ValueError:
                 raise DistlibException('invalid name or version: %r, %r' %
                                       (name, version))
@@ -993,11 +993,11 @@ def make_graph(dists):
         requires = dist.metadata['Requires-Dist'] + dist.metadata['Requires']
         for req in requires:
             try:
-                predicate = VersionPredicate(req)
-            except IrrationalVersionError:
+                predicate = NormalizedMatcher(req)
+            except UnsupportedVersionError:
                 # XXX compat-mode if cannot read the version
                 name = req.split()[0]
-                predicate = VersionPredicate(name)
+                predicate = NormalizedMatcher(name)
 
             name = predicate.name.lower()   # case-insensitive
 
@@ -1008,7 +1008,7 @@ def make_graph(dists):
                 for version, provider in provided[name]:
                     try:
                         match = predicate.match(version)
-                    except IrrationalVersionError:
+                    except UnsupportedVersionError:
                         # XXX small compat-mode
                         if version.split(' ') == 1:
                             match = True

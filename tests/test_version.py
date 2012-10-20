@@ -9,9 +9,9 @@ import doctest
 from compat import unittest
 
 from distlib.version import NormalizedVersion as V
-from distlib.version import HugeMajorVersionNumError, IrrationalVersionError
+from distlib.version import HugeMajorVersionNumError, UnsupportedVersionError
 from distlib.version import suggest_normalized_version as suggest
-from distlib.version import VersionPredicate
+from distlib.version import NormalizedMatcher
 from distlib.version import legacy_version_key
 from distlib.version import is_semver, semver_key
 
@@ -61,7 +61,7 @@ class VersionTestCase(unittest.TestCase):
                       '1.2.dev2.post2', '1.2.post2.dev3.post4')
 
         for s in irrational:
-            self.assertRaises(IrrationalVersionError, V, s)
+            self.assertRaises(UnsupportedVersionError, V, s)
 
     def test_huge_version(self):
         self.assertEqual(str(V('1980.0')), '1980.0')
@@ -190,7 +190,7 @@ class VersionTestCase(unittest.TestCase):
         self.assertEqual(suggest('1.4p1'), '1.4.post1')
 
     def test_predicate(self):
-        # VersionPredicate knows how to parse stuff like:
+        # NormalizedMatcher knows how to parse stuff like:
         #
         #   Project (>=version, ver2)
 
@@ -201,48 +201,48 @@ class VersionTestCase(unittest.TestCase):
                       'Hey (>=2.5,<2.7)')
 
         for predicate in predicates:
-            VersionPredicate(predicate)
+            NormalizedMatcher(predicate)
 
-        self.assertTrue(VersionPredicate('Hey (>=2.5,<2.7)').match('2.6'))
-        self.assertTrue(VersionPredicate('Ho').match('2.6'))
-        self.assertFalse(VersionPredicate('Hey (>=2.5,!=2.6,<2.7)').match('2.6'))
-        self.assertTrue(VersionPredicate('Ho (<3.0)').match('2.6'))
-        self.assertTrue(VersionPredicate('Ho (<3.0,!=2.5)').match('2.6.0'))
-        self.assertFalse(VersionPredicate('Ho (<3.0,!=2.6)').match('2.6.0'))
-        self.assertTrue(VersionPredicate('Ho (2.5)').match('2.5.4'))
-        self.assertFalse(VersionPredicate('Ho (!=2.5)').match('2.5.2'))
-        self.assertTrue(VersionPredicate('Hey (<=2.5)').match('2.5.9'))
-        self.assertFalse(VersionPredicate('Hey (<=2.5)').match('2.6.0'))
-        self.assertTrue(VersionPredicate('Hey (>=2.5)').match('2.5.1'))
+        self.assertTrue(NormalizedMatcher('Hey (>=2.5,<2.7)').match('2.6'))
+        self.assertTrue(NormalizedMatcher('Ho').match('2.6'))
+        self.assertFalse(NormalizedMatcher('Hey (>=2.5,!=2.6,<2.7)').match('2.6'))
+        self.assertTrue(NormalizedMatcher('Ho (<3.0)').match('2.6'))
+        self.assertTrue(NormalizedMatcher('Ho (<3.0,!=2.5)').match('2.6.0'))
+        self.assertFalse(NormalizedMatcher('Ho (<3.0,!=2.6)').match('2.6.0'))
+        self.assertTrue(NormalizedMatcher('Ho (2.5)').match('2.5.4'))
+        self.assertFalse(NormalizedMatcher('Ho (!=2.5)').match('2.5.2'))
+        self.assertTrue(NormalizedMatcher('Hey (<=2.5)').match('2.5.9'))
+        self.assertFalse(NormalizedMatcher('Hey (<=2.5)').match('2.6.0'))
+        self.assertTrue(NormalizedMatcher('Hey (>=2.5)').match('2.5.1'))
 
-        self.assertRaises(ValueError, VersionPredicate, '')
+        self.assertRaises(ValueError, NormalizedMatcher, '')
 
-        self.assertTrue(VersionPredicate('Hey 2.5').match('2.5.1'))
+        self.assertTrue(NormalizedMatcher('Hey 2.5').match('2.5.1'))
 
         # XXX need to silent the micro version in this case
-        self.assertFalse(VersionPredicate('Ho (<3.0,!=2.6)').match('2.6.3'))
+        self.assertFalse(NormalizedMatcher('Ho (<3.0,!=2.6)').match('2.6.3'))
 
         # Make sure a predicate that ends with a number works
-        self.assertTrue(VersionPredicate('virtualenv5 (1.0)').match('1.0'))
-        self.assertTrue(VersionPredicate('virtualenv5').match('1.0'))
-        self.assertTrue(VersionPredicate('vi5two').match('1.0'))
-        self.assertTrue(VersionPredicate('5two').match('1.0'))
-        self.assertTrue(VersionPredicate('vi5two 1.0').match('1.0'))
-        self.assertTrue(VersionPredicate('5two 1.0').match('1.0'))
+        self.assertTrue(NormalizedMatcher('virtualenv5 (1.0)').match('1.0'))
+        self.assertTrue(NormalizedMatcher('virtualenv5').match('1.0'))
+        self.assertTrue(NormalizedMatcher('vi5two').match('1.0'))
+        self.assertTrue(NormalizedMatcher('5two').match('1.0'))
+        self.assertTrue(NormalizedMatcher('vi5two 1.0').match('1.0'))
+        self.assertTrue(NormalizedMatcher('5two 1.0').match('1.0'))
 
         # test repr
         for predicate in predicates:
-            self.assertEqual(str(VersionPredicate(predicate)), predicate)
+            self.assertEqual(str(NormalizedMatcher(predicate)), predicate)
 
     def test_predicate_name(self):
         # Test that names are parsed the right way
 
-        self.assertEqual('Hey', VersionPredicate('Hey (<1.1)').name)
-        self.assertEqual('Foo-Bar', VersionPredicate('Foo-Bar (1.1)').name)
-        self.assertEqual('Foo Bar', VersionPredicate('Foo Bar (1.1)').name)
+        self.assertEqual('Hey', NormalizedMatcher('Hey (<1.1)').name)
+        self.assertEqual('Foo-Bar', NormalizedMatcher('Foo-Bar (1.1)').name)
+        self.assertEqual('Foo Bar', NormalizedMatcher('Foo Bar (1.1)').name)
 
     def test_is_final(self):
-        # VersionPredicate knows is a distribution is a final one or not.
+        # NormalizedMatcher knows is a distribution is a final one or not.
         final_versions = ('1.0', '1.0.post456')
         other_versions = ('1.0.dev1', '1.0a2', '1.0c3')
 
@@ -253,7 +253,7 @@ class VersionTestCase(unittest.TestCase):
 
     def test_micro_predicate(self):
         self.assertNotEqual(V('3.4.0'), V('3.4'))
-        predicate = VersionPredicate('zope.event (3.4.0)')
+        predicate = NormalizedMatcher('zope.event (3.4.0)')
         self.assertTrue(predicate.match('3.4.0'))
         self.assertFalse(predicate.match('3.4.1'))
 
