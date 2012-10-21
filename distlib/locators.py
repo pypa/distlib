@@ -257,7 +257,7 @@ class SimpleScrapingLocator(Locator):
         return result
 
     platform_dependent = re.compile(r'\b(linux-(i\d86|x86_64|arm\w+)|'
-                                    r'win(32|-amd64)|macosx-\d+)\b', re.I)
+                                    r'win(32|-amd64)|macosx-?\d+)\b', re.I)
 
     def _is_platform_dependent(self, url):
         return self.platform_dependent.search(url)
