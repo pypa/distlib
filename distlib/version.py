@@ -437,7 +437,7 @@ def semantic_key(s):
     result = None
     m = is_semver(s)
     if not m:
-        raise UnsupportedVersionError('Not a semantic version: %r' % s)
+        raise UnsupportedVersionError(s)
     groups = m.groups()
     major, minor, patch = [int(i) for i in groups[:3]]
     # choose the '|' and '*' so that versions sort correctly
@@ -459,10 +459,11 @@ def adaptive_key(s):
     try:
         result = normalized_key(s, False)
     except UnsupportedVersionError:
-        s = suggest_normalized_version(s)
-        if s is None:
-            raise
-        result = normalized_key(s, False)
+        ss = suggest_normalized_version(s)
+        if ss is not None:
+            result = normalized_key(ss)     # "guaranteed" to work
+        else:
+            result = semantic_key(s)        # let's hope ...
     return result
 
 
