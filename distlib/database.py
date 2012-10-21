@@ -18,13 +18,14 @@ import zipimport
 
 from . import DistlibException
 from .compat import StringIO, configparser, urlopen
-from .version import (suggest_normalized_version, DefaultMatcher,
-                      UnsupportedVersionError)
+from .version import (suggest_normalized_version, UnsupportedVersionError,
+                      get_scheme)
 from .metadata import Metadata
 from .util import parse_requires, cached_property, get_export_entry
 
 
-__all__ = ['Distribution', 'InstalledDistribution', 'EggInfoDistribution',
+__all__ = ['Distribution', 'BaseInstalledDistribution',
+           'InstalledDistribution', 'EggInfoDistribution',
            'DistributionPath']
 
 
@@ -67,6 +68,7 @@ class DistributionPath(object):
         self._cache = _Cache()
         self._cache_egg = _Cache()
         self._cache_enabled = True
+        self._scheme = get_scheme('default')
 
     def enable_cache(self):
         """
@@ -224,12 +226,12 @@ class DistributionPath(object):
                         break
                 else:
                     try:
-                        predicate = DefaultMatcher(obs)
+                        matcher = self._scheme.matcher(obs)
                     except ValueError:
                         raise DistlibException(
                             'distribution %r has ill-formed obsoletes field: '
                             '%r' % (dist.name, obs))
-                    if name == o_components[0] and predicate.match(version):
+                    if name == o_components[0] and matcher.match(version):
                         yield dist
                         break
 
@@ -248,10 +250,10 @@ class DistributionPath(object):
         :type name: string
         :type version: string
         """
-        predicate = None
+        matcher = None
         if not version is None:
             try:
-                predicate = DefaultMatcher(name + ' (' + version + ')')
+                matcher = self._scheme.matcher('%s (%s)' % (name, version))
             except ValueError:
                 raise DistlibException('invalid name or version: %r, %r' %
                                       (name, version))
@@ -261,7 +263,7 @@ class DistributionPath(object):
 
             for p in provided:
                 p_components = p.rsplit(' ', 1)
-                if len(p_components) == 1 or predicate is None:
+                if len(p_components) == 1 or matcher is None:
                     if name == p_components[0]:
                         yield dist
                         break
@@ -272,7 +274,7 @@ class DistributionPath(object):
                             'distribution %r has invalid Provides field: %r' %
                             (dist.name, p))
                     p_ver = p_ver[1:-1]  # trim off the parenthesis
-                    if p_name == name and predicate.match(p_ver):
+                    if p_name == name and matcher.match(p_ver):
                         yield dist
                         break
 
@@ -319,16 +321,11 @@ class Distribution(object):
 
     def __init__(self, metadata):
         self.metadata = metadata
+        self.name = metadata.name
+        self.version = metadata.version
         self.locator = None
         self.md5_digest = None
-
-    @cached_property
-    def name(self):
-        return self.metadata.name
-
-    @cached_property
-    def version(self):
-        return self.metadata.version
+        self._scheme = get_scheme('default')
 
     @property
     def download_url(self):
@@ -386,7 +383,13 @@ class Distribution(object):
     __hash__ = object.__hash__
 
 
-class InstalledDistribution(Distribution):
+class BaseInstalledDistribution(Distribution):
+    def __init__(self, metadata, path, env=None):
+        super(BaseInstalledDistribution, self).__init__(metadata)
+        self.path = path
+        self.dist_path  = env
+
+class InstalledDistribution(BaseInstalledDistribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
     constructor. It reads the metadata contained in ``METADATA`` when it is
     instantiated."""
@@ -405,9 +408,7 @@ class InstalledDistribution(Distribution):
             metadata_path = os.path.join(path, 'METADATA')
             metadata = Metadata(path=metadata_path)
 
-        super(InstalledDistribution, self).__init__(metadata)
-        self.path = path
-        self.dist_path  = env
+        super(InstalledDistribution, self).__init__(metadata, path, env)
 
         if env and env._cache_enabled:
             env._cache.add(self)
@@ -699,37 +700,38 @@ class InstalledDistribution(Distribution):
     __hash__ = object.__hash__
 
 
-class EggInfoDistribution(object):
+class EggInfoDistribution(BaseInstalledDistribution):
     """Created with the *path* of the ``.egg-info`` directory or file provided
     to the constructor. It reads the metadata contained in the file itself, or
     if the given path happens to be a directory, the metadata is read from the
     file ``PKG-INFO`` under that directory."""
 
-    name = ''
-    """The name of the distribution."""
-
-    version = ''
-    """The version of the distribution."""
-
-    metadata = None
-    """A :class:`distutils2.metadata.Metadata` instance loaded with
-    the distribution's ``METADATA`` file."""
-
     def __init__(self, path, env=None):
         self.path = path
         self.dist_path  = env
         if env._cache_enabled and path in env._cache_egg.path:
-            self.metadata = env._cache_egg.path[path].metadata
-            self.name = self.metadata['Name']
-            self.version = self.metadata['Version']
-            return
+            metadata = env._cache_egg.path[path].metadata
+            self.name = metadata['Name']
+            self.version = metadata['Version']
+        else:
+            metadata = self._get_metadata(path)
 
+            # Need to be set before caching
+            self.name = metadata['Name']
+            self.version = metadata['Version']
+
+            if env and env._cache_enabled:
+                env._cache_egg.add(self)
+
+        super(EggInfoDistribution, self).__init__(metadata, path, env)
+
+    def _get_metadata(self, path):
         requires = None
 
         if path.endswith('.egg'):
             if os.path.isdir(path):
                 meta_path = os.path.join(path, 'EGG-INFO', 'PKG-INFO')
-                self.metadata = Metadata(path=meta_path)
+                metadata = Metadata(path=meta_path)
                 req_path = os.path.join(path, 'EGG-INFO', 'requires.txt')
                 requires = parse_requires(req_path)
             else:
@@ -737,37 +739,29 @@ class EggInfoDistribution(object):
                 zipf = zipimport.zipimporter(path)
                 fileobj = StringIO(
                     zipf.get_data('EGG-INFO/PKG-INFO').decode('utf8'))
-                self.metadata = Metadata(fileobj=fileobj)
+                metadata = Metadata(fileobj=fileobj)
                 try:
                     requires = zipf.get_data('EGG-INFO/requires.txt')
                 except IOError:
                     requires = None
-            self.name = self.metadata['Name']
-            self.version = self.metadata['Version']
-
         elif path.endswith('.egg-info'):
             if os.path.isdir(path):
                 path = os.path.join(path, 'PKG-INFO')
                 req_path = os.path.join(path, 'requires.txt')
                 requires = parse_requires(req_path)
-            self.metadata = Metadata(path=path)
-            self.name = self.metadata['Name']
-            self.version = self.metadata['Version']
-
+            metadata = Metadata(path=path)
         else:
             raise ValueError('path must end with .egg-info or .egg, got %r' %
                              path)
 
         if requires:
-            if self.metadata['Metadata-Version'] == '1.1':
+            if metadata['Metadata-Version'] == '1.1':
                 # we can't have 1.1 metadata *and* Setuptools requires
                 for field in ('Obsoletes', 'Requires', 'Provides'):
-                    if field in self.metadata:
-                        del self.metadata[field]
-            self.metadata['Requires-Dist'] += requires
-
-        if env and env._cache_enabled:
-            env._cache_egg.add(self)
+                    if field in metadata:
+                        del metadata[field]
+            metadata['Requires-Dist'] += requires
+        return metadata
 
     def __repr__(self):
         return '<EggInfoDistribution %r %s at %r>' % (
@@ -993,13 +987,13 @@ def make_graph(dists):
         requires = dist.metadata['Requires-Dist'] + dist.metadata['Requires']
         for req in requires:
             try:
-                predicate = DefaultMatcher(req)
+                matcher = dist._scheme.matcher(req)
             except UnsupportedVersionError:
                 # XXX compat-mode if cannot read the version
                 name = req.split()[0]
-                predicate = DefaultMatcher(name)
+                matcher = dist._scheme.matcher(name)
 
-            name = predicate.name.lower()   # case-insensitive
+            name = matcher.name.lower()   # case-insensitive
 
             if name not in provided:
                 graph.add_missing(dist, req)
@@ -1007,7 +1001,7 @@ def make_graph(dists):
                 matched = False
                 for version, provider in provided[name]:
                     try:
-                        match = predicate.match(version)
+                        match = matcher.match(version)
                     except UnsupportedVersionError:
                         # XXX small compat-mode
                         if version.split(' ') == 1:

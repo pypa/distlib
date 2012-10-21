@@ -18,8 +18,7 @@ from email import message_from_file
 from . import DistlibException
 from .compat import StringIO, string_types
 from .markers import interpret
-from .version import (is_valid_predicate, is_valid_version,
-                      is_valid_versions)
+from .version import get_scheme
 
 logger = logging.getLogger(__name__)
 
@@ -232,6 +231,7 @@ class Metadata(object):
         self.docutils_support = _HAS_DOCUTILS
         self.platform_dependent = platform_dependent
         self.execution_context = execution_context
+        self.scheme = get_scheme('default')
         if [path, fileobj, mapping].count(None) < 2:
             raise TypeError('path, fileobj and mapping are exclusive')
         if path is not None:
@@ -447,17 +447,17 @@ class Metadata(object):
             if name in _PREDICATE_FIELDS and value is not None:
                 for v in value:
                     # check that the values are valid predicates
-                    if not is_valid_predicate(v.split(';')[0]):
+                    if not self.scheme.is_valid_matcher(v.split(';')[0]):
                         logger.warning(
                             '%r: %r is not a valid predicate (field %r)',
                             project_name, v, name)
             # FIXME this rejects UNKNOWN, is that right?
             elif name in _VERSIONS_FIELDS and value is not None:
-                if not is_valid_versions(value):
+                if not self.scheme.is_valid_constraint_list(value):
                     logger.warning('%r: %r is not a valid version (field %r)',
                                    project_name, value, name)
             elif name in _VERSION_FIELDS and value is not None:
-                if not is_valid_version(value):
+                if not self.scheme.is_valid_version(value):
                     logger.warning('%r: %r is not a valid version (field %r)',
                                    project_name, value, name)
 
@@ -531,15 +531,17 @@ class Metadata(object):
         if self['Metadata-Version'] != '1.2':
             return missing, warnings
 
-        def is_valid_predicates(value):
+        def are_valid_constraints(value):
             for v in value:
-                if not is_valid_predicate(v.split(';')[0]):
+                if not self.scheme.is_valid_matcher(v.split(';')[0]):
                     return False
             return True
 
-        for fields, controller in ((_PREDICATE_FIELDS, is_valid_predicates),
-                                   (_VERSIONS_FIELDS, is_valid_versions),
-                                   (_VERSION_FIELDS, is_valid_version)):
+        for fields, controller in ((_PREDICATE_FIELDS, are_valid_constraints),
+                                   (_VERSIONS_FIELDS,
+                                    self.scheme.is_valid_constraint_list),
+                                   (_VERSION_FIELDS,
+                                    self.scheme.is_valid_version)):
             for field in fields:
                 value = self.get(field, None)
                 if value is not None and not controller(value):

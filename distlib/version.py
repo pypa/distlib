@@ -12,12 +12,11 @@ import re
 
 from .compat import string_types
 
-__all__ = ['NormalizedVersion', 'suggest_normalized_version',
-           'NormalizedMatcher', 'is_valid_version', 'is_valid_versions',
-           'is_valid_predicate', 'UnsupportedVersionError',
-           'HugeMajorVersionError',
-           'SemanticVersion', 'SemanticMatcher',
+__all__ = ['NormalizedVersion', 'NormalizedMatcher',
            'LegacyVersion', 'LegacyMatcher',
+           'SemanticVersion', 'SemanticMatcher',
+           'UnsupportedVersionError', 'HugeMajorVersionError',
+           'suggest_normalized_version',
            'normalized_key', 'legacy_key', 'semantic_key']
 
 class UnsupportedVersionError(Exception):
@@ -369,37 +368,6 @@ def suggest_normalized_version(s):
         rs = None
     return rs
 
-
-def is_valid_predicate(predicate):
-    try:
-        v = NormalizedMatcher(predicate)
-        result = True
-    except (ValueError, UnsupportedVersionError):
-        result = False
-    return result
-
-def get_matcher(s):
-    if isinstance(s, string_types):
-        s = NormalizedMatcher(s)
-    return s
-
-def is_valid_versions(s):
-    s = 'dummy (%s)' % s
-    try:
-        DefaultMatcher(s)
-        result = True
-    except UnsupportedVersionError:
-        result = False
-    return result
-
-def is_valid_version(s):
-    try:
-        DefaultVersion(s)
-        result = True
-    except UnsupportedVersionError:
-        result = False
-    return result
-
 #
 #   Legacy version processing (distribute-compatible)
 #
@@ -482,18 +450,44 @@ class SemanticVersion(Version):
 class SemanticMatcher(Matcher):
     version_class = SemanticVersion
 
+class VersionScheme(object):
+    def __init__(self, key, version, matcher):
+        self.key = key
+        self.version = version
+        self.matcher = matcher
+
+    def is_valid_version(self, s):
+        try:
+            self.version(s)
+            result = True
+        except UnsupportedVersionError:
+            result = False
+        return result
+
+    def is_valid_matcher(self, s):
+        try:
+            self.matcher(s)
+            result = True
+        except UnsupportedVersionError:
+            result = False
+        return result
+
+    def is_valid_constraint_list(self, s):
+        """
+        Used for processing some metadata fields
+        """
+        return self.is_valid_matcher('dummy_name (%s)' % s)
+
 _SCHEMES = {
-    'normalized': (normalized_key, NormalizedVersion, NormalizedMatcher),
-    'legacy': (legacy_key, LegacyVersion, LegacyMatcher),
-    'semantic': (semantic_key, SemanticVersion, SemanticMatcher),
+    'normalized': VersionScheme(normalized_key, NormalizedVersion,
+                                NormalizedMatcher),
+    'legacy': VersionScheme(legacy_key, LegacyVersion, LegacyMatcher),
+    'semantic': VersionScheme(semantic_key, SemanticVersion, SemanticMatcher),
 }
 
-def set_scheme(scheme):
-    global default_key, DefaultVersion, DefaultMatcher
+_SCHEMES['default'] = _SCHEMES['normalized']
 
-    lscheme = scheme.lower()
-    if lscheme not in _SCHEMES:
-        raise ValueError('Not a valid scheme: %r' % scheme)
-    default_key, DefaultVersion, DefaultMatcher = _SCHEMES[lscheme]
-
-set_scheme('normalized')
+def get_scheme(name):
+    if name not in _SCHEMES:
+        raise ValueError('unknown scheme name: %r' % name)
+    return _SCHEMES[name]

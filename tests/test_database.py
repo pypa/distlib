@@ -21,6 +21,7 @@ from distlib.compat import text_type, file_type, StringIO
 import distlib.database
 from distlib.metadata import Metadata
 from distlib.database import (InstalledDistribution, EggInfoDistribution,
+                              BaseInstalledDistribution,
                               DistributionPath, make_graph,
                               get_required_dists, get_dependent_dists)
 from distlib.util import get_resources_dests, ExportEntry
@@ -391,16 +392,16 @@ class TestDatabase(LoggingCatcher,
         d = DistributionPath()
         ed = DistributionPath(include_egg=True)
 
-        cases = ((d, non_egg_dists, (InstalledDistribution,)),
-                 (ed, all_dists, (InstalledDistribution, EggInfoDistribution)))
+        cases = ((d, non_egg_dists, InstalledDistribution),
+                 (ed, all_dists, BaseInstalledDistribution))
 
-        for distset, fake_dists, allowed_classes in cases:
+        for distset, fake_dists, allowed_class in cases:
             found_dists = []
 
             # Verify the fake dists have been found.
             dists = list(distset.get_distributions())
             for dist in dists:
-                self.assertIsInstance(dist, allowed_classes)
+                self.assertIsInstance(dist, allowed_class)
                 if (dist.name in dict(fake_dists) and
                     dist.path.startswith(self.fake_dists_path)):
                     found_dists.append((dist.name, dist.version))

@@ -16,9 +16,10 @@ import sys
 
 from .. import DistlibException, __version__ as distlib_version
 from ..compat import (urlparse, urlunparse, urljoin, splituser, unquote,
-                      urllib2, Request, URLError, HTTPError, httplib)
+                      urllib2, Request, URLError, HTTPError, httplib,
+                      string_types)
 from ..metadata import Metadata
-from ..version import get_matcher
+from ..version import get_scheme
 from .base import BaseClient
 from .dist import (ReleasesList, EXTENSIONS, get_infos_from_url, MD5_HASH)
 from .errors import (DownloadError, UnableToDownload, CantParseArchiveName,
@@ -145,6 +146,7 @@ class Crawler(BaseClient):
         # on one)
         self._processed_urls = []
         self._projects = {}
+        self.scheme = get_scheme('default')
 
     @with_mirror_support()
     def search_projects(self, name=None, **kwargs):
@@ -169,28 +171,30 @@ class Crawler(BaseClient):
             matching_projects.append(self._get_project(project_name))
         return matching_projects
 
-    def get_releases(self, requirements, force_update=False):
+    def get_releases(self, matcher, force_update=False):
         """Search for releases and return a ReleasesList object containing
         the results.
         """
-        predicate = get_matcher(requirements)
-        if predicate.name.lower() in self._projects and not force_update:
-            return self._projects.get(predicate.name.lower())
-        logger.debug('Reading info on PyPI about %s', predicate.name)
-        self._process_index_page(predicate.name)
+        if isinstance(matcher, string_types):
+            matcher = self.scheme.matcher(matcher)
+        lname = matcher.name.lower()
+        if lname in self._projects and not force_update:
+            return self._projects.get(lname)
+        logger.debug('Reading info on PyPI about %s', matcher.name)
+        self._process_index_page(matcher.name)
 
-        if predicate.name.lower() not in self._projects:
+        if lname not in self._projects:
             raise ProjectNotFound
 
-        releases = self._projects.get(predicate.name.lower())
+        releases = self._projects.get(lname)
         releases.sort_releases()
         return releases
 
     def get_release(self, requirements):
         """Return only one release that fulfill the given requirements"""
-        predicate = get_matcher(requirements)
-        release = self.get_releases(predicate)\
-                      .get_last(predicate)
+        matcher = self.scheme.matcher(requirements)
+        release = self.get_releases(matcher)\
+                      .get_last(matcher)
         if not release:
             raise ReleaseNotFound("No release matches the given criterias")
         return release

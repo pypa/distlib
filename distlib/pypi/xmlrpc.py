@@ -9,7 +9,7 @@ implementation at http://wiki.python.org/moin/PyPiXmlRpc).
 import logging
 
 from ..compat import xmlrpclib
-from ..version import get_matcher, UnsupportedVersionError
+from ..version import get_scheme, UnsupportedVersionError
 from .base import BaseClient
 from .errors import ProjectNotFound, InvalidSearchField, ReleaseNotFound
 from .dist import ReleaseInfo
@@ -45,14 +45,15 @@ class Client(BaseClient):
         super(Client, self).__init__(prefer_source)
         self.server_url = server_url
         self._projects = {}
+        self.scheme = get_scheme('default')
 
     def get_release(self, requirements):
         """Return a release with all complete metadata and distribution
         related informations.
         """
-        predicate = get_matcher(requirements)
-        releases = self.get_releases(predicate.name)
-        release = releases.get_last(predicate)
+        matcher = self.scheme.matcher(requirements)
+        releases = self.get_releases(matcher.name)
+        release = releases.get_last(matcher)
         self.get_metadata(release.name, str(release.version))
         self.get_distributions(release.name, str(release.version))
         return release
@@ -80,10 +81,11 @@ class Client(BaseClient):
         def get_versions(project_name, show_hidden):
             return self.proxy.package_releases(project_name, show_hidden)
 
-        predicate = get_matcher(requirements)
-        project_name = predicate.name
-        if not force_update and (project_name.lower() in self._projects):
-            project = self._projects[project_name.lower()]
+        matcher = self.scheme.matcher(requirements)
+        project_name = matcher.name
+        lname = project_name.lower()
+        if not force_update and (lname in self._projects):
+            project = self._projects[lname]
             if not project.contains_hidden and show_hidden:
                 # if hidden releases are requested, and have an existing
                 # list of releases that does not contains hidden ones
@@ -101,9 +103,9 @@ class Client(BaseClient):
             project.add_releases([ReleaseInfo(project_name, version,
                                               index=self._index)
                                   for version in versions])
-        project = project.filter(predicate)
+        project = project.filter(matcher)
         if len(project) == 0:
-            raise ReleaseNotFound("%s" % predicate)
+            raise ReleaseNotFound("%s" % matcher)
         project.sort_releases()
         return project
 

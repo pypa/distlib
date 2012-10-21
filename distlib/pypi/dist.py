@@ -11,9 +11,9 @@ import re
 import hashlib
 import tempfile
 
-from ..compat import urlparse, urlretrieve, shutil
-from ..version import (suggest_normalized_version, DefaultVersion,
-                       get_matcher, UnsupportedVersionError)
+from ..compat import urlparse, urlretrieve, shutil, string_types
+from ..version import (suggest_normalized_version, get_scheme,
+                       UnsupportedVersionError)
 from ..metadata import Metadata
 from .errors import (HashDoesNotMatch, UnsupportedHashName,
                      CantParseArchiveName)
@@ -34,7 +34,7 @@ class IndexReference(object):
 
 class ReleaseInfo(IndexReference):
     """Represent a release of a project (a project with a specific version).
-    The release contain the _metadata informations related to this specific
+    The release contain the _metadata information related to this specific
     version, and is also a container for distribution related informations.
 
     See the DistInfo class for more information about distributions.
@@ -52,6 +52,7 @@ class ReleaseInfo(IndexReference):
         self.set_index(index)
         self.name = name
         self._version = None
+        self.scheme = get_scheme('default')
         self.version = version
         if metadata:
             self.metadata = Metadata(mapping=metadata)
@@ -66,7 +67,7 @@ class ReleaseInfo(IndexReference):
 
     def set_version(self, version):
         try:
-            self._version = DefaultVersion(version)
+            self._version = self.scheme.version(version)
         except UnsupportedVersionError:
             suggestion = suggest_normalized_version(version)
             if suggestion:
@@ -346,6 +347,7 @@ class ReleasesList(IndexReference):
         self.set_index(index)
         self.releases = []
         self.name = name
+        self.scheme = get_scheme('default')
         self.contains_hidden = contains_hidden
         if releases:
             self.add_releases(releases)
@@ -354,20 +356,21 @@ class ReleasesList(IndexReference):
         self._index.get_releases(self.name)
         return self.releases
 
-    def filter(self, predicate):
-        """Filter and return a subset of releases matching the given predicate.
+    def filter(self, matcher):
+        """Filter and return a subset of releases matching the given matcher.
         """
         return ReleasesList(self.name, [release for release in self.releases
-                                        if predicate.match(release.version)],
+                                        if matcher.match(release.version)],
                                         index=self._index)
 
-    def get_last(self, requirements):
+    def get_last(self, matcher):
         """Return the "last" release, that satisfy the given predicates.
 
         "last" is defined by the version number of the releases
         """
-        predicate = get_matcher(requirements)
-        releases = self.filter(predicate)
+        if isinstance(matcher, string_types):
+            matcher = self.scheme.matcher(matcher)
+        releases = self.filter(matcher)
         if len(releases) == 0:
             return None
         releases.sort_releases(reverse=True)
