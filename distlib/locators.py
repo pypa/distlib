@@ -408,21 +408,22 @@ default_locator = AggregatingLocator(
                     SimpleScrapingLocator('http://pypi.python.org/simple/',
                                           timeout=2.0))
 
-def locate(predicate):
+def locate(predicate, scheme='legacy'):
     result = None
-    vp = DefaultMatcher(predicate)
-    versions = default_locator.get_project(vp.name)
+    scheme = get_scheme(scheme)
+    matcher = scheme.matcher(predicate)
+    versions = default_locator.get_project(matcher.name)
     if versions:
         # sometimes, versions are invalid
         slist = []
         for k in versions:
             try:
-                if vp.match(k):
+                if scheme.matcher.match(k):
                     slist.append(k)
             except Exception:   # legacy versions :-(
                 slist.append(k)
         if len(slist) > 1:
-            slist = sorted(slist, key=default_key)
+            slist = sorted(slist, key=scheme.key)
         if slist:
             result = versions[slist[-1]]
     return result

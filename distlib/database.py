@@ -325,7 +325,6 @@ class Distribution(object):
         self.version = metadata.version
         self.locator = None
         self.md5_digest = None
-        self._scheme = get_scheme('default')
 
     @property
     def download_url(self):
@@ -944,7 +943,7 @@ class DependencyGraph(object):
         return '\n'.join(output)
 
 
-def make_graph(dists):
+def make_graph(dists, scheme='default'):
     """Makes a dependency graph from the given distributions.
 
     :parameter dists: a list of distributions
@@ -952,6 +951,7 @@ def make_graph(dists):
                  :class:`distutils2.database.EggInfoDistribution` instances
     :rtype: a :class:`DependencyGraph` instance
     """
+    scheme = get_scheme(scheme)
     graph = DependencyGraph()
     provided = {}  # maps names to lists of (version, dist) tuples
 
@@ -987,11 +987,11 @@ def make_graph(dists):
         requires = dist.metadata['Requires-Dist'] + dist.metadata['Requires']
         for req in requires:
             try:
-                matcher = dist._scheme.matcher(req)
+                matcher = scheme.matcher(req)
             except UnsupportedVersionError:
                 # XXX compat-mode if cannot read the version
                 name = req.split()[0]
-                matcher = dist._scheme.matcher(name)
+                matcher = scheme.matcher(name)
 
             name = matcher.name.lower()   # case-insensitive
 
