@@ -12,7 +12,7 @@ import hashlib
 import tempfile
 
 from ..compat import urlparse, urlretrieve, shutil
-from ..version import (suggest_normalized_version, NormalizedVersion,
+from ..version import (suggest_normalized_version, DefaultVersion,
                        get_matcher, UnsupportedVersionError)
 from ..metadata import Metadata
 from .errors import (HashDoesNotMatch, UnsupportedHashName,
@@ -66,7 +66,7 @@ class ReleaseInfo(IndexReference):
 
     def set_version(self, version):
         try:
-            self._version = NormalizedVersion(version)
+            self._version = DefaultVersion(version)
         except UnsupportedVersionError:
             suggestion = suggest_normalized_version(version)
             if suggestion:

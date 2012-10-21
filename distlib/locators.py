@@ -21,7 +21,7 @@ from .database import Distribution
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
                    examine_filename)
-from .version import legacy_key, NormalizedMatcher
+from .version import default_key, DefaultMatcher
 
 logger = logging.getLogger(__name__)
 
@@ -410,7 +410,7 @@ default_locator = AggregatingLocator(
 
 def locate(predicate):
     result = None
-    vp = NormalizedMatcher(predicate)
+    vp = DefaultMatcher(predicate)
     versions = default_locator.get_project(vp.name)
     if versions:
         # sometimes, versions are invalid
@@ -422,7 +422,7 @@ def locate(predicate):
             except Exception:   # legacy versions :-(
                 slist.append(k)
         if len(slist) > 1:
-            slist = sorted(slist, key=legacy_key)
+            slist = sorted(slist, key=default_key)
         if slist:
             result = versions[slist[-1]]
     return result

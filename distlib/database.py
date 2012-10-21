@@ -18,7 +18,7 @@ import zipimport
 
 from . import DistlibException
 from .compat import StringIO, configparser, urlopen
-from .version import (suggest_normalized_version, NormalizedMatcher,
+from .version import (suggest_normalized_version, DefaultMatcher,
                       UnsupportedVersionError)
 from .metadata import Metadata
 from .util import parse_requires, cached_property, get_export_entry
@@ -224,7 +224,7 @@ class DistributionPath(object):
                         break
                 else:
                     try:
-                        predicate = NormalizedMatcher(obs)
+                        predicate = DefaultMatcher(obs)
                     except ValueError:
                         raise DistlibException(
                             'distribution %r has ill-formed obsoletes field: '
@@ -251,7 +251,7 @@ class DistributionPath(object):
         predicate = None
         if not version is None:
             try:
-                predicate = NormalizedMatcher(name + ' (' + version + ')')
+                predicate = DefaultMatcher(name + ' (' + version + ')')
             except ValueError:
                 raise DistlibException('invalid name or version: %r, %r' %
                                       (name, version))
@@ -993,11 +993,11 @@ def make_graph(dists):
         requires = dist.metadata['Requires-Dist'] + dist.metadata['Requires']
         for req in requires:
             try:
-                predicate = NormalizedMatcher(req)
+                predicate = DefaultMatcher(req)
             except UnsupportedVersionError:
                 # XXX compat-mode if cannot read the version
                 name = req.split()[0]
-                predicate = NormalizedMatcher(name)
+                predicate = DefaultMatcher(name)
 
             name = predicate.name.lower()   # case-insensitive
 
