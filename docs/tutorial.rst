@@ -414,6 +414,97 @@ The other script, ``bar``, is different only in the essentials::
     ---
     >         func = _resolve('foo', 'other_main')
 
+Using the version API
+^^^^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: distlib.version
+
+Overview
+~~~~~~~~
+
+The :class:`NormalizedVersion` class implements a :pep:`386` compatible
+version::
+
+    >>> from distlib.version import NormalizedVersion
+    >>> v1 = NormalizedVersion('1.0')
+    >>> v2 = NormalizedVersion('1.0a1')
+    >>> v3 = NormalizedVersion('1.0b1')
+    >>> v4 = NormalizedVersion('1.0c1')
+    >>> v5 = NormalizedVersion('1.0.post1')
+
+These sort in the expected order::
+
+    >>> v2 < v3 < v4 < v1 < v5
+    True
+
+You can't pass any old thing as a version number::
+
+    >>> NormalizedVersion('foo')
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "distlib/version.py", line 49, in __init__
+        self._parts = parts = self.parse(s)
+      File "distlib/version.py", line 254, in parse
+        def parse(self, s): return normalized_key(s)
+      File "distlib/version.py", line 199, in normalized_key
+        raise UnsupportedVersionError(s)
+    distlib.version.UnsupportedVersionError: foo
+
+Matching versions against constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`NormalizedMatcher` is used to match version constraints against
+versions::
+
+    >>> from distlib.version import NormalizedMatcher
+    >>> m = NormalizedMatcher('foo (1.0b1)')
+    >>> m
+    NormalizedMatcher('foo (1.0b1)')
+    >>> [m.match(v) for v in v1, v2, v3, v4, v5]
+    [False, False, True, False, False]
+
+Specifying ``'foo (1.0b1)'`` is equivalent to specifying ``'foo (==1.0b1)'``,
+i.e. only the exact version is matched. You can also specify inequality
+constraints::
+
+    >>> m = NormalizedMatcher('foo (<1.0c1)')
+    >>> [m.match(v) for v in v1, v2, v3, v4, v5]
+    [False, True, True, False, False]
+
+and multiple constraints::
+
+    >>> m = NormalizedMatcher('foo (>= 1.0b1, <1.0.post1)')
+    >>> [m.match(v) for v in v1, v2, v3, v4, v5]
+    [True, False, True, True, False]
+
+You can do exactly the same thing as above with ``setuptools``/
+``distribute`` version numbering (use ``LegacyVersion`` and ``LegacyMatcher``)
+or with semantic versioning (use ``SemanticVersion`` and ``SemanticMatcher``).
+However, you can't mix and match versions of different types::
+
+    >>> from distlib.version import SemanticVersion, LegacyVersion
+    >>> nv = NormalizedVersion('1.0')
+    >>> nv = NormalizedVersion('1.0.0')
+    >>> lv = LegacyVersion('1.0.0')
+    >>> sv = SemanticVersion('1.0.0')
+    >>> lv == sv
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "distlib/version.py", line 61, in __eq__
+        self._check_compatible(other)
+      File "distlib/version.py", line 58, in _check_compatible
+        raise TypeError('cannot compare %r and %r' % (self, other))
+    TypeError: cannot compare LegacyVersion('1.0.0') and SemanticVersion('1.0.0')
+    >>> lv == sv
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "distlib/version.py", line 61, in __eq__
+        self._check_compatible(other)
+      File "distlib/version.py", line 58, in _check_compatible
+        raise TypeError('cannot compare %r and %r' % (self, other))
+    TypeError: cannot compare LegacyVersion('1.0.0') and SemanticVersion('1.0.0')
+
+
 Using the locators API
 ^^^^^^^^^^^^^^^^^^^^^^
 

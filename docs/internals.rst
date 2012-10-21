@@ -527,13 +527,13 @@ schemes, a function to do the parsing (as no information is needed other than
 the string), and the parse method of the class will call that function::
 
     def normalized_key(s):
-        # parse using PEP-386 logic
+        "parse using PEP-386 logic"
 
     def legacy_key(s):
-        # parse using distribute/setuptools logic
+        "parse using distribute/setuptools logic"
 
     def semantic_key(s):
-        # parse using semantic versioning logic
+        "parse using semantic versioning logic"
 
     class Version:
         # defines all common code
@@ -555,8 +555,10 @@ and then::
 And a custom versioning scheme can be devised to work in the same way::
 
     def custom_key(s):
-        # convert s to tuple using custom logic, raise UnsupportedVersionError
-        # on problems
+       """
+       convert s to tuple using custom logic, raise UnsupportedVersionError
+       on problems
+       """
 
     class CustomVersion(Version):
         def parse(self, s): return custom_key(s)
@@ -567,10 +569,12 @@ The matcher classes are pretty minimal, too::
         version_class = None
 
         def match(self, string_or_version):
-            # If passed a string, convert to version using version_class,
-            # then do matching in a way independent of version scheme in use
+            """
+            If passed a string, convert to version using version_class,
+            then do matching in a way independent of version scheme in use
+            """
 
-and then:
+and then::
 
     class NormalizedMatcher(Matcher):
         version_class = NormalizedVersion
