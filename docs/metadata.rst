@@ -5,6 +5,9 @@
    :synopsis: Class holding the metadata of a release.
 
 
+.. warning:: This documentation has not been updated since being copied over
+   from ``distutils2``, and may not be up to date.
+
 .. TODO use sphinx-autogen to generate basic doc from the docstrings
 
 .. class:: Metadata

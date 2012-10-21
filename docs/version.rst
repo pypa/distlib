@@ -9,6 +9,8 @@ This module contains classes and functions useful to deal with version numbers.
 It's an implementation of version specifiers `as defined in PEP 345
 <http://www.python.org/dev/peps/pep-0345/#version-specifiers>`_.
 
+.. warning:: This documentation has not been updated since being copied over
+   from ``distutils2``, and may not be up to date.
 
 Version numbers
 ---------------

@@ -11,6 +11,9 @@ In this document, "distribution" refers to an instance of
 :class:`distlib.database.Distribution` or
 :class:`distlib.database.EggInfoDistribution`.
 
+.. warning:: This documentation has not been updated since being copied over
+   from ``distutils2``, and may not be up to date.
+
 .. XXX terminology problem with dist vs. release: dists are installed, but deps
    use releases
 

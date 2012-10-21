@@ -7,6 +7,9 @@
 
 This module provides an implementation of :PEP:`376`.
 
+.. warning:: This documentation has not been updated since being copied over
+   from ``distutils2``, and may not be up to date.
+
 Installed Python distributions are represented by instances of
 :class:`Distribution`, or :class:`EggInfoDistribution` for legacy egg formats.
 Most functions also provide an extra argument ``use_egg_info`` to take legacy
