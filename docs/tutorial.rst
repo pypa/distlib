@@ -641,7 +641,7 @@ distributions registered on PyPI::
     24801
     >>>
 
-This is done using the XML-RPC API.
+This is implemented using the XML-RPC API.
 
 The Locator API is very bare-bones at the moment, but additional features will
 be added in due course. A very bare-bones command-line script which exercises
@@ -658,10 +658,10 @@ hopefully, a move to fully declarative metadata will facilitate indexing it and
 allowing the provision of features currently provided by ``setuptools`` (e.g.
 hints for downloads -- ``'dependency _links'``).
 
-The accessors skip binary distributions (``.egg`` files are currently treated
+The locators skip binary distributions (``.egg`` files are currently treated
 as binary distributions).
 
-The PyPI accessor classes don't yet support the use of mirrors, but that can be
+The PyPI locator classes don't yet support the use of mirrors, but that can be
 added in due course -- once the basic functionality is working satisfactorily.
 
 Next steps

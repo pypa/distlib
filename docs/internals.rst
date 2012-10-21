@@ -63,7 +63,7 @@ packages, we'll assume that the requirements are as follows:
   file on the file system. This is to cater for any external APIs which need to
   access the resource data as files (examples would be a shared library for
   linking using ``dlopen()`` on POSIX, or any APIs which need access to
-  resource data via OS-level file handles rather than Python streams.
+  resource data via OS-level file handles rather than Python streams).
 
 
 A minimal solution
@@ -188,26 +188,28 @@ What a finder needs to do can be exemplified by the following skeleton for
 
     class ResourceFinder(object):
         def __init__(self, module):
-            # initialise finder for the specified package
+            "Initialise finder for the specified package"
 
         def find(self, resource_name):
-            # find and return a ``Resource`` instance or ``None``
+            "Find and return a ``Resource`` instance or ``None``"
 
         def is_container(self, resource):
-            # return whether resource is a container
+            "Return whether resource is a container"
 
         def get_bytes(self, resource):
-            # return the resource's data as bytes
+            "Return the resource's data as bytes"
 
         def get_size(self, resource):
-            # return the size of the resource's data in bytes
+            "Return the size of the resource's data in bytes"
 
         def get_stream(self, resource):
-            # return the resource's data as a binary stream
+            "Return the resource's data as a binary stream"
 
         def get_resources(self, resource):
-            # return the resources contained in this resource as a set of
-            # (relative) resource names
+            """
+            Return the resources contained in this resource as a set of
+            (relative) resource names
+            """
 
 
 Dealing with the requirement for access via file system files
@@ -443,7 +445,7 @@ Python ecosystem are:
 
 * Versioning in ``setuptools``/``distribute``. This is described in
   :pep:`386` in `this section
-  http://www.python.org/dev/peps/pep-0386/#setuptools\`_ -- it's perhaps the
+  <http://www.python.org/dev/peps/pep-0386/#setuptools>`_ -- it's perhaps the
   most widely used Python version scheme, but since it tries to be very
   lexible and work with a wide range of conventions, it ends up allowing a
   very chaotic mess of version conventions in the Python community as a whole.
@@ -584,6 +586,29 @@ and then::
 
     class SemanticMatcher(Matcher):
         version_class = SemanticVersion
+
+Ideally one would want to work with the PEP 386 scheme, but there might be times
+when one needs to work with the legacy scheme (for example, when investigating
+dependency graphs of existing PyPI projects). Hence, the important aspects of
+each scheme are bundled into a simple :class:`VersionScheme` class::
+
+    class VersionScheme(object):
+        def __init__(self, key, matcher):
+            self.key = key          # version string -> tuple converter
+            self.matcher = matcher  # Matcher subclass for the scheme
+
+Of course, the version class is also available through the matcher's
+``version_class`` attribute.
+
+The appropriate scheme can be fetched by using the :func:`get_scheme` function,
+which is defined thus::
+
+    def get_scheme(scheme_name):
+        "Get a VersionScheme for the given scheme_name."
+
+Allowed names are ``'normalized'``, ``'legacy'``, ``'semantic'`` and
+``'default'`` (which points to the same as ``''``). If an unrecognised name is
+passed in, a ``ValueError`` is raised.
 
 The reimplemented ``distlib.version`` module is shorter than the corresponding
 module in ``distutils2``, but the entire test suite passes, and there is support

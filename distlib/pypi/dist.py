@@ -67,7 +67,7 @@ class ReleaseInfo(IndexReference):
 
     def set_version(self, version):
         try:
-            self._version = self.scheme.version(version)
+            self._version = self.scheme.matcher.version_class(version)
         except UnsupportedVersionError:
             suggestion = suggest_normalized_version(version)
             if suggestion:

@@ -83,14 +83,17 @@ Main features
 Distlib currently offers the following features:
 
 * The package ``distlib.version``, which implements version specifiers as
-  defined by :pep:`386`.
+  defined by :pep:`386`, but also support for working with "legacy" versions
+  (``setuptools``/``distribute``) and semantic versions.
 * The package ``distlib.metadata``, which implements distribution metadata as
   defined by :pep:`345`, :pep:`314` and :pep:`241`.
 * The package ``distlib.markers``, which implements environment markers as
   defined by :pep:`345`.
 * The package ``distlib.database``, which implements a database of installed
   distributions, as defined by :pep:`376`, and distribution dependency graph
-  logic.
+  logic. Support is also provided for non-installed distributions (i.e.
+  distributions registered with metadata on an index like PyPI), including
+  the ability to scan for dependencies and building dependency graphs.
 * The package ``distlib.glob``, which implements globbing functionality
   such as the ability to use ``**`` in patterns to specify recursing into
   subdirectories.
@@ -101,6 +104,7 @@ Distlib currently offers the following features:
   launchers.
 * The package ``distlib.locators``, which allows finding distributions on
   PyPI (XML-RPC or via the "simple" interface) or local directories.
+
 
 Python version and platform compatibility
 -----------------------------------------

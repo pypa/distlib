@@ -451,14 +451,13 @@ class SemanticMatcher(Matcher):
     version_class = SemanticVersion
 
 class VersionScheme(object):
-    def __init__(self, key, version, matcher):
+    def __init__(self, key, matcher):
         self.key = key
-        self.version = version
         self.matcher = matcher
 
     def is_valid_version(self, s):
         try:
-            self.version(s)
+            self.matcher.version_class(s)
             result = True
         except UnsupportedVersionError:
             result = False
@@ -479,10 +478,9 @@ class VersionScheme(object):
         return self.is_valid_matcher('dummy_name (%s)' % s)
 
 _SCHEMES = {
-    'normalized': VersionScheme(normalized_key, NormalizedVersion,
-                                NormalizedMatcher),
-    'legacy': VersionScheme(legacy_key, LegacyVersion, LegacyMatcher),
-    'semantic': VersionScheme(semantic_key, SemanticVersion, SemanticMatcher),
+    'normalized': VersionScheme(normalized_key, NormalizedMatcher),
+    'legacy': VersionScheme(legacy_key, LegacyMatcher),
+    'semantic': VersionScheme(semantic_key, SemanticMatcher),
 }
 
 _SCHEMES['default'] = _SCHEMES['normalized']
