@@ -450,6 +450,29 @@ class SemanticVersion(Version):
 class SemanticMatcher(Matcher):
     version_class = SemanticVersion
 
+#
+# Adaptive versioning. When handed a legacy version string, tries to
+# determine a suggested normalized version.
+#
+
+def adaptive_key(s):
+    try:
+        result = normalized_key(s, False)
+    except UnsupportedVersionError:
+        s = suggest_normalized_version(s)
+        if s is None:
+            raise
+        result = normalized_key(s, False)
+    return result
+
+
+class AdaptiveVersion(NormalizedVersion):
+    def parse(self, s): return adaptive_key(s)
+
+class AdaptiveMatcher(Matcher):
+    version_class = AdaptiveVersion
+
+
 class VersionScheme(object):
     def __init__(self, key, matcher):
         self.key = key
@@ -481,9 +504,11 @@ _SCHEMES = {
     'normalized': VersionScheme(normalized_key, NormalizedMatcher),
     'legacy': VersionScheme(legacy_key, LegacyMatcher),
     'semantic': VersionScheme(semantic_key, SemanticMatcher),
+    'semantic': VersionScheme(semantic_key, SemanticMatcher),
+    'adaptive': VersionScheme(adaptive_key, AdaptiveMatcher),
 }
 
-_SCHEMES['default'] = _SCHEMES['normalized']
+_SCHEMES['default'] = _SCHEMES['adaptive']
 
 def get_scheme(name):
     if name not in _SCHEMES:
