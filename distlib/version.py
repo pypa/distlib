@@ -452,7 +452,7 @@ class SemanticMatcher(Matcher):
 
 #
 # Adaptive versioning. When handed a legacy version string, tries to
-# determine a suggested normalized version.
+# determine a suggested normalized version, and work with that.
 #
 
 def adaptive_key(s):

@@ -408,7 +408,7 @@ default_locator = AggregatingLocator(
                     SimpleScrapingLocator('http://pypi.python.org/simple/',
                                           timeout=2.0))
 
-def locate(predicate, scheme='legacy'):
+def locate(predicate, scheme='default'):
     result = None
     scheme = get_scheme(scheme)
     matcher = scheme.matcher(predicate)

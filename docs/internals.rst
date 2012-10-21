@@ -490,6 +490,9 @@ changed slightly from ``distutils2`` to allow better support for legacy
 version numbering. Since the re-implementation facilitated adding semantic
 version support at minimal cost, this has also been provided.
 
+Versions
+~~~~~~~~
+
 The basic scheme is as follows. The differences between versioning schemes
 is catered for by having a single function for each scheme which converts
 a string version to an appropriate tuple which acts as a key for sorting
@@ -499,6 +502,9 @@ any common code. Then we can have subclasses ``NormalizedVersion`` (PEP-386),
 
 To compare versions, we just check type compatibility and then compare the
 corresponding tuples.
+
+Matchers
+~~~~~~~~
 
 Matchers take a name followed by a set of constraints in parentheses.
 Each constraint is an operation together with a version string which
@@ -601,6 +607,9 @@ and then::
     class SemanticMatcher(Matcher):
         version_class = SemanticVersion
 
+Version schemes
+~~~~~~~~~~~~~~~
+
 Ideally one would want to work with the PEP 386 scheme, but there might be times
 when one needs to work with the legacy scheme (for example, when investigating
 dependency graphs of existing PyPI projects). Hence, the important aspects of
@@ -614,15 +623,42 @@ each scheme are bundled into a simple :class:`VersionScheme` class::
 Of course, the version class is also available through the matcher's
 ``version_class`` attribute.
 
+:class:`VersionScheme` make it easier to work with alternative version schemes.
+For example, say we decide to experiment with an "adaptive" version scheme,
+which is based on the PEP 386 scheme, but when handed a non-conforming version,
+automatically tries to convert it to a normalized version using
+:func:`suggest_normalized_version`. Then, code which has to deal with version
+schemes just has to pick the appropriate scheme by name.
+
+Creating the adaptive scheme is easy::
+
+    def adaptive_key(s):
+        try:
+            result = normalized_key(s, False)
+        except UnsupportedVersionError:
+            s = suggest_normalized_version(s)
+            if s is None:
+                raise
+            result = normalized_key(s, False)
+        return result
+
+
+    class AdaptiveVersion(NormalizedVersion):
+        def parse(self, s): return adaptive_key(s)
+
+    class AdaptiveMatcher(Matcher):
+        version_class = AdaptiveVersion
+
+
 The appropriate scheme can be fetched by using the :func:`get_scheme` function,
 which is defined thus::
 
     def get_scheme(scheme_name):
         "Get a VersionScheme for the given scheme_name."
 
-Allowed names are ``'normalized'``, ``'legacy'``, ``'semantic'`` and
-``'default'`` (which points to the same as ``''``). If an unrecognised name is
-passed in, a ``ValueError`` is raised.
+Allowed names are ``'normalized'``, ``'legacy'``, ``'semantic'``,
+``'adaptive'`` and ``'default'`` (which points to the same as ``'adaptive'``).
+If an unrecognised name is passed in, a ``ValueError`` is raised.
 
 The reimplemented ``distlib.version`` module is shorter than the corresponding
 module in ``distutils2``, but the entire test suite passes, and there is support
