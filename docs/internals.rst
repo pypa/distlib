@@ -463,7 +463,21 @@ Although the new versioning scheme mentioned in PEP 386 was implemented in
 many projects on PyPI which do not conform to it, but rather to the "legacy"
 versioning schemes in ``distutils``/``setuptools``/``distribute``. These
 schemes are deserving of some support not because of their intrinsic qualities,
-but due to their ubiquity in projects registered on PyPI.
+but due to their ubiquity in projects registered on PyPI. Below are some
+results from testing actual projects on PyPI::
+
+    Packages processed: 24891
+    Packages with no versions: 217
+    Packages with versions: 24674
+    Number of packages clean for all schemes: 19010 (77%)
+    Number of packages clean for PEP 386: 21072 (85%)
+    Number of packages clean for PEP 386 + suggestion: 23685 (96%)
+    Number of packages clean for legacy: 24674 (100%, by you would expect)
+    Number of packages clean for semantic: 19278 (78%)
+
+where "+ suggestion" refers to using the suggested version algorithm to derive
+a version from a version which would otherwise be incompatible with :pep:`386`.
+
 
 A minimal solution
 ^^^^^^^^^^^^^^^^^^
