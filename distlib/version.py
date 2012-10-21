@@ -469,7 +469,7 @@ def semantic_key(s):
     result = None
     m = is_semver(s)
     if not m:
-        raise ValueError('Not a semantic version: %r' % s)
+        raise UnsupportedVersionError('Not a semantic version: %r' % s)
     groups = m.groups()
     major, minor, patch = [int(i) for i in groups[:3]]
     # choose the '|' and '*' so that versions sort correctly
@@ -482,5 +482,18 @@ class SemanticVersion(Version):
 class SemanticMatcher(Matcher):
     version_class = SemanticVersion
 
-DefaultVersion = NormalizedVersion
-DefaultMatcher = NormalizedMatcher
+_SCHEMES = {
+    'normalized': (normalized_key, NormalizedVersion, NormalizedMatcher),
+    'legacy': (legacy_key, LegacyVersion, LegacyMatcher),
+    'semantic': (semantic_key, SemanticVersion, SemanticMatcher),
+}
+
+def set_scheme(scheme):
+    global default_key, DefaultVersion, DefaultMatcher
+
+    lscheme = scheme.lower()
+    if lscheme not in _SCHEMES:
+        raise ValueError('Not a valid scheme: %r' % scheme)
+    default_key, DefaultVersion, DefaultMatcher = _SCHEMES[lscheme]
+
+set_scheme('normalized')

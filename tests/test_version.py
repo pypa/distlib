@@ -323,7 +323,7 @@ class SemanticVersionTestCase(unittest.TestCase):
         ]
         for s in bad:
             self.assertFalse(is_semver(s))
-            self.assertRaises(ValueError, semantic_key, s)
+            self.assertRaises(UnsupportedVersionError, semantic_key, s)
 
         for s in good:
             self.assertTrue(is_semver(s))

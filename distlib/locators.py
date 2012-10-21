@@ -422,7 +422,7 @@ def locate(predicate):
             except Exception:   # legacy versions :-(
                 slist.append(k)
         if len(slist) > 1:
-            slist = sorted(slist, key=legacy_version_key)
+            slist = sorted(slist, key=legacy_key)
         if slist:
             result = versions[slist[-1]]
     return result
