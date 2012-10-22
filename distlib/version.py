@@ -15,9 +15,10 @@ from .compat import string_types
 __all__ = ['NormalizedVersion', 'NormalizedMatcher',
            'LegacyVersion', 'LegacyMatcher',
            'SemanticVersion', 'SemanticMatcher',
+           'AdaptiveVersion', 'AdaptiveMatcher',
            'UnsupportedVersionError', 'HugeMajorVersionError',
            'suggest_normalized_version',
-           'normalized_key', 'legacy_key', 'semantic_key']
+           'normalized_key', 'legacy_key', 'semantic_key', 'adaptive_key']
 
 class UnsupportedVersionError(Exception):
     """This is an unsupported version."""

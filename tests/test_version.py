@@ -14,7 +14,9 @@ from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
                              suggest_normalized_version as suggest,
                              LegacyVersion as LV, LegacyMatcher as LM,
                              SemanticVersion as SV, SemanticMatcher as SM,
-                             legacy_key, is_semver, semantic_key)
+                             AdaptiveVersion as AV, AdaptiveMatcher as AM,
+                             is_semver, get_scheme, adaptive_key,
+                             normalized_key, legacy_key, semantic_key)
 
 
 class VersionTestCase(unittest.TestCase):
@@ -242,6 +244,24 @@ class VersionTestCase(unittest.TestCase):
         self.assertTrue(matcher.match('3.4.0'))
         self.assertFalse(matcher.match('3.4.1'))
 
+    def test_schemes(self):
+        cases = (
+            ('normalized', (normalized_key, NV, NM)),
+            ('legacy', (legacy_key, LV, LM)),
+            ('semantic', (semantic_key, SV, SM)),
+            ('adaptive', (adaptive_key, AV, AM)),
+        )
+
+        for name, values in cases:
+            scheme = get_scheme(name)
+            key, version, matcher = values
+            self.assertIs(key, scheme.key)
+            self.assertIs(matcher, scheme.matcher)
+            self.assertIs(version, scheme.matcher.version_class)
+
+        self.assertIs(get_scheme('default'), get_scheme('adaptive'))
+
+        self.assertRaises(ValueError, get_scheme, 'random')
 
 class LegacyVersionTestCase(unittest.TestCase):
     # These tests are the same as distribute's
@@ -334,7 +354,7 @@ class SemanticVersionTestCase(unittest.TestCase):
             self.assertLess(ka, kb)
 
         # From the semver.org home page
-        versions = [
+        versions = (
             '1.0.0-alpha',
             '1.0.0-alpha.1',
             '1.0.0-beta.2',
@@ -346,11 +366,61 @@ class SemanticVersionTestCase(unittest.TestCase):
             '1.3.7+build',
             '1.3.7+build.2.b8f12d7',
             '1.3.7+build.11.e0f985a',
-        ]
+        )
 
         for i, v1 in enumerate(versions):
             for v2 in versions[i+1:]:
                 compare(v1, v2)
+
+class AdaptiveVersionTestCase(unittest.TestCase):
+    def test_basic(self):
+        versions = (
+            # normalized versions
+            '1.0',
+            '1.2.3',
+            '1.2.3a4',
+            '1.2.3b3',
+            '1.2c4',
+            '4.17rc2',
+            '1.2.3.4',
+            '1.0.dev345',
+            '1.0.post456.dev623',
+
+            # legacy versions
+            '0.4.0-0',
+            '0.0.0preview1',
+            '0.0c1',
+            '1.2a1',
+            '1.2.a.1',
+            '1.2a',
+
+            # semantic versions
+            '1.0.0-alpha',
+            '1.0.0-alpha.1',
+            '1.0.0-beta.2',
+            '1.0.0-beta.11',
+            '1.0.0-rc.1',
+            '1.0.0-rc.1+build.1',
+            '1.0.0',
+            '1.0.0+0.3.7',
+            '1.3.7+build',
+            '1.3.7+build.2.b8f12d7',
+            '1.3.7+build.11.e0f985a',
+        )
+
+        bad_versions = (
+            '0pl1',
+            '0pre1',
+            '0rc1',
+            '1.2...a',
+        )
+
+        for v in versions:
+            AV(v)
+
+        for v in bad_versions:
+            self.assertRaises(UnsupportedVersionError, AV, v)
+
 
 class CompatibilityTestCase(unittest.TestCase):
     def test_basic(self):
@@ -379,6 +449,7 @@ def test_suite():
     suite = [unittest.makeSuite(VersionTestCase),
              unittest.makeSuite(CompatibilityTestCase),
              unittest.makeSuite(LegacyVersionTestCase),
+             unittest.makeSuite(AdaptiveVersionTestCase),
              unittest.makeSuite(SemanticVersionTestCase)]
     return unittest.TestSuite(suite)
 
