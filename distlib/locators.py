@@ -185,8 +185,12 @@ class PyPIJSONLocator(Locator):
 
 class Page(object):
 
-    _href = re.compile('href\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^>\\s\\n]*))', re.I|re.S)
-    _base = re.compile(r"""<base\s+href\s*=\s*['"]?([^'">]+)""", re.I|re.S)
+    _href = re.compile("""
+(rel\s*=\s*(?:"(?P<rel1>[^"]*)"|'(?P<rel2>[^']*)'|(?P<rel3>[^>\s\n]*))\s+)?
+href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
+(\s+rel\s*=\s*(?:"(?P<rel4>[^"]*)"|'(?P<rel5>[^']*)'|(?P<rel6>[^>\s\n]*)))?
+""", re.I | re.S | re.X)
+    _base = re.compile(r"""<base\s+href\s*=\s*['"]?([^'">]+)""", re.I | re.S)
 
     def __init__(self, data, url):
         self.data = data
@@ -199,11 +203,14 @@ class Page(object):
     def links(self):
         result = set()
         for match in self._href.finditer(self.data):
-            url = match.group(1) or match.group(2) or match.group(3)
+            d = match.groupdict('')
+            rel = (d['rel1'] or d['rel2'] or d['rel3'] or
+                   d['rel4'] or d['rel5'] or d['rel6'])
+            url = d['url1'] or d['url2'] or d['url3']
             url = urljoin(self.base_url, url)
             url = unescape(url)
             # do any other required cleanup of URL here
-            result.add(url)
+            result.add((url, rel))
         return result
 
 class SimpleScrapingLocator(Locator):
@@ -273,10 +280,14 @@ class SimpleScrapingLocator(Locator):
                 self._update_version_data(self.result, info)
         return info
 
-    def _should_queue(self, link, referrer):
+    def _should_queue(self, link, referrer, rel):
         scheme, netloc, path, _, _, _ = urlparse(link)
         if path.endswith(self.source_extensions + self.binary_extensions +
                          self.excluded_extensions):
+            result = False
+        elif not referrer.startswith(self.base_url):
+            result = False
+        elif rel not in ('homepage', 'download'):
             result = False
         elif scheme not in ('http', 'https', 'ftp'):
             result = False
@@ -288,8 +299,8 @@ class SimpleScrapingLocator(Locator):
                 result = False
             else:
                 result = True
-        if not result:
-            logger.debug('Not queueing %s from %s', link, referrer)
+        logger.debug('should_queue: %s (%s) from %s -> %s', link, rel,
+                     referrer, result)
         return result
 
     def _fetch(self):
@@ -300,12 +311,11 @@ class SimpleScrapingLocator(Locator):
                     page = self.get_page(url)
                     if page is None:    # e.g. after an error
                         continue
-                    for link in page.links:
+                    for link, rel in page.links:
                         if link not in self._seen:
                             self._seen.add(link)
                             if (not self._process_download(link) and
-                                self._should_queue(link, url) and
-                                url.startswith(self.base_url)):
+                                self._should_queue(link, url, rel)):
                                 logger.debug('Queueing %s from %s', link, url)
                                 self._to_fetch.put(link)
             finally:
@@ -418,7 +428,7 @@ def locate(requirement, scheme='default'):
         slist = []
         for k in versions:
             try:
-                if scheme.matcher.match(k):
+                if matcher.match(k):
                     slist.append(k)
             except Exception:
                 pass # slist.append(k)
