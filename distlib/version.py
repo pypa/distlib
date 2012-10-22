@@ -369,6 +369,12 @@ def suggest_normalized_version(s):
         rs = None
     return rs
 
+def suggest_semantic_version(s):
+    return s
+
+def suggest_adaptive_version(s):
+    return suggest_normalized_version(s)
+
 #
 #   Legacy version processing (distribute-compatible)
 #
@@ -476,9 +482,10 @@ class AdaptiveMatcher(Matcher):
 
 
 class VersionScheme(object):
-    def __init__(self, key, matcher):
+    def __init__(self, key, matcher, suggester=None):
         self.key = key
         self.matcher = matcher
+        self.suggester = suggester
 
     def is_valid_version(self, s):
         try:
@@ -502,12 +509,21 @@ class VersionScheme(object):
         """
         return self.is_valid_matcher('dummy_name (%s)' % s)
 
+    def suggest(self, s):
+        if self.suggester is None:
+            result = None
+        else:
+            result = self.suggester(s)
+        return result
+
 _SCHEMES = {
-    'normalized': VersionScheme(normalized_key, NormalizedMatcher),
-    'legacy': VersionScheme(legacy_key, LegacyMatcher),
-    'semantic': VersionScheme(semantic_key, SemanticMatcher),
-    'semantic': VersionScheme(semantic_key, SemanticMatcher),
-    'adaptive': VersionScheme(adaptive_key, AdaptiveMatcher),
+    'normalized': VersionScheme(normalized_key, NormalizedMatcher,
+                                suggest_normalized_version),
+    'legacy': VersionScheme(legacy_key, LegacyMatcher, lambda self, s: s),
+    'semantic': VersionScheme(semantic_key, SemanticMatcher,
+                              suggest_semantic_version),
+    'adaptive': VersionScheme(adaptive_key, AdaptiveMatcher,
+                              suggest_adaptive_version),
 }
 
 _SCHEMES['default'] = _SCHEMES['adaptive']
