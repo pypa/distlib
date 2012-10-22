@@ -94,3 +94,5 @@ class UtilTestCase(unittest.TestCase):
                          ('python-gnupg', '0.1', None))
         self.assertEqual(examine_filename('baklabel-1.0.3-2729-py3.2'),
                          ('baklabel', '1.0.3-2729', '3.2'))
+        self.assertEqual(examine_filename('advpy-0.99b'),
+                         ('advpy', '0.99b', None))

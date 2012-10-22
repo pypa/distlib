@@ -80,10 +80,12 @@ class Locator(object):
         return result
 
     def convert_url_to_download_info(self, url, project_name):
-        scheme, netloc, path, params, query, frag = urlparse(url)
         result = None
+        scheme, netloc, path, params, query, frag = urlparse(url)
+        origpath = path
+        if path and path[-1] == '/':
+            path = path[:-1]
         if path.endswith(self.downloadable_extensions):
-            origpath = path
             path = filename = posixpath.basename(path)
             for ext in self.downloadable_extensions:
                 if path.endswith(ext):
@@ -416,7 +418,7 @@ class AggregatingLocator(Locator):
 default_locator = AggregatingLocator(
                     #PyPIJSONLocator('http://pypi.python.org/pypi'),
                     SimpleScrapingLocator('http://pypi.python.org/simple/',
-                                          timeout=2.0))
+                                          timeout=3.0))
 
 def locate(requirement, scheme='default'):
     result = None
