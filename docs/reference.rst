@@ -686,7 +686,7 @@ Functions
 
    This convenience function returns the latest version of a potentially
    downloadable distribution which matches a requirement (name and version
-   predicates). If a potentially downloadable distribution (i.e. one with
+   constraints). If a potentially downloadable distribution (i.e. one with
    a download URL) is not found, ``None`` is returned; otherwise, an
    instance of :class:`~distlib.database.Distribution` is returned. The
    returned instance will have, at a minimum, ``name``, ``version`` and

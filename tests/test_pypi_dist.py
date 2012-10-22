@@ -196,7 +196,7 @@ class TestReleasesList(unittest.TestCase):
 
     def test_filter(self):
         # Test we filter the distributions the right way, using version
-        # predicate match method
+        # match method
         releases = ReleasesList('FooBar', (
             ReleaseInfo("FooBar", "1.1"),
             ReleaseInfo("FooBar", "1.1.1"),

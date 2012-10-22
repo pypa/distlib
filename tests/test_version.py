@@ -183,19 +183,19 @@ class VersionTestCase(unittest.TestCase):
         # they us "p1" "p2" for post releases
         self.assertEqual(suggest('1.4p1'), '1.4.post1')
 
-    def test_predicate(self):
+    def test_matcher(self):
         # NormalizedMatcher knows how to parse stuff like:
         #
         #   Project (>=version, ver2)
 
-        predicates = ('zope.interface (>3.5.0)',
-                      'AnotherProject (3.4)',
-                      'OtherProject (<3.0)',
-                      'NoVersion',
-                      'Hey (>=2.5,<2.7)')
+        constraints = ('zope.interface (>3.5.0)',
+                       'AnotherProject (3.4)',
+                       'OtherProject (<3.0)',
+                       'NoVersion',
+                       'Hey (>=2.5,<2.7)')
 
-        for predicate in predicates:
-            NM(predicate)
+        for constraint in constraints:
+            NM(constraint)
 
         self.assertTrue(NM('Hey (>=2.5,<2.7)').match('2.6'))
         self.assertTrue(NM('Ho').match('2.6'))
@@ -219,28 +219,28 @@ class VersionTestCase(unittest.TestCase):
         # XXX need to silent the micro version in this case
         self.assertFalse(NM('Ho (<3.0,!=2.6)').match('2.6.3'))
 
-        # Make sure a predicate that ends with a number works
+        # Make sure a constraint that ends with a number works
         self.assertTrue(NM('virtualenv5 (1.0)').match('1.0'))
         self.assertTrue(NM('virtualenv5').match('1.0'))
         self.assertTrue(NM('vi5two').match('1.0'))
         self.assertTrue(NM('5two').match('1.0'))
 
         # test repr
-        for predicate in predicates:
-            self.assertEqual(str(NM(predicate)), predicate)
+        for constraint in constraints:
+            self.assertEqual(str(NM(constraint)), constraint)
 
-    def test_predicate_name(self):
+    def test_matcher_name(self):
         # Test that names are parsed the right way
 
         self.assertEqual('Hey', NM('Hey (<1.1)').name)
         self.assertEqual('Foo-Bar', NM('Foo-Bar (1.1)').name)
         self.assertEqual('Foo Bar', NM('Foo Bar (1.1)').name)
 
-    def test_micro_predicate(self):
+    def test_micro_matching(self):
         self.assertNotEqual(NV('3.4.0'), NV('3.4'))
-        predicate = NM('zope.event (3.4.0)')
-        self.assertTrue(predicate.match('3.4.0'))
-        self.assertFalse(predicate.match('3.4.1'))
+        matcher = NM('zope.event (3.4.0)')
+        self.assertTrue(matcher.match('3.4.0'))
+        self.assertFalse(matcher.match('3.4.1'))
 
 
 class LegacyVersionTestCase(unittest.TestCase):

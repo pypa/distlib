@@ -101,26 +101,26 @@ class Matcher(_Common):
         self._string = s = s.strip()
         m = self.predicate_re.match(s)
         if not m:
-            raise ValueError('Not a valid predicate: %r' % s)
+            raise ValueError('Not valid: %r' % s)
         groups = m.groups('')
         self.name = groups[0].strip()
-        predicates = []
+        clist = []
         if groups[2]:
             constraints = [c.strip() for c in groups[2].split(',')]
             for c in constraints:
                 m = self.constraint_re.match(c)
                 if not m:
-                    raise ValueError('Invalid %r in predicate %r' % (c, s))
+                    raise ValueError('Invalid %r in %r' % (c, s))
                 groups = m.groups('==')
-                predicates.append((groups[0], self.version_class(groups[1])))
-        self._parts = tuple(predicates)
+                clist.append((groups[0], self.version_class(groups[1])))
+        self._parts = tuple(clist)
 
     def match(self, version):
         """Check if the provided version matches the constraints."""
         if isinstance(version, string_types):
             version = self.version_class(version)
-        for operator, predicate in self._parts:
-            if not self._operators[operator](version, predicate):
+        for operator, constraint in self._parts:
+            if not self._operators[operator](version, constraint):
                 return False
         return True
 

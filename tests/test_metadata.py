@@ -255,7 +255,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         missing, warnings = metadata.check()
         self.assertEqual(missing, ['Home-page'])
 
-    def test_check_predicates(self):
+    def test_check_matchers(self):
         metadata = Metadata()
         metadata['Version'] = 'rr'
         metadata['Name'] = 'vimpdb'
@@ -453,7 +453,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertIn('Requires-Dist: other', lines)
         self.assertIn('Requires-Dist: another (==1.0)', lines)
 
-        # test warnings for invalid version predicates
+        # test warnings for invalid version constraints
         # XXX this would cause no warnings if we used update (or the mapping
         # argument of the constructor), see comment in Metadata.update
         metadata = Metadata()
@@ -461,7 +461,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         metadata['Requires-Python'] = '1-4'
         self.assertEqual(len(self.get_logs()), 2)
 
-        # test multiple version predicates
+        # test multiple version matches
         metadata = Metadata()
 
         # XXX check PEP and see if 3 == 3.0

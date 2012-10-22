@@ -364,7 +364,7 @@ class ReleasesList(IndexReference):
                                         index=self._index)
 
     def get_last(self, matcher):
-        """Return the "last" release, that satisfy the given predicates.
+        """Return the "last" release, that satisfy the given constraints.
 
         "last" is defined by the version number of the releases
         """

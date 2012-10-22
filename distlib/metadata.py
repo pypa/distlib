@@ -446,10 +446,10 @@ class Metadata(object):
 
             if name in _PREDICATE_FIELDS and value is not None:
                 for v in value:
-                    # check that the values are valid predicates
+                    # check that the values are valid
                     if not self.scheme.is_valid_matcher(v.split(';')[0]):
                         logger.warning(
-                            '%r: %r is not a valid predicate (field %r)',
+                            '%r: %r is not valid (field %r)',
                             project_name, v, name)
             # FIXME this rejects UNKNOWN, is that right?
             elif name in _VERSIONS_FIELDS and value is not None:
