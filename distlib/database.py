@@ -18,8 +18,7 @@ import zipimport
 
 from . import DistlibException
 from .compat import StringIO, configparser, urlopen
-from .version import (suggest_normalized_version, UnsupportedVersionError,
-                      get_scheme)
+from .version import get_scheme, UnsupportedVersionError
 from .metadata import Metadata
 from .util import parse_requires, cached_property, get_export_entry
 
@@ -146,13 +145,7 @@ class DistributionPath(object):
         :returns: directory name
         :rtype: string"""
         name = name.replace('-', '_')
-        normalized_version = suggest_normalized_version(version)
-        # Because this is a lookup procedure, something will be returned even if
-        #   it is a version that cannot be normalized
-        if normalized_version is None:
-            # Unable to achieve normality?
-            normalized_version = version
-        return '-'.join([name, normalized_version]) + DISTINFO_EXT
+        return '-'.join([name, version]) + DISTINFO_EXT
 
 
     def get_distributions(self):
