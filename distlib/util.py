@@ -349,7 +349,7 @@ PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_]+([.-][a-z_][a-z0-9_]*)*)-'
                                       '([0-9][a-z0-9_.+-]*)', re.I)
 PYTHON_VERSION = re.compile(r'-py(\d\.?\d?)$')
 
-def examine_filename(filename):
+def examine_filename(filename, project_name=None):
     """
     Extract name, version, python version from a filename (no extension)
 

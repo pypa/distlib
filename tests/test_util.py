@@ -96,3 +96,5 @@ class UtilTestCase(unittest.TestCase):
                          ('baklabel', '1.0.3-2729', '3.2'))
         self.assertEqual(examine_filename('advpy-0.99b'),
                          ('advpy', '0.99b', None))
+        self.assertEqual(examine_filename('asv_files-dev-20120501-01', 'asv_files'),
+                         ('asv_files', 'dev-20120501-01', None))

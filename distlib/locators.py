@@ -90,7 +90,7 @@ class Locator(object):
             for ext in self.downloadable_extensions:
                 if path.endswith(ext):
                     path = path[:-len(ext)]
-                    t = examine_filename(path)
+                    t = examine_filename(path, project_name)
                     if not t:
                         logger.debug('No match for project/version: %s', path)
                     else:
@@ -203,6 +203,11 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
 
     @cached_property
     def links(self):
+        def clean(url):
+            scheme, netloc, path, params, query, frag = urlparse(url)
+            return urlunparse((scheme, netloc, quote(path),
+                               params, query, frag))
+
         result = set()
         for match in self._href.finditer(self.data):
             d = match.groupdict('')
@@ -210,8 +215,7 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
                    d['rel4'] or d['rel5'] or d['rel6'])
             url = d['url1'] or d['url2'] or d['url3']
             url = urljoin(self.base_url, url)
-            url = unescape(url)
-            # do any other required cleanup of URL here
+            url = clean(unescape(url))
             result.add((url, rel))
         return result
 
