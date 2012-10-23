@@ -15,6 +15,7 @@ from .glob import iglob
 
 logger = logging.getLogger(__name__)
 
+
 def parse_requires(req_path):
     """Create a list of dependencies from a requires.txt file.
 
@@ -103,6 +104,7 @@ def get_resources_dests(resources_root, rules):
                     destinations[resource_file] = rel_dest + '/' + rel_path
     return destinations
 
+
 @contextlib.contextmanager
 def chdir(d):
     cwd = os.getcwd()
@@ -112,6 +114,7 @@ def chdir(d):
     finally:
         os.chdir(cwd)
 
+
 class cached_property(object):
     def __init__(self, func):
         self.func = func
@@ -119,9 +122,11 @@ class cached_property(object):
         #    setattr(self, attr, getattr(func, attr, None))
 
     def __get__(self, obj, type=None):
-        if obj is None: return self
+        if obj is None:
+            return self
         obj.__dict__[self.func.__name__] = value = self.func(obj)
         return value
+
 
 class FileOperator(object):
     def __init__(self, dry_run=False):
@@ -162,12 +167,12 @@ class FileOperator(object):
         Returns false if both exist and 'target' is the same age or younger
         than 'source'. Raise PackagingFileError if 'source' does not exist.
 
-        Note that this test is not very accurate: files created in the same second
-        will have the same "age".
+        Note that this test is not very accurate: files created in the same
+        second will have the same "age".
         """
         if not os.path.exists(source):
             raise DistlibException("file '%r' does not exist" %
-                                     os.path.abspath(source))
+                                   os.path.abspath(source))
         if not os.path.exists(target):
             return True
 
@@ -234,7 +239,7 @@ class ExportEntry(object):
 
     def __repr__(self):
         return '<ExportEntry %s = %s:%s %s>' % (self.name, self.prefix,
-                                                  self.suffix, self.flags)
+                                                self.suffix, self.flags)
 
     def __eq__(self, other):
         if not isinstance(other, ExportEntry):
@@ -251,8 +256,9 @@ class ExportEntry(object):
 
 ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.])+)
                       \s*=\s*(?P<callable>(\w+)([:\.]\w+)*)
-                      \s*(\[\s*(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\s*\])?''',
-                      re.VERBOSE)
+                      \s*(\[\s*(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\s*\])?
+                      ''', re.VERBOSE)
+
 
 def get_export_entry(specification):
     m = ENTRY_RE.search(specification)
@@ -284,6 +290,7 @@ def get_export_entry(specification):
         result = ExportEntry(name, prefix, suffix, flags)
     return result
 
+
 def get_cache_base():
     """
     Return the default base location for distlib caches. If the directory does
@@ -300,7 +307,8 @@ def get_cache_base():
     """
     if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
         result = os.path.expandvars('$localappdata')
-    else:   #assume posix, or old Windows
+    else:
+        # Assume posix, or old Windows
         result = os.path.expanduser('~')
     result = os.path.join(result, '.distlib')
     # we use 'isdir' instead of 'exists', because we want to
@@ -308,6 +316,7 @@ def get_cache_base():
     if not os.path.isdir(result):
         os.makedirs(result)
     return result
+
 
 def path_to_cache_dir(path):
     """
@@ -325,10 +334,12 @@ def path_to_cache_dir(path):
     p = p.replace(os.sep, '--')
     return d + p + '.cache'
 
+
 def ensure_slash(s):
     if not s.endswith('/'):
         return s + '/'
     return s
+
 
 def parse_credentials(netloc):
     username = password = None
@@ -340,6 +351,7 @@ def parse_credentials(netloc):
             username, password = prefix.split(':', 1)
     return username, password, netloc
 
+
 def get_process_umask():
     result = os.umask(0o22)
     os.umask(result)
@@ -348,6 +360,7 @@ def get_process_umask():
 PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_]+([.-][a-z_][a-z0-9_]*)*)-'
                                       '([0-9][a-z0-9_.+-]*)', re.I)
 PYTHON_VERSION = re.compile(r'-py(\d\.?\d?)$')
+
 
 def examine_filename(filename, project_name=None):
     """

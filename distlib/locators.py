@@ -47,9 +47,21 @@ class Locator(object):
         self._cache = {}
 
     def _get_project(self, name):
+        """
+        For a given project, get a dictionary mapping available versions to Distribution
+        instances.
+
+        This should be implemented in subclasses.
+        """
         raise NotImplementedError('Please implement in the subclass')
 
     def get_project(self, name):
+        """
+        For a given project, get a dictionary mapping available versions to Distribution
+        instances.
+
+        This calls _get_project to do all the work, and just implements a caching layer on top.
+        """
         if self._cache is None:
             result = self._get_project(name)
         elif name in self._cache:
@@ -60,6 +72,14 @@ class Locator(object):
         return result
 
     def prefer_url(self, url1, url2):
+        """
+        Choose one of two URLs where both are candidates for distribution
+        archives for the same version of a distribution (for example,
+        .tar.gz vs. zip).
+
+        The current implement favours http:// URLs over https://, archives
+        from PyPI over those from other locations and then the archive name.
+        """
         def score(url):
             t = urlparse(url)
             return (t.scheme != 'https', 'pypi.python.org' in t.netloc,
@@ -80,6 +100,13 @@ class Locator(object):
         return result
 
     def convert_url_to_download_info(self, url, project_name):
+        """
+        See if a URL is a candidate for a download URL for a project (the URL
+        has typically been scraped from an HTML page).
+
+        If it is, a dictionary is returned with keys "name", "version",
+        "filename" and "url"; otherwise, None is returned.
+        """
         def same_project(name1, name2):
             name1, name2 = name1.lower(), name2.lower()
             if name1 == name2:
@@ -123,6 +150,11 @@ class Locator(object):
         return result
 
     def _update_version_data(self, result, info):
+        """
+        Update a result dictionary (the final result from _get_project) with a dictionary for a
+        specific version, whih typically holds information gleaned from a filename or URL for an
+        archive for the distribution.
+        """
         name = info.pop('name')
         version = info.pop('version')
         if version in result:
@@ -195,7 +227,12 @@ class PyPIJSONLocator(Locator):
         return result
 
 class Page(object):
-
+    "This class represents a scraped HTML page."
+    # The following slightly hairy-looking regex just looks for the contents of
+    # an anchor link, which has an attribute "href" either immediately preceded
+    # or immediately followed by a "rel" attribute. The attribute values can be
+    # declared with double quotes, single quotes or no quotes - which leads to
+    # the length of the expression.
     _href = re.compile("""
 (rel\s*=\s*(?:"(?P<rel1>[^"]*)"|'(?P<rel2>[^']*)'|(?P<rel3>[^>\s\n]*))\s+)?
 href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
@@ -204,6 +241,10 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
     _base = re.compile(r"""<base\s+href\s*=\s*['"]?([^'">]+)""", re.I | re.S)
 
     def __init__(self, data, url):
+        """
+        Initialise an instance with the Unicode page contents and the URL they
+        came from.
+        """
         self.data = data
         self.base_url = self.url = url
         m = self._base.search(self.data)
@@ -212,7 +253,13 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
 
     @cached_property
     def links(self):
+        """
+        Return the URLs of all the links on a page together with information
+        about their "rel" attribute, for determining which ones to treat as
+        downloads and which ones to queue for further scraping.
+        """
         def clean(url):
+            "Tidy up an URL."
             scheme, netloc, path, params, query, frag = urlparse(url)
             return urlunparse((scheme, netloc, quote(path),
                                params, query, frag))
@@ -229,7 +276,13 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
         return result
 
 class SimpleScrapingLocator(Locator):
+    """
+    A locator which scrapes HTML pages to locate downloads for a distribution.
+    This runs multiple threads to do the I/O; performance is at least as good
+    as pip's PackageFinder, which works in an analogous fashion.
+    """
 
+    # These are used to deal with various Content-Encoding schemes.
     decoders = {
         'deflate': zlib.decompress,
         'gzip': lambda b: gzip.GzipFile(fileobj=BytesIO(d)).read(),
@@ -247,6 +300,11 @@ class SimpleScrapingLocator(Locator):
         self._lock = threading.RLock()
 
     def _prepare_threads(self):
+        """
+        Threads are created only when get_project is called, and terminate
+        before it returns. They are there primarily to parallelise I/O (i.e.
+        fetching web pages).
+        """
         self._threads = []
         for i in range(self.num_workers):
             t = threading.Thread(target=self._fetch)
@@ -255,6 +313,10 @@ class SimpleScrapingLocator(Locator):
             self._threads.append(t)
 
     def _wait_threads(self):
+        """
+        Tell all the threads to terminate (by sending a sentinel value) and
+        wait for them to do so.
+        """
         # Note that you need two loops, since you can't say which
         # thread will get each sentinel
         for t in self._threads:
@@ -282,9 +344,21 @@ class SimpleScrapingLocator(Locator):
                                     r'win(32|-amd64)|macosx-?\d+)\b', re.I)
 
     def _is_platform_dependent(self, url):
+        """
+        Does an URL refer to a platform-specific download?
+        """
         return self.platform_dependent.search(url)
 
     def _process_download(self, url):
+        """
+        See if an URL is a suitable download for a project.
+
+        If it is, register information in the result dictionary (for
+        _get_project) about the specific version it's for.
+
+        Note that the return value isn't actually used other than as a boolean
+        value.
+        """
         if self._is_platform_dependent(url):
             info = None
         else:
@@ -296,6 +370,10 @@ class SimpleScrapingLocator(Locator):
         return info
 
     def _should_queue(self, link, referrer, rel):
+        """
+        Determine whether a link URL from a referring page and with a
+        particular "rel" attribute should be queued for scraping.
+        """
         scheme, netloc, path, _, _, _ = urlparse(link)
         if path.endswith(self.source_extensions + self.binary_extensions +
                          self.excluded_extensions):
@@ -319,6 +397,12 @@ class SimpleScrapingLocator(Locator):
         return result
 
     def _fetch(self):
+        """
+        Get a URL to fetch from the work queue, get the HTML page, examine its
+        links for download candidates and candidates for further scraping.
+
+        This is a handy method to run in a thread.
+        """
         while True:
             url = self._to_fetch.get()
             try:
@@ -334,12 +418,20 @@ class SimpleScrapingLocator(Locator):
                                 logger.debug('Queueing %s from %s', link, url)
                                 self._to_fetch.put(link)
             finally:
+                # always do this, to avoid hangs :-)
                 self._to_fetch.task_done()
             if not url:
                 #logger.debug('Sentinel seen, quitting.')
                 break
 
     def get_page(self, url):
+        """
+        Get the HTML for an URL, possibly from an in-memory cache.
+
+        XXX TODO Note: this cache is never actually cleared. It's assumed that
+        the data won't get stale over the lifetime of a locator instance (not
+        necessarily true for the default_locator).
+        """
         # http://peak.telecommunity.com/DevCenter/EasyInstall#package-index-api
         scheme, netloc, path, _, _, _ = urlparse(url)
         if scheme == 'file' and os.path.isdir(url2pathname(path)):
@@ -396,11 +488,19 @@ class DirectoryLocator(Locator):
             raise ValueError('Not a directory: %r' % path)
         self.base_dir = path
 
+    def should_include(self, filename, parent):
+        """
+        Should a filename be considered as a candidate for a distribution
+        archive? As well as the filename, the directory which contains it
+        is provided, though not used by the current implementation.
+        """
+        return filename.endswith(self.downloadable_extensions)
+
     def _get_project(self, name):
         result = {}
         for root, dirs, files in os.walk(self.base_dir):
             for fn in files:
-                if fn.endswith(self.downloadable_extensions):
+                if self.should_include(fn, root):
                     fn = os.path.join(root, fn)
                     url = urlunparse(('file', '',
                                       pathname2url(os.path.abspath(fn)),
@@ -411,6 +511,9 @@ class DirectoryLocator(Locator):
         return result
 
 class AggregatingLocator(Locator):
+    """
+    Chain and/or merge a list of locators.
+    """
     def __init__(self, *locators, **kwargs):
         super(AggregatingLocator, self).__init__()
         self.locators = locators
@@ -434,6 +537,10 @@ default_locator = AggregatingLocator(
                                           timeout=3.0))
 
 def locate(requirement, scheme='default'):
+    """
+    Locate a downloadable distribution, given a requirement (project name and
+    version constraints, if any).
+    """
     result = None
     scheme = get_scheme(scheme)
     matcher = scheme.matcher(requirement)
