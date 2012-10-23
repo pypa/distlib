@@ -361,7 +361,11 @@ def examine_filename(filename, project_name=None):
     if m:
         pyver = m.group(1)
         filename = filename[:m.start()]
-    m = PROJECT_NAME_AND_VERSION.match(filename)
-    if m:
-        result = m.group(1), m.group(3), pyver
+    if project_name and len(filename) > len(project_name) + 1:
+        n = len(project_name)
+        result = filename[:n], filename[n + 1:], pyver
+    else:
+        m = PROJECT_NAME_AND_VERSION.match(filename)
+        if m:
+            result = m.group(1), m.group(3), pyver
     return result

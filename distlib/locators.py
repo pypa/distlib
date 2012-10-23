@@ -80,6 +80,16 @@ class Locator(object):
         return result
 
     def convert_url_to_download_info(self, url, project_name):
+        def same_project(name1, name2):
+            name1, name2 = name1.lower(), name2.lower()
+            if name1 == name2:
+                result = True
+            else:
+                # distribute replaces '-' by '_' in project names, so it
+                # can tell where the version starts in a filename.
+                result = name1.replace('_', '-') == name2.replace('_', '-')
+            return result
+
         result = None
         scheme, netloc, path, params, query, frag = urlparse(url)
         origpath = path
@@ -95,8 +105,7 @@ class Locator(object):
                         logger.debug('No match for project/version: %s', path)
                     else:
                         name, version, pyver = t
-                        if (not project_name or
-                            project_name.lower() == name.lower()):
+                        if not project_name or same_project(project_name, name):
                             result = {
                                 'name': name,
                                 'version': version,
