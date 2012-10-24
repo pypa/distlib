@@ -330,6 +330,7 @@ class SimpleScrapingLocator(Locator):
         self.project_name = name
         url = urljoin(self.base_url, '%s/' % quote(name))
         self._seen.clear()
+        self._page_cache.clear()
         self._prepare_threads()
         try:
             logger.debug('Queueing %s', url)
