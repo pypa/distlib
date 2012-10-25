@@ -42,7 +42,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.md5_digest,
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
 
-    def ztest_scraper(self):
+    def test_scraper(self):
         locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
         for name in ('sarge', 'Sarge'):
             result = locator.get_project(name)
@@ -83,7 +83,7 @@ class LocatorTestCase(unittest.TestCase):
             self.assertEqual(dist.version, '0.9')
             self.assertEqual(get_path(dist.download_url), expected)
 
-    def ztest_aggregation(self):
+    def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
         loc2 = SimpleScrapingLocator('http://pypi.python.org/simple/',
@@ -98,8 +98,11 @@ class LocatorTestCase(unittest.TestCase):
         dist = result['0.9']
         self.assertEqual(dist.name, 'Flask')
         self.assertEqual(dist.version, '0.9')
-        self.assertEqual(url2pathname(dist.download_url), exp1)
+        scheme, _, path, _, _, _ = urlparse(dist.download_url)
+        self.assertEqual(scheme, 'file')
+        self.assertEqual(url2pathname(path), exp1)
         locator.merge = True
+        locator._cache.clear()
         result = locator.get_project('flask')
         self.assertGreater(len(result), 1)
         self.assertIn('0.9', result)
