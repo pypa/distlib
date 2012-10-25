@@ -306,6 +306,7 @@ class SimpleScrapingLocator(Locator):
         self._seen = set()
         self._to_fetch = queue.Queue()
         self._bad_hosts = set()
+        self.skip_externals = False
         self.num_workers = num_workers
         self._lock = threading.RLock()
 
@@ -388,6 +389,8 @@ class SimpleScrapingLocator(Locator):
         scheme, netloc, path, _, _, _ = urlparse(link)
         if path.endswith(self.source_extensions + self.binary_extensions +
                          self.excluded_extensions):
+            result = False
+        elif self.skip_externals and not link.startswith(self.base_url):
             result = False
         elif not referrer.startswith(self.base_url):
             result = False
