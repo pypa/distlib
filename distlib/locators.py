@@ -251,6 +251,8 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
         if m:
             self.base_url = m.group(1)
 
+    _clean_re = re.compile(r'[^a-z0-9$&+,/:;=?@.#%_\\|-]', re.I)
+
     @cached_property
     def links(self):
         """
@@ -271,7 +273,8 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
                    d['rel4'] or d['rel5'] or d['rel6'])
             url = d['url1'] or d['url2'] or d['url3']
             url = urljoin(self.base_url, url)
-            url = clean(unescape(url))
+            url = unescape(url)
+            url = self._clean_re.sub(lambda m: '%%%2x' % ord(m.group(0)), url)
             result.add((url, rel))
         return result
 
@@ -286,6 +289,7 @@ class SimpleScrapingLocator(Locator):
     decoders = {
         'deflate': zlib.decompress,
         'gzip': lambda b: gzip.GzipFile(fileobj=BytesIO(d)).read(),
+        'none': lambda b: b,
     }
 
     def __init__(self, url, timeout=None, num_workers=10):
@@ -473,7 +477,8 @@ class SimpleScrapingLocator(Locator):
                         logger.exception('Fetch failed: %s: %s', url, e)
                 except URLError as e:
                     logger.exception('Fetch failed: %s: %s', url, e)
-                    self._bad_hosts.add(host)
+                    with self._lock:
+                        self._bad_hosts.add(host)
                 except Exception as e:
                     logger.exception('Fetch failed: %s: %s', url, e)
                 finally:
