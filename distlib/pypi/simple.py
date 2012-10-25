@@ -146,7 +146,7 @@ class Crawler(BaseClient):
         # on one)
         self._processed_urls = []
         self._projects = {}
-        self.scheme = get_scheme('default')
+        self.vscheme = get_scheme('default')
 
     @with_mirror_support()
     def search_projects(self, name=None, **kwargs):
@@ -176,7 +176,7 @@ class Crawler(BaseClient):
         the results.
         """
         if isinstance(matcher, string_types):
-            matcher = self.scheme.matcher(matcher)
+            matcher = self.vscheme.matcher(matcher)
         lname = matcher.name.lower()
         if lname in self._projects and not force_update:
             return self._projects.get(lname)
@@ -192,7 +192,7 @@ class Crawler(BaseClient):
 
     def get_release(self, requirements):
         """Return only one release that fulfill the given requirements"""
-        matcher = self.scheme.matcher(requirements)
+        matcher = self.vscheme.matcher(requirements)
         release = self.get_releases(matcher)\
                       .get_last(matcher)
         if not release:
