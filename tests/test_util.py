@@ -5,7 +5,7 @@ from compat import unittest
 from distlib import DistlibException
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
-                          parse_credentials, ensure_slash, examine_filename)
+                          parse_credentials, ensure_slash, split_filename)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -86,15 +86,20 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(ensure_slash('abc'), 'abc/')
         self.assertEqual(ensure_slash('def/'), 'def/')
 
-    def test_examine_filename(self):
-        self.assertIsNone(examine_filename('abl.jquery'))
-        self.assertEqual(examine_filename('abl.jquery-1.4.2-2'),
+    def test_split_filename(self):
+        self.assertIsNone(split_filename('abl.jquery'))
+        self.assertEqual(split_filename('abl.jquery-1.4.2-2'),
                          ('abl.jquery', '1.4.2-2', None))
-        self.assertEqual(examine_filename('python-gnupg-0.1'),
+        self.assertEqual(split_filename('python-gnupg-0.1'),
                          ('python-gnupg', '0.1', None))
-        self.assertEqual(examine_filename('baklabel-1.0.3-2729-py3.2'),
+        self.assertEqual(split_filename('baklabel-1.0.3-2729-py3.2'),
                          ('baklabel', '1.0.3-2729', '3.2'))
-        self.assertEqual(examine_filename('advpy-0.99b'),
+        self.assertEqual(split_filename('baklabel-1.0.3-2729-py27'),
+                         ('baklabel', '1.0.3-2729', '27'))
+        self.assertEqual(split_filename('advpy-0.99b'),
                          ('advpy', '0.99b', None))
-        self.assertEqual(examine_filename('asv_files-dev-20120501-01', 'asv_files'),
+        self.assertEqual(split_filename('asv_files-dev-20120501-01', 'asv_files'),
                          ('asv_files', 'dev-20120501-01', None))
+        #import pdb; pdb.set_trace()
+        #self.assertEqual(split_filename('asv_files-test-dev-20120501-01', 'asv_files'),
+        #                 ('asv_files-test', 'dev-20120501-01', None))

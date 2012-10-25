@@ -31,6 +31,7 @@ if sys.version_info[0] < 3:
     import xmlrpclib
     import Queue as queue
     from HTMLParser import HTMLParser
+    import htmlentitydefs
 
     _userprog = None
     def splituser(host):
@@ -62,6 +63,7 @@ else:
     import xmlrpc.client as xmlrpclib
     import queue
     from html.parser import HTMLParser
+    import html.entities as htmlentitydefs
 
 try:
     from platform import python_implementation

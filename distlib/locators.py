@@ -20,7 +20,7 @@ from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
 from .database import Distribution
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
-                   examine_filename)
+                   split_filename)
 from .version import get_scheme
 
 logger = logging.getLogger(__name__)
@@ -99,6 +99,12 @@ class Locator(object):
                 logger.debug('Replacing %r with %r', url1, url2)
         return result
 
+    def split_filename(self, filename, project_name):
+        """
+        Attempt to split a filename in project name, version and Python version.
+        """
+        return split_filename(filename, project_name)
+
     def convert_url_to_download_info(self, url, project_name):
         """
         See if a URL is a candidate for a download URL for a project (the URL
@@ -127,7 +133,7 @@ class Locator(object):
             for ext in self.downloadable_extensions:
                 if path.endswith(ext):
                     path = path[:-len(ext)]
-                    t = examine_filename(path, project_name)
+                    t = self.split_filename(path, project_name)
                     if not t:
                         logger.debug('No match for project/version: %s', path)
                     else:

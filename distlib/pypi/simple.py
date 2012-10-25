@@ -17,7 +17,7 @@ import sys
 from .. import DistlibException, __version__ as distlib_version
 from ..compat import (urlparse, urlunparse, urljoin, splituser, unquote,
                       urllib2, Request, URLError, HTTPError, httplib,
-                      string_types)
+                      string_types, htmlentitydefs)
 from ..metadata import Metadata
 from ..version import get_scheme
 from .base import BaseClient
@@ -452,8 +452,7 @@ class Crawler(BaseClient):
         elif what.startswith('#'):
             what = int(what[1:])
         else:
-            from html.entities import name2codepoint
-            what = name2codepoint.get(what, match.group(0))
+            what = htmlentitydefs.name2codepoint.get(what, match.group(0))
         return chr(what)
 
     def _htmldecode(self, text):

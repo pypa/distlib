@@ -362,7 +362,7 @@ PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_]+([.-][a-z_][a-z0-9_]*)*)-'
 PYTHON_VERSION = re.compile(r'-py(\d\.?\d?)$')
 
 
-def examine_filename(filename, project_name=None):
+def split_filename(filename, project_name=None):
     """
     Extract name, version, python version from a filename (no extension)
 
@@ -375,9 +375,11 @@ def examine_filename(filename, project_name=None):
         pyver = m.group(1)
         filename = filename[:m.start()]
     if project_name and len(filename) > len(project_name) + 1:
-        n = len(project_name)
-        result = filename[:n], filename[n + 1:], pyver
-    else:
+        m = re.match(re.escape(project_name) + r'\b', filename)
+        if m:
+            n = m.end()
+            result = filename[:n], filename[n + 1:], pyver
+    if result is None:
         m = PROJECT_NAME_AND_VERSION.match(filename)
         if m:
             result = m.group(1), m.group(3), pyver
