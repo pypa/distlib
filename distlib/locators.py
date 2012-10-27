@@ -478,7 +478,10 @@ class SimpleScrapingLocator(Locator):
                         m = CHARSET.search(content_type)
                         if m:
                             encoding = m.group(1)
-                        data = data.decode(encoding)
+                        try:
+                            data = data.decode(encoding)
+                        except UnicodeError:
+                            data = data.decode('latin-1')    # fallback
                         result = Page(data, final_url)
                         self._page_cache[final_url] = result
                 except HTTPError as e:
