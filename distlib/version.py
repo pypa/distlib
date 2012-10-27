@@ -446,7 +446,7 @@ def suggest_adaptive_version(s):
 #   Legacy version processing (distribute-compatible)
 #
 
-_VERSION_PART = re.compile(r'([a-z]+|[\d]+|[\.-])', re.I)
+_VERSION_PART = re.compile(r'([a-z]+|\d+|[\.-])', re.I)
 _VERSION_REPLACE = {
     'pre':'c',
     'preview':'c',
@@ -475,6 +475,9 @@ def legacy_key(s):
     result = []
     for p in get_parts(s):
         if p.startswith('*'):
+            if p < '*final':
+                while result and result[-1] == '*final-':
+                    result.pop()
             while result and result[-1] == '00000000':
                 result.pop()
         result.append(p)

@@ -306,9 +306,9 @@ class LegacyVersionTestCase(unittest.TestCase):
         compare('0pl1', '0.4pl1')
         compare('2.1dev','2.1a0')
         compare('2.1.0rc1','2.1.0')
-        compare('2.1.0','2.1.0-rc0')
-        compare('2.1.0','2.1.0-a')
-        compare('2.1.0','2.1.0-alpha')
+        compare('2.1.0-rc0','2.1.0')
+        compare('2.1.0-a','2.1.0')
+        compare('2.1.0-alpha','2.1.0')
         compare('2.1.0','2.1.0-foo')
         compare('1.0','1.0-1')
         compare('1.0-1','1.0.1')
@@ -316,8 +316,6 @@ class LegacyVersionTestCase(unittest.TestCase):
         compare('1.0dev','1.0rc1')
         compare('1.0pre','1.0')
         compare('1.0pre','1.0')
-        compare('1.0a','1.0-a')
-        compare('1.0rc1','1.0-rc1')
 
         versions = """
         0.80.1-3 0.80.1-2 0.80.1-1 0.79.9999+0.80.0pre4-1
@@ -328,6 +326,13 @@ class LegacyVersionTestCase(unittest.TestCase):
         for i, v1 in enumerate(versions):
             for v2 in versions[i+1:]:
                 compare(v2, v1)
+
+    def test_absolute(self):
+        cases = (
+            ('1.0-beta6', ('00000001', '*beta', '00000006', '*final')),
+        )
+        for k, v in cases:
+            self.assertEqual(legacy_key(k), v)
 
 
 class SemanticVersionTestCase(unittest.TestCase):

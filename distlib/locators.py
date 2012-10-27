@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 MD5_HASH = re.compile('^md5=([a-f0-9]+)$')
 CHARSET = re.compile(r';\s*charset\s*=\s*(.*)\s*$', re.I)
-HTML_CONTENT_TYPE = re.compile('text/html|application/xhtml')
+HTML_CONTENT_TYPE = re.compile('text/html|application/x(ht)?ml')
 
 def get_all_distribution_names(url=None):
     if url is None:
