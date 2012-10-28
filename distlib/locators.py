@@ -125,6 +125,9 @@ class Locator(object):
 
         result = None
         scheme, netloc, path, params, query, frag = urlparse(url)
+        if frag.lower().startswith('egg='):
+            logger.debug('%s: version hint in fragment: %r',
+                         project_name, frag)
         origpath = path
         if path and path[-1] == '/':
             path = path[:-1]
@@ -282,6 +285,9 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
             url = unescape(url)
             url = self._clean_re.sub(lambda m: '%%%2x' % ord(m.group(0)), url)
             result.add((url, rel))
+        # We sort the result, hoping to bring the most recent versions
+        # to the front
+        result = sorted(result, key=lambda t: t[0], reverse=True)
         return result
 
 class SimpleScrapingLocator(Locator):
@@ -559,6 +565,7 @@ def locate(requirement, scheme='default'):
     Locate a downloadable distribution, given a requirement (project name and
     version constraints, if any).
     """
+    logger.debug('locate %r starting', requirement)
     result = None
     scheme = get_scheme(scheme)
     matcher = scheme.matcher(requirement)
@@ -576,4 +583,5 @@ def locate(requirement, scheme='default'):
             slist = sorted(slist, key=scheme.key)
         if slist:
             result = versions[slist[-1]]
+    logger.debug('locate %r -> %s', requirement, result)
     return result
