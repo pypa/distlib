@@ -28,6 +28,8 @@ class LocatorTestCase(unittest.TestCase):
                          'sarge-0.1.tar.gz')
         self.assertEqual(dist.md5_digest,
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
+        names = locator.get_distribution_names()
+        self.assertGreater(len(names), 25000)
 
     def test_json(self):
         locator = PyPIJSONLocator('http://python.org/pypi')
@@ -41,6 +43,7 @@ class LocatorTestCase(unittest.TestCase):
                          'sarge-0.1.tar.gz')
         self.assertEqual(dist.md5_digest,
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
+        self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
     def test_scraper(self):
         locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
@@ -55,6 +58,8 @@ class LocatorTestCase(unittest.TestCase):
                              'sarge-0.1.tar.gz')
             self.assertEqual(dist.md5_digest,
                              '961ddd9bc085fdd8b248c6dd96ceb1c8')
+        names = locator.get_distribution_names()
+        self.assertGreater(len(names), 25000)
 
     def test_unicode_project_name(self):
         # Just checking to see that no exceptions are raised.
@@ -82,6 +87,9 @@ class LocatorTestCase(unittest.TestCase):
             self.assertEqual(dist.name, 'Flask')
             self.assertEqual(dist.version, '0.9')
             self.assertEqual(get_path(dist.download_url), expected)
+        names = locator.get_distribution_names()
+        expected = set(['Flask', 'python-gnupg', 'coverage', 'Django'])
+        self.assertEqual(names, expected)
 
     def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
@@ -110,3 +118,6 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.name, 'Flask')
         self.assertEqual(dist.version, '0.9')
         self.assertEqual(dist.download_url, exp2)
+        n1 = loc1.get_distribution_names()
+        n2 = loc2.get_distribution_names()
+        self.assertEqual(locator.get_distribution_names(), n1 | n2)

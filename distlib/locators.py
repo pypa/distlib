@@ -55,6 +55,12 @@ class Locator(object):
         """
         raise NotImplementedError('Please implement in the subclass')
 
+    def get_distribution_names(self):
+        """
+        Return all the distribution names known to this locator.
+        """
+        raise NotImplementedError('Please implement in the subclass')
+
     def get_project(self, name):
         """
         For a given project, get a dictionary mapping available versions to Distribution
@@ -190,6 +196,12 @@ class PyPIRPCLocator(Locator):
         self.base_url = url
         self.client = xmlrpclib.ServerProxy(url)
 
+    def get_distribution_names(self):
+        """
+        Return all the distribution names known to this locator.
+        """
+        return set(self.client.list_packages())
+
     def _get_project(self, name):
         result = {}
         versions = self.client.package_releases(name, True)
@@ -212,6 +224,12 @@ class PyPIJSONLocator(Locator):
     def __init__(self, url):
         super(PyPIJSONLocator, self).__init__()
         self.base_url = ensure_slash(url)
+
+    def get_distribution_names(self):
+        """
+        Return all the distribution names known to this locator.
+        """
+        raise NotImplementedError('Not available from this locator')
 
     def _get_project(self, name):
         result = {}
@@ -503,6 +521,17 @@ class SimpleScrapingLocator(Locator):
                     self._page_cache[url] = result   # even if None (failure)
         return result
 
+    _distname_re = re.compile('<a href=[^>]*>([^<]+)<')
+
+    def get_distribution_names(self):
+        """
+        Return all the distribution names known to this locator.
+        """
+        result = set()
+        page = self.get_page(self.base_url)
+        for match in self._distname_re.finditer(page.data):
+            result.add(match.group(1))
+        return result
 
 class DirectoryLocator(Locator):
     def __init__(self, path):
@@ -534,6 +563,24 @@ class DirectoryLocator(Locator):
                         self._update_version_data(result, info)
         return result
 
+    def get_distribution_names(self):
+        """
+        Return all the distribution names known to this locator.
+        """
+        result = set()
+        for root, dirs, files in os.walk(self.base_dir):
+            for fn in files:
+                if self.should_include(fn, root):
+                    fn = os.path.join(root, fn)
+                    url = urlunparse(('file', '',
+                                      pathname2url(os.path.abspath(fn)),
+                                      '', '', ''))
+                    info = self.convert_url_to_download_info(url, None)
+                    if info:
+                        result.add(info['name'])
+        return result
+
+
 class AggregatingLocator(Locator):
     """
     Chain and/or merge a list of locators.
@@ -554,6 +601,19 @@ class AggregatingLocator(Locator):
                     result = r
                     break
         return result
+
+    def get_distribution_names(self):
+        """
+        Return all the distribution names known to this locator.
+        """
+        result = set()
+        for locator in self.locators:
+            try:
+                result |= locator.get_distribution_names()
+            except NotImplementedError:
+                pass
+        return result
+
 
 default_locator = AggregatingLocator(
                     #PyPIJSONLocator('http://pypi.python.org/pypi'),

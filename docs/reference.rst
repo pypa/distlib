@@ -583,8 +583,17 @@ Classes
                   portion, if any, of the passed-in URL.
       :rtype: dict
 
+   .. method:: get_distribution_names
 
-.. class:: DirectoryLocator
+      Get the names of all distributions known to this locator.
+
+      The base class raises :class:`NotImplementedError`; this method should
+      be implemented in a subclass.
+
+      :returns: All distributions known to this locator.
+      :rtype: set
+
+.. class:: DirectoryLocator(Locator)
 
    This locator scans the file system under a base directory, looking for
    distribution archives.
@@ -594,11 +603,7 @@ Classes
       :param base_dir: The base directory to scan for distribution archives.
       :type base_dir: str
 
-    .. method:: get_project(name)
-
-       See :meth:`Locator.get_project`.
-
-.. class:: PyPIRPCLocator
+.. class:: PyPIRPCLocator(Locator)
 
    This locator uses the PyPI XML-RPC interface to locate distribution
    archives and other data about downloads.
@@ -613,7 +618,7 @@ Classes
        See :meth:`Locator.get_project`.
 
 
-.. class:: PyPIJSONLocator
+.. class:: PyPIJSONLocator(Locator)
 
    This locator uses the PyPI JSON interface to locate distribution
    archives and other data about downloads. It gets the metadata and URL
@@ -640,12 +645,8 @@ Classes
       :param url: The base URL to use for the simple service HTML pages.
       :type url: str
 
-    .. method:: get_project(name)
 
-       See :meth:`Locator.get_project`.
-
-
-.. class:: AggregatingLocator
+.. class:: AggregatingLocator(Locator)
 
    This locator uses a list of other aggregators and delegates finding projects
    to them. It can either return the first result found (i.e. from the first
@@ -663,9 +664,6 @@ Classes
                     are consulted in the order in which they're passed in.
       :type merge: bool
 
-    .. method:: get_project(name)
-
-       See :meth:`Locator.get_project`.
 
 Functions
 ^^^^^^^^^
