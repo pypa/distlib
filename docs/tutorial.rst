@@ -631,6 +631,11 @@ Now the same project, using the XML-RPC API::
 The reason why some of the download URLs come up as UNKNOWN is that some of
 the PyPI metadata is incomplete.
 
+Locators also have a method, :meth:`get_distribution_names`, which returns a
+set of all the distribution names known to that locator instance. Note that
+the base :class:`Locator` and :class:`JSONLocator` classes don't implement this
+method, so they will raise a :class:`NotImplementedError`.
+
 The ``locators`` package also contains a function,
 :func:`get_all_distribution_names`, which retrieves the names of all
 distributions registered on PyPI::

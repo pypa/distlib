@@ -4,13 +4,14 @@
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 import contextlib
+import json
 import logging
 import os
 import re
 import sys
 
 from . import DistlibException
-from .compat import string_types, shutil
+from .compat import string_types, shutil, urlopen
 from .glob import iglob
 
 logger = logging.getLogger(__name__)
@@ -384,3 +385,31 @@ def split_filename(filename, project_name=None):
         if m:
             result = m.group(1), m.group(3), pyver
     return result
+
+
+def _get_external_data(url):
+    result = {}
+    try:
+        resp = urlopen(url)
+        headers = resp.info()
+        if headers.get('Content-Type') != 'application/json':
+            logger.debug('Unexpected response for JSON request')
+        else:
+            data = resp.read().decode('utf-8')
+            result = json.loads(data)
+    except Exception:
+        logger.exception('Failed to get external data for %s', url)
+    return result
+
+
+def get_extended_metadata(name, version):
+    url = ('http://www.red-dove.com/pypi/results/'
+           '%s/%s/%s/info/package.json' % (name[0].upper(), name,
+                                           version))
+    return _get_external_data(url)
+
+
+def get_release_data(name):
+    url = ('http://www.red-dove.com/pypi/projects/'
+           '%s/%s/project.json' % (name[0].upper(), name))
+    return _get_external_data(url)

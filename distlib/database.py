@@ -11,16 +11,16 @@ import os
 import codecs
 import csv
 import hashlib
-import json
 import logging
 import sys
 import zipimport
 
 from . import DistlibException
-from .compat import StringIO, configparser, urlopen
+from .compat import StringIO, configparser
 from .version import get_scheme, UnsupportedVersionError
 from .metadata import Metadata
-from .util import parse_requires, cached_property, get_export_entry
+from .util import (parse_requires, cached_property, get_export_entry,
+                   get_extended_metadata)
 
 
 __all__ = ['Distribution', 'BaseInstalledDistribution',
@@ -325,28 +325,15 @@ class Distribution(object):
 
     @cached_property
     def extended_metadata(self):
-        result = {}
-        url = ('http://www.red-dove.com/pypi/results/'
-               '%s/%s/%s/info/package.json' % (self.name[0].upper(), self.name,
-                                               self.version))
-        try:
-            resp = urlopen(url)
-            headers = resp.info()
-            if headers.get('Content-Type') != 'application/json':
-                logger.debug('Unexpected response for metadata JSON request')
-            else:
-                data = resp.read().decode('utf-8')
-                result = json.loads(data)
-                # put relevant things in base metadata.
-                reqts = result.get('requirements', {})
-                deps = []
-                deps.extend(reqts.get('install', []))
-                if self.metadata['Requires']:
-                    pass # import pdb; pdb.set_trace()
-                else:
-                    self.metadata['Requires'] = deps
-        except Exception:
-            pass
+        result = get_extended_metadata(self.name, self.version)
+        # put relevant things in base metadata.
+        reqts = result.get('requirements', {})
+        deps = []
+        deps.extend(reqts.get('install', []))
+        if self.metadata['Requires']:
+            pass # import pdb; pdb.set_trace()
+        else:
+            self.metadata['Requires'] = deps
         return result
 
     def get_requirements(self, key):

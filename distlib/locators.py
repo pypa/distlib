@@ -37,7 +37,7 @@ def get_all_distribution_names(url=None):
 
 class Locator(object):
     source_extensions = ('.tar.gz', '.tar.bz2', '.tar', '.zip', '.tgz')
-    binary_extensions = ('.egg', '.exe')
+    binary_extensions = ('.egg', '.exe', '.whl')
     excluded_extensions = ('.pdf',)
 
     # Leave out binaries from downloadables, for now.
@@ -307,6 +307,7 @@ href\s*=\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\s\n]*))
         # to the front
         result = sorted(result, key=lambda t: t[0], reverse=True)
         return result
+
 
 class SimpleScrapingLocator(Locator):
     """
