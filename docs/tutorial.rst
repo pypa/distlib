@@ -483,7 +483,6 @@ or with semantic versioning (use ``SemanticVersion`` and ``SemanticMatcher``).
 However, you can't mix and match versions of different types::
 
     >>> from distlib.version import SemanticVersion, LegacyVersion
-    >>> nv = NormalizedVersion('1.0')
     >>> nv = NormalizedVersion('1.0.0')
     >>> lv = LegacyVersion('1.0.0')
     >>> sv = SemanticVersion('1.0.0')
@@ -495,14 +494,14 @@ However, you can't mix and match versions of different types::
       File "distlib/version.py", line 58, in _check_compatible
         raise TypeError('cannot compare %r and %r' % (self, other))
     TypeError: cannot compare LegacyVersion('1.0.0') and SemanticVersion('1.0.0')
-    >>> lv == sv
+    >>> nv == sv
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
       File "distlib/version.py", line 61, in __eq__
         self._check_compatible(other)
       File "distlib/version.py", line 58, in _check_compatible
         raise TypeError('cannot compare %r and %r' % (self, other))
-    TypeError: cannot compare LegacyVersion('1.0.0') and SemanticVersion('1.0.0')
+    TypeError: cannot compare NormalizedVersion('1.0.0') and SemanticVersion('1.0.0')
 
 
 Using the locators API

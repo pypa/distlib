@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import re
+import socket
 import sys
 
 from . import DistlibException
@@ -114,6 +115,16 @@ def chdir(d):
         yield
     finally:
         os.chdir(cwd)
+
+
+@contextlib.contextmanager
+def socket_timeout(seconds=15):
+    cto = socket.getdefaulttimeout()
+    try:
+        socket.setdefaulttimeout(seconds)
+        yield
+    finally:
+        socket.setdefaulttimeout(cto)
 
 
 class cached_property(object):
@@ -397,8 +408,8 @@ def _get_external_data(url):
         else:
             data = resp.read().decode('utf-8')
             result = json.loads(data)
-    except Exception:
-        logger.exception('Failed to get external data for %s', url)
+    except Exception as e:
+        logger.exception('Failed to get external data for %s: %s', url, e)
     return result
 
 

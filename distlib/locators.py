@@ -20,7 +20,7 @@ from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
 from .database import Distribution
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
-                   split_filename)
+                   split_filename, get_release_data)
 from .version import get_scheme
 
 logger = logging.getLogger(__name__)
@@ -581,6 +581,27 @@ class DirectoryLocator(Locator):
                         result.add(info['name'])
         return result
 
+class JSONLocator(Locator):
+    def get_distribution_names(self):
+        """
+        Return all the distribution names known to this locator.
+        """
+        raise NotImplementedError('Not available from this locator')
+
+    def _get_project(self, name):
+        result = {}
+        data = get_release_data(name)
+        if data:
+            for info in data.get('files', []):
+                if info['ptype'] != 'sdist' or info['pyversion'] != 'source':
+                    continue
+                md = Metadata()
+                md['Name'] = name
+                md['Version'] = version = info['version']
+                md['Download-URL'] = info['url']
+                dist = Distribution(md)
+                result[version] = dist
+        return result
 
 class AggregatingLocator(Locator):
     """
@@ -617,7 +638,7 @@ class AggregatingLocator(Locator):
 
 
 default_locator = AggregatingLocator(
-                    #PyPIJSONLocator('http://pypi.python.org/pypi'),
+                    JSONLocator(),
                     SimpleScrapingLocator('http://pypi.python.org/simple/',
                                           timeout=3.0))
 
