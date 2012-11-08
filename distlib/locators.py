@@ -600,6 +600,7 @@ class JSONLocator(Locator):
                 md['Version'] = version = info['version']
                 md['Download-URL'] = info['url']
                 dist = Distribution(md)
+                md.dependencies = info.get('requirements', {})
                 result[version] = dist
         return result
 

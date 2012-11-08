@@ -19,8 +19,7 @@ from . import DistlibException
 from .compat import StringIO, configparser
 from .version import get_scheme, UnsupportedVersionError
 from .metadata import Metadata
-from .util import (parse_requires, cached_property, get_export_entry,
-                   get_extended_metadata)
+from .util import parse_requires, cached_property, get_export_entry
 
 
 __all__ = ['Distribution', 'BaseInstalledDistribution',
@@ -323,24 +322,15 @@ class Distribution(object):
     def download_url(self):
         return self.metadata.download_url
 
-    @cached_property
-    def extended_metadata(self):
-        result = get_extended_metadata(self.name, self.version)
-        # put relevant things in base metadata.
-        reqts = result.get('requirements', {})
-        deps = []
-        deps.extend(reqts.get('install', []))
-        if self.metadata['Requires']:
-            pass # import pdb; pdb.set_trace()
-        else:
-            self.metadata['Requires'] = deps
-        return result
-
     def get_requirements(self, key):
+        """
+        Get the requirements of a particular type
+        ('setup', 'install', 'test')
+        """
         result = []
-        emd = self.extended_metadata
-        if 'requirements' in emd and key in emd['requirements']:
-            result = emd['requirements'][key]
+        d = self.metadata.dependencies
+        if key in d:
+            result = d[key]
         return result
 
     def __repr__(self):
@@ -363,10 +353,42 @@ class Distribution(object):
 
 
 class BaseInstalledDistribution(Distribution):
+
+    hasher = None
+
     def __init__(self, metadata, path, env=None):
         super(BaseInstalledDistribution, self).__init__(metadata)
         self.path = path
         self.dist_path  = env
+
+    def get_hash(self, data, hasher=None):
+        """
+        Get the hash of some data, using a particular hash algorithm, if
+        specified.
+
+        :param data: The data to be hashed.
+        :type data: bytes
+        :param hasher: The name of a hash implementation, supported by hashlib,
+                       or ``None``. Examples of valid values are ``'sha1'``,
+                       ``'sha224'``, ``'sha384'``, '``sha256'``, ``'md5'`` and
+                       ``'sha512'``. If no hasher is specified, the ``hasher``
+                       attribute of the :class:`InstalledDistribution` instance
+                       is used. If the hasher is determined to be ``None``, MD5
+                       is used as the hashing algorithm.
+        :returns: The hash of the data. If a hasher was explicitly specified,
+                  the returned hash will be prefixed with the specified hasher
+                  followed by '='.
+        :rtype: str
+        """
+        if hasher is None:
+            hasher = self.hasher
+        if hasher is None:
+            hasher = hashlib.md5
+            prefix = ''
+        else:
+            hasher = getattr(hashlib, hasher)
+            prefix = '%s=' % self.hasher
+        return '%s%s' % (prefix, hasher(data).hexdigest())
 
 class InstalledDistribution(BaseInstalledDistribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
@@ -377,8 +399,6 @@ class InstalledDistribution(BaseInstalledDistribution):
     """A boolean that indicates whether the ``REQUESTED`` metadata file is
     present (in other words, whether the package was installed by user
     request or it was installed as a dependency)."""
-
-    hasher = None
 
     def __init__(self, path, env=None):
         if env and env._cache_enabled and path in env._cache.path:
@@ -490,35 +510,6 @@ class InstalledDistribution(BaseInstalledDistribution):
         """
         for result in self._get_records(local):
             yield result
-
-    def get_hash(self, data, hasher=None):
-        """
-        Get the hash of some data, using a particular hash algorithm, if
-        specified.
-
-        :param data: The data to be hashed.
-        :type data: bytes
-        :param hasher: The name of a hash implementation, supported by hashlib,
-                       or ``None``. Examples of valid values are ``'sha1'``,
-                       ``'sha224'``, ``'sha384'``, '``sha256'``, ``'md5'`` and
-                       ``'sha512'``. If no hasher is specified, the ``hasher``
-                       attribute of the :class:`InstalledDistribution` instance
-                       is used. If the hasher is determined to be ``None``, MD5
-                       is used as the hashing algorithm.
-        :returns: The hash of the data. If a hasher was explicitly specified,
-                  the returned hash will be prefixed with the specified hasher
-                  followed by '='.
-        :rtype: str
-        """
-        if hasher is None:
-            hasher = self.hasher
-        if hasher is None:
-            hasher = hashlib.md5
-            prefix = ''
-        else:
-            hasher = getattr(hashlib, hasher)
-            prefix = '%s=' % self.hasher
-        return '%s%s' % (prefix, hasher(data).hexdigest())
 
     def write_installed_files(self, paths):
         """
@@ -688,7 +679,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
     def __init__(self, path, env=None):
         self.path = path
         self.dist_path  = env
-        if env._cache_enabled and path in env._cache_egg.path:
+        if env and env._cache_enabled and path in env._cache_egg.path:
             metadata = env._cache_egg.path[path].metadata
             self.name = metadata['Name']
             self.version = metadata['Version']
@@ -749,6 +740,25 @@ class EggInfoDistribution(BaseInstalledDistribution):
     def __str__(self):
         return "%s %s" % (self.name, self.version)
 
+    def check_installed_files(self):
+        """
+        Checks that the hashes and sizes of the files in ``RECORD`` are
+        matched by the files themselves. Returns a (possibly empty) list of
+        mismatches. Each entry in the mismatch list will be a tuple consisting
+        of the path, 'exists', 'size' or 'hash' according to what didn't match
+        (existence is checked first, then size, then hash), the expected
+        value and the actual value.
+        """
+        mismatches = []
+        record_path = os.path.join(self.path, 'installed-files.txt')
+        if os.path.exists(record_path):
+            for path, hash, size in self.list_installed_files():
+                if path == record_path:
+                    continue
+                if not os.path.exists(path):
+                    mismatches.append((path, 'exists', True, False))
+        return mismatches
+
     def list_installed_files(self, local=False):
 
         def _md5(path):
@@ -757,7 +767,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
                 content = f.read()
             finally:
                 f.close()
-            return md5(content).hexdigest()
+            return hashlib.md5(content).hexdigest()
 
         def _size(path):
             return os.stat(path).st_size
@@ -964,7 +974,10 @@ def make_graph(dists, scheme='default'):
 
     # now make the edges
     for dist in dists:
+        # need to leave this in because tests currently rely on it ...
         requires = dist.metadata['Requires-Dist'] + dist.metadata['Requires']
+        if not requires:
+            requires = dist.get_requirements('install')
         for req in requires:
             try:
                 matcher = scheme.matcher(req)

@@ -127,44 +127,6 @@ class CommonDistributionTests(FakeDistsMixin):
                 self.assertEqual(hash, record_data[path][0])
                 self.assertEqual(size, record_data[path][1])
 
-    def test_check_installed_files(self):
-        for dir_ in self.dirs:
-            dist = self.cls(dir_)
-            mismatches = dist.check_installed_files()
-            self.assertEqual(mismatches, [])
-            # pick a non-empty file at random and change its contents
-            # but not its size. Check the failure returned,
-            # then restore the file.
-            files = [f for f in dist.list_installed_files() if f[-1] not in ('', '0')]
-            bad_file = random.choice(files)
-            bad_file_name = bad_file[0]
-            with open(bad_file_name, 'rb') as f:
-                data = f.read()
-            bad_data = bytes(bytearray(reversed(data)))
-            bad_hash = dist.get_hash(bad_data)
-            with open(bad_file_name, 'wb') as f:
-                f.write(bad_data)
-            mismatches = dist.check_installed_files()
-            self.assertEqual(mismatches, [(bad_file_name, 'hash', bad_file[1],
-                                           bad_hash)])
-            # now truncate the file by one byte and see what's returned
-            with open(bad_file_name, 'wb') as f:
-                f.write(bad_data[:-1])
-            bad_size = str(len(bad_data) - 1)
-            mismatches = dist.check_installed_files()
-            self.assertEqual(mismatches, [(bad_file_name, 'size', bad_file[2],
-                                           bad_size)])
-
-            # now remove the file and see what's returned
-            os.remove(bad_file_name)
-            mismatches = dist.check_installed_files()
-            self.assertEqual(mismatches, [(bad_file_name, 'exists',
-                                           True, False)])
-
-            # restore the file
-            with open(bad_file_name, 'wb') as f:
-                f.write(data)
-
     def test_hash(self):
         datalen = random.randrange(0, 500)
         data = os.urandom(datalen)
@@ -311,6 +273,44 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         self.assertEqual(resource_path, 'babar.png')
         self.assertRaises(KeyError, dist.get_resource_path, 'notexist')
 
+    def test_check_installed_files(self):
+        for dir_ in self.dirs:
+            dist = self.cls(dir_)
+            mismatches = dist.check_installed_files()
+            self.assertEqual(mismatches, [])
+            # pick a non-empty file at random and change its contents
+            # but not its size. Check the failure returned,
+            # then restore the file.
+            files = [f for f in dist.list_installed_files() if f[-1] not in ('', '0')]
+            bad_file = random.choice(files)
+            bad_file_name = bad_file[0]
+            with open(bad_file_name, 'rb') as f:
+                data = f.read()
+            bad_data = bytes(bytearray(reversed(data)))
+            bad_hash = dist.get_hash(bad_data)
+            with open(bad_file_name, 'wb') as f:
+                f.write(bad_data)
+            mismatches = dist.check_installed_files()
+            self.assertEqual(mismatches, [(bad_file_name, 'hash', bad_file[1],
+                                           bad_hash)])
+            # now truncate the file by one byte and see what's returned
+            with open(bad_file_name, 'wb') as f:
+                f.write(bad_data[:-1])
+            bad_size = str(len(bad_data) - 1)
+            mismatches = dist.check_installed_files()
+            self.assertEqual(mismatches, [(bad_file_name, 'size', bad_file[2],
+                                           bad_size)])
+
+            # now remove the file and see what's returned
+            os.remove(bad_file_name)
+            mismatches = dist.check_installed_files()
+            self.assertEqual(mismatches, [(bad_file_name, 'exists',
+                                           True, False)])
+
+            # restore the file
+            with open(bad_file_name, 'wb') as f:
+                f.write(data)
+
 
 class TestEggInfoDistribution(CommonDistributionTests,
                               LoggingCatcher,
@@ -328,6 +328,22 @@ class TestEggInfoDistribution(CommonDistributionTests,
                      if f.endswith('.egg') or f.endswith('.egg-info')]
 
         self.records = {}
+        for egginfo_dir in self.dirs:
+            dist_location = egginfo_dir.replace('.egg-info', '')
+            record_file = os.path.join(egginfo_dir, 'installed-files.txt')
+
+            dist = self.cls(egginfo_dir)
+            #dist.write_installed_files(get_files(dist_location))
+
+            record_data = {}
+            if os.path.exists(record_file):
+                with open(record_file) as fp:
+                    for line in fp:
+                        line = line.strip()
+                        if line == './':
+                            break
+                        record_data[line] = None, None
+            self.records[egginfo_dir] = record_data
 
     @unittest.skip('not implemented yet')
     def test_list_installed_files(self):

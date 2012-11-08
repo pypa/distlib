@@ -10,7 +10,7 @@ from test_version import (VersionTestCase, CompatibilityTestCase,
 from test_markers import MarkersTestCase
 from test_metadata import MetadataTestCase
 from test_database import (DataFilesTestCase, TestDatabase, TestDistribution,
-                           DepGraphTestCase)
+                           TestEggInfoDistribution, DepGraphTestCase)
 from test_resources import (ZipResourceTestCase, FileResourceTestCase,
                             CacheTestCase)
 from test_scripts import ScriptTestCase

@@ -232,6 +232,7 @@ class Metadata(object):
         self.platform_dependent = platform_dependent
         self.execution_context = execution_context
         self.scheme = get_scheme('default')
+        self.dependencies = {}
         if [path, fileobj, mapping].count(None) < 2:
             raise TypeError('path, fileobj and mapping are exclusive')
         if path is not None:

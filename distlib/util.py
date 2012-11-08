@@ -415,13 +415,6 @@ def _get_external_data(url):
     return result
 
 
-def get_extended_metadata(name, version):
-    url = ('http://www.red-dove.com/pypi/results/'
-           '%s/%s/%s/info/package.json' % (name[0].upper(), name,
-                                           version))
-    return _get_external_data(url)
-
-
 def get_release_data(name):
     url = ('http://www.red-dove.com/pypi/projects/'
            '%s/%s/project.json' % (name[0].upper(), name))

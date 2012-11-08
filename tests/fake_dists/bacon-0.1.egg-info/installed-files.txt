@@ -1,0 +1,7 @@
+../dummy.py
+../dummy.pyc
+./
+PKG-INFO
+SOURCES.txt
+top_level.txt
+dependency_links.txt
