@@ -922,6 +922,8 @@ class DependencyGraph(object):
             # Remove from the adjacency list of others
             for k, v in alist.items():
                 alist[k] = [(d, r) for d, r in v if d not in to_remove]
+            logger.debug('Moving to result: %s',
+                ['%s (%s)' % (d.name, d.version) for d in dists])
             result.extend(to_remove)
         return result, list(alist.keys())
 

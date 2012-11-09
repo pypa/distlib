@@ -648,7 +648,7 @@ def locate(requirement, scheme='default', locator=None):
     Locate a downloadable distribution, given a requirement (project name and
     version constraints, if any).
     """
-    logger.debug('locate %r starting', requirement)
+    #logger.debug('locate %r starting', requirement)
     result = None
     scheme = get_scheme(scheme)
     matcher = scheme.matcher(requirement)
@@ -662,11 +662,13 @@ def locate(requirement, scheme='default', locator=None):
             try:
                 if matcher.match(k):
                     slist.append(k)
+                    if matcher.is_single:
+                        break
             except Exception:
                 pass # slist.append(k)
         if len(slist) > 1:
             slist = sorted(slist, key=scheme.key)
         if slist:
             result = versions[slist[-1]]
-    logger.debug('locate %r -> %s', requirement, result)
+    #logger.debug('locate %r -> %s', requirement, result)
     return result

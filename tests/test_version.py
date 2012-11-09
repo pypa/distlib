@@ -231,6 +231,22 @@ class VersionTestCase(unittest.TestCase):
         for constraint in constraints:
             self.assertEqual(str(NM(constraint)), constraint)
 
+        #Test is_single
+        cases = (
+            ('Dummy', False),
+            ('Dummy (1.0)', True),
+            ('Dummy (<1.0)', False),
+            ('Dummy (<=1.0)', False),
+            ('Dummy (>1.0)', False),
+            ('Dummy (>=1.0)', False),
+            ('Dummy (==1.0)', True),
+            ('Dummy (!=1.0)', False),
+        )
+
+        for s, b in cases:
+            m = NM(s)
+            self.assertEqual(m.is_single, b)
+
     def test_matcher_name(self):
         # Test that names are parsed the right way
 

@@ -125,6 +125,10 @@ class Matcher(_Common):
                 return False
         return True
 
+    @property
+    def is_single(self):
+        return len(self._parts) == 1 and self._parts[0][0] == '=='
+
     def _check_compatible(self, other):
         if type(self) != type(other) or self.name != other.name:
             raise TypeError('cannot compare %s and %s' % (self, other))
