@@ -408,14 +408,18 @@ def _get_external_data(url):
         if headers.get('Content-Type') != 'application/json':
             logger.debug('Unexpected response for JSON request')
         else:
-            data = resp.read().decode('utf-8')
-            result = json.loads(data)
+            #data = resp.read().decode('utf-8')
+            #result = json.loads(data)
+            result = json.load(resp)
     except Exception as e:
         logger.exception('Failed to get external data for %s: %s', url, e)
     return result
 
 
 def get_release_data(name):
+    #logger.debug('get_release_data start: %s', name)
     url = ('http://www.red-dove.com/pypi/projects/'
            '%s/%s/project.json' % (name[0].upper(), name))
-    return _get_external_data(url)
+    result = _get_external_data(url)
+    #logger.debug('get_release_data done: %s', name)
+    return result

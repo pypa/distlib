@@ -596,7 +596,7 @@ class JSONLocator(Locator):
                 if info['ptype'] != 'sdist' or info['pyversion'] != 'source':
                     continue
                 md = Metadata()
-                md['Name'] = name
+                md['Name'] = data['name']
                 md['Version'] = version = info['version']
                 md['Download-URL'] = info['url']
                 dist = Distribution(md)
@@ -643,7 +643,7 @@ default_locator = AggregatingLocator(
                     SimpleScrapingLocator('http://pypi.python.org/simple/',
                                           timeout=3.0))
 
-def locate(requirement, scheme='default'):
+def locate(requirement, scheme='default', locator=None):
     """
     Locate a downloadable distribution, given a requirement (project name and
     version constraints, if any).
@@ -652,7 +652,9 @@ def locate(requirement, scheme='default'):
     result = None
     scheme = get_scheme(scheme)
     matcher = scheme.matcher(requirement)
-    versions = default_locator.get_project(matcher.name)
+    if locator is None:
+        locator = default_locator
+    versions = locator.get_project(matcher.name)
     if versions:
         # sometimes, versions are invalid
         slist = []
