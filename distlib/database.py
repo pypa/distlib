@@ -923,7 +923,7 @@ class DependencyGraph(object):
             for k, v in alist.items():
                 alist[k] = [(d, r) for d, r in v if d not in to_remove]
             logger.debug('Moving to result: %s',
-                ['%s (%s)' % (d.name, d.version) for d in dists])
+                ['%s (%s)' % (d.name, d.version) for d in to_remove])
             result.extend(to_remove)
         return result, list(alist.keys())
 
