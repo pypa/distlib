@@ -190,6 +190,31 @@ class Locator(object):
         dist.locator = self
         result[version] = dist
 
+    def locate(self, matcher, scheme):
+        """
+        Find the most recent distribution which matches the given
+        matcher.
+        """
+        result = None
+        versions = self.get_project(matcher.name)
+        if versions:
+            # sometimes, versions are invalid
+            slist = []
+            for k in versions:
+                try:
+                    if matcher.match(k):
+                        slist.append(k)
+                        if matcher.is_single:
+                            break
+                except Exception:
+                    pass # slist.append(k)
+            if len(slist) > 1:
+                slist = sorted(slist, key=scheme.key)
+            if slist:
+                result = versions[slist[-1]]
+        return result
+
+
 class PyPIRPCLocator(Locator):
     def __init__(self, url):
         super(PyPIRPCLocator, self).__init__()
@@ -654,21 +679,4 @@ def locate(requirement, scheme='default', locator=None):
     matcher = scheme.matcher(requirement)
     if locator is None:
         locator = default_locator
-    versions = locator.get_project(matcher.name)
-    if versions:
-        # sometimes, versions are invalid
-        slist = []
-        for k in versions:
-            try:
-                if matcher.match(k):
-                    slist.append(k)
-                    if matcher.is_single:
-                        break
-            except Exception:
-                pass # slist.append(k)
-        if len(slist) > 1:
-            slist = sorted(slist, key=scheme.key)
-        if slist:
-            result = versions[slist[-1]]
-    #logger.debug('locate %r -> %s', requirement, result)
-    return result
+    return locator.locate(matcher, scheme)
