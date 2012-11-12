@@ -251,7 +251,7 @@ class DistributionPath(object):
                                       (name, version))
 
         for dist in self.get_distributions():
-            provided = dist.metadata['Provides-Dist'] + dist.metadata['Provides']
+            provided = dist.provides
 
             for p in provided:
                 p_components = p.rsplit(' ', 1)
@@ -321,6 +321,19 @@ class Distribution(object):
     @property
     def download_url(self):
         return self.metadata.download_url
+
+    @cached_property
+    def provides(self):
+        return set(self.metadata['Provides-Dist'] +
+                   self.metadata['Provides'] +
+                   ['%s (%s)' % (self.name, self.version)]
+                  )
+
+    @cached_property
+    def requires(self):
+        result = set(self.metadata['Requires-Dist'] +
+                     self.metadata['Requires'] +
+                     self.get_requirements('install'))
 
     def get_requirements(self, key):
         """
@@ -947,14 +960,11 @@ def make_graph(dists, scheme='default'):
     graph = DependencyGraph()
     provided = {}  # maps names to lists of (version, dist) tuples
 
-    # first, build the graph and find out the provides
+    # first, build the graph and find out what's provided
     for dist in dists:
         graph.add_distribution(dist)
-        provides = (dist.metadata['Provides-Dist'] +
-                    dist.metadata['Provides'] +
-                    ['%s (%s)' % (dist.name, dist.version)])
 
-        for p in provides:
+        for p in dist.provides:
             comps = p.strip().rsplit(" ", 1)
             name = comps[0]
             version = None

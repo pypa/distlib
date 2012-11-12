@@ -190,12 +190,14 @@ class Locator(object):
         dist.locator = self
         result[version] = dist
 
-    def locate(self, matcher, scheme):
+    def locate(self, requirement, scheme='default'):
         """
         Find the most recent distribution which matches the given
-        matcher.
+        matcher, using the provided scheme.
         """
         result = None
+        scheme = get_scheme(scheme)
+        matcher = scheme.matcher(requirement)
         versions = self.get_project(matcher.name)
         if versions:
             # sometimes, versions are invalid
@@ -675,8 +677,6 @@ def locate(requirement, scheme='default', locator=None):
     """
     #logger.debug('locate %r starting', requirement)
     result = None
-    scheme = get_scheme(scheme)
-    matcher = scheme.matcher(requirement)
     if locator is None:
         locator = default_locator
-    return locator.locate(matcher, scheme)
+    return locator.locate(requirement, scheme)

@@ -135,14 +135,15 @@ class Matcher(_Common):
 
     def __eq__(self, other):
         self._check_compatible(other)
-        return self.name == other.name and self._parts == other._parts
+        return (self.name.lower() == other.name.lower()
+                and self._parts == other._parts)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     # See http://docs.python.org/reference/datamodel#object.__hash__
     def __hash__(self):
-        return hash(self.name) + hash(self._parts)
+        return hash(self.name.lower()) + hash(self._parts)
 
 # A marker used in the second and third parts of the `parts` tuple, for
 # versions that don't have those segments, to sort properly. An example
