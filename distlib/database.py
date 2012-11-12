@@ -1000,10 +1000,8 @@ def make_graph(dists, scheme='default'):
 
             name = matcher.name.lower()   # case-insensitive
 
-            if name not in provided:
-                graph.add_missing(dist, req)
-            else:
-                matched = False
+            matched = False
+            if name in provided:
                 for version, provider in provided[name]:
                     try:
                         match = matcher.match(version)
@@ -1014,8 +1012,8 @@ def make_graph(dists, scheme='default'):
                         graph.add_edge(dist, provider, req)
                         matched = True
                         break
-                if not matched:
-                    graph.add_missing(dist, req)
+            if not matched:
+                graph.add_missing(dist, req)
     return graph
 
 
