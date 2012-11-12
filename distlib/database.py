@@ -331,9 +331,9 @@ class Distribution(object):
 
     @cached_property
     def requires(self):
-        result = set(self.metadata['Requires-Dist'] +
-                     self.metadata['Requires'] +
-                     self.get_requirements('install'))
+        return set(self.metadata['Requires-Dist'] +
+                   self.metadata['Requires'] +
+                   self.get_requirements('install'))
 
     def get_requirements(self, key):
         """
@@ -1008,11 +1008,7 @@ def make_graph(dists, scheme='default'):
                     try:
                         match = matcher.match(version)
                     except UnsupportedVersionError:
-                        # XXX small compat-mode
-                        if version.split(' ') == 1:
-                            match = True
-                        else:
-                            match = False
+                        match = False
 
                     if match:
                         graph.add_edge(dist, provider, req)
