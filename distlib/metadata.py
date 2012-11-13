@@ -225,13 +225,14 @@ class Metadata(object):
     # also document the mapping API and UNKNOWN default key
 
     def __init__(self, path=None, platform_dependent=False,
-                 execution_context=None, fileobj=None, mapping=None):
+                 execution_context=None, fileobj=None, mapping=None,
+                 scheme='default'):
         self._fields = {}
         self.requires_files = []
         self.docutils_support = _HAS_DOCUTILS
         self.platform_dependent = platform_dependent
         self.execution_context = execution_context
-        self.scheme = get_scheme('default')
+        self.scheme = scheme
         self.dependencies = {}
         if [path, fileobj, mapping].count(None) < 2:
             raise TypeError('path, fileobj and mapping are exclusive')
@@ -445,20 +446,21 @@ class Metadata(object):
         if logger.isEnabledFor(logging.WARNING):
             project_name = self['Name']
 
+            scheme = get_scheme(self.scheme)
             if name in _PREDICATE_FIELDS and value is not None:
                 for v in value:
                     # check that the values are valid
-                    if not self.scheme.is_valid_matcher(v.split(';')[0]):
+                    if not scheme.is_valid_matcher(v.split(';')[0]):
                         logger.warning(
                             '%r: %r is not valid (field %r)',
                             project_name, v, name)
             # FIXME this rejects UNKNOWN, is that right?
             elif name in _VERSIONS_FIELDS and value is not None:
-                if not self.scheme.is_valid_constraint_list(value):
+                if not scheme.is_valid_constraint_list(value):
                     logger.warning('%r: %r is not a valid version (field %r)',
                                    project_name, value, name)
             elif name in _VERSION_FIELDS and value is not None:
-                if not self.scheme.is_valid_version(value):
+                if not scheme.is_valid_version(value):
                     logger.warning('%r: %r is not a valid version (field %r)',
                                    project_name, value, name)
 
@@ -532,17 +534,19 @@ class Metadata(object):
         if self['Metadata-Version'] != '1.2':
             return missing, warnings
 
+        scheme = get_scheme(self.scheme)
+
         def are_valid_constraints(value):
             for v in value:
-                if not self.scheme.is_valid_matcher(v.split(';')[0]):
+                if not scheme.is_valid_matcher(v.split(';')[0]):
                     return False
             return True
 
         for fields, controller in ((_PREDICATE_FIELDS, are_valid_constraints),
                                    (_VERSIONS_FIELDS,
-                                    self.scheme.is_valid_constraint_list),
+                                    scheme.is_valid_constraint_list),
                                    (_VERSION_FIELDS,
-                                    self.scheme.is_valid_version)):
+                                    scheme.is_valid_version)):
             for field in fields:
                 value = self.get(field, None)
                 if value is not None and not controller(value):

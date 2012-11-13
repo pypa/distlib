@@ -43,8 +43,17 @@ class Locator(object):
     # Leave out binaries from downloadables, for now.
     downloadable_extensions = source_extensions
 
-    def __init__(self):
+    def __init__(self, scheme='default'):
         self._cache = {}
+        self.scheme = scheme
+
+    def _get_scheme(self):
+        return self._scheme
+
+    def _set_scheme(self, value):
+        self._scheme = value
+
+    scheme = property(_get_scheme, _set_scheme)
 
     def _get_project(self, name):
         """
@@ -176,7 +185,7 @@ class Locator(object):
             dist = result[version]
             md = dist.metadata
         else:
-            md = Metadata()
+            md = Metadata(scheme=self.scheme)
             md['Name'] = name
             md['Version'] = version
             dist = Distribution(md)
@@ -190,14 +199,13 @@ class Locator(object):
         dist.locator = self
         result[version] = dist
 
-    def locate(self, requirement, scheme='default'):
+    def locate(self, requirement):
         """
         Find the most recent distribution which matches the given
         matcher, using the provided scheme.
         """
         result = None
-        if isinstance(scheme, string_types):
-            scheme = get_scheme(scheme)
+        scheme = get_scheme(self.scheme)
         matcher = scheme.matcher(requirement)
         versions = self.get_project(matcher.name)
         if versions:
@@ -219,8 +227,8 @@ class Locator(object):
 
 
 class PyPIRPCLocator(Locator):
-    def __init__(self, url):
-        super(PyPIRPCLocator, self).__init__()
+    def __init__(self, url, **kwargs):
+        super(PyPIRPCLocator, self).__init__(**kwargs)
         self.base_url = url
         self.client = xmlrpclib.ServerProxy(url)
 
@@ -236,7 +244,7 @@ class PyPIRPCLocator(Locator):
         for v in versions:
             urls = self.client.release_urls(name, v)
             data = self.client.release_data(name, v)
-            metadata = Metadata()
+            metadata = Metadata(scheme=self.scheme)
             metadata.update(data)
             dist = Distribution(metadata)
             if urls:
@@ -249,8 +257,8 @@ class PyPIRPCLocator(Locator):
         return result
 
 class PyPIJSONLocator(Locator):
-    def __init__(self, url):
-        super(PyPIJSONLocator, self).__init__()
+    def __init__(self, url, **kwargs):
+        super(PyPIJSONLocator, self).__init__(**kwargs)
         self.base_url = ensure_slash(url)
 
     def get_distribution_names(self):
@@ -266,7 +274,7 @@ class PyPIJSONLocator(Locator):
             resp = urlopen(url)
             data = resp.read().decode() # for now
             d = json.loads(data)
-            md = Metadata()
+            md = Metadata(scheme=self.scheme)
             md.update(d['info'])
             dist = Distribution(md)
             urls = d['urls']
@@ -351,8 +359,8 @@ class SimpleScrapingLocator(Locator):
         'none': lambda b: b,
     }
 
-    def __init__(self, url, timeout=None, num_workers=10):
-        super(SimpleScrapingLocator, self).__init__()
+    def __init__(self, url, timeout=None, num_workers=10, **kwargs):
+        super(SimpleScrapingLocator, self).__init__(**kwargs)
         self.base_url = ensure_slash(url)
         self.timeout = timeout
         self._page_cache = {}
@@ -563,8 +571,8 @@ class SimpleScrapingLocator(Locator):
         return result
 
 class DirectoryLocator(Locator):
-    def __init__(self, path):
-        super(DirectoryLocator, self).__init__()
+    def __init__(self, path, **kwargs):
+        super(DirectoryLocator, self).__init__(**kwargs)
         path = os.path.abspath(path)
         if not os.path.isdir(path):
             raise ValueError('Not a directory: %r' % path)
@@ -623,7 +631,7 @@ class JSONLocator(Locator):
             for info in data.get('files', []):
                 if info['ptype'] != 'sdist' or info['pyversion'] != 'source':
                     continue
-                md = Metadata()
+                md = Metadata(scheme=self.scheme)
                 md['Name'] = data['name']
                 md['Version'] = version = info['version']
                 md['Download-URL'] = info['url']
@@ -637,9 +645,16 @@ class AggregatingLocator(Locator):
     Chain and/or merge a list of locators.
     """
     def __init__(self, *locators, **kwargs):
-        super(AggregatingLocator, self).__init__()
+        self.merge = kwargs.pop('merge', False)
         self.locators = locators
-        self.merge = kwargs.get('merge', False)
+        super(AggregatingLocator, self).__init__(**kwargs)
+
+    def _set_scheme(self, value):
+        self._scheme = value
+        for locator in self.locators:
+            locator.scheme = value
+
+    scheme = property(Locator.scheme.fget, _set_scheme)
 
     def _get_project(self, name):
         result = {}
@@ -671,13 +686,4 @@ default_locator = AggregatingLocator(
                     SimpleScrapingLocator('http://pypi.python.org/simple/',
                                           timeout=3.0))
 
-def locate(requirement, scheme='default', locator=None):
-    """
-    Locate a downloadable distribution, given a requirement (project name and
-    version constraints, if any).
-    """
-    #logger.debug('locate %r starting', requirement)
-    result = None
-    if locator is None:
-        locator = default_locator
-    return locator.locate(requirement, scheme)
+locate = default_locator.locate
