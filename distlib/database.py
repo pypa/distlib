@@ -362,7 +362,8 @@ class Distribution(object):
                       self.download_url == other.download_url)
         return result
 
-    __hash__ = object.__hash__
+    def __hash__(self):
+        return hash(self.name) + hash(self.version) + hash(self.download_url)
 
 
 class BaseInstalledDistribution(Distribution):

@@ -15,7 +15,7 @@ import zlib
 
 from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
                      url2pathname, pathname2url, queue, quote,
-                     unescape,
+                     unescape, string_types,
                      Request, HTTPError, URLError)
 from .database import Distribution
 from .metadata import Metadata
@@ -196,7 +196,8 @@ class Locator(object):
         matcher, using the provided scheme.
         """
         result = None
-        scheme = get_scheme(scheme)
+        if isinstance(scheme, string_types):
+            scheme = get_scheme(scheme)
         matcher = scheme.matcher(requirement)
         versions = self.get_project(matcher.name)
         if versions:
