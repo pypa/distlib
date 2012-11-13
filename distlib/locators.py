@@ -687,3 +687,136 @@ default_locator = AggregatingLocator(
                                           timeout=3.0))
 
 locate = default_locator.locate
+
+class DependencyFinder(object):
+    def __init__(self, locator=None, scheme='default'):
+        self.locator = locator or default_locator
+        self.locator.scheme = scheme
+        self.scheme = get_scheme(scheme)
+        self.provided = {}
+        self.dists = {}
+        self.dists_by_name = {}
+        self.reqts = {}
+        self.dispensable = set()
+
+    def get_name_and_version(self, p):
+        comps = p.strip().rsplit(' ', 1)
+        name = comps[0]
+        version = None
+        if len(comps) == 2:
+            version = comps[1]
+            if len(version) < 3 or version[0] != '(' or version[-1] != ')':
+                raise ValueError('Ill-formed provides field: %r' % p)
+            version = version[1:-1]  # trim off parentheses
+        # Name in lower case for case-insensitivity
+        name = name.lower()
+        return name, version
+
+    def add_distribution(self, dist):
+        logger.debug('adding distribution %s', dist)
+        name = dist.name.lower()
+        self.dists_by_name[name] = dist
+        self.dists[(name, dist.version)] = dist
+        for p in dist.provides:
+            name, version = self.get_name_and_version(p)
+            logger.debug('Add to provided: %s, %s, %s', name, version, dist)
+            self.provided.setdefault(name, set()).add((version, dist))
+
+    def remove_distribution(self, dist):
+        logger.debug('removing distribution %s', dist)
+        name = dist.name.lower()
+        del self.dists_by_name[name]
+        del self.dists[(name, dist.version)]
+        for p in dist.provides:
+            name, version = self.get_name_and_version(p)
+            logger.debug('Remove from provided: %s, %s, %s', name, version, dist)
+            s = self.provided[name]
+            s.remove((version, dist))
+            if not s:
+                del self.provided[name]
+
+    def get_matcher(self, reqt):
+        try:
+            matcher = self.scheme.matcher(reqt)
+        except UnsupportedVersionError:
+            # XXX compat-mode if cannot read the version
+            name = reqt.split()[0]
+            matcher = scheme.matcher(name)
+        return matcher
+
+    def find_providers(self, reqt):
+        matcher = self.get_matcher(reqt)
+        name = matcher.name.lower()   # case-insensitive
+        result = set()
+        provided = self.provided
+        if name in provided:
+            for version, provider in provided[name]:
+                try:
+                    match = matcher.match(version)
+                except UnsupportedVersionError:
+                    match = False
+
+                if match:
+                    result.add(provider)
+                    break
+        return result
+
+    def try_to_replace(self, provider, other, problems):
+        rlist = self.reqts[other]
+        unmatched = set()
+        for s in rlist:
+            matcher = self.get_matcher(s)
+            if not matcher.match(provider.version):
+                unmatched.add(s)
+        if unmatched:
+            # can't replace other with provider
+            problems.add(('cantreplace', other, provider, unmatched))
+            result = False
+        else:
+            # can replace other with provider
+            self.remove_distribution(other)
+            del self.reqts[other]
+            for s in rlist:
+                self.reqts.setdefault(provider, set()).add(s)
+            self.add_distribution(provider)
+            result = True
+        return result
+
+    def find(self, dist):
+        problems = set()
+        todo = set([dist])
+        while todo:
+            dist = todo.pop()
+            name = dist.name.lower()
+            if name not in self.dists_by_name:
+                self.add_distribution(dist)
+            else:
+                #import pdb; pdb.set_trace()
+                other = self.dists_by_name[name]
+                if other != dist:
+                    self.try_to_replace(dist, other, problems)
+
+            for r in dist.requires:
+                providers = self.find_providers(r)
+                if not providers:
+                    logger.debug('No providers found for %r', r)
+                    provider = self.locator.locate(r)
+                    if provider is None:
+                        logger.debug('Cannot satisfy %r', r)
+                        problems.add(('unsatisfied', r))
+                    else:
+                        n, v = provider.name.lower(), provider.version
+                        if (n, v) not in self.dists:
+                            todo.add(provider)
+                        providers.add(provider)
+                for p in providers:
+                    name = p.name.lower()
+                    if name not in self.dists_by_name:
+                        self.reqts.setdefault(p, set()).add(r)
+                    else:
+                        other = self.dists_by_name[name]
+                        if other != p:
+                            # see if other can be replaced by p
+                            self.try_to_replace(p, other, problems)
+
+        return set(self.dists.values()), problems
