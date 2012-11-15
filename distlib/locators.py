@@ -17,7 +17,7 @@ from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
                      url2pathname, pathname2url, queue, quote,
                      unescape, string_types,
                      Request, HTTPError, URLError)
-from .database import Distribution
+from .database import Distribution, DistributionPath
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
                    split_filename, get_release_data)
@@ -640,6 +640,21 @@ class JSONLocator(Locator):
                 result[version] = dist
         return result
 
+class DistPathLocator(Locator):
+    def __init__(self, path, **kwargs):
+        super(DistPathLocator, self).__init__(**kwargs)
+        assert isinstance(path, DistributionPath)
+        self.path = path
+
+    def _get_project(self, name):
+        dist = self.path.get_distribution(name)
+        if dist is None:
+            result = None
+        else:
+            result = { dist.version: dist }
+        return result
+
+
 class AggregatingLocator(Locator):
     """
     Chain and/or merge a list of locators.
@@ -782,7 +797,10 @@ class DependencyFinder(object):
             result = True
         return result
 
-    def find(self, dist):
+    def find(self, requirement):
+        dist = self.locator.locate(requirement)
+        if dist is None:
+            raise ValueError('Unable to locate %r' % requirement)
         problems = set()
         todo = set([dist])
         while todo:

@@ -5,13 +5,15 @@
 #
 from __future__ import unicode_literals
 import os
+import sys
 
 from compat import unittest
 
 from distlib.compat import url2pathname, urlparse
+from distlib.database import DistributionPath
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
-                              AggregatingLocator)
+                              DistPathLocator, AggregatingLocator)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -90,6 +92,23 @@ class LocatorTestCase(unittest.TestCase):
         names = locator.get_distribution_names()
         expected = set(['Flask', 'python-gnupg', 'coverage', 'Django'])
         self.assertEqual(names, expected)
+
+    def test_path(self):
+        fakes = os.path.join(HERE, 'fake_dists')
+        sys.path.insert(0, fakes)
+        try:
+            edp = DistributionPath(include_egg=True)
+            locator = DistPathLocator(edp)
+            cases = ('babar', 'choxie', 'strawberry', 'towel-stuff',
+                     'coconuts-aster', 'bacon', 'grammar', 'truffles',
+                     'banana', 'cheese')
+            for name in cases:
+                d = locator.locate(name)
+                r = locator.get_project(name)
+                self.assertIsNotNone(d)
+                self.assertEqual(r, { d.version: d })
+        finally:
+            sys.path.pop(0)
 
     def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
