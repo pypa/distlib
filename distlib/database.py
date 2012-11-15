@@ -1031,14 +1031,14 @@ def get_dependent_dists(dists, dist):
     graph = make_graph(dists)
 
     dep = [dist]  # dependent distributions
-    fringe = graph.reverse_list[dist]  # list of nodes we should inspect
+    todo = graph.reverse_list[dist]  # list of nodes we should inspect
 
-    while not len(fringe) == 0:
-        node = fringe.pop()
-        dep.append(node)
-        for prev in graph.reverse_list[node]:
-            if prev not in dep:
-                fringe.append(prev)
+    while todo:
+        d = todo.pop()
+        dep.append(d)
+        for succ in graph.reverse_list[d]:
+            if succ not in dep:
+                todo.append(succ)
 
     dep.pop(0)  # remove dist from dep, was there to prevent infinite loops
     return dep
@@ -1056,14 +1056,14 @@ def get_required_dists(dists, dist):
     graph = make_graph(dists)
 
     req = []  # required distributions
-    fringe = graph.adjacency_list[dist]  # list of nodes we should inspect
+    todo = graph.adjacency_list[dist]  # list of nodes we should inspect
 
-    while not len(fringe) == 0:
-        node = fringe.pop()[0]
-        req.append(node)
-        for next in graph.adjacency_list[node]:
-            if next not in req:
-                fringe.append(next)
+    while todo:
+        d = todo.pop()[0]
+        req.append(d)
+        for pred in graph.adjacency_list[d]:
+            if pred not in req:
+                todo.append(pred)
 
     return req
 
