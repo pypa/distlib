@@ -641,15 +641,15 @@ class JSONLocator(Locator):
         return result
 
 class DistPathLocator(Locator):
-    def __init__(self, path, **kwargs):
+    def __init__(self, distpath, **kwargs):
         super(DistPathLocator, self).__init__(**kwargs)
-        assert isinstance(path, DistributionPath)
-        self.path = path
+        assert isinstance(distpath, DistributionPath)
+        self.distpath = distpath
 
     def _get_project(self, name):
-        dist = self.path.get_distribution(name)
+        dist = self.distpath.get_distribution(name)
         if dist is None:
-            result = None
+            result = {}
         else:
             result = { dist.version: dist }
         return result

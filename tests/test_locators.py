@@ -107,6 +107,11 @@ class LocatorTestCase(unittest.TestCase):
                 r = locator.get_project(name)
                 self.assertIsNotNone(d)
                 self.assertEqual(r, { d.version: d })
+            d = locator.locate('nonexistent')
+            r = locator.get_project('nonexistent')
+            self.assertIsNone(d)
+            self.assertFalse(r)
+
         finally:
             sys.path.pop(0)
 

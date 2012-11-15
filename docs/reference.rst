@@ -551,6 +551,12 @@ Classes
 
    The base class for locators. Implements logic common to multiple locators.
 
+   .. method:: __init__(scheme='default')
+
+      Initialise an instance of the locator.
+      :param scheme: The version scheme to use.
+      :type scheme: str
+
    .. method:: get_project(name)
 
       This method should be implemented in subclasses. It returns a
@@ -598,20 +604,22 @@ Classes
    This locator scans the file system under a base directory, looking for
    distribution archives.
 
-   .. method:: __init__(base_dir)
+   .. method:: __init__(base_dir, **kwargs)
 
       :param base_dir: The base directory to scan for distribution archives.
       :type base_dir: str
+      :param  kwargs: Passed to base class constructor.
 
 .. class:: PyPIRPCLocator(Locator)
 
    This locator uses the PyPI XML-RPC interface to locate distribution
    archives and other data about downloads.
 
-   .. method:: __init__(url)
+   .. method:: __init__(url, **kwargs)
 
       :param url: The base URL to use for the XML-RPC service.
       :type url: str
+      :param  kwargs: Passed to base class constructor.
 
     .. method:: get_project(name)
 
@@ -625,10 +633,11 @@ Classes
    information in a single call, so it should perform better than the
    XML-RPC locator.
 
-   .. method:: __init__(url)
+   .. method:: __init__(url, **kwargs)
 
       :param url: The base URL to use for the JSON service.
       :type url: str
+      :param  kwargs: Passed to base class constructor.
 
     .. method:: get_project(name)
 
@@ -640,10 +649,29 @@ Classes
    This locator uses the PyPI 'simple' interface -- a Web scraping interface --
    to locate distribution archives.
 
-   .. method:: __init__(url)
+   .. method:: __init__(url, timeout=None, num_workers=10, **kwargs)
 
       :param url: The base URL to use for the simple service HTML pages.
       :type url: str
+      :param timeout: How long (in seconds) to wait before giving up on a
+                      remote resource.
+      :type timeout: float
+      :param num_workers: The number of worker threads created to perform
+                          scraping activities.
+      :type num_workers: int
+      :param  kwargs: Passed to base class constructor.
+
+
+.. class:: DistPathLocator
+
+   This locator uses a :class:`DistributionPath` instance to locate installed
+   distributions.
+
+   .. method:: __init__(url, distpath, **kwargs)
+
+      :param distpath: The distribution path to use.
+      :type distpath: :class:`DistributionPath`
+      :param  kwargs: Passed to base class constructor.
 
 
 .. class:: AggregatingLocator(Locator)
@@ -653,17 +681,30 @@ Classes
    aggregator in the list provided which returns a non-empty result), or a
    merged result from all the aggregators in the list.
 
-   .. method:: __init__(*locators, merge=False)
+   .. method:: __init__(*locators, **kwargs)
 
       :param locators: A list of aggregators to delegate finding projects to.
       :type locators: sequence of locators
-      :param merge: If ``True``, each aggregator in the list is asked to
-                    provide results, which are aggregated into a results
-                    dictionary. If ``False``, the first non-empty return value
-                    from the list of aggregators is returned. The aggregators
-                    are consulted in the order in which they're passed in.
+      :param merge: If this *kwarg* is ``True``, each aggregator in the list is
+                    asked to provide results, which are aggregated into a
+                    results dictionary. If ``False``, the first non-empty
+                    return value from the list of aggregators is returned.
+                    The locators are consulted in the order in which they're
+                    passed in.
       :type merge: bool
 
+
+.. class:: DependencyFinder
+
+   This class allows you to recursively find all the distributions which a
+   particular distribution depends on.
+
+   .. method:: __init__(locator)
+
+      Initialise an instance with the locator to be used for locating
+      distributions.
+
+   .. method:: find(requirement)
 
 Functions
 ^^^^^^^^^

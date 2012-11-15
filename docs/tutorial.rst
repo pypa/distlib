@@ -186,13 +186,12 @@ This entry format is used in the :mod:`distlib.scripts` package for installing
 scripts based on Python callables.
 
 
-Using the dependency API
-^^^^^^^^^^^^^^^^^^^^^^^^
+Distribution dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can use the ``distlib.depgraph`` package to analyse the dependencies
-between various distributions and to create a graph representing these
-dependency relationships. The main interface is through the following
-functions:
+You can use the ``distlib.locators`` package to locate the dependencies that
+a distribution has. The ``distlib.database`` package has code which
+allow you to analyse the relationships between a set of distributions:
 
 * :func:`make_graph`, which generates a dependency graph from a list of
   distributions.
@@ -589,6 +588,11 @@ The following locators are provided:
   scrape, and locates packages using a similar approach to the
   ``PackageFinder`` class in ``pip``, or as documented in the ``setuptools``
   documentation as the approach used by ``easy_install``.
+
+* :class:`DistPathLocator` -- this takes a :class:`DistributionPath` instance
+  and locates installed distributions. This can be used with
+  :class:`AggregatingLocator` to satisfy requirements from installed
+  distributions before looking elsewhere for them.
 
 * :class:`AggregatingLocator` -- this takes a list of other aggregators and
   delegates finding projects to them. It can either return the first result
