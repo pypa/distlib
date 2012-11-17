@@ -329,6 +329,10 @@ class Distribution(object):
                    ['%s (%s)' % (self.name, self.version)]
                   )
 
+    @property
+    def name_and_version(self):
+        return '%s (%s)' % (self.name, self.version)
+
     @cached_property
     def requires(self):
         return set(self.metadata['Requires-Dist'] +
