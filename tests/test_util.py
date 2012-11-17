@@ -1,3 +1,4 @@
+from itertools import islice
 import os
 
 from compat import unittest
@@ -5,7 +6,8 @@ from compat import unittest
 from distlib import DistlibException
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
-                          parse_credentials, ensure_slash, split_filename)
+                          parse_credentials, ensure_slash, split_filename,
+                          EventMixin)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -103,3 +105,81 @@ class UtilTestCase(unittest.TestCase):
         #import pdb; pdb.set_trace()
         #self.assertEqual(split_filename('asv_files-test-dev-20120501-01', 'asv_files'),
         #                 ('asv_files-test', 'dev-20120501-01', None))
+
+    def test_events(self):
+        collected = []
+
+        def handler1(e, *args, **kwargs):
+            collected.append((1, e, args, kwargs))
+
+        def handler2(e, *args, **kwargs):
+            collected.append((2, e, args, kwargs))
+
+        def handler3(e, *args, **kwargs):
+            if not args:
+                raise NotImplementedError('surprise!')
+            collected.append((3, e, args, kwargs))
+            return (args, kwargs)
+
+        e = EventMixin()
+        e.add('A', handler1)
+        self.assertRaises(ValueError, e.remove, 'B', handler1)
+
+        cases = (
+            ((1, 2), {'buckle': 'my shoe'}),
+            ((3, 4), {'shut': 'the door'}),
+        )
+
+        for case in cases:
+            e.publish('A', *case[0], **case[1])
+            e.publish('B', *case[0], **case[1])
+
+        for actual, source in zip(collected, cases):
+            self.assertEqual(actual, (1, 'A') + source[:1] + source[1:])
+
+        collected = []
+        e.add('B', handler2)
+
+        self.assertEqual(tuple(e.get_subscribers('A')), (handler1,))
+        self.assertEqual(tuple(e.get_subscribers('B')), (handler2,))
+        self.assertEqual(tuple(e.get_subscribers('C')), ())
+
+        for case in cases:
+            e.publish('A', *case[0], **case[1])
+            e.publish('B', *case[0], **case[1])
+
+        actuals = islice(collected, 0, None, 2)
+        for actual, source in zip(actuals, cases):
+            self.assertEqual(actual, (1, 'A') + source[:1] + source[1:])
+
+        actuals = islice(collected, 1, None, 2)
+        for actual, source in zip(actuals, cases):
+            self.assertEqual(actual, (2, 'B') + source[:1] + source[1:])
+
+        e.remove('B', handler2)
+
+        collected = []
+
+        for case in cases:
+            e.publish('A', *case[0], **case[1])
+            e.publish('B', *case[0], **case[1])
+
+        for actual, source in zip(collected, cases):
+            self.assertEqual(actual, (1, 'A') + source[:1] + source[1:])
+
+        e.add('C', handler3)
+
+        collected = []
+        returned = []
+
+        for case in cases:
+            returned.extend(e.publish('C', *case[0], **case[1]))
+            returned.extend(e.publish('C'))
+
+        for actual, source in zip(collected, cases):
+            self.assertEqual(actual, (3, 'C') + source[:1] + source[1:])
+
+        self.assertEqual(tuple(islice(returned, 1, None, 2)), (None, None))
+        actuals = islice(returned, 0, None, 2)
+        for actual, expected in zip(actuals, cases):
+            self.assertEqual(actual, expected)

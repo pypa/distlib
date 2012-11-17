@@ -18,6 +18,8 @@ from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 class LocatorTestCase(unittest.TestCase):
+
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     def test_xmlrpc(self):
         locator = PyPIRPCLocator('http://python.org/pypi')
         result = locator.get_project('sarge')
@@ -47,6 +49,7 @@ class LocatorTestCase(unittest.TestCase):
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
         self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     def test_scraper(self):
         locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
         for name in ('sarge', 'Sarge'):
@@ -115,6 +118,7 @@ class LocatorTestCase(unittest.TestCase):
         finally:
             sys.path.pop(0)
 
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
