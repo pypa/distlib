@@ -790,20 +790,44 @@ class EggInfoDistribution(BaseInstalledDistribution):
         def _size(path):
             return os.stat(path).st_size
 
-        path = self.path
-        if local:
-            path = path.replace('/', os.sep)
-
-        # XXX What about scripts and data files ?
-        if os.path.isfile(path):
-            result = [(path, _md5(path), _size(path))]
-        else:
-            result = []
-            for root, dir, files in os.walk(path):
-                for item in files:
-                    item = os.path.join(root, item)
-                    result.append((item, _md5(item), _size(item)))
+        record_path = os.path.join(self.path, 'installed-files.txt')
+        result = []
+        with codecs.open(record_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line == './':
+                    break
+                p = os.path.normpath(os.path.join(self.path, line))
+                result.append((p, _md5(p), _size(p)))
         return result
+
+    def list_distinfo_files(self, local=False):
+        """
+        Iterates over the ``installed-files.txt`` entries and returns paths for
+        each line if the path is pointing to a file located in the
+        ``.egg-info`` directory or one of its subdirectories.
+
+        :parameter local: If *local* is ``True``, each returned path is
+                          transformed into a local absolute path. Otherwise the
+                          raw value from ``installed-files.txt`` is returned.
+        :type local: boolean
+        :returns: iterator of paths
+        """
+        record_path = os.path.join(self.path, 'installed-files.txt')
+        skip = True
+        with codecs.open(record_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line == './':
+                    skip = False
+                    continue
+                if not skip:
+                    p = os.path.normpath(os.path.join(self.path, line))
+                    if p.startswith(self.path):
+                        if local:
+                            yield p
+                        else:
+                            yield line
 
     def uses(self, path):
         return False
