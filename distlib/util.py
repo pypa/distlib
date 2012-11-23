@@ -3,6 +3,7 @@
 # Copyright (C) 2012 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
+import codecs
 from collections import deque
 import contextlib
 import json
@@ -409,9 +410,10 @@ def _get_external_data(url):
         if headers.get('Content-Type') != 'application/json':
             logger.debug('Unexpected response for JSON request')
         else:
-            #data = resp.read().decode('utf-8')
+            reader = codecs.getreader('utf-8')(resp)
+            #data = reader.read().decode('utf-8')
             #result = json.loads(data)
-            result = json.load(resp)
+            result = json.load(reader)
     except Exception as e:
         logger.exception('Failed to get external data for %s: %s', url, e)
     return result
