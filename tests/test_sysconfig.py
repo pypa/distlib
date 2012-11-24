@@ -310,7 +310,7 @@ class TestSysConfig(unittest.TestCase):
         ldflags = sysconfig.get_config_var('LDFLAGS')
         ldshared = sysconfig.get_config_var('LDSHARED')
 
-        self.assertIn(ldflags, ldshared)
+        self.assertIn(ldflags.strip(), ldshared.strip())
 
     @unittest.skipUnless(sys.platform == "darwin", "test only relevant on MacOSX")
     def test_platform_in_subprocess(self):
