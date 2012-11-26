@@ -20,7 +20,7 @@ from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
 from .database import Distribution, DistributionPath
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
-                   split_filename, get_release_data)
+                   split_filename, get_project_data)
 from .version import get_scheme
 
 logger = logging.getLogger(__name__)
@@ -626,7 +626,7 @@ class JSONLocator(Locator):
 
     def _get_project(self, name):
         result = {}
-        data = get_release_data(name)
+        data = get_project_data(name)
         if data:
             for info in data.get('files', []):
                 if info['ptype'] != 'sdist' or info['pyversion'] != 'source':

@@ -419,13 +419,21 @@ def _get_external_data(url):
     return result
 
 
-def get_release_data(name):
-    #logger.debug('get_release_data start: %s', name)
+def get_project_data(name):
     url = ('http://www.red-dove.com/pypi/projects/'
            '%s/%s/project.json' % (name[0].upper(), name))
     result = _get_external_data(url)
-    #logger.debug('get_release_data done: %s', name)
     return result
+
+def get_package_data(name, version):
+    url = ('http://www.red-dove.com/pypi/projects/'
+           '%s/%s/package-%s.json' % (name[0].upper(), name, version))
+    result = _get_external_data(url)
+    return result
+
+#
+# Simple events framework
+#
 
 class EventMixin(object):
     """
