@@ -214,7 +214,7 @@ class UtilTestCase(unittest.TestCase):
             seq.add(pred, succ)
 
         # Note: these tests are sensitive to dictionary ordering
-        # but work under Python 2.7 and 3.2
+        # but work under Python 2.6, 2.7, 3.2, 3.3, 3.4
         cases = (
             ('check', ['check']),
             ('register', ['check', 'register']),
@@ -251,12 +251,19 @@ class UtilTestCase(unittest.TestCase):
                          'build_scripts', 'build', 'install_headers',
                          'install_lib', 'install_scripts', 'install_data',
                          'install_distinfo', 'install']),
-            ('upload_sdist', ['check', 'register', 'sdist', 'upload_sdist']),
-            ('upload_bdist', ['check', 'build_clibs', 'build_ext', 'build_py',
-                              'build_scripts', 'build', 'register',
-                              'upload_bdist']),
+            ('upload_sdist', (['check', 'register', 'sdist', 'upload_sdist'],
+                              ['check', 'sdist', 'register', 'upload_sdist'])),
+            ('upload_bdist', (['check', 'build_clibs', 'build_ext', 'build_py',
+                               'build_scripts', 'build', 'register',
+                               'upload_bdist'],
+                              ['check', 'build_clibs', 'build_ext', 'build_py',
+                               'build_scripts', 'register', 'build',
+                               'upload_bdist'])),
         )
 
         for final, expected in cases:
             actual = list(seq.get_steps(final))
-            self.assertEqual(actual, expected)
+            if isinstance(expected, tuple):
+                self.assertIn(actual, expected)
+            else:
+                self.assertEqual(actual, expected)
