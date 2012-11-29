@@ -7,7 +7,7 @@ from distlib import DistlibException
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
                           parse_credentials, ensure_slash, split_filename,
-                          EventMixin)
+                          EventMixin, Sequencer)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -182,4 +182,81 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(tuple(islice(returned, 1, None, 2)), (None, None))
         actuals = islice(returned, 0, None, 2)
         for actual, expected in zip(actuals, cases):
+            self.assertEqual(actual, expected)
+
+    def test_sequencer(self):
+        seq = Sequencer()
+
+        steps = (
+            ('check', 'sdist'),
+            ('check', 'register'),
+            ('check', 'sdist'),
+            ('check', 'register'),
+            ('register', 'upload_sdist'),
+            ('sdist', 'upload_sdist'),
+            ('check', 'build_clibs'),
+            ('build_clibs', 'build_ext'),
+            ('build_ext', 'build_py'),
+            ('build_py', 'build_scripts'),
+            ('build_scripts', 'build'),
+            ('build', 'test'),
+            ('register', 'upload_bdist'),
+            ('build', 'upload_bdist'),
+            ('build', 'install_headers'),
+            ('install_headers', 'install_lib'),
+            ('install_lib', 'install_scripts'),
+            ('install_scripts', 'install_data'),
+            ('install_data', 'install_distinfo'),
+            ('install_distinfo', 'install')
+        )
+
+        for pred, succ in steps:
+            seq.add(pred, succ)
+
+        # Note: these tests are sensitive to dictionary ordering
+        # but work under Python 2.7 and 3.2
+        cases = (
+            ('check', ['check']),
+            ('register', ['check', 'register']),
+            ('sdist', ['check', 'sdist']),
+            ('build_clibs', ['check', 'build_clibs']),
+            ('build_ext', ['check', 'build_clibs', 'build_ext']),
+            ('build_py', ['check', 'build_clibs', 'build_ext', 'build_py']),
+            ('build_scripts', ['check', 'build_clibs', 'build_ext', 'build_py',
+                               'build_scripts']),
+            ('build', ['check', 'build_clibs', 'build_ext', 'build_py',
+                       'build_scripts', 'build']),
+            ('test', ['check', 'build_clibs', 'build_ext', 'build_py',
+                      'build_scripts', 'build', 'test']),
+            ('install_headers', ['check', 'build_clibs', 'build_ext',
+                                 'build_py', 'build_scripts', 'build',
+                                 'install_headers']),
+            ('install_lib', ['check', 'build_clibs', 'build_ext', 'build_py',
+                             'build_scripts', 'build', 'install_headers',
+                             'install_lib']),
+            ('install_scripts', ['check', 'build_clibs', 'build_ext',
+                                 'build_py', 'build_scripts', 'build',
+                                 'install_headers', 'install_lib',
+                                 'install_scripts']),
+            ('install_data', ['check', 'build_clibs', 'build_ext', 'build_py',
+                              'build_scripts', 'build', 'install_headers',
+                              'install_lib', 'install_scripts',
+                              'install_data']),
+            ('install_distinfo', ['check', 'build_clibs', 'build_ext',
+                                  'build_py', 'build_scripts', 'build',
+                                  'install_headers', 'install_lib',
+                                  'install_scripts', 'install_data',
+                                  'install_distinfo']),
+            ('install', ['check', 'build_clibs', 'build_ext', 'build_py',
+                         'build_scripts', 'build', 'install_headers',
+                         'install_lib', 'install_scripts', 'install_data',
+                         'install_distinfo', 'install']),
+            ('upload_sdist', ['check', 'register', 'sdist', 'upload_sdist']),
+            ('upload_bdist', ['check', 'build_clibs', 'build_ext', 'build_py',
+                              'build_scripts', 'build', 'register',
+                              'upload_bdist']),
+        )
+
+        for final, expected in cases:
+            actual = list(seq.get_steps(final))
             self.assertEqual(actual, expected)
