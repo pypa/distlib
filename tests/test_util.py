@@ -276,3 +276,5 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(list(seq.get_steps('D')), ['A', 'B', 'C', 'D'])
         seq.add('C', 'A')
         self.assertEqual(list(seq.get_steps('D')), ['C', 'A', 'B', 'D'])
+        self.assertFalse(seq.is_step('E'))
+        self.assertRaises(ValueError, seq.get_steps, 'E')

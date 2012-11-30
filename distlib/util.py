@@ -530,8 +530,11 @@ class Sequencer(object):
         except KeyError:
             raise ValueError('%r not a successor of %r' % (succ, pred))
 
+    def is_step(self, step):
+        return step in self._preds or step in self._succs
+
     def get_steps(self, final):
-        if final not in self._preds and final not in self._succs:
+        if not self.is_step(final):
             raise ValueError('Unknown: %r' % final)
         result = []
         todo = []

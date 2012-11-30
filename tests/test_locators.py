@@ -35,6 +35,7 @@ class LocatorTestCase(unittest.TestCase):
         names = locator.get_distribution_names()
         self.assertGreater(len(names), 25000)
 
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     def test_json(self):
         locator = PyPIJSONLocator('http://python.org/pypi')
         result = locator.get_project('sarge')
@@ -66,6 +67,7 @@ class LocatorTestCase(unittest.TestCase):
         names = locator.get_distribution_names()
         self.assertGreater(len(names), 25000)
 
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     def test_unicode_project_name(self):
         # Just checking to see that no exceptions are raised.
         NAME = '\u2603'
