@@ -566,8 +566,11 @@ class SimpleScrapingLocator(Locator):
         """
         result = set()
         page = self.get_page(self.base_url)
-        for match in self._distname_re.finditer(page.data):
-            result.add(match.group(1))
+        if not page:
+            logger.warning('Unable to get %s' % self.base_url)
+        else:
+            for match in self._distname_re.finditer(page.data):
+                result.add(match.group(1))
         return result
 
 class DirectoryLocator(Locator):

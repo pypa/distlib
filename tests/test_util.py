@@ -184,7 +184,7 @@ class UtilTestCase(unittest.TestCase):
         for actual, expected in zip(actuals, cases):
             self.assertEqual(actual, expected)
 
-    def test_sequencer(self):
+    def test_sequencer_basic(self):
         seq = Sequencer()
 
         steps = (
@@ -267,3 +267,12 @@ class UtilTestCase(unittest.TestCase):
                 self.assertIn(actual, expected)
             else:
                 self.assertEqual(actual, expected)
+
+    def test_sequencer_cycle(self):
+        seq = Sequencer()
+        seq.add('A', 'B')
+        seq.add('B', 'C')
+        seq.add('C', 'D')
+        self.assertEqual(list(seq.get_steps('D')), ['A', 'B', 'C', 'D'])
+        seq.add('C', 'A')
+        self.assertEqual(list(seq.get_steps('D')), ['C', 'A', 'B', 'D'])
