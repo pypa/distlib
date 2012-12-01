@@ -647,17 +647,20 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
             mode = 'r'
         else:
             raise ValueError('Unknown format for %r' % archive_filename)
-    if format == 'zip':
-        archive = zipfile.ZipFile(archive_filename, 'r')
-        if check:
-            names = archive.namelist()
-            for name in names:
-                check_path(name)
-    else:
-        archive = tarfile.open(archive_filename, mode)
-        if check:
-            names = archive.getnames()
-            for name in names:
-                check_path(name)
+    try:
+        if format == 'zip':
+            archive = zipfile.ZipFile(archive_filename, 'r')
+            if check:
+                names = archive.namelist()
+                for name in names:
+                    check_path(name)
+        else:
+            archive = tarfile.open(archive_filename, mode)
+            if check:
+                names = archive.getnames()
+                for name in names:
+                    check_path(name)
 
-    archive.extractall(dest_dir)
+        archive.extractall(dest_dir)
+    finally:
+        archive.close()
