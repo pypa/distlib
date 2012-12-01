@@ -1,5 +1,7 @@
 from itertools import islice
 import os
+import shutil
+import tempfile
 
 from compat import unittest
 
@@ -7,7 +9,7 @@ from distlib import DistlibException
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
                           parse_credentials, ensure_slash, split_filename,
-                          EventMixin, Sequencer)
+                          EventMixin, Sequencer, unarchive)
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -278,3 +280,25 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(list(seq.get_steps('D')), ['C', 'A', 'B', 'D'])
         self.assertFalse(seq.is_step('E'))
         self.assertRaises(ValueError, seq.get_steps, 'E')
+
+    def test_unarchive(self):
+        good_archives = ()  # TODO create test archives
+        bad_archives = ()
+        for name, cls, mode, lister in good_archives:
+            td = tempfile.mkdtemp()
+            try:
+                unarchive(name, td)
+                archive = cls(name, mode)
+                names = getattr(archive, lister)()
+                for name in names:
+                    p = os.path.join(td, name)
+                    self.assertTrue(os.path.exists(p))
+            finally:
+                shutil.rmtree(td)
+
+        for name in bad_archives:
+            td = tempfile.mkdtemp()
+            try:
+                self.assertRaises(ValueError, unarchive, name, td)
+            finally:
+                shutil.rmtree(td)

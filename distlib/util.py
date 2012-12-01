@@ -617,3 +617,47 @@ class Sequencer(object):
                 result.append('  %s -> %s;' % (pred, succ))
         result.append('}')
         return '\n'.join(result)
+
+#
+# Archiving functionality for zip, tar, tgz, tbz
+#
+
+def unarchive(archive_filename, dest_dir, format=None, check=True):
+    import tarfile
+    import zipfile
+
+    def check_path(path):
+        p = os.path.abspath(os.path.join(dest_dir, path))
+        if not p.startswith(dest_dir) or p[plen] != os.sep:
+            raise ValueError('path outside destination: %r' % p)
+
+    dest_dir = os.path.abspath(dest_dir)
+    plen = len(dest_dir)
+    if format is None:
+        if archive_filename.endswith(('.zip', '.whl')):
+            format = 'zip'
+        elif archive_filename.endswith(('.tar.gz', '.tgz')):
+            format = 'tgz'
+            mode = 'r:gz'
+        elif archive_filename.endswith(('.tar.bz2', '.tbz')):
+            format = 'tbz'
+            mode = 'r:bz2'
+        elif archive_filename.endswith('.tar'):
+            format = 'tar'
+            mode = 'r'
+        else:
+            raise ValueError('Unknown format for %r' % archive_filename)
+    if format == 'zip':
+        archive = zipfile.ZipFile(archive_filename, 'r')
+        if check:
+            names = archive.namelist()
+            for name in names:
+                check_path(name)
+    else:
+        archive = tarfile.open(archive_filename, mode)
+        if check:
+            names = archive.getnames()
+            for name in names:
+                check_path(name)
+
+    archive.extractall(dest_dir)
