@@ -11,6 +11,8 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive)
 
+HERE = os.path.dirname(__file__)
+
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
         self.assertEqual(entry.name, name)
@@ -282,11 +284,20 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(ValueError, seq.get_steps, 'E')
 
     def test_unarchive(self):
-        good_archives = ()  # TODO create test archives
-        bad_archives = ()
+        import zipfile, tarfile
+
+        good_archives = (
+            ('good.zip', zipfile.ZipFile, 'r', 'namelist'),
+            ('good.tar', tarfile.open, 'r', 'getnames'),
+            ('good.tar.gz', tarfile.open, 'r:gz', 'getnames'),
+            ('good.tar.bz2', tarfile.open, 'r:bz2', 'getnames'),
+        )
+        bad_archives = ('bad.zip', 'bad.tar', 'bad.tar.gz', 'bad.tar.bz2')
+
         for name, cls, mode, lister in good_archives:
             td = tempfile.mkdtemp()
             try:
+                name = os.path.join(HERE, name)
                 unarchive(name, td)
                 archive = cls(name, mode)
                 names = getattr(archive, lister)()
@@ -297,6 +308,7 @@ class UtilTestCase(unittest.TestCase):
                 shutil.rmtree(td)
 
         for name in bad_archives:
+            name = os.path.join(HERE, name)
             td = tempfile.mkdtemp()
             try:
                 self.assertRaises(ValueError, unarchive, name, td)
