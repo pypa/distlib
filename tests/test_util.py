@@ -327,7 +327,7 @@ class ProgressTestCase(unittest.TestCase):
             (' 60 %', 'ETA : 00:00:02', '19 KB/s'),
             (' 70 %', 'ETA : 00:00:01', '19 KB/s'),
             (' 80 %', 'ETA : 00:00:01', '19 KB/s'),
-            (' 90 %', 'ETA : --:--:--', '19 KB/s'),
+            (' 90 %', 'ETA : 00:00:00', '19 KB/s'),
             ('100 %', 'Done: 00:00:04', '22 KB/s'),
         )
         bar = Progress(maxval=100000).start()

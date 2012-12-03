@@ -722,10 +722,11 @@ class Progress(object):
         return result
 
     def format_duration(self, duration):
-        if duration <= 0:
+        logger.debug('Duration: %s, cur: %s', duration, self.cur)
+        if (duration <= 0) and self.max is None or self.cur == self.min:
             result = '??:??:??'
-        elif duration < 1:
-            result = '--:--:--'
+        #elif duration < 1:
+        #    result = '--:--:--'
         else:
             result = time.strftime('%H:%M:%S', time.gmtime(duration))
         return result
