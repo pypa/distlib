@@ -2,6 +2,7 @@ from itertools import islice
 import os
 import shutil
 import tempfile
+import time
 
 from compat import unittest
 
@@ -9,7 +10,7 @@ from distlib import DistlibException
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
                           parse_credentials, ensure_slash, split_filename,
-                          EventMixin, Sequencer, unarchive)
+                          EventMixin, Sequencer, unarchive, Progress)
 
 HERE = os.path.dirname(__file__)
 
@@ -314,3 +315,58 @@ class UtilTestCase(unittest.TestCase):
                 self.assertRaises(ValueError, unarchive, name, td)
             finally:
                 shutil.rmtree(td)
+
+class ProgressTestCase(unittest.TestCase):
+    def test_basic(self):
+        expected = (
+            (' 10 %', 'ETA : 00:00:04', '19 KB/s'),
+            (' 20 %', 'ETA : 00:00:04', '19 KB/s'),
+            (' 30 %', 'ETA : 00:00:03', '19 KB/s'),
+            (' 40 %', 'ETA : 00:00:03', '19 KB/s'),
+            (' 50 %', 'ETA : 00:00:02', '19 KB/s'),
+            (' 60 %', 'ETA : 00:00:02', '19 KB/s'),
+            (' 70 %', 'ETA : 00:00:01', '19 KB/s'),
+            (' 80 %', 'ETA : 00:00:01', '19 KB/s'),
+            (' 90 %', 'ETA : --:--:--', '19 KB/s'),
+            ('100 %', 'Done: 00:00:04', '22 KB/s'),
+        )
+        bar = Progress(maxval=100000).start()
+        for i, v in enumerate(range(10000, 100000, 10000)):
+            time.sleep(0.5)
+            bar.update(v)
+            p, e, s = expected[i]
+            self.assertEqual(bar.percentage, p)
+            self.assertEqual(bar.ETA, e)
+            self.assertEqual(bar.speed, s)
+        bar.stop()
+        p, e, s = expected[i + 1]
+        self.assertEqual(bar.percentage, p)
+        self.assertEqual(bar.ETA, e)
+        self.assertEqual(bar.speed, s)
+
+    def test_unknown(self):
+        expected = (
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
+            ('100 %', 'Done: 00:00:04', '19 KB/s'),
+        )
+        bar = Progress(maxval=None).start()
+        for i, v in enumerate(range(10000, 100000, 10000)):
+            time.sleep(0.5)
+            bar.update(v)
+            p, e, s = expected[i]
+            self.assertEqual(bar.percentage, p)
+            self.assertEqual(bar.ETA, e)
+            self.assertEqual(bar.speed, s)
+        bar.stop()
+        p, e, s = expected[i + 1]
+        self.assertEqual(bar.percentage, p)
+        self.assertEqual(bar.ETA, e)
+        self.assertEqual(bar.speed, s)
