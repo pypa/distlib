@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2012 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
@@ -624,6 +623,8 @@ class Sequencer(object):
             preds = self._preds[succ]
             for pred in preds:
                 result.append('  %s -> %s;' % (pred, succ))
+        for node in self._nodes:
+            result.append('  %s;' % node)
         result.append('}')
         return '\n'.join(result)
 
