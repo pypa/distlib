@@ -512,6 +512,13 @@ class Sequencer(object):
     def __init__(self):
         self._preds = {}
         self._succs = {}
+        self._nodes = set() # nodes with no preds/succs
+
+    def add_node(self, node):
+        self._nodes.add(node)
+
+    def remove_node(self, node):
+        self._nodes.remove(node)
 
     def add(self, pred, succ):
         assert pred != succ
@@ -532,7 +539,8 @@ class Sequencer(object):
             raise ValueError('%r not a successor of %r' % (succ, pred))
 
     def is_step(self, step):
-        return step in self._preds or step in self._succs
+        return (step in self._preds or step in self._succs or
+                step in self._nodes)
 
     def get_steps(self, final):
         if not self.is_step(final):
@@ -722,7 +730,6 @@ class Progress(object):
         return result
 
     def format_duration(self, duration):
-        logger.debug('Duration: %s, cur: %s', duration, self.cur)
         if (duration <= 0) and self.max is None or self.cur == self.min:
             result = '??:??:??'
         #elif duration < 1:

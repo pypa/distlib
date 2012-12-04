@@ -18,7 +18,8 @@ __all__ = ['NormalizedVersion', 'NormalizedMatcher',
            'AdaptiveVersion', 'AdaptiveMatcher',
            'UnsupportedVersionError', 'HugeMajorVersionError',
            'suggest_normalized_version',
-           'normalized_key', 'legacy_key', 'semantic_key', 'adaptive_key']
+           'normalized_key', 'legacy_key', 'semantic_key', 'adaptive_key',
+           'get_scheme']
 
 class UnsupportedVersionError(Exception):
     """This is an unsupported version."""

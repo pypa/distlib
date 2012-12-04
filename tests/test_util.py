@@ -283,6 +283,12 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(list(seq.get_steps('D')), ['C', 'A', 'B', 'D'])
         self.assertFalse(seq.is_step('E'))
         self.assertRaises(ValueError, seq.get_steps, 'E')
+        seq.add_node('E')
+        self.assertTrue(seq.is_step('E'))
+        self.assertEqual(list(seq.get_steps('E')), ['E'])
+        seq.remove_node('E')
+        self.assertFalse(seq.is_step('E'))
+        self.assertRaises(ValueError, seq.get_steps, 'E')
 
     def test_unarchive(self):
         import zipfile, tarfile
