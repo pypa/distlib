@@ -8,13 +8,14 @@ import contextlib
 import json
 import logging
 import os
+import py_compile
 import re
 import socket
 import sys
 import time
 
 from . import DistlibException
-from .compat import string_types, shutil, urlopen
+from .compat import string_types, shutil, urlopen, cache_from_source
 from .glob import iglob
 
 logger = logging.getLogger(__name__)
@@ -197,6 +198,7 @@ class FileOperator(object):
     def copy_file(self, infile, outfile):
         """Copy a file respecting dry-run and force flags.
         """
+        logger.info('Copying %s to %s', infile, outfile)
         if not self.dry_run:
             if os.path.isdir(outfile):
                 outfile = os.path.join(outfile, os.path.split(infile)[-1])
@@ -234,6 +236,18 @@ class FileOperator(object):
             logger.info('Creating %s' % path)
             if not self.dry_run:
                 os.mkdir(path)
+
+    def byte_compile(self, path, optimize=False, force=False, prefix=None):
+        dpath = cache_from_source(path, not optimize)
+        logger.info('Byte-compiling %s to %s', path, dpath)
+        if not self.dry_run:
+            if force or self.newer(path, dpath):
+                if not prefix:
+                    diagpath = None
+                else:
+                    assert path.startswith(prefix)
+                    diagpath = path[len(prefix):]
+                py_compile.compile(path, dpath, diagpath)
 
 def resolve(module_name, dotted_path):
     if module_name in sys.modules:

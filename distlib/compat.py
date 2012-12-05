@@ -340,3 +340,16 @@ except ImportError:
         def clear(self):
             'Clear maps[0], leaving maps[1:] intact.'
             self.maps[0].clear()
+
+try:
+    from imp import cache_from_source
+except ImportError:
+    def cache_from_source(path, debug_override=None):
+        assert path.endswith('.py')
+        if debug_override is None:
+            debug_override = __debug__
+        if debug_override:
+            suffix = 'c'
+        else:
+            suffix = 'o'
+        return path + suffix
