@@ -10,7 +10,8 @@ from distlib import DistlibException
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
                           parse_credentials, ensure_slash, split_filename,
-                          EventMixin, Sequencer, unarchive, Progress)
+                          EventMixin, Sequencer, unarchive, Progress,
+                          FileOperator)
 
 HERE = os.path.dirname(__file__)
 
@@ -376,3 +377,18 @@ class ProgressTestCase(unittest.TestCase):
         self.assertEqual(bar.percentage, p)
         self.assertEqual(bar.ETA, e)
         self.assertEqual(bar.speed, s)
+
+class FileOpsTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.fileop = FileOperator()
+
+    def test_ensure_dir(self):
+        td = tempfile.mkdtemp()
+        os.rmdir(td)
+        self.fileop.ensure_dir(td)
+        self.assertTrue(os.path.exists(td))
+        self.fileop.dry_run = True
+        os.rmdir(td)
+        self.fileop.ensure_dir(td)
+        self.assertFalse(os.path.exists(td))

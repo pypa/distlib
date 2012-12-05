@@ -226,6 +226,14 @@ class FileOperator(object):
 
     set_executable_mode = lambda s, f: s.set_mode(0o555, 0o7777, f)
 
+    def ensure_dir(self, path):
+        path = os.path.abspath(path)
+        if not os.path.exists(path):
+            d, f = os.path.split(path)
+            self.ensure_dir(d)
+            logger.info('Creating %s' % path)
+            if not self.dry_run:
+                os.mkdir(path)
 
 def resolve(module_name, dotted_path):
     if module_name in sys.modules:
