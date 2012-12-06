@@ -21,7 +21,7 @@ from .database import Distribution, DistributionPath
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
                    split_filename, get_project_data)
-from .version import get_scheme
+from .version import get_scheme, UnsupportedVersionError
 
 logger = logging.getLogger(__name__)
 
@@ -706,10 +706,9 @@ default_locator = AggregatingLocator(
 locate = default_locator.locate
 
 class DependencyFinder(object):
-    def __init__(self, locator=None, scheme='default'):
+    def __init__(self, locator=None):
         self.locator = locator or default_locator
-        self.locator.scheme = scheme
-        self.scheme = get_scheme(scheme)
+        self.scheme = get_scheme(self.locator.scheme)
         self.provided = {}
         self.dists = {}
         self.dists_by_name = {}
@@ -758,7 +757,7 @@ class DependencyFinder(object):
         except UnsupportedVersionError:
             # XXX compat-mode if cannot read the version
             name = reqt.split()[0]
-            matcher = scheme.matcher(name)
+            matcher = self.scheme.matcher(name)
         return matcher
 
     def find_providers(self, reqt):
