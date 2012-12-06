@@ -107,7 +107,7 @@ class ScriptMaker(object):
         use_launcher = self.add_launchers and os.name == 'nt'
         if use_launcher:
             exename = '%s.exe' % outname
-            if 'gui' in flags:
+            if 'gui' in entry.flags:
                 ext = 'pyw'
                 launcher = self._get_launcher('w')
             else:
