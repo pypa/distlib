@@ -45,13 +45,13 @@ class ScriptMaker(object):
     script_template = SCRIPT_TEMPLATE
 
     def __init__(self, source_dir, target_dir, add_launchers=True,
-                 dry_run=False):
+                 dry_run=False, fileop=None):
         self.source_dir = source_dir
         self.target_dir = target_dir
         self.add_launchers = add_launchers
         self.force = False
         self.set_mode = False
-        self._fileop = FileOperator(dry_run)
+        self._fileop = fileop or FileOperator(dry_run)
 
     def _get_shebang(self, encoding, post_interp=b''):
         if not sysconfig.is_python_build():

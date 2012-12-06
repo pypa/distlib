@@ -148,6 +148,7 @@ class cached_property(object):
 class FileOperator(object):
     def __init__(self, dry_run=False):
         self.dry_run = dry_run
+        self.ensured = set()
 
     def convert_path(self, pathname):
         """Return 'pathname' as a name that will work on the native filesystem.
@@ -230,7 +231,8 @@ class FileOperator(object):
 
     def ensure_dir(self, path):
         path = os.path.abspath(path)
-        if not os.path.exists(path):
+        if path not in self.ensured and not os.path.exists(path):
+            self.ensured.add(path)
             d, f = os.path.split(path)
             self.ensure_dir(d)
             logger.info('Creating %s' % path)
