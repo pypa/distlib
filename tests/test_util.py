@@ -11,7 +11,7 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
-                          FileOperator)
+                          FileOperator, is_string_sequence)
 
 HERE = os.path.dirname(__file__)
 
@@ -322,6 +322,13 @@ class UtilTestCase(unittest.TestCase):
                 self.assertRaises(ValueError, unarchive, name, td)
             finally:
                 shutil.rmtree(td)
+
+    def test_string_sequence(self):
+        self.assertTrue(is_string_sequence(['a']))
+        self.assertTrue(is_string_sequence(['a', 'b']))
+        self.assertFalse(is_string_sequence(['a', 'b', None]))
+        self.assertRaises(AssertionError, is_string_sequence, [])
+
 
 class ProgressTestCase(unittest.TestCase):
     def test_basic(self):

@@ -409,6 +409,16 @@ def get_process_umask():
     os.umask(result)
     return result
 
+def is_string_sequence(seq):
+    result = True
+    i = None
+    for i, s in enumerate(seq):
+        if not isinstance(s, string_types):
+            result = False
+            break
+    assert i is not None
+    return result
+
 PROJECT_NAME_AND_VERSION = re.compile('([a-z0-9_]+([.-][a-z_][a-z0-9_]*)*)-'
                                       '([0-9][a-z0-9_.+-]*)', re.I)
 PYTHON_VERSION = re.compile(r'-py(\d\.?\d?)$')
