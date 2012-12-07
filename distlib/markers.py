@@ -29,18 +29,28 @@ _OPERATORS = {'==': lambda x, y: x == y,
 def _operate(operation, x, y):
     return _OPERATORS[operation](x, y)
 
+def _in_venv():
+    if hasattr(sys, 'real_prefix'):
+        # virtualenv venvs
+        result = True
+    else:
+        # PEP 405 venvs
+        result = sys.prefix != getattr(sys, 'base_prefix', None)
+    return result
 
 # restricted set of variables
-_VARS = {'sys.platform': sys.platform,
-         'python_version': '%s.%s' % sys.version_info[:2],
-         # FIXME parsing sys.platform is not reliable, but there is no other
-         # way to get e.g. 2.7.2+, and the PEP is defined with sys.version
-         'python_full_version': sys.version.split(' ', 1)[0],
-         'os.name': os.name,
-         'platform.version': platform.version(),
-         'platform.machine': platform.machine(),
-         'platform.python_implementation': python_implementation(),
-        }
+_VARS = {
+    'sys.platform': sys.platform,
+    'python_version': '%s.%s' % sys.version_info[:2],
+    # FIXME parsing sys.platform is not reliable, but there is no other
+    # way to get e.g. 2.7.2+, and the PEP is defined with sys.version
+    'python_full_version': sys.version.split(' ', 1)[0],
+    'os.name': os.name,
+    'platform.version': platform.version(),
+    'platform.machine': platform.machine(),
+    'platform.python_implementation': python_implementation(),
+    'platform.in_venv': str(_in_venv()),
+}
 
 
 class _Operation(object):

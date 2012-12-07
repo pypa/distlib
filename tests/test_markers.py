@@ -15,6 +15,13 @@ from distlib.markers import interpret
 class MarkersTestCase(unittest.TestCase):
 
     def test_interpret(self):
+        def in_venv():
+            if hasattr(sys, 'real_prefix'):
+                result = True
+            else:
+                result = sys.prefix != getattr(sys, 'base_prefix', None)
+            return result
+
         sys_platform = sys.platform
         version = sys.version.split()[0]
         os_name = os.name
@@ -33,6 +40,8 @@ class MarkersTestCase(unittest.TestCase):
             (platform_version, platform_machine)))
         self.assertTrue(interpret('platform.python_implementation == "%s"' %
             platform_python_implementation))
+
+        self.assertTrue(interpret('platform.in_venv == "%s"' % in_venv()))
 
         # stuff that need to raise a syntax error
         ops = ('os.name == os.name', 'os.name == 2', "'2' == '2'",
