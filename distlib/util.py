@@ -251,6 +251,18 @@ class FileOperator(object):
                     diagpath = path[len(prefix):]
                 py_compile.compile(path, dpath, diagpath)
 
+    def is_writable(self, path):
+        result = False
+        while not result:
+            if os.path.exists(path):
+                result = os.access(path, os.W_OK)
+                break
+            parent = os.path.dirname(path)
+            if parent == path:
+                break
+            path = parent
+        return result
+
 def resolve(module_name, dotted_path):
     if module_name in sys.modules:
         mod = sys.modules[module_name]
