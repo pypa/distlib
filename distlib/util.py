@@ -200,9 +200,9 @@ class FileOperator(object):
         """Copy a file respecting dry-run and force flags.
         """
         logger.info('Copying %s to %s', infile, outfile)
+        assert not os.path.isdir(outfile)
+        self.ensure_dir(os.path.dirname(outfile))
         if not self.dry_run:
-            if os.path.isdir(outfile):
-                outfile = os.path.join(outfile, os.path.split(infile)[-1])
             shutil.copyfile(infile, outfile)
 
     def write_binary_file(self, path, data):
