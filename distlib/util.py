@@ -10,6 +10,7 @@ import logging
 import os
 import py_compile
 import re
+import shutil
 import socket
 import sys
 import time
@@ -257,16 +258,37 @@ class FileOperator(object):
     def byte_compile(self, path, optimize=False, force=False, prefix=None):
         dpath = cache_from_source(path, not optimize)
         logger.info('Byte-compiling %s to %s', path, dpath)
-        if force or self.newer(path, dpath):
-            if not prefix:
-                diagpath = None
-            else:
-                assert path.startswith(prefix)
-                diagpath = path[len(prefix):]
         if self.record:
             self.files_written.add(dpath)
         if not self.dry_run:
+            if force or self.newer(path, dpath):
+                if not prefix:
+                    diagpath = None
+                else:
+                    assert path.startswith(prefix)
+                    diagpath = path[len(prefix):]
             py_compile.compile(path, dpath, diagpath)
+
+    def ensure_removed(self, path):
+        if os.path.exists(path):
+            if os.path.isdir(path) and not os.path.islink(path):
+                logger.debug('Removing directory tree at %s', path)
+                if not self.dry_run:
+                    shutil.rmtree(path)
+                if self.record:
+                    if path in self.dirs_created:
+                        self.dirs_created.remove(path)
+            else:
+                if os.path.islink(path):
+                    s = 'link'
+                else:
+                    s = 'file'
+                logger.debug('Removing %s %s', s, path)
+                if not self.dry_run:
+                    os.remove(path)
+                if self.record:
+                    if path in self.files_written:
+                        self.files_written.remove(path)
 
     def is_writable(self, path):
         result = False

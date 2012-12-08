@@ -56,6 +56,12 @@ class DistributionPath(object):
     """
     Represents a set of distributions installed on a path (typically sys.path).
     """
+
+    requested = False
+    """A boolean that indicates whether the ``REQUESTED`` metadata file is
+    present (in other words, whether the package was installed by user
+    request or it was installed as a dependency)."""
+
     def __init__(self, path=None, include_egg=False):
         if path is None:
             path = sys.path
@@ -413,10 +419,6 @@ class InstalledDistribution(BaseInstalledDistribution):
     constructor. It reads the metadata contained in ``METADATA`` when it is
     instantiated."""
 
-    requested = False
-    """A boolean that indicates whether the ``REQUESTED`` metadata file is
-    present (in other words, whether the package was installed by user
-    request or it was installed as a dependency)."""
 
     def __init__(self, path, env=None):
         if env and env._cache_enabled and path in env._cache.path:
