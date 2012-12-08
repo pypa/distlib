@@ -392,10 +392,14 @@ class FileOpsTestCase(unittest.TestCase):
 
     def test_ensure_dir(self):
         td = tempfile.mkdtemp()
-        os.rmdir(td)
-        self.fileop.ensure_dir(td)
-        self.assertTrue(os.path.exists(td))
-        self.fileop.dry_run = True
-        os.rmdir(td)
-        self.fileop.ensure_dir(td)
-        self.assertFalse(os.path.exists(td))
+        try:
+            os.rmdir(td)
+            self.fileop.ensure_dir(td)
+            self.assertTrue(os.path.exists(td))
+            self.fileop.dry_run = True
+            os.rmdir(td)
+            self.fileop.ensure_dir(td)
+            self.assertFalse(os.path.exists(td))
+        finally:
+            if os.path.isdir(td):
+                os.rmdir(td)

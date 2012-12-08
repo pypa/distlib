@@ -149,6 +149,13 @@ class FileOperator(object):
     def __init__(self, dry_run=False):
         self.dry_run = dry_run
         self.ensured = set()
+        self.record = False
+        self.files_written = set()
+        self.dirs_created = set()
+
+    def record_as_written(self, path):
+        if self.record:
+            self.files_written.add(path)
 
     def convert_path(self, pathname):
         """Return 'pathname' as a name that will work on the native filesystem.
@@ -199,9 +206,11 @@ class FileOperator(object):
     def copy_file(self, infile, outfile):
         """Copy a file respecting dry-run and force flags.
         """
-        logger.info('Copying %s to %s', infile, outfile)
         assert not os.path.isdir(outfile)
         self.ensure_dir(os.path.dirname(outfile))
+        logger.info('Copying %s to %s', infile, outfile)
+        if self.record:
+            self.files_written.add(outfile)
         if not self.dry_run:
             shutil.copyfile(infile, outfile)
 
@@ -209,11 +218,15 @@ class FileOperator(object):
         if not self.dry_run:
             with open(path, 'wb') as f:
                 f.write(data)
+        if self.record:
+            self.files_written.add(path)
 
     def write_text_file(self, path, data, encoding):
         if not self.dry_run:
             with open(path, 'wb') as f:
                 f.write(data.encode(encoding))
+        if self.record:
+            self.files_written.add(path)
 
     def set_mode(self, bits, mask, files):
         if os.name == 'posix':
@@ -236,20 +249,24 @@ class FileOperator(object):
             d, f = os.path.split(path)
             self.ensure_dir(d)
             logger.info('Creating %s' % path)
+            if self.record:
+                self.dirs_created.add(path)
             if not self.dry_run:
                 os.mkdir(path)
 
     def byte_compile(self, path, optimize=False, force=False, prefix=None):
         dpath = cache_from_source(path, not optimize)
         logger.info('Byte-compiling %s to %s', path, dpath)
+        if force or self.newer(path, dpath):
+            if not prefix:
+                diagpath = None
+            else:
+                assert path.startswith(prefix)
+                diagpath = path[len(prefix):]
+        if self.record:
+            self.files_written.add(dpath)
         if not self.dry_run:
-            if force or self.newer(path, dpath):
-                if not prefix:
-                    diagpath = None
-                else:
-                    assert path.startswith(prefix)
-                    diagpath = path[len(prefix):]
-                py_compile.compile(path, dpath, diagpath)
+            py_compile.compile(path, dpath, diagpath)
 
     def is_writable(self, path):
         result = False
