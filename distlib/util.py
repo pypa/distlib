@@ -216,6 +216,7 @@ class FileOperator(object):
             shutil.copyfile(infile, outfile)
 
     def write_binary_file(self, path, data):
+        self.ensure_dir(os.path.dirname(path))
         if not self.dry_run:
             with open(path, 'wb') as f:
                 f.write(data)
@@ -223,6 +224,7 @@ class FileOperator(object):
             self.files_written.add(path)
 
     def write_text_file(self, path, data, encoding):
+        self.ensure_dir(os.path.dirname(path))
         if not self.dry_run:
             with open(path, 'wb') as f:
                 f.write(data.encode(encoding))

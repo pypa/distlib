@@ -542,9 +542,9 @@ class InstalledDistribution(BaseInstalledDistribution):
                                 lineterminator=str('\n'),
                                 quotechar=str('"'))
             for path in paths:
-                if path.endswith(('.pyc', '.pyo')):
+                if os.path.isdir(path) or path.endswith(('.pyc', '.pyo')):
                     # do not put size and hash, as in PEP-376
-                    writer.writerow((fpath, '', ''))
+                    writer.writerow((path, '', ''))
                 else:
                     size = os.path.getsize(path)
                     with open(path, 'rb') as fp:
