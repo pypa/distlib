@@ -517,6 +517,18 @@ def get_package_data(name, version):
            '%s/%s/package-%s.json' % (name[0].upper(), name, version))
     result = _get_external_data(url)
     return result
+#
+# This is currently only used to find the inlude directory in a venv;
+# hopefully it can be dispensed with at some point.
+#
+def in_venv():
+    if hasattr(sys, 'real_prefix'):
+        # virtualenv venv
+        result = True
+    else:
+        # PEP 405 venv
+        result = hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix
+    return result
 
 #
 # Simple event pub/sub
