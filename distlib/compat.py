@@ -32,6 +32,7 @@ if sys.version_info[0] < 3:
     import Queue as queue
     from HTMLParser import HTMLParser
     import htmlentitydefs
+    raw_input = raw_input
 
     _userprog = None
     def splituser(host):
@@ -64,6 +65,7 @@ else:
     import queue
     from html.parser import HTMLParser
     import html.entities as htmlentitydefs
+    raw_input = input
 
 try:
     from platform import python_implementation
