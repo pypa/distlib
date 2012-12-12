@@ -115,9 +115,10 @@ def get_resources_dests(resources_root, rules):
 def proceed(prompt, allowed_chars):
     while True:
         s = raw_input(prompt)
-        c = s[0].lower()
-        if c in allowed_chars:
-            break
+        if s:
+            c = s[0].lower()
+            if c in allowed_chars:
+                break
     return c
 
 @contextlib.contextmanager

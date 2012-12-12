@@ -50,7 +50,7 @@ class _Cache(object):
     def add(self, dist):
         if dist.path not in self.path:
             self.path[dist.path] = dist
-            self.name.setdefault(dist.name, []).append(dist)
+            self.name.setdefault(dist.name.lower(), []).append(dist)
 
 class DistributionPath(object):
     """
@@ -181,9 +181,10 @@ class DistributionPath(object):
                 or ``None``
         """
         result = None
+        name = name.lower()
         if not self._cache_enabled:
             for dist in self._yield_distributions():
-                if dist.name == name:
+                if dist.name.lower() == name:
                     result = dist
                     break
         else:
@@ -424,7 +425,7 @@ class InstalledDistribution(BaseInstalledDistribution):
             metadata = env._cache.path[path].metadata
         else:
             metadata_path = os.path.join(path, 'METADATA')
-            metadata = Metadata(path=metadata_path)
+            metadata = Metadata(path=metadata_path, scheme='legacy')
 
         super(InstalledDistribution, self).__init__(metadata, path, env)
 
@@ -725,7 +726,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
         if path.endswith('.egg'):
             if os.path.isdir(path):
                 meta_path = os.path.join(path, 'EGG-INFO', 'PKG-INFO')
-                metadata = Metadata(path=meta_path)
+                metadata = Metadata(path=meta_path, scheme='legacy')
                 req_path = os.path.join(path, 'EGG-INFO', 'requires.txt')
                 requires = parse_requires(req_path)
             else:
@@ -733,7 +734,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
                 zipf = zipimport.zipimporter(path)
                 fileobj = StringIO(
                     zipf.get_data('EGG-INFO/PKG-INFO').decode('utf8'))
-                metadata = Metadata(fileobj=fileobj)
+                metadata = Metadata(fileobj=fileobj, scheme='legacy')
                 try:
                     requires = zipf.get_data('EGG-INFO/requires.txt')
                 except IOError:
@@ -743,7 +744,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
                 path = os.path.join(path, 'PKG-INFO')
                 req_path = os.path.join(path, 'requires.txt')
                 requires = parse_requires(req_path)
-            metadata = Metadata(path=path)
+            metadata = Metadata(path=path, scheme='legacy')
         else:
             raise ValueError('path must end with .egg-info or .egg, got %r' %
                              path)

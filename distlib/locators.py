@@ -713,7 +713,6 @@ class DependencyFinder(object):
         self.dists = {}
         self.dists_by_name = {}
         self.reqts = {}
-        self.dispensable = set()
 
     def get_name_and_version(self, p):
         comps = p.strip().rsplit(' ', 1)
@@ -802,6 +801,7 @@ class DependencyFinder(object):
         dist = self.locator.locate(requirement)
         if dist is None:
             raise ValueError('Unable to locate %r' % requirement)
+        dist.requested = True
         problems = set()
         todo = set([dist])
         while todo:
