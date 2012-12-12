@@ -160,6 +160,9 @@ class FileOperator(object):
     def __init__(self, dry_run=False):
         self.dry_run = dry_run
         self.ensured = set()
+        self._init_record()
+
+    def _init_record(self):
         self.record = False
         self.files_written = set()
         self.dirs_created = set()
@@ -220,10 +223,10 @@ class FileOperator(object):
         assert not os.path.isdir(outfile)
         self.ensure_dir(os.path.dirname(outfile))
         logger.info('Copying %s to %s', infile, outfile)
-        if self.record:
-            self.files_written.add(outfile)
         if not self.dry_run:
             shutil.copyfile(infile, outfile)
+        if self.record:
+            self.files_written.add(outfile)
 
     def write_binary_file(self, path, data):
         self.ensure_dir(os.path.dirname(path))
@@ -262,16 +265,14 @@ class FileOperator(object):
             d, f = os.path.split(path)
             self.ensure_dir(d)
             logger.info('Creating %s' % path)
-            if self.record:
-                self.dirs_created.add(path)
             if not self.dry_run:
                 os.mkdir(path)
+            if self.record:
+                self.dirs_created.add(path)
 
     def byte_compile(self, path, optimize=False, force=False, prefix=None):
         dpath = cache_from_source(path, not optimize)
         logger.info('Byte-compiling %s to %s', path, dpath)
-        if self.record:
-            self.files_written.add(dpath)
         if not self.dry_run:
             if force or self.newer(path, dpath):
                 if not prefix:
@@ -280,6 +281,8 @@ class FileOperator(object):
                     assert path.startswith(prefix)
                     diagpath = path[len(prefix):]
             py_compile.compile(path, dpath, diagpath)
+        if self.record:
+            self.files_written.add(dpath)
 
     def ensure_removed(self, path):
         if os.path.exists(path):
@@ -313,6 +316,28 @@ class FileOperator(object):
                 break
             path = parent
         return result
+
+    def commit(self):
+        """
+        Commit recorded changes, turn off recording, return
+        changes.
+        """
+        assert self.record
+        result = self.files_written, self.dirs_created
+        self._init_record()
+        return result
+
+    def rollback(self):
+        if not self.dry_run:
+            for f in list(self.files_written):
+                if os.path.exists(f):
+                    os.remove(f)
+            # dirs should all be empty now
+            # reverse so that subdirs appear before their parents
+            dirs = sorted(self.dirs_created, reverse=True)
+            for d in dirs:
+                os.rmdir(d) # should fail if non-empty
+        self._init_record()
 
 def resolve(module_name, dotted_path):
     if module_name in sys.modules:
