@@ -16,7 +16,8 @@ import sys
 import time
 
 from . import DistlibException
-from .compat import string_types, shutil, urlopen, cache_from_source
+from .compat import (string_types, shutil, urlopen, cache_from_source,
+                     raw_input)
 from .glob import iglob
 
 logger = logging.getLogger(__name__)
@@ -110,6 +111,14 @@ def get_resources_dests(resources_root, rules):
                     destinations[resource_file] = rel_dest + '/' + rel_path
     return destinations
 
+
+def proceed(prompt, allowed_chars):
+    while True:
+        s = raw_input(prompt)
+        c = s[0].lower()
+        if c in allowed_chars:
+            break
+    return c
 
 @contextlib.contextmanager
 def chdir(d):

@@ -431,6 +431,9 @@ class InstalledDistribution(BaseInstalledDistribution):
         if env and env._cache_enabled:
             env._cache.add(self)
 
+        path = self.get_distinfo_file('REQUESTED')
+        self.requested = os.path.exists(path)
+
     def __repr__(self):
         return '<InstalledDistribution %r %s at %r>' % (
             self.name, self.version, self.path)
@@ -570,11 +573,11 @@ class InstalledDistribution(BaseInstalledDistribution):
                 continue
             if not os.path.exists(path):
                 mismatches.append((path, 'exists', True, False))
-            else:
+            elif os.path.isfile(path):
                 actual_size = str(os.path.getsize(path))
-                if actual_size != size:
+                if size and actual_size != size:
                     mismatches.append((path, 'size', size, actual_size))
-                else:
+                elif hash:
                     with open(path, 'rb') as f:
                         actual_hash = self.get_hash(f.read())
                         if actual_hash != hash:
@@ -694,6 +697,8 @@ class EggInfoDistribution(BaseInstalledDistribution):
     to the constructor. It reads the metadata contained in the file itself, or
     if the given path happens to be a directory, the metadata is read from the
     file ``PKG-INFO`` under that directory."""
+
+    requested = True    # as we have no way of knowing, assume it was
 
     def __init__(self, path, env=None):
         self.path = path
