@@ -104,7 +104,7 @@ class DistributionPath(object):
             for dir in os.listdir(realpath):
                 dist_path = os.path.join(realpath, dir)
                 if self._include_dist and dir.endswith(DISTINFO_EXT):
-                    yield InstalledDistribution(dist_path, self)
+                    yield InstalledDistribution(dist_path, env=self)
                 elif self._include_egg and dir.endswith(('.egg-info',
                                                          '.egg')):
                     yield EggInfoDistribution(dist_path, self)
@@ -417,13 +417,14 @@ class BaseInstalledDistribution(Distribution):
 class InstalledDistribution(BaseInstalledDistribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
     constructor. It reads the metadata contained in ``METADATA`` when it is
-    instantiated."""
+    instantiated., or uses a passed in Metadata instance (useful for when
+    dry-run mode is being used)."""
 
 
-    def __init__(self, path, env=None):
+    def __init__(self, path, metadata=None, env=None):
         if env and env._cache_enabled and path in env._cache.path:
             metadata = env._cache.path[path].metadata
-        else:
+        elif metadata is None:
             metadata_path = os.path.join(path, 'METADATA')
             metadata = Metadata(path=metadata_path, scheme='legacy')
 
@@ -534,13 +535,15 @@ class InstalledDistribution(BaseInstalledDistribution):
         for result in self._get_records(local):
             yield result
 
-    def write_installed_files(self, paths):
+    def write_installed_files(self, paths, dry_run=False):
         """
         Writes the ``RECORD`` file, using the ``paths`` iterable passed in. Any
         existing ``RECORD`` file is silently overwritten.
         """
         record_path = os.path.join(self.path, 'RECORD')
         logger.info('creating %s', record_path)
+        if dry_run:
+            return
         with codecs.open(record_path, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter=str(','),
                                 lineterminator=str('\n'),
