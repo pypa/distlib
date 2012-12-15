@@ -119,8 +119,7 @@ class ResourceFinder(object):
     def __init__(self, module):
         self.module = module
         self.loader = getattr(module, '__loader__', None)
-        self.base = os.path.dirname(os.path.abspath(getattr(module,
-                                                    '__file__', '')))
+        self.base = os.path.dirname(getattr(module, '__file__', ''))
 
     def _make_path(self, resource_name):
         parts = resource_name.split('/')
