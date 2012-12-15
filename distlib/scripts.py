@@ -11,6 +11,7 @@ import sys
 
 from . import DistlibException
 from .compat import sysconfig, fsencode, detect_encoding
+from .resources import finder
 from .util import FileOperator, get_export_entry
 
 logger = logging.getLogger(__name__)
@@ -202,10 +203,8 @@ class ScriptMaker(object):
                 bits = '64'
             else:
                 bits = '32'
-            fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 '%s%s.exe' % (kind, bits))
-            with open(fname, 'rb') as f:
-                result = f.read()
+            name = '%s%s.exe' % (kind, bits)
+            result = finder('distlib').find(name).bytes
             return result
 
     # Public API follows
