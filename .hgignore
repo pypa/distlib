@@ -1,4 +1,4 @@
-\.(py[co]|log)$
+\.(py[co]|log|zip)$
 tests/run/
 docs/_build/
 MANIFEST
