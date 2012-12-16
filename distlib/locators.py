@@ -36,7 +36,7 @@ def get_all_distribution_names(url=None):
     return client.list_packages()
 
 class Locator(object):
-    source_extensions = ('.tar.gz', '.tar.bz2', '.tar', '.zip', '.tgz')
+    source_extensions = ('.tar.gz', '.tar.bz2', '.tar', '.zip', '.tgz', '.tbz')
     binary_extensions = ('.egg', '.exe', '.whl')
     excluded_extensions = ('.pdf',)
 

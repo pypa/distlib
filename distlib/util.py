@@ -751,8 +751,11 @@ class Sequencer(object):
         return '\n'.join(result)
 
 #
-# Unarchiving functionality for zip, tar, tgz, tbz
+# Unarchiving functionality for zip, tar, tgz, tbz, whl
 #
+
+ARCHIVE_EXTENSIONS = ('.tar.gz', '.tar.bz2', '.tar', '.zip',
+                      '.tgz', '.tbz', '.whl')
 
 def unarchive(archive_filename, dest_dir, format=None, check=True):
     import tarfile
