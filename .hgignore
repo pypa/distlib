@@ -1,6 +1,5 @@
-\.(py[co]|log|zip)$
+\.(py[co]|log|zip|coverage)$
 tests/run/
 docs/_build/
 MANIFEST
-dist/
-build/
+(dist|htmlcov|build)/
