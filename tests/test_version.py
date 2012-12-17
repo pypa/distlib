@@ -231,7 +231,7 @@ class VersionTestCase(unittest.TestCase):
         for constraint in constraints:
             self.assertEqual(str(NM(constraint)), constraint)
 
-        #Test is_single
+        #Test exact_version
         cases = (
             ('Dummy', False),
             ('Dummy (1.0)', True),
@@ -245,7 +245,7 @@ class VersionTestCase(unittest.TestCase):
 
         for s, b in cases:
             m = NM(s)
-            self.assertEqual(m.is_single, b)
+            self.assertEqual(m.exact_version is not None, b)
 
     def test_matcher_name(self):
         # Test that names are parsed the right way

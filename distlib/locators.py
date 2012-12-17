@@ -215,7 +215,7 @@ class Locator(object):
                 try:
                     if matcher.match(k):
                         slist.append(k)
-                        if matcher.is_single:
+                        if matcher.exact_version:
                             break
                 except Exception:
                     pass # slist.append(k)

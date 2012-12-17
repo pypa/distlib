@@ -127,8 +127,11 @@ class Matcher(_Common):
         return True
 
     @property
-    def is_single(self):
-        return len(self._parts) == 1 and self._parts[0][0] == '=='
+    def exact_version(self):
+        result = None
+        if len(self._parts) == 1 and self._parts[0][0] == '==':
+            result = self._parts[0][1]
+        return result
 
     def _check_compatible(self, other):
         if type(self) != type(other) or self.name != other.name:

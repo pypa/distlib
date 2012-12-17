@@ -356,6 +356,34 @@ class Distribution(object):
             result = d[key]
         return result
 
+    def matches_requirement(self, req):
+        scheme = get_scheme(self.metadata.scheme)
+        try:
+            matcher = scheme.matcher(req)
+        except UnsupportedVersionError:
+            # XXX compat-mode if cannot read the version
+            logger.warning('could not read version %r - using name only',
+                           req)
+            name = req.split()[0]
+            matcher = scheme.matcher(name)
+
+        name = matcher.name.lower()   # case-insensitive
+
+        result = False
+        # Note this is similar to code in make_graph - to be refactored
+        for p in self.provides:
+            vm = scheme.matcher(p)
+            if vm.name.lower() != name:
+                continue
+            version = vm.exact_version
+            assert version
+            try:
+                result = matcher.match(version)
+                break
+            except UnsupportedVersionError:
+                pass
+        return result
+
     def __repr__(self):
         if self.download_url:
             suffix = ' [%s]' % self.download_url
@@ -1034,6 +1062,8 @@ def make_graph(dists, scheme='default'):
                 matcher = scheme.matcher(req)
             except UnsupportedVersionError:
                 # XXX compat-mode if cannot read the version
+                logger.warning('could not read version %r - using name only',
+                               req)
                 name = req.split()[0]
                 matcher = scheme.matcher(name)
 
