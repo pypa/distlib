@@ -328,7 +328,7 @@ class Distribution(object):
     def download_url(self):
         return self.metadata.download_url
 
-    @cached_property
+    @property
     def provides(self):
         return set(self.metadata['Provides-Dist'] +
                    self.metadata['Provides'] +
