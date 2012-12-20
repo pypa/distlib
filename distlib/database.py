@@ -343,7 +343,8 @@ class Distribution(object):
     def requires(self):
         return set(self.metadata['Requires-Dist'] +
                    self.metadata['Requires'] +
-                   self.get_requirements('install'))
+                   self.get_requirements('install') +
+                   self.get_requirements('setup'))
 
     def get_requirements(self, key):
         """
@@ -1056,7 +1057,8 @@ def make_graph(dists, scheme='default'):
         # need to leave this in because tests currently rely on it ...
         requires = dist.metadata['Requires-Dist'] + dist.metadata['Requires']
         if not requires:
-            requires = dist.get_requirements('install')
+            requires = (dist.get_requirements('install') +
+                        dist.get_requirements('setup'))
         for req in requires:
             try:
                 matcher = scheme.matcher(req)
