@@ -768,6 +768,7 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
 
     dest_dir = os.path.abspath(dest_dir)
     plen = len(dest_dir)
+    archive = None
     if format is None:
         if archive_filename.endswith(('.zip', '.whl')):
             format = 'zip'
@@ -798,7 +799,8 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
 
         archive.extractall(dest_dir)
     finally:
-        archive.close()
+        if archive:
+            archive.close()
 
 #
 # Simple progress bar
