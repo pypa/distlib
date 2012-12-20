@@ -236,6 +236,53 @@ Classes
 
 
 
+The :class:`DependencyGraph` class
+----------------------------------
+
+.. class:: DependencyGraph
+
+   This class represents a dependency graph between releases.  The nodes are
+   distribution instances; the edge model dependencies.  An edge from ``a``
+   to ``b`` means that ``a`` depends on ``b``.
+
+   .. method:: add_distribution(distribution)
+
+      Add *distribution* to the graph.
+
+   .. method:: add_edge(x, y, label=None)
+
+      Add an edge from distribution *x* to distribution *y* with the given
+      *label* (string).
+
+   .. method:: add_missing(distribution, requirement)
+
+      Add a missing *requirement* (string) for the given *distribution*.
+
+   .. method:: repr_node(dist, level=1)
+
+      Print a subgraph starting from *dist*.  *level* gives the depth of the
+      subgraph.
+
+   Direct access to the graph nodes and edges is provided through these
+   attributes:
+
+   .. attribute:: adjacency_list
+
+      Dictionary mapping distributions to a list of ``(other, label)`` tuples
+      where  ``other`` is a distribution and the edge is labeled with ``label``
+      (i.e. the version specifier, if such was provided).
+
+   .. attribute:: reverse_list
+
+      Dictionary mapping distributions to a list of predecessors.  This allows
+      efficient traversal.
+
+   .. attribute:: missing
+
+      Dictionary mapping distributions to a list of requirements that were not
+      provided by any distribution.
+
+
 The ``distlib.resources`` package
 ---------------------------------
 

@@ -104,6 +104,9 @@ Distlib currently offers the following features:
   launchers.
 * The package ``distlib.locators``, which allows finding distributions on
   PyPI (XML-RPC or via the "simple" interface) or local directories.
+* The package ``distlib.util``, which contains miscellaneous functions and
+  classes which are useful in packaging, but which do not fit neatly into
+  one of the other packages in ``distlib``.
 
 
 Python version and platform compatibility
