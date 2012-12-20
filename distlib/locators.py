@@ -798,7 +798,7 @@ class DependencyFinder(object):
         return result
 
     def find(self, requirement):
-        dist = self.locator.locate(requirement)
+        dist = odist = self.locator.locate(requirement)
         if dist is None:
             raise ValueError('Unable to locate %r' % requirement)
         dist.requested = True
@@ -838,4 +838,28 @@ class DependencyFinder(object):
                             # see if other can be replaced by p
                             self.try_to_replace(p, other, problems)
 
-        return set(self.dists.values()), problems
+        # Check to see which dists are setup-time dependencies, and
+        # which ones are install-time dependencies
+        dists = set(self.dists.values())
+        install_dists = set([odist])
+        for dist in dists:
+            ireqts = dist.get_requirements('install')
+            if not ireqts:
+                continue
+            for ddist in dists:
+                if ddist in install_dists:
+                    continue
+                if ddist is not dist:
+                    # see if ddist is an install-time requirement
+                    # of dist or not
+                    for r in ireqts:
+                        m = self.scheme.matcher(r)
+                        if m.name.lower() == ddist.lower():
+                            install_dists.add(ddist)
+                            break
+        for dist in dists:
+            dist.build_time_dependency = dist not in install_dists
+            if dist.build_time_dependency:
+                logger.debug('%s is a build-time dependency only.',
+                             dist.name_and_version)
+        return dists, problems

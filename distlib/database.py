@@ -312,6 +312,12 @@ class Distribution(object):
     for construction.
     """
 
+    build_time_dependency = False
+    """
+    Set to True if it's known to be only a build-time dependency (i.e.
+    not needed after installation).
+    """
+
     requested = False
     """A boolean that indicates whether the ``REQUESTED`` metadata file is
     present (in other words, whether the package was installed by user
