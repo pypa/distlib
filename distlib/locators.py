@@ -854,7 +854,7 @@ class DependencyFinder(object):
                     # of dist or not
                     for r in ireqts:
                         m = self.scheme.matcher(r)
-                        if m.name.lower() == ddist.lower():
+                        if m.name.lower() == ddist.name.lower():
                             install_dists.add(ddist)
                             break
         for dist in dists:

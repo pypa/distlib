@@ -347,10 +347,12 @@ class Distribution(object):
 
     @cached_property
     def requires(self):
-        return set(self.metadata['Requires-Dist'] +
-                   self.metadata['Requires'] +
-                   self.get_requirements('install') +
-                   self.get_requirements('setup'))
+        return set(self.metadata['Requires-Dist']
+                   + self.metadata['Requires']
+                   + self.get_requirements('install')
+                   + self.get_requirements('setup')
+                   + self.get_requirements('test')
+                   )
 
     def get_requirements(self, key):
         """
