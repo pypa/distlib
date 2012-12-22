@@ -804,6 +804,7 @@ class DependencyFinder(object):
         dist.requested = True
         problems = set()
         todo = set([dist])
+        install_dists = set([odist])
         while todo:
             dist = todo.pop()
             name = dist.name.lower()
@@ -814,6 +815,8 @@ class DependencyFinder(object):
                 other = self.dists_by_name[name]
                 if other != dist:
                     self.try_to_replace(dist, other, problems)
+
+            ireqts = set(dist.get_requirements('install'))
 
             for r in dist.requires:
                 providers = self.find_providers(r)
@@ -828,6 +831,10 @@ class DependencyFinder(object):
                         if (n, v) not in self.dists:
                             todo.add(provider)
                         providers.add(provider)
+                        if r in ireqts and dist in install_dists:
+                            install_dists.add(provider)
+                            logger.debug('Adding %s to install_dists',
+                                         provider.name_and_version)
                 for p in providers:
                     name = p.name.lower()
                     if name not in self.dists_by_name:
@@ -838,25 +845,7 @@ class DependencyFinder(object):
                             # see if other can be replaced by p
                             self.try_to_replace(p, other, problems)
 
-        # Check to see which dists are setup-time dependencies, and
-        # which ones are install-time dependencies
         dists = set(self.dists.values())
-        install_dists = set([odist])
-        for dist in dists:
-            ireqts = dist.get_requirements('install')
-            if not ireqts:
-                continue
-            for ddist in dists:
-                if ddist in install_dists:
-                    continue
-                if ddist is not dist:
-                    # see if ddist is an install-time requirement
-                    # of dist or not
-                    for r in ireqts:
-                        m = self.scheme.matcher(r)
-                        if m.name.lower() == ddist.name.lower():
-                            install_dists.add(ddist)
-                            break
         for dist in dists:
             dist.build_time_dependency = dist not in install_dists
             if dist.build_time_dependency:
