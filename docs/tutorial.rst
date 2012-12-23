@@ -23,7 +23,7 @@ Installation
 
 Distlib is a pure-Python library. You should be able to install it using::
 
-    pip install distlib
+   pip install distlib
 
 for installing ``distlib`` into a virtualenv or other directory where you have
 write permissions. On Posix platforms, you may need to invoke using ``sudo``
@@ -33,11 +33,11 @@ Python's ``site-packages`` directory.
 Testing
 -------
 
-A full test suite is included with ``distlib``. To run it, you'll need to
-unpack a source tarball and run ``python setup.py test`` in the top-level
-directory of the unpack location. You can of course also run
+A full test suite is included with ``distlib``. To run it, you'll need to clone
+the repository or download a tarball and run ``python setup.py test``
+in the top-level directory of the package. You can of course also run
 ``python setup.py install``
-to install from the source tarball (perhaps invoking with ``sudo`` if you need
+to install the package (perhaps invoking with ``sudo`` if you need
 to install to a protected location).
 
 First steps
@@ -72,8 +72,9 @@ not instantiated directly; rather, they are returned by querying
 :class:`DistributionPath` for distributions. To create a ``DistributionPath``
 instance, you can do ::
 
-    >>> from distlib.database import DistributionPath
-    >>> dist_path = DistributionPath()
+   >>> from distlib.database import DistributionPath
+   >>> dist_path = DistributionPath()
+   >>>
 
 Querying a path for distributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,12 +83,12 @@ In this most basic form, ``dist_path`` will provide access to all non-legacy
 distributions on ``sys.path``. To get these distributions, you invoke the
 :meth:`get_distributions` method, which returns an iterable. Let's try it::
 
-    >>> list(dist_path.get_distributions())
-    []
-    >>>
+   >>> list(dist_path.get_distributions())
+   []
+   >>>
 
-This may seem surprising, but that's only because, if you've just started
-looking at ``distlib``, you won't *have* any non-legacy distributions.
+This may seem surprising if you've just started looking at ``distlib``,
+as you won't *have* any non-legacy distributions.
 
 Including legacy distributions in the search results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,46 +97,51 @@ To include distributions created and installed using ``setuptools`` or
 ``distribute``, you need to create the ``DistributionPath`` by specifying an
 additional keyword argument, like so::
 
-    >>> dist_path = DistributionPath(include_egg=True)
+   >>> dist_path = DistributionPath(include_egg=True)
+   >>>
 
 and then you'll get a less surprising result::
 
-    >>> len(list(dist_path.get_distributions()))
-    77
+   >>> len(list(dist_path.get_distributions()))
+   77
+   >>>
 
 The exact number returned will be different for you, of course. You can ask
 for a particular distribution by name, using the :meth:`get_distribution`
 method::
 
-    >>> dist_path.get_distribution('setuptools')
-    <EggInfoDistribution u'setuptools' 0.6c11 at '/usr/lib/python2.7/dist-packages/setuptools.egg-info'>
-    >>>
+   >>> dist_path.get_distribution('setuptools')
+   <EggInfoDistribution u'setuptools' 0.6c11 at '/usr/lib/python2.7/dist-packages/setuptools.egg-info'>
+   >>>
 
-If you want to look at a specific path other than ``sys.path``, you specify it as a
-positional argument to the :class:`DistributionPath` constructor::
+If you want to look at a specific path other than ``sys.path``, you specify it
+as a positional argument to the :class:`DistributionPath` constructor::
 
-    >>> from pprint import pprint
-    >>> special_dists = DistributionPath(['tests/fake_dists'], include_egg=True)
-    >>> pprint([d.name for d in special_dists.get_distributions()])
-    ['babar',
-     'choxie',
-     'towel-stuff',
-     'grammar',
-     'truffles',
-     'coconuts-aster',
-     'nut',
-     'bacon',
-     'banana',
-     'cheese',
-     'strawberry']
-    >>>
+   >>> from pprint import pprint
+   >>> special_dists = DistributionPath(['tests/fake_dists'], include_egg=True)
+   >>> pprint([d.name for d in special_dists.get_distributions()])
+   ['babar',
+    'choxie',
+    'towel-stuff',
+    'grammar',
+    'truffles',
+    'coconuts-aster',
+    'nut',
+    'bacon',
+    'banana',
+    'cheese',
+    'strawberry']
+   >>>
 
 or, if you leave out egg-based distributions::
 
-    >>> special_dists = DistributionPath(['tests/fake_dists'])
-    >>> pprint([d.name for d in special_dists.get_distributions()])
-    ['babar', 'choxie', 'towel-stuff', 'grammar']
-    >>>
+   >>> special_dists = DistributionPath(['tests/fake_dists'])
+   >>> pprint([d.name for d in special_dists.get_distributions()])
+   ['babar',
+    'choxie',
+    'towel-stuff',
+    'grammar']
+   >>>
 
 Distribution properties
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,7 +173,7 @@ To give a concrete example, the `Babel <http://babel.edgewall.org/>`_ library
 for internationalisation support provides a mechanism for extracting, from a
 variety of sources, message text to be internationalised. Babel itself provides
 functionality to extract messages from e.g. Python and JavaScript source code,
-but helpfully provides a mechanism whereby providers of other sources of
+but helpfully offers a mechanism whereby providers of other sources of
 message text can provide their own extractors. It does this by providing a
 category ``'babel.extractors'``, under which other software can register
 extractors for their sources. The `Jinja2 <http://jinja2.pocoo.org/>`_ template
@@ -185,8 +191,8 @@ The values associated with a category are a list of strings with the format::
 
     name = prefix [ ":" suffix ] [ "[" flags "]" ]
 
-where ``name``, ``prefix`` and ``suffix`` are ``pkgnames``, ``suffix`` and
-``flags`` are optional, and ``flags`` follow the description in
+where ``name``, ``prefix``, and ``suffix`` are ``pkgnames``. ``suffix`` and
+``flags`` are optional and ``flags`` follow the description in
 :ref:`flag-formats`.
 
 Any installed distribution can offer up values for any category, and
@@ -201,7 +207,6 @@ be used for any purpose determined by the distribution author (for example, the
 This entry format is used in the :mod:`distlib.scripts` package for installing
 scripts based on Python callables.
 
-
 Distribution dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -211,11 +216,9 @@ allow you to analyse the relationships between a set of distributions:
 
 * :func:`make_graph`, which generates a dependency graph from a list of
   distributions.
-
 * :func:`get_dependent_dists`, which takes a list of distributions and a
   specific distribution in that list, and returns the distributions that
   are dependent on that specific distribution.
-
 * :func:`get_required_dists`, which takes a list of distributions and a
   specific distribution in that list, and returns the distributions that
   are required by that specific distribution.
@@ -237,51 +240,51 @@ You can use the ``distlib.resources`` package to access data stored in Python
 packages, whether in the file system or .zip files. Consider a package
 which contains data alongside Python code::
 
-    foofoo
-    ├── bar
-    │   ├── bar_resource.bin
-    │   ├── baz.py
-    │   └── __init__.py
-    ├── foo_resource.bin
-    ├── __init__.py
-    └── nested
-        └── nested_resource.bin
+   foofoo
+   ├── bar
+   │   ├── bar_resource.bin
+   │   ├── baz.py
+   │   └── __init__.py
+   ├── foo_resource.bin
+   ├── __init__.py
+   └── nested
+       └── nested_resource.bin
 
 Access to resources in the file system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can access these resources like so::
 
-    >>> from distlib.resources import finder
-    >>> f = finder('foofoo')
-    >>> r = f.find('foo_resource.bin')
-    >>> r.is_container
-    False
-    >>> r.size
-    10
-    >>> r.bytes
-    b'more_data\n'
-    >>> s = r.as_stream()
-    >>> s.read()
-    b'more_data\n'
-    >>> s.close()
-    >>> r = f.find('nested')
-    >>> r.is_container
-    True
-    >>> r.resources
-    {'nested_resource.bin'}
-    >>> r = f.find('nested/nested_resource.bin')
-    >>> r.size
-    12
-    >>> r.bytes
-    b'nested data\n'
-    >>> f = finder('foofoo.bar')
-    >>> r = f.find('bar_resource.bin')
-    >>> r.is_container
-    False
-    >>> r.bytes
-    b'data\n'
-    >>>
+   >>> from distlib.resources import finder
+   >>> f = finder('foofoo')
+   >>> r = f.find('foo_resource.bin')
+   >>> r.is_container
+   False
+   >>> r.size
+   10
+   >>> r.bytes
+   b'more_data\n'
+   >>> s = r.as_stream()
+   >>> s.read()
+   b'more_data\n'
+   >>> s.close()
+   >>> r = f.find('nested')
+   >>> r.is_container
+   True
+   >>> r.resources
+   {'nested_resource.bin'}
+   >>> r = f.find('nested/nested_resource.bin')
+   >>> r.size
+   12
+   >>> r.bytes
+   b'nested data\n'
+   >>> f = finder('foofoo.bar')
+   >>> r = f.find('bar_resource.bin')
+   >>> r.is_container
+   False
+   >>> r.bytes
+   b'data\n'
+   >>>
 
 Access to resources in the ``.zip`` files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -289,32 +292,32 @@ Access to resources in the ``.zip`` files
 It works the same way if the package is in a .zip file. Given the zip file
 ``foo.zip``::
 
-    $ unzip -l foo.zip
-    Archive:  foo.zip
-      Length      Date    Time    Name
-    ---------  ---------- -----   ----
-           10  2012-09-20 21:34   foo/foo_resource.bin
-            8  2012-09-20 21:42   foo/__init__.py
-           14  2012-09-20 21:42   foo/bar/baz.py
-            8  2012-09-20 21:42   foo/bar/__init__.py
-            5  2012-09-20 21:33   foo/bar/bar_resource.bin
-    ---------                     -------
-           45                     5 files
+   $ unzip -l foo.zip
+   Archive:  foo.zip
+     Length      Date    Time    Name
+   ---------  ---------- -----   ----
+          10  2012-09-20 21:34   foo/foo_resource.bin
+           8  2012-09-20 21:42   foo/__init__.py
+          14  2012-09-20 21:42   foo/bar/baz.py
+           8  2012-09-20 21:42   foo/bar/__init__.py
+           5  2012-09-20 21:33   foo/bar/bar_resource.bin
+   ---------                     -------
+          45                     5 files
 
 You can access its resources as follows::
 
-    >>> import sys
-    >>> sys.path.append('foo.zip')
-    >>> from distlib.resources import finder
-    >>> f = finder('foo')
-    >>> r = f.find('foo_resource.bin')
-    >>> r.is_container
-    False
-    >>> r.size
-    10
-    >>> r.bytes
-    'more_data\n'
-    >>>
+   >>> import sys
+   >>> sys.path.append('foo.zip')
+   >>> from distlib.resources import finder
+   >>> f = finder('foo')
+   >>> r = f.find('foo_resource.bin')
+   >>> r.is_container
+   False
+   >>> r.size
+   10
+   >>> r.bytes
+   'more_data\n'
+   >>>
 
 and so on.
 
@@ -322,7 +325,6 @@ Using the scripts API
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. currentmodule:: distlib.scripts
-
 
 You can use the ``distlib.scripts`` API to install scripts. Installing scripts
 is slightly more involved than just copying files:
@@ -380,21 +382,21 @@ Wrapping callables with scripts
 Let's see how wrapping a callable works. Consider the following file::
 
     $ cat scripts/foo.py
-    def main():
+      def main():
         print('Hello from foo')
 
     def other_main():
         print('Hello again from foo')
 
-we can try wrapping ``main`` and ``other_main`` as callables::
+   we can try wrapping ``main`` and ``other_main`` as callables::
 
-    >>> from distlib.scripts import ScriptMaker
-    >>> maker = ScriptMaker('scripts', '/tmp/scratch')
-    >>> maker.make_multiple(('foo = foo:main', 'bar = foo:other_main'))
-    ['/tmp/scratch/foo', '/tmp/scratch/bar']
-    >>>
+      >>> from distlib.scripts import ScriptMaker
+      >>> maker = ScriptMaker('scripts', '/tmp/scratch')
+      >>> maker.make_multiple(('foo = foo:main', 'bar = foo:other_main'))
+      ['/tmp/scratch/foo', '/tmp/scratch/bar']
+      >>>
 
-we can inspect the resulting scripts. First, ``foo``::
+   we can inspect the resulting scripts. First, ``foo``::
 
     $ ls /tmp/scratch/
     bar  foo
@@ -440,30 +442,33 @@ Overview
 The :class:`NormalizedVersion` class implements a :pep:`386` compatible
 version::
 
-    >>> from distlib.version import NormalizedVersion
-    >>> v1 = NormalizedVersion('1.0')
-    >>> v2 = NormalizedVersion('1.0a1')
-    >>> v3 = NormalizedVersion('1.0b1')
-    >>> v4 = NormalizedVersion('1.0c1')
-    >>> v5 = NormalizedVersion('1.0.post1')
+      >>> from distlib.version import NormalizedVersion
+      >>> v1 = NormalizedVersion('1.0')
+      >>> v2 = NormalizedVersion('1.0a1')
+      >>> v3 = NormalizedVersion('1.0b1')
+      >>> v4 = NormalizedVersion('1.0c1')
+      >>> v5 = NormalizedVersion('1.0.post1')
+      >>>
 
 These sort in the expected order::
 
-    >>> v2 < v3 < v4 < v1 < v5
-    True
+      >>> v2 < v3 < v4 < v1 < v5
+      True
+      >>>
 
 You can't pass any old thing as a version number::
 
-    >>> NormalizedVersion('foo')
-    Traceback (most recent call last):
+      >>> NormalizedVersion('foo')
+      Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
       File "distlib/version.py", line 49, in __init__
-        self._parts = parts = self.parse(s)
+       self._parts = parts = self.parse(s)
       File "distlib/version.py", line 254, in parse
-        def parse(self, s): return normalized_key(s)
+       def parse(self, s): return normalized_key(s)
       File "distlib/version.py", line 199, in normalized_key
-        raise UnsupportedVersionError(s)
-    distlib.version.UnsupportedVersionError: foo
+       raise UnsupportedVersionError(s)
+      distlib.version.UnsupportedVersionError: foo
+      >>>
 
 Matching versions against constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -471,53 +476,56 @@ Matching versions against constraints
 The :class:`NormalizedMatcher` is used to match version constraints against
 versions::
 
-    >>> from distlib.version import NormalizedMatcher
-    >>> m = NormalizedMatcher('foo (1.0b1)')
-    >>> m
-    NormalizedMatcher('foo (1.0b1)')
-    >>> [m.match(v) for v in v1, v2, v3, v4, v5]
-    [False, False, True, False, False]
+      >>> from distlib.version import NormalizedMatcher
+      >>> m = NormalizedMatcher('foo (1.0b1)')
+      >>> m
+      NormalizedMatcher('foo (1.0b1)')
+      >>> [m.match(v) for v in v1, v2, v3, v4, v5]
+      [False, False, True, False, False]
+      >>>
 
 Specifying ``'foo (1.0b1)'`` is equivalent to specifying ``'foo (==1.0b1)'``,
 i.e. only the exact version is matched. You can also specify inequality
 constraints::
 
-    >>> m = NormalizedMatcher('foo (<1.0c1)')
-    >>> [m.match(v) for v in v1, v2, v3, v4, v5]
-    [False, True, True, False, False]
+      >>> m = NormalizedMatcher('foo (<1.0c1)')
+      >>> [m.match(v) for v in v1, v2, v3, v4, v5]
+      [False, True, True, False, False]
+      >>>
 
 and multiple constraints::
 
-    >>> m = NormalizedMatcher('foo (>= 1.0b1, <1.0.post1)')
-    >>> [m.match(v) for v in v1, v2, v3, v4, v5]
-    [True, False, True, True, False]
+      >>> m = NormalizedMatcher('foo (>= 1.0b1, <1.0.post1)')
+      >>> [m.match(v) for v in v1, v2, v3, v4, v5]
+      [True, False, True, True, False]
+      >>>
 
 You can do exactly the same thing as above with ``setuptools``/
 ``distribute`` version numbering (use ``LegacyVersion`` and ``LegacyMatcher``)
 or with semantic versioning (use ``SemanticVersion`` and ``SemanticMatcher``).
 However, you can't mix and match versions of different types::
 
-    >>> from distlib.version import SemanticVersion, LegacyVersion
-    >>> nv = NormalizedVersion('1.0.0')
-    >>> lv = LegacyVersion('1.0.0')
-    >>> sv = SemanticVersion('1.0.0')
-    >>> lv == sv
-    Traceback (most recent call last):
+      >>> from distlib.version import SemanticVersion, LegacyVersion
+      >>> nv = NormalizedVersion('1.0.0')
+      >>> lv = LegacyVersion('1.0.0')
+      >>> sv = SemanticVersion('1.0.0')
+      >>> lv == sv
+      Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
       File "distlib/version.py", line 61, in __eq__
-        self._check_compatible(other)
+       self._check_compatible(other)
       File "distlib/version.py", line 58, in _check_compatible
-        raise TypeError('cannot compare %r and %r' % (self, other))
-    TypeError: cannot compare LegacyVersion('1.0.0') and SemanticVersion('1.0.0')
-    >>> nv == sv
-    Traceback (most recent call last):
+      raise TypeError('cannot compare %r and %r' % (self, other))
+      TypeError: cannot compare LegacyVersion('1.0.0') and SemanticVersion('1.0.0')
+      >>> nv == sv
+      Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
       File "distlib/version.py", line 61, in __eq__
-        self._check_compatible(other)
+       self._check_compatible(other)
       File "distlib/version.py", line 58, in _check_compatible
-        raise TypeError('cannot compare %r and %r' % (self, other))
-    TypeError: cannot compare NormalizedVersion('1.0.0') and SemanticVersion('1.0.0')
-
+      raise TypeError('cannot compare %r and %r' % (self, other))
+      TypeError: cannot compare NormalizedVersion('1.0.0') and SemanticVersion('1.0.0')
+      >>>
 
 Using the locators API
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -535,30 +543,30 @@ instance of :class:`distlib.database.Distribution` which can be queried for
 any distributions it requires, so that they can also be located if desired.
 Here is a basic example::
 
-    >>> from distlib.locators import locate
-    >>> flask = locate('flask')
-    >>> flask
-    <Distribution Flask (0.9) [http://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz]>
-    >>> dependencies = [locate(r) for r in flask.get_requirements('install')]
-    >>> from pprint import pprint
-    >>> pprint(dependencies)
-    [<Distribution Werkzeug (0.8.3) [http://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.8.3.tar.gz]>,
-     <Distribution Jinja2 (2.6) [http://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.6.tar.gz]>]
-    >>>
+      >>> from distlib.locators import locate
+      >>> flask = locate('flask')
+      >>> flask
+      <Distribution Flask (0.9) [http://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz]>
+      >>> dependencies = [locate(r) for r in flask.get_requirements('install')]
+      >>> from pprint import pprint
+      >>> pprint(dependencies)
+      [<Distribution Werkzeug (0.8.3) [http://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.8.3.tar.gz]>,
+      <Distribution Jinja2 (2.6) [http://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.6.tar.gz]>]
+      >>>
 
 The values returned by :meth:`get_requirements` are just strings. Here's another example,
 showing a little more detail::
 
-    >>> authy = locate('authy')
-    >>> authy.get_requirements('install')
-    [u'httplib2 (>= 0.7, < 0.8)', u'simplejson']
-    >>> authy
-    <Distribution authy (0.0.4) [http://pypi.python.org/packages/source/a/authy/authy-0.0.4.tar.gz]>
-    >>> deps = [locate(r) for r in authy.get_requirements('install')]
-    >>> pprint(deps)
-    [<Distribution httplib2 (0.7.6) [http://pypi.python.org/packages/source/h/httplib2/httplib2-0.7.6.tar.gz]>,
-     <Distribution simplejson (2.6.2) [http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.2.tar.gz]>]
-    >>>
+      >>> authy = locate('authy')
+      >>> authy.get_requirements('install')
+      [u'httplib2 (>= 0.7, < 0.8)', u'simplejson']
+      >>> authy
+      <Distribution authy (0.0.4) [http://pypi.python.org/packages/source/a/authy/authy-0.0.4.tar.gz]>
+      >>> deps = [locate(r) for r in authy.get_requirements('install')]
+      >>> pprint(deps)
+      [<Distribution httplib2 (0.7.6) [http://pypi.python.org/packages/source/h/httplib2/httplib2-0.7.6.tar.gz]>,
+      <Distribution simplejson (2.6.2) [http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.2.tar.gz]>]
+      >>>
 
 Note that the constraints on the dependencies were honoured by :func:`locate`.
 
@@ -617,76 +625,38 @@ The following locators are provided:
 
 There is a default locator, available at :attr:`distlib.locators.default_locator`.
 
-An example of usage of locator instances is given below::
-
-    >>> from distlib.locators import SimpleScrapingLocator
-    >>> from pprint import pprint
-    >>> locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
-    >>> result = locator.get_project('python-gnupg')
-    >>> pprint(result)
-    {u'0.2.3': <Distribution python-gnupg (0.2.3) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.3.tar.gz]>,
-     u'0.2.4': <Distribution python-gnupg (0.2.4) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.4.tar.gz]>,
-     u'0.2.9': <Distribution python-gnupg (0.2.9) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.9.tar.gz]>,
-     u'0.3.0': <Distribution python-gnupg (0.3.0) [http://python-gnupg.googlecode.com/files/python-gnupg-0.3.0.tar.gz]>,
-     u'0.3.1': <Distribution python-gnupg (0.3.1) [http://python-gnupg.googlecode.com/files/python-gnupg-0.3.1.tar.gz]>}
-    >>>
-
-Now the same project, using the XML-RPC API::
-
-    >>> from distlib.locators import PyPIRPCLocator
-    >>> locator = PyPIRPCLocator('http://python.org/pypi')
-    >>> result = locator.get_project('python-gnupg')
-    >>> pprint(result)
-    {'0.2.3': <Distribution python-gnupg (0.2.3) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.3.tar.gz]>,
-     '0.2.4': <Distribution python-gnupg (0.2.4) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.4.tar.gz]>,
-     '0.2.6': <Distribution python-gnupg (0.2.6) [UNKNOWN]>,
-     '0.2.7': <Distribution python-gnupg (0.2.7) [UNKNOWN]>,
-     '0.2.8': <Distribution python-gnupg (0.2.8) [UNKNOWN]>,
-     '0.2.9': <Distribution python-gnupg (0.2.9) [http://python-gnupg.googlecode.com/files/python-gnupg-0.2.9.tar.gz]>,
-     '0.3.0': <Distribution python-gnupg (0.3.0) [http://python-gnupg.googlecode.com/files/python-gnupg-0.3.0.tar.gz]>,
-     '0.3.1': <Distribution python-gnupg (0.3.1) [http://python-gnupg.googlecode.com/files/python-gnupg-0.3.1.tar.gz]>}
-    >>>
-
-The reason why some of the download URLs come up as UNKNOWN is that some of
-the PyPI metadata is incomplete.
-
-Locators also have a method, :meth:`get_distribution_names`, which returns a
-set of all the distribution names known to that locator instance. Note that
-the base :class:`Locator` and :class:`JSONLocator` classes don't implement this
-method, so they will raise a :class:`NotImplementedError`.
-
 The ``locators`` package also contains a function,
 :func:`get_all_distribution_names`, which retrieves the names of all
 distributions registered on PyPI::
 
-    >>> from distlib.locators import get_all_distribution_names
-    >>> names = get_all_package_names()
-    >>> len(names)
-    24801
-    >>>
+      >>> from distlib.locators import get_all_distribution_names
+      >>> names = get_all_package_names()
+      >>> len(names)
+      24801
+      >>>
 
 This is implemented using the XML-RPC API.
 
-The Locator API is very bare-bones at the moment, but additional features will
-be added in due course. A very bare-bones command-line script which exercises
-these locators is to be found `here <https://gist.github.com/3886402>`_, and
-feedback will be gratefully received from anyone who tries it out.
+   The Locator API is very bare-bones at the moment, but additional features will
+   be added in due course. A very bare-bones command-line script which exercises
+   these locators is to be found `here <https://gist.github.com/3886402>`_, and
+   feedback will be gratefully received from anyone who tries it out.
 
-None of the locators currently returns enough metadata to allow dependency
-resolution to be carried out, but that is a function of the fact that metadata
-relating to dependencies is not indexed, and would require not just downloading
-the distribution archives and inspection of contained metadata files, but
-potentially also introspecting setup.py! This is the downside of having vital
-information only available via keyword arguments to the :func:`setup` call:
-hopefully, a move to fully declarative metadata will facilitate indexing it and
-allowing the provision of features currently provided by ``setuptools`` (e.g.
-hints for downloads -- ``'dependency _links'``).
+   None of the locators currently returns enough metadata to allow dependency
+   resolution to be carried out, but that is a result of the fact that metadata
+   relating to dependencies are not indexed, and would require not just downloading
+   the distribution archives and inspection of contained metadata files, but
+   potentially also introspecting setup.py! This is the downside of having vital
+   information only available via keyword arguments to the :func:`setup` call:
+   hopefully, a move to fully declarative metadata will facilitate indexing it and
+   allowing the provision of features currently provided by ``setuptools`` (e.g.
+   hints for downloads -- ``'dependency _links'``).
 
-The locators skip binary distributions (``.egg`` files are currently treated
-as binary distributions).
+   The locators will skip binary distributions (``.egg`` files are currently
+   treated as binary distributions).
 
-The PyPI locator classes don't yet support the use of mirrors, but that can be
-added in due course -- once the basic functionality is working satisfactorily.
+   The PyPI locator classes don't yet support the use of mirrors, but that can be
+   added in due course -- once the basic functionality is working satisfactorily.
 
 Next steps
 ----------

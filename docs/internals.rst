@@ -35,17 +35,17 @@ However, this approach fails if the package is deployed in a .zip file.
 To consider how to provide a minimal uniform API to access resources in Python
 packages, we'll assume that the requirements are as follows:
 
-* All resources are regarded as binary. The using application is expected to
+* All resources are regarded as binary. The consuming application is expected to
   know how to convert resources to text, where appropriate.
 * All resources are read-only.
 * It should be possible to access resources either as streams, or as their
   entire data as a byte-string.
 * Resources will have a unique, identifying name which is text. Resources will
-  be hierarchical, and named using filesystem-like paths using '/' as a
+  be hierarchical and named using filesystem-like paths using '/' as a
   separator. The library will be responsible for converting resource names
   to the names of the underlying representations (e.g. encoding of file names
   corresponding to resource names).
-* Some resources are containers of other resoures, some are not. For
+* Some resources are containers of other resources, some are not. For
   example, a resource ``nested/nested_resource.bin`` in a package would not
   contain other resources, but implies the existence of a resource
   ``nested``, which contains ``nested_resource.bin``.
@@ -64,7 +64,6 @@ packages, we'll assume that the requirements are as follows:
   access the resource data as files (examples would be a shared library for
   linking using ``dlopen()`` on POSIX, or any APIs which need access to
   resource data via OS-level file handles rather than Python streams).
-
 
 A minimal solution
 ^^^^^^^^^^^^^^^^^^
@@ -211,7 +210,6 @@ What a finder needs to do can be exemplified by the following skeleton for
             (relative) resource names
             """
 
-
 Dealing with the requirement for access via file system files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -225,11 +223,11 @@ through a :class:`Cache` class, which will have the following methods:
 * A constructor which takes an optional base directory for the cache. If
   none is provided, we'll construct a base directory of the form::
 
-  <rootdir>/.distlib/resource-cache
+     <rootdir>/.distlib/resource-cache
 
   where ``<rootdir>`` is the user's home directory. On Windows, if the
   environment specifies a variable named ``LOCALAPPDATA``, its value
-  will be used as ``<rootdir>``; otherwise, the user's home directory
+  will be used as ``<rootdir>`` -- otherwise, the user's home directory
   will be used.
 
 * A :meth:`get` method which takes a ``Resource`` and returns a file system
@@ -255,14 +253,13 @@ through a :class:`Cache` class, which will have the following methods:
   and returns a (``prefix``, ``subpath``) tuple.
 
   The default implementation will use :func:`os.splitdrive` to see if there's
-  a Windows drive, and convert its ``':'`` to ``'---'``. The rest of the
-  prefix will be converted by replacing ``'/'`` by ``'--'``, and appending
-  ``'.cache'`` to the result.
+  a Windows drive, if present, and convert its ``':'`` to ``'---'``. The rest
+  of the prefix will be converted by replacing ``'/'`` by ``'--'``, and
+  appending ``'.cache'`` to the result.
 
 The cache will be activated when the ``file_path`` property of a ``Resource``
 is accessed. This will be a cached property, and will call the cache's
 :meth:`get` method to obtain the file system path.
-
 
 The ``scripts`` API
 -------------------
@@ -284,12 +281,11 @@ source to target, for the following reasons:
 * On Windows systems, which don't support shebang lines natively, some
   alternate means of finding the correct interpreter need to be provided.
   Following the acceptance and implementation of PEP 397, a shebang-
-  interpreting launcher will be available in Python 3.3 and later, and a
+  interpreting launcher will be available in Python 3.3 and later and a
   standalone version of it for use with earlier Python versions is also
   available. However, where this can't be used, an alternative approach
   using executable launchers installed with the scripts may be necessary.
   (That is the approach taken by ``setuptools``.)
-
   Windows also has two types of launchers - console applications and
   Windows applications. The appropriate launcher needs to be used for
   scripts.
@@ -351,7 +347,7 @@ In addition, other methods suggest themselves for :class:`ScriptMaker`:
 
 * A :meth:`~ScriptMaker.make_multiple` method, which takes an iterable of
   specifications and just runs calls :meth:`~ScriptMaker.make` on each
-  item iterated over, aggregatig the results to return a list of absolute paths
+  item iterated over, aggregating the results to return a list of absolute paths
   of all files that were installed (or would have been installed, but for the
   dry-run mode being in effect).
 
@@ -360,9 +356,9 @@ In addition, other methods suggest themselves for :class:`ScriptMaker`:
   analysis tool, over all the installed files.
 
 * The details of the callable specification can be encapsulated in a utility
-  function, :func:`~distlib.util.get_exports_entry`. This would take a specification
-  and return ``None``, if the specification didn't match the callable format,
-  or an instance of :class:`ExportEntry` if it did match.
+  function, :func:`~distlib.util.get_exports_entry`. This would take a
+  specification and return ``None``, if the specification didn't match the
+  callable format, or an instance of :class:`ExportEntry` if it did match.
 
 In addition, the following attributes on a ``ScriptMaker`` could be further used
 to refine its behaviour:
@@ -382,18 +378,17 @@ format of just an alphanumeric string, optionally followed by an '=' and a
 value (with no intervening spaces). Multiple flags can be separated by ','
 and whitespace. The following would be valid flag sections::
 
-  [a,b,c]
-  [a, b, c]
-  [a=b, c=d, e, f=g, 9=8]
+   [a,b,c]
+   [a, b, c]
+   [a=b, c=d, e, f=g, 9=8]
 
 whereas the following would be invalid::
 
- []
- [\]
- [a,]
- [a,,b]
- [a=,b,c]
-
+  []
+  [\]
+  [a,]
+  [a,,b]
+  [a=,b,c]
 
 The ``version`` API
 -------------------
@@ -403,10 +398,10 @@ This section describes the design of the ``distlib`` API relating to versions.
 The problem we're trying to solve
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Distribution releases are named by versions, and versions have two principal
+Distribution releases are named by versions and versions have two principal
 uses:
 
-* Identifying a particular release, and determining whether or not it is
+* Identifying a particular release and determining whether or not it is
   earlier or later than some other release.
 
 * When specifying other distributions that a distribution release depends on,
@@ -466,18 +461,17 @@ schemes are deserving of some support not because of their intrinsic qualities,
 but due to their ubiquity in projects registered on PyPI. Below are some
 results from testing actual projects on PyPI::
 
-    Packages processed: 24891
-    Packages with no versions: 217
-    Packages with versions: 24674
-    Number of packages clean for all schemes: 19010 (77%)
-    Number of packages clean for PEP 386: 21072 (85%)
-    Number of packages clean for PEP 386 + suggestion: 23685 (96%)
-    Number of packages clean for legacy: 24674 (100%, by you would expect)
-    Number of packages clean for semantic: 19278 (78%)
+   Packages processed: 24891
+   Packages with no versions: 217
+   Packages with versions: 24674
+   Number of packages clean for all schemes: 19010 (77%)
+   Number of packages clean for PEP 386: 21072 (85%)
+   Number of packages clean for PEP 386 + suggestion: 23685 (96%)
+   Number of packages clean for legacy: 24674 (100%, by you would expect)
+   Number of packages clean for semantic: 19278 (78%)
 
 where "+ suggestion" refers to using the suggested version algorithm to derive
 a version from a version which would otherwise be incompatible with :pep:`386`.
-
 
 A minimal solution
 ^^^^^^^^^^^^^^^^^^
@@ -623,7 +617,7 @@ each scheme are bundled into a simple :class:`VersionScheme` class::
 Of course, the version class is also available through the matcher's
 ``version_class`` attribute.
 
-:class:`VersionScheme` make it easier to work with alternative version schemes.
+:class:`VersionScheme` makes it easier to work with alternative version schemes.
 For example, say we decide to experiment with an "adaptive" version scheme,
 which is based on the PEP 386 scheme, but when handed a non-conforming version,
 automatically tries to convert it to a normalized version using
@@ -661,13 +655,12 @@ Allowed names are ``'normalized'``, ``'legacy'``, ``'semantic'``,
 If an unrecognised name is passed in, a ``ValueError`` is raised.
 
 The reimplemented ``distlib.version`` module is shorter than the corresponding
-module in ``distutils2``, but the entire test suite passes, and there is support
+module in ``distutils2``, but the entire test suite passes and there is support
 for working with three versioning schemes as opposed to just one. However, the
 concept of "final" versions, which is not in the PEP but which was in the
 ``distutils2`` implementation, has been removed because it appears of little
 value (there's no way to determine the "final" status of versions for many of
 the project releases registered on PyPI).
-
 
 Next steps
 ----------

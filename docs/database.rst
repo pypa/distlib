@@ -4,11 +4,10 @@
 .. module:: distlib.database
    :synopsis: Functions to query and manipulate installed distributions.
 
-
 This module provides an implementation of :PEP:`376`.
 
 .. warning:: This documentation has not been updated since being copied over
-   from ``distutils2``, and may not be up to date.
+   from ``distutils2`` and may not be up to date.
 
 Installed Python distributions are represented by instances of
 :class:`Distribution`, or :class:`EggInfoDistribution` for legacy egg formats.
@@ -16,9 +15,9 @@ Most functions also provide an extra argument ``use_egg_info`` to take legacy
 distributions into account.
 
 For the purpose of this module, "installed" means that the distribution's
-:file:`.dist-info`, :file:`.egg-info` or :file:`egg` directory or file is found
+:file:`.dist-info` or :file:`.egg-info` or :file:`egg` directory is found
 on :data:`sys.path`.  For example, if the parent directory of a
-:file:`dist-info` directory  is added to :envvar:`PYTHONPATH`, then it will be
+:file:`dist-info` directory is added to :envvar:`PYTHONPATH`, then it will be
 available in the database.
 
 Classes representing installed distributions
@@ -68,8 +67,8 @@ Classes representing installed distributions
    .. method:: uses(path)
 
       Check whether *path* was installed by this distribution (i.e. if the path
-      is present in the :file:`RECORD` file).  *path* can be a local absolute
-      path or a relative ``'/'``-separated path.  Returns a boolean.
+      is present in the :file:`RECORD` file). *path* can be a local absolute
+      path or a relative ``'/'``-separated path. Returns a boolean.
 
    Available attributes:
 
@@ -91,7 +90,6 @@ Classes representing installed distributions
       Boolean indicating whether this distribution was requested by the user of
       automatically installed as a dependency.
 
-
 .. class:: EggInfoDistribution(path)
 
    Class representing a legacy distribution.  It is compatible with distutils'
@@ -99,8 +97,8 @@ Classes representing installed distributions
 
    .. FIXME should be named EggDistribution
 
-   Instantiate with the *path* to an egg file or directory.  Instances can be
-   compared and sorted.  Other available methods are:
+   Instantiate with the *path* to an egg file or directory. Instances can be
+   compared and sorted. Other available methods are:
 
    .. method:: list_installed_files(local=False)
 
@@ -122,7 +120,6 @@ Classes representing installed distributions
 
       Shortcut for ``metadata['Version']``.
 
-
 Functions to work with the database
 -----------------------------------
 
@@ -132,11 +129,10 @@ Functions to work with the database
    for the first installed distribution matching *name*.  Egg distributions are
    considered only if *use_egg_info* is true; if both a dist-info and an egg
    file are found, the dist-info prevails.  The directories to be searched are
-   given in *paths*, which defaults to :data:`sys.path`.  Returns ``None`` if no
+   given in *paths*, which defaults to :data:`sys.path`. Returns ``None`` if no
    matching distribution is found.
 
    .. FIXME param should be named use_egg
-
 
 .. function:: get_distributions(use_egg_info=False, paths=None)
 
@@ -145,14 +141,12 @@ Functions to work with the database
    *use_egg_info* is true, also return instances of :class:`EggInfoDistribution`
    for legacy distributions found.
 
-
 .. function:: get_file_users(path)
 
    Return an iterator over all distributions using *path*, a local absolute path
    or a relative ``'/'``-separated path.
 
    .. XXX does this work with prefixes or full file path only?
-
 
 .. function:: obsoletes_distribution(name, version=None, use_egg_info=False)
 
@@ -161,14 +155,12 @@ Functions to work with the database
    :mod:`distlib.version`).  If *use_egg_info* is true, legacy egg
    distributions will be considered as well.
 
-
 .. function:: provides_distribution(name, version=None, use_egg_info=False)
 
    Return an iterator over all distributions that declare they provide *name*.
    *version* is an optional argument to match only specific releases (see
    :mod:`distlib.version`).  If *use_egg_info* is true, legacy egg
    distributions will be considered as well.
-
 
 Utility functions
 -----------------
@@ -177,15 +169,15 @@ Utility functions
 
    Escape *name* and *version* into a filename-safe form and return the
    directory name built from them, for example
-   :file:`{safename}-{safeversion}.dist-info.`  In *name*, runs of
+   :file:`{safename}-{safeversion}.dist-info`. In *name*, runs of
    non-alphanumeric characters are replaced with one ``'_'``; in *version*,
    spaces become dots, and runs of other non-alphanumeric characters (except
-   dots) a replaced by one ``'-'``.
+   dots) are replaced by one ``'-'``.
 
    .. XXX wth spaces in version numbers?
 
 For performance purposes, the list of distributions is being internally
-cached.   Caching is enabled by default, but you can control it with these
+cached. Caching is enabled by default, but you can control it with these
 functions:
 
 .. function:: clear_cache()
@@ -200,7 +192,6 @@ functions:
 
    Enable the internal cache, without clearing it.
 
-
 Examples
 --------
 
@@ -210,48 +201,48 @@ Printing all information about a distribution
 Given the name of an installed distribution, we shall print out all
 information that can be obtained using functions provided in this module::
 
-   import sys
-   import distlib.database
+    import sys
+    import distlib.database
 
-   try:
-       name = sys.argv[1]
-   except ValueError:
-       sys.exit('Not enough arguments')
+    try:
+        name = sys.argv[1]
+    except ValueError:
+        sys.exit('Not enough arguments')
 
-   # first create the Distribution instance
-   dist = distlib.database.Distribution(path)
-   if dist is None:
-       sys.exit('No such distribution')
+    # first create the Distribution instance
+    dist = distlib.database.Distribution(path)
+    if dist is None:
+        sys.exit('No such distribution')
 
-   print('Information about %r' % dist.name)
-   print()
+    print('Information about %r' % dist.name)
+    print()
 
-   print('Files')
-   print('=====')
-   for path, md5, size in dist.list_installed_files():
-       print('* Path: %s' % path)
-       print('  Hash %s, Size: %s bytes' % (md5, size))
-   print()
+    print('Files')
+    print('=====')
+    for path, md5, size in dist.list_installed_files():
+        print('* Path: %s' % path)
+        print('  Hash %s, Size: %s bytes' % (md5, size))
+    print()
 
-   print('Metadata')
-   print('========')
-   for key, value in dist.metadata.items():
-       print('%20s: %s' % (key, value))
-   print()
+    print('Metadata')
+    print('========')
+    for key, value in dist.metadata.items():
+        print('%20s: %s' % (key, value))
+    print()
 
-   print('Extra')
-   print('=====')
-   if dist.requested:
-       print('* It was installed by user request')
-   else:
-       print('* It was installed as a dependency')
+    print('Extra')
+    print('=====')
+    if dist.requested:
+        print('* It was installed by user request')
+    else:
+        print('* It was installed as a dependency')
 
 If we save the script above as ``print_info.py``, we can use it to extract
-information from a :file:`.dist-info` directory.  By typing in the console:
+information from a :file:`.dist-info` directory. By typing in the console:
 
 .. code-block:: sh
 
-   python print_info.py choxie
+    python print_info.py choxie
 
 we get the following output:
 
@@ -301,10 +292,9 @@ we get the following output:
         Requires-Python: UNKNOWN
       Requires-External: []
 
-  Extra
-  =====
-  * It was installed as a dependency
-
+   Extra
+   =====
+   * It was installed as a dependency
 
 Getting metadata about a distribution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -317,7 +307,7 @@ full :class:`Distribution` object but just want to do something with its
    >>> info = get_distribution('chocolate').metadata
    >>> info['Keywords']
    ['cooking', 'happiness']
-
+   >>>
 
 Finding out obsoleted distributions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -325,20 +315,20 @@ Finding out obsoleted distributions
 Now, we tackle a different problem, we are interested in finding out
 which distributions have been obsoleted. This can be easily done as follows::
 
-  import distlib.database
+    import distlib.database
 
-  # iterate over all distributions in the system
-  for dist in distlib.database.get_distributions():
-      name, version = dist.name, dist.version
-      # find out which distributions obsolete this name/version combination
-      replacements = distlib.database.obsoletes_distribution(name, version)
-      if replacements:
-          print('%r %s is obsoleted by' % (name, version),
-                ', '.join(repr(r.name) for r in replacements))
+    # iterate over all distributions in the system
+    for dist in distlib.database.get_distributions():
+        name, version = dist.name, dist.version
+        # find out which distributions obsolete this name/version combination
+        replacements = distlib.database.obsoletes_distribution(name, version)
+        if replacements:
+            print('%r %s is obsoleted by' % (name, version),
+                    ', '.join(repr(r.name) for r in replacements))
 
 This is how the output might look like:
 
 .. code-block:: none
 
-  'strawberry' 0.6 is obsoleted by 'choxie'
-  'grammar' 1.0a4 is obsoleted by 'towel-stuff'
+   'strawberry' 0.6 is obsoleted by 'choxie'
+   'grammar' 1.0a4 is obsoleted by 'towel-stuff'

@@ -6,10 +6,10 @@ Start here for all things ``distlib``.
 Distlib evolved out of ``packaging``
 ------------------------------------
 
-Distlib is a library which implements low-level functions which relate to
-packaging and distribution of Python software. It consists in part of some of
+Distlib is a library which implements low-level functions that relate to
+packaging and distribution of Python software. It consists in part of
 the functions in the ``packaging`` Python package, which was intended to be
-released as part of Python 3.3, but which was removed shortly before Python
+released as part of Python 3.3, but was removed shortly before Python
 3.3 entered beta testing.
 
 What was the problem with ``packaging``?
@@ -18,7 +18,7 @@ What was the problem with ``packaging``?
 The ``packaging`` software just wasn't ready for inclusion in the Python
 standard library. The amount of work needed to get it into the desired
 state was too great, given the number of people able to work on the project,
-the time they could devote to it and the Python 3.3 release schedule.
+the time they could devote to it, and the Python 3.3 release schedule.
 
 The approach taken by ``packaging`` was seen to be a good one: to ensure
 interoperability and consistency between different tools in the packaging
@@ -31,13 +31,13 @@ installation hooks.
 While some very good work was done in defining PEPs to codify some of the
 best practices, ``packaging`` suffered from some drawbacks, too:
 
-* Not all the PEPs may have been complete, because some important use
-  cases were not considered -- for example, built (binary) distributions for
+* Not all the PEPs may have been functionally complete, because some important
+  use cases were not considered -- for example, built (binary) distributions for
   Windows.
 
 * It continued the command-based design of ``distutils``, which had resulted
-  in ``distutils`` being difficult to extend in a consistent and easily
-  understood, maintainable fashion.
+  in ``distutils`` being difficult to extend in a consistent, easily
+  understood, and maintainable fashion.
 
 * Some important features required by distribution authors were not considered
   -- for example:
@@ -62,7 +62,7 @@ The idea behind Distlib is expressed in `this python-dev post
 <http://mail.python.org/pipermail/python-dev/2012-September/121716.html>`_,
 though a different name was suggested for the library. Basically, Distlib
 contains the implementations of the packaging PEPs and other low-level
-features which relate to packaging, distribution and deployment of Python
+features which relate to packaging, distribution, and deployment of Python
 software. If Distlib can be made genuinely useful, then it is possible for
 third-party packaging tools to transition to using it. Their developers and
 users then benefit from standardised implementation of low-level functions,
@@ -72,10 +72,10 @@ between tools.
 How you can help
 ----------------
 
-If you have some time abd the inclination to improve the state of Python
+If you have some time and the inclination to improve the state of Python
 packaging, then you can help by trying out Distlib, raising issues where
 you find problems, contributing feedback and/or patches to the
-implementation, documentation and underlying PEPs.
+implementation, documentation, and underlying PEPs.
 
 Main features
 -------------
@@ -113,16 +113,15 @@ Python version and platform compatibility
 -----------------------------------------
 
 Distlib is intended to be used on any Python version >= 2.6 and is tested on
-Python versions 2.6, 2.7, 3.1, 3.2 and 3.3 on Linux, Windows, and Mac OS X (not
+Python versions 2.6, 2.7, 3.1, 3.2, and 3.3 on Linux, Windows, and Mac OS X (not
 all versions are tested on all platforms, but are expected to work correctly).
-
 
 Project status
 --------------
 
 The project has reached alpha status in its development: there is a test
 suite and it has been exercised on Windows, Ubuntu and Mac OS X. No release
-has yet been made: to work with the proejct, you need to clone the source
+has yet been made: to work with the project, you need to clone the source
 repository or download a tarball from it.
 
 The source repository for the project is on BitBucket:

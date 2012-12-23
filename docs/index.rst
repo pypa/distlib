@@ -13,7 +13,7 @@ functionality which is intended to be used as the basis for third-party
 packaging tools. Using a common low-level layer will improve interoperability
 and consistency of user experience across those tools which use the library.
 
-**Please note:** this documentation is *work in progress*.
+**Please note:** this documentation is a *work in progress*.
 
 .. toctree::
    :maxdepth: 4

@@ -16,7 +16,7 @@ Classes
 
    This class represents a set of distributions which are installed on a Python
    path (like ``PYTHONPATH`` / ``sys.path``). Both new-style (``distlib``) and
-   legacy (egg) distibutions are catered for.
+   legacy (egg) distributions are catered for.
 
    Methods:
 
@@ -60,7 +60,7 @@ Classes
 
       Looks for a distribution by name. It returns the first one found with
       that name (there should only be one distribution with a given name on a
-      given search path). Returns ``None`` if no distrubution was found, or
+      given search path). Returns ``None`` if no distribution was found, or
       else an instance of :class:`Distribution` (or, if ``include_egg`` was
       specified as ``True`` for the instance, an instance of
       :class:`EggInfoDistribution` if a legacy distribution was found with that
@@ -80,7 +80,6 @@ Classes
       :type name: str
       :returns: An iterator which iterates over exported entries (instances of
                 :class:`ExportEntry`).
-
 
 .. class:: Distribution
 
@@ -111,7 +110,6 @@ Classes
 
       The locator for an instance which has been retrieved through a locator.
       This is ``None`` for an installed distribution.
-
 
 .. class:: InstalledDistribution(Distribution)
 
@@ -201,7 +199,6 @@ Classes
                        default location.
       :type filename: str
 
-
 .. class:: EggInfoDistribution
 
    Analogous to :class:`Distribution`, but covering legacy distributions. This
@@ -234,15 +231,13 @@ Classes
                     (i.e. with platform-specific directory separators as
                     indicated by ``os.sep``).
 
-
-
 The :class:`DependencyGraph` class
 ----------------------------------
 
 .. class:: DependencyGraph
 
-   This class represents a dependency graph between releases.  The nodes are
-   distribution instances; the edge model dependencies.  An edge from ``a``
+   This class represents a dependency graph between releases. The nodes are
+   distribution instances; the edges model dependencies. An edge from ``a``
    to ``b`` means that ``a`` depends on ``b``.
 
    .. method:: add_distribution(distribution)
@@ -274,14 +269,13 @@ The :class:`DependencyGraph` class
 
    .. attribute:: reverse_list
 
-      Dictionary mapping distributions to a list of predecessors.  This allows
+      Dictionary mapping distributions to a list of predecessors. This allows
       efficient traversal.
 
    .. attribute:: missing
 
       Dictionary mapping distributions to a list of requirements that were not
       provided by any distribution.
-
 
 The ``distlib.resources`` package
 ---------------------------------
@@ -294,7 +288,7 @@ Attributes
 .. attribute:: cache
 
    An instance of :class:`Cache`, which uses the default base location for the
-   cache (as descibed in the documentation for :meth:`Cache.__init__`).
+   cache (as described in the documentation for :meth:`Cache.__init__`).
 
 Functions
 ^^^^^^^^^
@@ -479,7 +473,6 @@ Classes
       .zip) into a directory name in the cache. This implementation
       delegates the work to :func:`~distlib.util.path_to_cache_dir`.
 
-
 The ``distlib.scripts`` package
 -------------------------------
 
@@ -590,7 +583,6 @@ The ``distlib.locators`` package
 
 .. currentmodule:: distlib.locators
 
-
 Classes
 ^^^^^^^^
 
@@ -672,7 +664,6 @@ Classes
 
        See :meth:`Locator.get_project`.
 
-
 .. class:: PyPIJSONLocator(Locator)
 
    This locator uses the PyPI JSON interface to locate distribution
@@ -689,7 +680,6 @@ Classes
     .. method:: get_project(name)
 
        See :meth:`Locator.get_project`.
-
 
 .. class:: SimpleScrapingLocator
 
@@ -708,7 +698,6 @@ Classes
       :type num_workers: int
       :param  kwargs: Passed to base class constructor.
 
-
 .. class:: DistPathLocator
 
    This locator uses a :class:`DistributionPath` instance to locate installed
@@ -719,7 +708,6 @@ Classes
       :param distpath: The distribution path to use.
       :type distpath: :class:`DistributionPath`
       :param  kwargs: Passed to base class constructor.
-
 
 .. class:: AggregatingLocator(Locator)
 
@@ -739,7 +727,6 @@ Classes
                     The locators are consulted in the order in which they're
                     passed in.
       :type merge: bool
-
 
 .. class:: DependencyFinder
 
@@ -767,13 +754,12 @@ Functions
              Note that some of the names may be Unicode.
    :rtype: list
 
-
 .. function:: locate(requirement)
 
    This convenience function returns the latest version of a potentially
    downloadable distribution which matches a requirement (name and version
    constraints). If a potentially downloadable distribution (i.e. one with
-   a download URL) is not found, ``None`` is returned; otherwise, an
+   a download URL) is not found, ``None`` is returned -- otherwise, an
    instance of :class:`~distlib.database.Distribution` is returned. The
    returned instance will have, at a minimum, ``name``, ``version`` and
    ``download_url``.
@@ -793,12 +779,10 @@ Variables
    This attribute holds a locator which is used by :func:`locate` to locate
    distributions.
 
-
 The ``distlib.util`` package
 -------------------------------
 
 .. currentmodule:: distlib.util
-
 
 Classes
 ^^^^^^^^
@@ -895,8 +879,6 @@ Functions
                        namespace, e.g. ``'environ'``, ``'sep'`` or
                        ``'path.supports_unicode_filenames'``.
    :type dotted_path: str
-
-
 
 Next steps
 ----------
