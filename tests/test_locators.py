@@ -13,7 +13,9 @@ from distlib.compat import url2pathname, urlparse
 from distlib.database import DistributionPath
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
-                              DistPathLocator, AggregatingLocator)
+                              DistPathLocator, AggregatingLocator,
+                              JSONLocator, DistPathLocator,
+                              DependencyFinder)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -151,3 +153,22 @@ class LocatorTestCase(unittest.TestCase):
         n1 = loc1.get_distribution_names()
         n2 = loc2.get_distribution_names()
         self.assertEqual(locator.get_distribution_names(), n1 | n2)
+
+    def test_dependency_finder(self):
+        locator = AggregatingLocator(
+            JSONLocator(),
+            SimpleScrapingLocator('http://pypi.python.org/simple/',
+                                  timeout=3.0),
+            scheme='legacy')
+        finder = DependencyFinder(locator)
+        dists, problems = finder.find('irc (5.0.1)')
+        self.assertFalse(problems)
+        expected = sorted([d.name_and_version for d in dists])
+        self.assertEqual(expected, ['hgtools (2.0.2)', 'irc (5.0.1)',
+                                    'pytest-runner (1.2)'])
+        dists, problems = finder.find('irc (5.0.1)', True)  # include tests
+        self.assertFalse(problems)
+        expected = sorted([d.name_and_version for d in dists])
+        self.assertEqual(expected, ['hgtools (2.0.2)', 'irc (5.0.1)',
+                                    'py (1.4.12)', 'pytest (2.3.4)',
+                                    'pytest-runner (1.2)'])

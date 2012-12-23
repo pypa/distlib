@@ -797,7 +797,7 @@ class DependencyFinder(object):
             result = True
         return result
 
-    def find(self, requirement):
+    def find(self, requirement, tests=False):
         dist = odist = self.locator.locate(requirement)
         if dist is None:
             raise ValueError('Unable to locate %r' % requirement)
@@ -817,8 +817,13 @@ class DependencyFinder(object):
                     self.try_to_replace(dist, other, problems)
 
             ireqts = set(dist.get_requirements('install'))
-
-            for r in dist.requires:
+            sreqts = set(dist.get_requirements('setup'))
+            if not tests:
+                treqts = set()
+            else:
+                treqts = set(dist.get_requirements('test'))
+            all_reqts = ireqts | sreqts | treqts
+            for r in all_reqts:
                 providers = self.find_providers(r)
                 if not providers:
                     logger.debug('No providers found for %r', r)
