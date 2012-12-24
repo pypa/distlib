@@ -12,7 +12,7 @@ class DistlibException(Exception):
 
 try:
     from logging import NullHandler
-except ImportError:
+except ImportError: # pragma: no cover
     class NullHandler(logging.Handler):
         def handle(self, record): pass
         def emit(self, record): pass

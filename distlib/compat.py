@@ -69,7 +69,7 @@ else:
 
 try:
     from platform import python_implementation
-except ImportError:
+except ImportError: # pragma: no cover
     def python_implementation():
         """Return a string identifying the Python implementation."""
         if 'PyPy' in sys.version:
@@ -82,12 +82,12 @@ except ImportError:
 
 try:
     import sysconfig
-except ImportError:
+except ImportError: # pragma: no cover
     from ._backport import sysconfig
 
 try:
     callable = callable
-except NameError:
+except NameError:   # pragma: no cover
     from collections import Callable
 
     def callable(obj):
@@ -96,7 +96,7 @@ except NameError:
 
 try:
     fsencode = os.fsencode
-except AttributeError:
+except AttributeError:  # pragma: no cover
     def fsencode(filename):
         if isinstance(filename, bytes):
             return filename
@@ -108,7 +108,7 @@ except AttributeError:
 
 try:
     from tokenize import detect_encoding
-except ImportError:
+except ImportError: # pragma: no cover
     from codecs import BOM_UTF8
     import re
 
@@ -210,7 +210,7 @@ unescape = HTMLParser().unescape
 
 try:
     from collections import ChainMap
-except ImportError:
+except ImportError: # pragma: no cover
     from collections import MutableMapping
 
     try:
@@ -345,7 +345,7 @@ except ImportError:
 
 try:
     from imp import cache_from_source
-except ImportError:
+except ImportError: # pragma: no cover
     def cache_from_source(path, debug_override=None):
         assert path.endswith('.py')
         if debug_override is None:
@@ -358,7 +358,7 @@ except ImportError:
 
 try:
     from collections import OrderedDict
-except ImportError:
+except ImportError: # pragma: no cover
 ## {{{ http://code.activestate.com/recipes/576693/ (r9)
 # Backport of OrderedDict() class that runs on Python 2.4, 2.5, 2.6, 2.7 and pypy.
 # Passes Python2.7's test suite and incorporates all the latest updates.
