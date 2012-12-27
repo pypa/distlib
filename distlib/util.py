@@ -280,7 +280,7 @@ class FileOperator(object):
                 else:
                     assert path.startswith(prefix)
                     diagpath = path[len(prefix):]
-            py_compile.compile(path, dpath, diagpath)
+            py_compile.compile(path, dpath, diagpath, True) # raise on error
         if self.record:
             self.files_written.add(dpath)
 
@@ -332,10 +332,16 @@ class FileOperator(object):
             for f in list(self.files_written):
                 if os.path.exists(f):
                     os.remove(f)
-            # dirs should all be empty now
+            # dirs should all be empty now, except perhaps for
+            # __pycache__ subdirs
             # reverse so that subdirs appear before their parents
             dirs = sorted(self.dirs_created, reverse=True)
             for d in dirs:
+                flist = os.listdir(d)
+                if flist:
+                    assert flist == ['__pycache__']
+                    sd = os.path.join(d, flist[0])
+                    os.rmdir(sd)
                 os.rmdir(d) # should fail if non-empty
         self._init_record()
 

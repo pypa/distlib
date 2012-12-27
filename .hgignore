@@ -1,4 +1,4 @@
-\.(py[co]|log|zip|coverage)$
+\.(py[co]|log|zip|coverage(rc)?)$
 tests/run/
 docs/_build/
 MANIFEST|distlib-vcsid
