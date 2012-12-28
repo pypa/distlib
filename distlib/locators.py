@@ -798,9 +798,12 @@ class DependencyFinder(object):
         return result
 
     def find(self, requirement, tests=False):
-        dist = odist = self.locator.locate(requirement)
-        if dist is None:
-            raise ValueError('Unable to locate %r' % requirement)
+        if isinstance(requirement, Distribution):
+            dist = odist = requirement
+        else:
+            dist = odist = self.locator.locate(requirement)
+            if dist is None:
+                raise ValueError('Unable to locate %r' % requirement)
         dist.requested = True
         problems = set()
         todo = set([dist])
