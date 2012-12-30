@@ -755,6 +755,15 @@ Classes
                 string 'unsatisfied' and whose second element is a requirement
                 which couldn't be satisified.
 
+                In the set of :class:`Distribution` instances returned, some
+                attributes will be set:
+
+                * The instance representing the passed-in ``requirement`` will
+                  have the :attr:`requested` attribute set to ``True``.
+                * All requirements which are not installation requirements (in
+                  other words, are needed only for build and test) will have
+                  the :attr:`build_time_dependency` attribute set to ``True``.
+
 
 Functions
 ^^^^^^^^^
