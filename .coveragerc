@@ -2,9 +2,23 @@
 branch = True
 omit =
     /home/vinay/.virtualenvs/*
-    tests/*.zip/*
+    /home/vsajip/.virtualenvs/*
     distlib/_backport/*
     distlib/pypi/*
+    tests/unittest2/*
+    tests/foo.zip/*
+    tests/bar.zip/*
+    tests/foofoo/*
+    tests/test_pypi_*
+    tests/pypi_server
+    tests/test_sysconfig*
+    tests/test_shutil*
+    tests/test_all*
+
+[paths]
+source =
+    /home/vinay/projects/distlib/
+    c:\Users\Vinay\Projects\distlib
 
 [report]
 exclude_lines =
