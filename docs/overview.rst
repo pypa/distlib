@@ -124,6 +124,10 @@ suite and it has been exercised on Windows, Ubuntu and Mac OS X. No release
 has yet been made: to work with the project, you need to clone the source
 repository or download a tarball from it.
 
+Coverage results are available at:
+
+http://www.red-dove.com/distlib/coverage/
+
 The source repository for the project is on BitBucket:
 
 https://bitbucket.org/vinay.sajip/distlib/

@@ -738,7 +738,23 @@ Classes
       Initialise an instance with the locator to be used for locating
       distributions.
 
-   .. method:: find(requirement)
+   .. method:: find(requirement, tests=False)
+
+      Find all the distributions needed to fulfill ``requirement``.
+
+      :param requirement: A string of the from ``name (version)`` where
+                          version can include an inequality constraint, or an
+                          instance of :class:`Distribution` (e.g. representing
+                          a distribution on the local hard disk).
+      :param tests: If ``True``, include requirements which are only needed for
+                    running tests. Otherwise, leave these out.
+      :returns: A 2-tuple. The first element is a set of :class:`Distribution`
+                instances. The second element is a set of problems encountered
+                during dependency resolution. Currently, if this set is non-
+                empty, it will contain 2-tuples whose first element is the
+                string 'unsatisfied' and whose second element is a requirement
+                which couldn't be satisified.
+
 
 Functions
 ^^^^^^^^^
