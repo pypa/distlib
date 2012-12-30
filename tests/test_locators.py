@@ -15,7 +15,8 @@ from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
                               DistPathLocator, AggregatingLocator,
                               JSONLocator, DistPathLocator,
-                              DependencyFinder)
+                              DependencyFinder,
+                              get_all_distribution_names, default_locator)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -172,3 +173,16 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(expected, ['hgtools (2.0.2)', 'irc (5.0.1)',
                                     'py (1.4.12)', 'pytest (2.3.4)',
                                     'pytest-runner (1.2)'])
+
+
+    def test_get_all_dist_names(self):
+        for url in (None, 'http://python.org/pypi'):
+            all_dists = get_all_distribution_names(url)
+            self.assertGreater(len(all_dists), 0)
+
+    def test_url_preference(self):
+        cases = (('http://netloc/path', 'https://netloc/path'),
+                 ('http://pypi.python.org/path', 'http://netloc/path'),
+                 ('http://netloc/B', 'http://netloc/A'))
+        for url1, url2 in cases:
+            self.assertEqual(default_locator.prefer_url(url1, url2), url1)
