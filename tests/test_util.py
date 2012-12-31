@@ -2,6 +2,7 @@ from itertools import islice
 import os
 import shutil
 import tempfile
+import textwrap
 import time
 
 from compat import unittest
@@ -274,6 +275,35 @@ class UtilTestCase(unittest.TestCase):
             else:
                 self.assertEqual(actual, expected)
 
+        dot = seq.dot
+        expected = '''
+        digraph G {
+          check -> build_clibs;
+          install_lib -> install_scripts;
+          register -> upload_bdist;
+          build -> upload_bdist;
+          build_ext -> build_py;
+          install_scripts -> install_data;
+          check -> sdist;
+          check -> register;
+          build -> install_headers;
+          install_data -> install_distinfo;
+          sdist -> upload_sdist;
+          register -> upload_sdist;
+          install_distinfo -> install;
+          build -> test;
+          install_headers -> install_lib;
+          build_py -> build_scripts;
+          build_clibs -> build_ext;
+          build_scripts -> build;
+        }
+        '''
+        expected = textwrap.dedent(expected).strip().splitlines()
+        actual = dot.splitlines()
+        self.assertEqual(expected[0], actual[0])
+        self.assertEqual(expected[-1], actual[-1])
+        self.assertEqual(set(expected[1:-1]), set(actual[1:-1]))
+
     def test_sequencer_cycle(self):
         seq = Sequencer()
         seq.add('A', 'B')
@@ -290,6 +320,8 @@ class UtilTestCase(unittest.TestCase):
         seq.remove_node('E')
         self.assertFalse(seq.is_step('E'))
         self.assertRaises(ValueError, seq.get_steps, 'E')
+        seq.remove('C', 'A')
+        self.assertEqual(list(seq.get_steps('D')), ['A', 'B', 'C', 'D'])
 
     def test_unarchive(self):
         import zipfile, tarfile
@@ -332,17 +364,23 @@ class UtilTestCase(unittest.TestCase):
 
 class ProgressTestCase(unittest.TestCase):
     def test_basic(self):
+        if os.name == 'nt':
+            speed1 = '20 KB/s'
+            speed2 = '22 KB/s'
+        else:
+            speed1 = '19 KB/s'
+            speed2 = '22 KB/s'
         expected = (
-            (' 10 %', 'ETA : 00:00:04', '19 KB/s'),
-            (' 20 %', 'ETA : 00:00:04', '19 KB/s'),
-            (' 30 %', 'ETA : 00:00:03', '19 KB/s'),
-            (' 40 %', 'ETA : 00:00:03', '19 KB/s'),
-            (' 50 %', 'ETA : 00:00:02', '19 KB/s'),
-            (' 60 %', 'ETA : 00:00:02', '19 KB/s'),
-            (' 70 %', 'ETA : 00:00:01', '19 KB/s'),
-            (' 80 %', 'ETA : 00:00:01', '19 KB/s'),
-            (' 90 %', 'ETA : 00:00:00', '19 KB/s'),
-            ('100 %', 'Done: 00:00:04', '22 KB/s'),
+            (' 10 %', 'ETA : 00:00:04', speed1),
+            (' 20 %', 'ETA : 00:00:04', speed1),
+            (' 30 %', 'ETA : 00:00:03', speed1),
+            (' 40 %', 'ETA : 00:00:03', speed1),
+            (' 50 %', 'ETA : 00:00:02', speed1),
+            (' 60 %', 'ETA : 00:00:02', speed1),
+            (' 70 %', 'ETA : 00:00:01', speed1),
+            (' 80 %', 'ETA : 00:00:01', speed1),
+            (' 90 %', 'ETA : 00:00:00', speed1),
+            ('100 %', 'Done: 00:00:04', speed2),
         )
         bar = Progress(maxval=100000).start()
         for i, v in enumerate(range(10000, 100000, 10000)):
@@ -359,17 +397,21 @@ class ProgressTestCase(unittest.TestCase):
         self.assertEqual(bar.speed, s)
 
     def test_unknown(self):
+        if os.name == 'nt':
+            speed = '20 KB/s'
+        else:
+            speed = '19 KB/s'
         expected = (
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            (' ?? %', 'ETA : ??:??:??', '19 KB/s'),
-            ('100 %', 'Done: 00:00:04', '19 KB/s'),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            (' ?? %', 'ETA : ??:??:??', speed),
+            ('100 %', 'Done: 00:00:04', speed),
         )
         bar = Progress(maxval=None).start()
         for i, v in enumerate(range(10000, 100000, 10000)):
