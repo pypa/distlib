@@ -5,15 +5,18 @@ omit =
     /home/vsajip/.virtualenvs/*
     distlib/_backport/*
     distlib/pypi/*
+    setup*
+    tests/support*
     tests/unittest2/*
     tests/foo.zip/*
     tests/bar.zip/*
     tests/foofoo/*
     tests/test_pypi_*
-    tests/pypi_server
+    tests/pypi_server*
     tests/test_sysconfig*
     tests/test_shutil*
     tests/test_all*
+    tests/distlib_tests*
 
 [paths]
 source =
