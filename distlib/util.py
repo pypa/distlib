@@ -694,6 +694,7 @@ class Sequencer(object):
                 todo.extend(preds)
         return reversed(result)
 
+    @property
     def strong_connections(self):
         #http://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
         index_counter = [0]
