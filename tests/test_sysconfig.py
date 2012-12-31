@@ -23,9 +23,6 @@ from distlib.compat import StringIO
 
 import support
 
-# Some tests don't work in Python 3.3 venvs
-
-_in_venv = hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix
 
 class TestSysConfig(unittest.TestCase):
 
@@ -247,7 +244,6 @@ class TestSysConfig(unittest.TestCase):
 
         # XXX more platforms to tests here
 
-    @unittest.skipIf(_in_venv, "test not relevant in venvs")
     def test_get_config_h_filename(self):
         config_h = sysconfig.get_config_h_filename()
         self.assertTrue(os.path.isfile(config_h), config_h)
@@ -286,7 +282,6 @@ class TestSysConfig(unittest.TestCase):
         finally:
             os.unlink(link)
 
-    @unittest.skipIf(_in_venv, "test not relevant in venvs")
     def test_user_similar(self):
         # Issue #8759: make sure the posix scheme for the users
         # is similar to the global posix_prefix one
@@ -311,7 +306,6 @@ class TestSysConfig(unittest.TestCase):
         _main()
         self.assertGreater(len(sys.stdout.getvalue().split('\n')), 0)
 
-    @unittest.skipIf(_in_venv, "test not relevant in venvs")
     @unittest.skipIf(sys.platform == 'win32', 'does not apply to Windows')
     def test_ldshared_value(self):
         ldflags = sysconfig.get_config_var('LDFLAGS')
@@ -319,7 +313,6 @@ class TestSysConfig(unittest.TestCase):
 
         self.assertIn(ldflags.strip(), ldshared.strip())
 
-    @unittest.skipIf(_in_venv, "test not relevant in venvs")
     @unittest.skipUnless(sys.platform == "darwin", "test only relevant on MacOSX")
     def test_platform_in_subprocess(self):
         my_platform = sysconfig.get_platform()
@@ -377,7 +370,6 @@ class MakefileTests(unittest.TestCase):
     def tearDown(self):
         os.unlink(self.TESTFN)
 
-    @unittest.skipIf(_in_venv, "test not relevant in venvs")
     @unittest.skipIf(sys.platform.startswith('win'),
                     'Test is not Windows compatible')
     def test_get_makefile_filename(self):
