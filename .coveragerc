@@ -6,6 +6,7 @@ omit =
     distlib/_backport/*
     distlib/pypi/*
     setup*
+    tests/compat*
     tests/support*
     tests/unittest2/*
     tests/foo.zip/*
