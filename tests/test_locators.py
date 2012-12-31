@@ -186,3 +186,11 @@ class LocatorTestCase(unittest.TestCase):
                  ('http://netloc/B', 'http://netloc/A'))
         for url1, url2 in cases:
             self.assertEqual(default_locator.prefer_url(url1, url2), url1)
+
+
+    def test_dist_reqts(self):
+        r = 'config (<=0.3.5)'
+        dist = default_locator.locate(r)
+        self.assertIsNotNone(dist)
+        self.assertTrue(dist.matches_requirement(r))
+        self.assertFalse(dist.matches_requirement('config (0.3.6)'))
