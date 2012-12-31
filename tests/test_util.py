@@ -8,11 +8,12 @@ import time
 from compat import unittest
 
 from distlib import DistlibException
+from distlib.compat import cache_from_source
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
-                          FileOperator, is_string_sequence)
+                          FileOperator, is_string_sequence, get_package_data)
 
 HERE = os.path.dirname(__file__)
 
@@ -369,6 +370,15 @@ class UtilTestCase(unittest.TestCase):
         self.assertFalse(is_string_sequence(['a', 'b', None]))
         self.assertRaises(AssertionError, is_string_sequence, [])
 
+    def test_package_data(self):
+        data = get_package_data('config', '0.3.6')
+        self.assertTrue(data)
+        self.assertTrue('metadata' in data)
+        metadata = data['metadata']
+        self.assertEqual(metadata['name'], 'config')
+        self.assertEqual(metadata['version'], '0.3.6')
+        data = get_package_data('config', '0.3.5')
+        self.assertFalse(data)
 
 class ProgressTestCase(unittest.TestCase):
     def test_basic(self):
@@ -439,17 +449,45 @@ class FileOpsTestCase(unittest.TestCase):
 
     def setUp(self):
         self.fileop = FileOperator()
+        self.workdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        if os.path.isdir(self.workdir):
+            shutil.rmtree(self.workdir)
 
     def test_ensure_dir(self):
-        td = tempfile.mkdtemp()
-        try:
-            os.rmdir(td)
-            self.fileop.ensure_dir(td)
-            self.assertTrue(os.path.exists(td))
-            self.fileop.dry_run = True
-            os.rmdir(td)
-            self.fileop.ensure_dir(td)
-            self.assertFalse(os.path.exists(td))
-        finally:
-            if os.path.isdir(td):
-                os.rmdir(td)
+        td = self.workdir
+        os.rmdir(td)
+        self.fileop.ensure_dir(td)
+        self.assertTrue(os.path.exists(td))
+        self.fileop.dry_run = True
+        os.rmdir(td)
+        self.fileop.ensure_dir(td)
+        self.assertFalse(os.path.exists(td))
+
+    def test_ensure_removed(self):
+        td = self.workdir
+        self.assertTrue(os.path.exists(td))
+        self.fileop.dry_run = True
+        self.fileop.ensure_removed(td)
+        self.assertTrue(os.path.exists(td))
+        self.fileop.dry_run = False
+        self.fileop.ensure_removed(td)
+        self.assertFalse(os.path.exists(td))
+
+    def test_is_writable(self):
+        sd = 'subdir'
+        ssd = 'subsubdir'
+        path = os.path.join(self.workdir, sd, ssd)
+        os.makedirs(path)
+        path = os.path.join(path, 'test')
+        self.assertTrue(self.fileop.is_writable(path))
+        if os.name == 'posix':
+            self.assertFalse(self.fileop.is_writable('/etc'))
+
+    def test_byte_compile(self):
+        path = os.path.join(self.workdir, 'hello.py')
+        dpath = cache_from_source(path, True)
+        self.fileop.write_text_file(path, 'print("Hello, world!")', 'utf-8')
+        self.fileop.byte_compile(path, optimize=False)
+        self.assertTrue(os.path.exists(dpath))
