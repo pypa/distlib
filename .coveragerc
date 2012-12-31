@@ -3,7 +3,7 @@ branch = True
 omit =
     /home/vinay/.virtualenvs/*
     /home/vsajip/.virtualenvs/*
-    /Users/administrator/projects/venv32/*
+    /Users/administrator/projects/venv*
     distlib/_backport/*
     distlib/pypi/*
     setup*
