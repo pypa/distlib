@@ -22,6 +22,7 @@ omit =
 [paths]
 source =
     /home/vinay/projects/distlib/
+    /Users/administrator/projects/distlib
     c:\Users\Vinay\Projects\distlib
 
 [report]
