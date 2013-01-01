@@ -11,7 +11,9 @@ from compat import unittest
 from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
                              UnlimitedMajorVersion as UV,
                              HugeMajorVersionError, UnsupportedVersionError,
-                             suggest_normalized_version as suggest,
+                             suggest_normalized_version,
+                             suggest_semantic_version,
+                             suggest_adaptive_version,
                              LegacyVersion as LV, LegacyMatcher as LM,
                              SemanticVersion as SV, SemanticMatcher as SM,
                              AdaptiveVersion as AV, AdaptiveMatcher as AM,
@@ -155,6 +157,7 @@ class VersionTestCase(unittest.TestCase):
         self.assertGreater(NV('1.0c4'), NV('1.0c1'))
 
     def test_suggest_normalized_version(self):
+        suggest = suggest_normalized_version
         self.assertEqual(suggest('1.0'), '1.0')
         self.assertEqual(suggest('1.0-alpha1'), '1.0a1')
         self.assertEqual(suggest('1.0c2'), '1.0c2')
@@ -184,6 +187,14 @@ class VersionTestCase(unittest.TestCase):
         # we want to be able to parse Tcl-TK
         # they us "p1" "p2" for post releases
         self.assertEqual(suggest('1.4p1'), '1.4.post1')
+
+    def test_suggestions_other(self):
+        suggest = suggest_semantic_version
+        self.assertEqual(suggest(''), '0.0.0')
+        self.assertEqual(suggest('1'), '1.0.0')
+        self.assertEqual(suggest('1.2'), '1.2.0')
+        suggest = suggest_adaptive_version
+        self.assertEqual(suggest('1.0-alpha1'), '1.0a1')
 
     def test_matcher(self):
         # NormalizedMatcher knows how to parse stuff like:

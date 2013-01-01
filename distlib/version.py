@@ -17,7 +17,8 @@ __all__ = ['NormalizedVersion', 'NormalizedMatcher',
            'SemanticVersion', 'SemanticMatcher',
            'AdaptiveVersion', 'AdaptiveMatcher',
            'UnsupportedVersionError', 'HugeMajorVersionError',
-           'suggest_normalized_version',
+           'suggest_normalized_version', 'suggest_semantic_version',
+           'suggest_adaptive_version',
            'normalized_key', 'legacy_key', 'semantic_key', 'adaptive_key',
            'get_scheme']
 
