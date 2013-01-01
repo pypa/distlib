@@ -129,7 +129,7 @@ class ScriptTestCase(unittest.TestCase):
                 with open(fn, 'rb') as f:
                     data = f.read()
                 self.assertEqual(data, tlauncher)
-            elif f.startswith('foo') and fn.endswith(('.py', '.pyw')):
+            elif fn.startswith('foo') and fn.endswith(('.py', '.pyw')):
                 with open(fn, 'rb') as f:
                     data = f.readline()
                     self.assertIn(b'python.exe', data)

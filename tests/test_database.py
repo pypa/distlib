@@ -411,23 +411,31 @@ class TestDatabase(LoggingCatcher,
         cases = ((d, non_egg_dists, InstalledDistribution),
                  (ed, all_dists, BaseInstalledDistribution))
 
-        for distset, fake_dists, allowed_class in cases:
-            found_dists = []
+        fake_dists_path = self.fake_dists_path
+        for enabled in (True, False):
+            if not enabled:
+                d.disable_cache()
+                ed.disable_cache()
+                d.clear_cache()
+                ed.clear_cache()
 
-            # Verify the fake dists have been found.
-            dists = list(distset.get_distributions())
-            for dist in dists:
-                self.assertIsInstance(dist, allowed_class)
-                if (dist.name in dict(fake_dists) and
-                    dist.path.startswith(self.fake_dists_path)):
-                    found_dists.append((dist.name, dist.version))
-                else:
-                    # check that it doesn't find anything more than this
-                    self.assertFalse(dist.path.startswith(self.fake_dists_path))
-                # otherwise we don't care what other distributions are found
+            for distset, fake_dists, allowed_class in cases:
+                found_dists = []
 
-            # Finally, test that we found all that we were looking for
-            self.assertEqual(sorted(found_dists), sorted(fake_dists))
+                # Verify the fake dists have been found.
+                dists = list(distset.get_distributions())
+                for dist in dists:
+                    self.assertIsInstance(dist, allowed_class)
+                    if (dist.name in dict(fake_dists) and
+                        dist.path.startswith(fake_dists_path)):
+                        found_dists.append((dist.name, dist.version))
+                    else:
+                        # check that it doesn't find anything more than this
+                        self.assertFalse(dist.path.startswith(fake_dists_path))
+                    # otherwise we don't care what other dists are found
+
+                # Finally, test that we found all that we were looking for
+                self.assertEqual(sorted(found_dists), sorted(fake_dists))
 
     @requires_zlib
     def test_get_distribution(self):

@@ -157,7 +157,7 @@ class DistributionPath(object):
                 :class:`EggInfoDistribution` instances
         """
         if not self._cache_enabled:
-            for dist in _yield_distributions(self):
+            for dist in self._yield_distributions():
                 yield dist
         else:
             self._generate_cache()
