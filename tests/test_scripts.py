@@ -103,6 +103,20 @@ class ScriptTestCase(unittest.TestCase):
                 with open(fn, 'rb') as f:
                     data = f.readline()
                     self.assertIn(executable, data)
+        # Now test making a script
+        files = self.maker.make('foo = foo:main [gui]')
+        self.assertEqual(len(files), 2)
+        filenames = set([os.path.basename(f) for f in files])
+        self.assertEqual(filenames, set(('foo-script.pyw', 'foo.exe')))
+        for fn in files:
+            if fn.endswith('.exe'):
+                with open(fn, 'rb') as f:
+                    data = f.read()
+                self.assertEqual(data, wlauncher)
+            elif fn.endswith(('.py', '.pyw')):
+                with open(fn, 'rb') as f:
+                    data = f.readline()
+                    self.assertIn(b'pythonw.exe', data)
 
     def test_dry_run(self):
         self.maker.dry_run = True

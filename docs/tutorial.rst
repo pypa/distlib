@@ -40,6 +40,13 @@ in the top-level directory of the package. You can of course also run
 to install the package (perhaps invoking with ``sudo`` if you need
 to install to a protected location).
 
+Coverage results are available at:
+
+http://www.red-dove.com/distlib/coverage/
+
+These are updated as and when time permits.
+
+
 First steps
 -----------
 

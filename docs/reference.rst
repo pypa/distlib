@@ -231,9 +231,6 @@ Classes
                     (i.e. with platform-specific directory separators as
                     indicated by ``os.sep``).
 
-The :class:`DependencyGraph` class
-----------------------------------
-
 .. class:: DependencyGraph
 
    This class represents a dependency graph between releases. The nodes are
