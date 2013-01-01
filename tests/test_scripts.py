@@ -124,7 +124,7 @@ class ScriptTestCase(unittest.TestCase):
         filenames = set([os.path.basename(f) for f in files])
         self.assertEqual(filenames, set(('foo-script.py', 'foo.exe')))
         for fn in files:
-            if fn.endswith('.exe'):
+            if fn.endswith('foo.exe'):
                 with open(fn, 'rb') as f:
                     data = f.read()
                 self.assertEqual(data, tlauncher)

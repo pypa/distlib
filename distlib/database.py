@@ -480,18 +480,22 @@ class InstalledDistribution(BaseInstalledDistribution):
     def __str__(self):
         return "%s %s" % (self.name, self.version)
 
-    def _get_records(self, local=False):
+    def _get_records(self):
         results = []
         record = self.open_distinfo_file('RECORD', preserve_newline=True)
         try:
             record_reader = csv.reader(record, delimiter=str(','),
                                        lineterminator=str('\n'))
+
+            # Base location is parent dir of .dist-info dir
+            base_location = os.path.dirname(self.path)
+            base_location = os.path.abspath(base_location)
             for row in record_reader:
                 missing = [None for i in range(len(row), 3)]
                 path, checksum, size = row + missing
-                if local:
+                if not os.path.isabs(path):
                     path = path.replace('/', os.sep)
-                    path = os.path.join(sys.prefix, path)
+                    path = os.path.join(base_location, path)
                 results.append((path, checksum, size))
         finally:
             record.close()
@@ -553,23 +557,14 @@ class InstalledDistribution(BaseInstalledDistribution):
             'no resource file with relative path %r is installed' %
             relative_path)
 
-    def list_installed_files(self, local=False):
+    def list_installed_files(self):
         """
         Iterates over the ``RECORD`` entries and returns a tuple
-        ``(path, hash, size)`` for each line. If *local* is ``True``,
-        the returned path is transformed into a local absolute path.
-        Otherwise the raw value from RECORD is returned.
+        ``(path, hash, size)`` for each line.
 
-        A local absolute path is an absolute path in which occurrences of
-        ``'/'`` have been replaced by the system separator given by ``os.sep``.
-
-        :parameter local: flag to say if the path should be returned as a local
-                          absolute path
-
-        :type local: boolean
         :returns: iterator of (path, hash, size)
         """
-        for result in self._get_records(local):
+        for result in self._get_records():
             yield result
 
     def write_installed_files(self, paths, dry_run=False):
@@ -708,19 +703,15 @@ class InstalledDistribution(BaseInstalledDistribution):
 
         return open(path, open_flags, **nl_arg)
 
-    def list_distinfo_files(self, local=False):
+    def list_distinfo_files(self):
         """
         Iterates over the ``RECORD`` entries and returns paths for each line if
         the path is pointing to a file located in the ``.dist-info`` directory
         or one of its subdirectories.
 
-        :parameter local: If *local* is ``True``, each returned path is
-                          transformed into a local absolute path. Otherwise the
-                          raw value from ``RECORD`` is returned.
-        :type local: boolean
         :returns: iterator of paths
         """
-        for path, checksum, size in self._get_records(local):
+        for path, checksum, size in self._get_records():
             # XXX add separator or use real relpath algo
             if path.startswith(self.path):
                 yield path

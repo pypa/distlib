@@ -258,7 +258,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         # Test for the iteration of local absolute paths
         distinfo_files = [os.path.join(sys.prefix, distinfo_dir, path) for
                           path in distinfo_files]
-        found = sorted(dist.list_distinfo_files(local=True))
+        found = sorted(dist.list_distinfo_files())
         if os.sep != '/':
             self.assertNotIn('/', found[0])
             self.assertIn(os.sep, found[0])
