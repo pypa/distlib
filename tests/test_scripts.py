@@ -117,7 +117,8 @@ class ScriptTestCase(unittest.TestCase):
             elif fn.endswith(('.py', '.pyw')):
                 with open(fn, 'rb') as f:
                     data = f.readline()
-                    self.assertIn(b'pythonw.exe', data)
+                    # can be pythonw.exe or pythonwXY.exe
+                    self.assertIn(b'pythonw', data)
 
         files = self.maker.make('foo = foo:main')
         self.assertEqual(len(files), 2)
@@ -128,7 +129,7 @@ class ScriptTestCase(unittest.TestCase):
                 with open(fn, 'rb') as f:
                     data = f.read()
                 self.assertEqual(data, tlauncher)
-            elif fn.endswith(('.py', '.pyw')):
+            elif f.startswith('foo') and fn.endswith(('.py', '.pyw')):
                 with open(fn, 'rb') as f:
                     data = f.readline()
                     self.assertIn(b'python.exe', data)
