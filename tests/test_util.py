@@ -491,3 +491,33 @@ class FileOpsTestCase(unittest.TestCase):
         self.fileop.write_text_file(path, 'print("Hello, world!")', 'utf-8')
         self.fileop.byte_compile(path, optimize=False)
         self.assertTrue(os.path.exists(dpath))
+
+    def write_some_files(self):
+        path = os.path.join(self.workdir, 'file1')
+        written = []
+        self.fileop.write_text_file(path, 'test', 'utf-8')
+        written.append(path)
+        path = os.path.join(self.workdir, 'file2')
+        self.fileop.copy_file(written[0], path)
+        written.append(path)
+        path = os.path.join(self.workdir, 'dir1')
+        self.fileop.ensure_dir(path)
+        return set(written), set([path])
+
+    def test_commit(self):
+        # will assert if record isn't set
+        self.assertRaises(AssertionError, self.fileop.commit)
+        self.fileop.record = True
+        expected = self.write_some_files()
+        actual = self.fileop.commit()
+        self.assertEqual(actual, expected)
+        self.assertFalse(self.fileop.record)
+
+    def test_rollback(self):
+        # will assert if record isn't set
+        self.assertRaises(AssertionError, self.fileop.commit)
+        self.fileop.record = True
+        expected = self.write_some_files()
+        actual = self.fileop.rollback()
+        self.assertEqual(os.listdir(self.workdir), [])
+        self.assertFalse(self.fileop.record)
