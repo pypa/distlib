@@ -10,7 +10,7 @@ import sys
 from compat import unittest
 
 from distlib.compat import url2pathname, urlparse
-from distlib.database import DistributionPath
+from distlib.database import DistributionPath, make_graph
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
                               DistPathLocator, AggregatingLocator,
@@ -174,6 +174,12 @@ class LocatorTestCase(unittest.TestCase):
                                     'py (1.4.12)', 'pytest (2.3.4)',
                                     'pytest-runner (1.2)'])
 
+        g = make_graph(dists)
+        slist, cycle = g.topological_sort()
+        self.assertFalse(cycle)
+        names = [d.name for d in slist]
+        self.assertEqual(names, ['py', 'hgtools', 'pytest',
+                                 'pytest-runner', 'irc'])
 
     def test_get_all_dist_names(self):
         for url in (None, 'http://python.org/pypi'):
