@@ -88,6 +88,7 @@ class ScriptTestCase(unittest.TestCase):
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_windows(self):
         wlauncher = self.maker._get_launcher('w')
+        tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
         executable = sys.executable.encode('utf-8')
         files = self.maker.make('script4.py')
@@ -103,7 +104,7 @@ class ScriptTestCase(unittest.TestCase):
                 with open(fn, 'rb') as f:
                     data = f.readline()
                     self.assertIn(executable, data)
-        # Now test making a script
+        # Now test making scripts gui and console
         files = self.maker.make('foo = foo:main [gui]')
         self.assertEqual(len(files), 2)
         filenames = set([os.path.basename(f) for f in files])
@@ -117,6 +118,20 @@ class ScriptTestCase(unittest.TestCase):
                 with open(fn, 'rb') as f:
                     data = f.readline()
                     self.assertIn(b'pythonw.exe', data)
+
+        files = self.maker.make('foo = foo:main')
+        self.assertEqual(len(files), 2)
+        filenames = set([os.path.basename(f) for f in files])
+        self.assertEqual(filenames, set(('foo-script.py', 'foo.exe')))
+        for fn in files:
+            if fn.endswith('.exe'):
+                with open(fn, 'rb') as f:
+                    data = f.read()
+                self.assertEqual(data, tlauncher)
+            elif fn.endswith(('.py', '.pyw')):
+                with open(fn, 'rb') as f:
+                    data = f.readline()
+                    self.assertIn(b'python.exe', data)
 
     def test_dry_run(self):
         self.maker.dry_run = True
