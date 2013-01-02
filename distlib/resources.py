@@ -173,7 +173,8 @@ class ZipResourceFinder(ResourceFinder):
         if path in self.loader._files:
             result = True
         else:
-            path = path + os.sep
+            if path[-1] != os.sep:
+                path = path + os.sep
             i = bisect.bisect(self.index, path)
             try:
                 result = self.index[i].startswith(path)
@@ -201,19 +202,24 @@ class ZipResourceFinder(ResourceFinder):
         return self.loader._files[path][3]
 
     def get_resources(self, resource):
-        path = resource.path[self.prefix_len:] + os.sep
+        path = resource.path[self.prefix_len:]
+        if path[-1] != os.sep:
+            path += os.sep
         plen = len(path)
         result = set()
         i = bisect.bisect(self.index, path)
         while i < len(self.index):
             if not self.index[i].startswith(path):
                 break
-            result.add(self.index[i][plen:])
+            s = self.index[i][plen:]
+            result.add(s.split(os.sep, 1)[0])   # only immediate children
             i += 1
         return result
 
     def is_container(self, resource):
-        path = resource.path[self.prefix_len:] +  os.sep
+        path = resource.path[self.prefix_len:]
+        if path[-1] != os.sep:
+            path += os.sep
         i = bisect.bisect(self.index, path)
         try:
             result = self.index[i].startswith(path)

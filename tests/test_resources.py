@@ -76,6 +76,14 @@ class ZipResourceTestCase(unittest.TestCase):
         expected = set(('bar_resource.bin', 'baz.py', '__init__.py'))
         self.assertEqual(r.resources, expected)
 
+    def test_root_resources(self):
+        f = finder('foo')
+        r = f.find('')
+        self.assertTrue(r)
+        self.assertTrue(r.is_container)
+        expected = set(('foo_resource.bin', 'bar', '__init__.py'))
+        self.assertEqual(r.resources, expected)
+
     def test_dir_in_zip(self):
         sys.path[0] = '%s/lib' % os.path.join(HERE, 'bar.zip')
         f = finder('barbar')
@@ -133,6 +141,14 @@ class FileResourceTestCase(unittest.TestCase):
         r = f.find('bar')
         self.assertTrue(r)
         expected = set(('bar_resource.bin', 'baz.py', '__init__.py'))
+        self.assertEqual(r.resources, expected)
+
+    def test_root_resources(self):
+        f = finder('foofoo')
+        r = f.find('')
+        self.assertTrue(r)
+        self.assertTrue(r.is_container)
+        expected = set(('foo_resource.bin', 'bar', '__init__.py', 'nested'))
         self.assertEqual(r.resources, expected)
 
     def test_nested(self):
