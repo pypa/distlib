@@ -33,6 +33,8 @@ if sys.version_info[0] < 3:
     from HTMLParser import HTMLParser
     import htmlentitydefs
     raw_input = raw_input
+    from itertools import ifilter as filter
+    from itertools import ifilterfalse as filterfalse
 
     _userprog = None
     def splituser(host):
@@ -66,6 +68,8 @@ else:
     from html.parser import HTMLParser
     import html.entities as htmlentitydefs
     raw_input = input
+    from itertools import filterfalse
+    filter = filter
 
 try:
     from platform import python_implementation
