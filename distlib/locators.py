@@ -821,7 +821,7 @@ class DependencyFinder(object):
 
             ireqts = set(dist.get_requirements('install'))
             sreqts = set(dist.get_requirements('setup'))
-            if not tests:
+            if not tests or dist not in install_dists:
                 treqts = set()
             else:
                 treqts = set(dist.get_requirements('test'))
