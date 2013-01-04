@@ -585,6 +585,8 @@ class InstalledDistribution(BaseInstalledDistribution):
             for path in paths:
                 if os.path.isdir(path) or path.endswith(('.pyc', '.pyo')):
                     # do not put size and hash, as in PEP-376
+                    if path.startswith(base):
+                        path = os.path.relpath(path, base)
                     writer.writerow((path, '', ''))
                 else:
                     size = os.path.getsize(path)
