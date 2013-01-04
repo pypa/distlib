@@ -488,14 +488,14 @@ class InstalledDistribution(BaseInstalledDistribution):
                                        lineterminator=str('\n'))
 
             # Base location is parent dir of .dist-info dir
-            base_location = os.path.dirname(self.path)
-            base_location = os.path.abspath(base_location)
+            #base_location = os.path.dirname(self.path)
+            #base_location = os.path.abspath(base_location)
             for row in record_reader:
                 missing = [None for i in range(len(row), 3)]
                 path, checksum, size = row + missing
-                if not os.path.isabs(path):
-                    path = path.replace('/', os.sep)
-                    path = os.path.join(base_location, path)
+                #if not os.path.isabs(path):
+                #    path = path.replace('/', os.sep)
+                #    path = os.path.join(base_location, path)
                 results.append((path, checksum, size))
         finally:
             record.close()
@@ -572,6 +572,8 @@ class InstalledDistribution(BaseInstalledDistribution):
         Writes the ``RECORD`` file, using the ``paths`` iterable passed in. Any
         existing ``RECORD`` file is silently overwritten.
         """
+        base = os.path.dirname(self.path)
+        base = os.path.join(base, '')
         record_path = os.path.join(self.path, 'RECORD')
         logger.info('creating %s', record_path)
         if dry_run:
@@ -588,9 +590,13 @@ class InstalledDistribution(BaseInstalledDistribution):
                     size = os.path.getsize(path)
                     with open(path, 'rb') as fp:
                         hash = self.get_hash(fp.read())
+                    if path.startswith(base):
+                        path = os.path.relpath(path, base)
                     writer.writerow((path, hash, size))
 
             # add the RECORD file itself
+            if record_path.startswith(base):
+                record_path = os.path.relpath(record_path, base)
             writer.writerow((record_path, '', ''))
 
     def check_installed_files(self):
@@ -603,8 +609,11 @@ class InstalledDistribution(BaseInstalledDistribution):
         value and the actual value.
         """
         mismatches = []
+        base = os.path.dirname(self.path)
         record_path = os.path.join(self.path, 'RECORD')
         for path, hash, size in self.list_installed_files():
+            if not os.path.isabs(path):
+                path = os.path.join(base, path)
             if path == record_path:
                 continue
             if not os.path.exists(path):
@@ -627,7 +636,10 @@ class InstalledDistribution(BaseInstalledDistribution):
 
         :rtype: boolean
         """
+        base = os.path.dirname(self.path)
         for p, checksum, size in self._get_records():
+            if not os.path.isabs(p):
+                p = os.path.join(base, p)
             local_absolute = os.path.join(sys.prefix, p)
             if path == p or path == local_absolute:
                 return True
@@ -711,8 +723,11 @@ class InstalledDistribution(BaseInstalledDistribution):
 
         :returns: iterator of paths
         """
+        base = os.path.dirname(self.path)
         for path, checksum, size in self._get_records():
             # XXX add separator or use real relpath algo
+            if not os.path.isabs(path):
+                path = os.path.join(base, path)
             if path.startswith(self.path):
                 yield path
 

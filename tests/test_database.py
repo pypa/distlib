@@ -253,7 +253,11 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         # Test for the iteration of the raw path
         distinfo_files = [os.path.join(distinfo_dir, filename) for filename in
                           os.listdir(distinfo_dir)]
-        found = dist.list_distinfo_files()
+        found = list(dist.list_distinfo_files())
+        base = self.fake_dists_path
+        for i, p in enumerate(found):
+            if not os.path.isabs(p):
+                found[i] = os.path.join(base, p)
         self.assertEqual(sorted(found), sorted(distinfo_files))
         # Test for the iteration of local absolute paths
         distinfo_files = [os.path.join(sys.prefix, distinfo_dir, path) for
@@ -284,6 +288,9 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
             files = [f for f in dist.list_installed_files() if f[-1] not in ('', '0')]
             bad_file = random.choice(files)
             bad_file_name = bad_file[0]
+            if not os.path.isabs(bad_file_name):
+                base = os.path.dirname(dir_)
+                bad_file_name = os.path.join(base, bad_file_name)
             with open(bad_file_name, 'rb') as f:
                 data = f.read()
             bad_data = bytes(bytearray(reversed(data)))
