@@ -9,7 +9,7 @@ import sys
 
 from compat import unittest
 
-from distlib.compat import url2pathname, urlparse
+from distlib.compat import url2pathname, urlparse, urljoin
 from distlib.database import DistributionPath, make_graph
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
@@ -20,11 +20,14 @@ from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+PYPI_RPC_HOST = 'http://python.org/pypi'
+PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'http://pypi.python.org')
+
 class LocatorTestCase(unittest.TestCase):
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     def test_xmlrpc(self):
-        locator = PyPIRPCLocator('http://python.org/pypi')
+        locator = PyPIRPCLocator(PYPI_RPC_HOST)
         result = locator.get_project('sarge')
         self.assertIn('0.1', result)
         dist = result['0.1']
@@ -40,7 +43,7 @@ class LocatorTestCase(unittest.TestCase):
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     def test_json(self):
-        locator = PyPIJSONLocator('http://python.org/pypi')
+        locator = PyPIJSONLocator(PYPI_RPC_HOST)
         result = locator.get_project('sarge')
         self.assertIn('0.1', result)
         dist = result['0.1']
@@ -182,7 +185,7 @@ class LocatorTestCase(unittest.TestCase):
                                  'pytest-runner', 'irc'])
 
     def test_get_all_dist_names(self):
-        for url in (None, 'http://python.org/pypi'):
+        for url in (None, PYPI_RPC_HOST):
             all_dists = get_all_distribution_names(url)
             self.assertGreater(len(all_dists), 0)
 
