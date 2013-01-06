@@ -207,21 +207,24 @@ class Locator(object):
         result = None
         scheme = get_scheme(self.scheme)
         matcher = scheme.matcher(requirement)
+        logger.debug('matcher: %s (%s)', matcher, type(matcher).__name__)
         versions = self.get_project(matcher.name)
         if versions:
             # sometimes, versions are invalid
             slist = []
             for k in versions:
                 try:
-                    if matcher.match(k):
+                    if not matcher.match(k):
+                        logger.debug('%s did not match %r', matcher, k)
+                    else:
                         slist.append(k)
-                        if matcher.exact_version:
-                            break
                 except Exception:
+                    logger.warning('error matching %s with %r', matcher, k)
                     pass # slist.append(k)
             if len(slist) > 1:
                 slist = sorted(slist, key=scheme.key)
             if slist:
+                logger.debug('sorted list: %s', slist)
                 result = versions[slist[-1]]
         return result
 
