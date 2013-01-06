@@ -849,13 +849,14 @@ class EggInfoDistribution(BaseInstalledDistribution):
 
         record_path = os.path.join(self.path, 'installed-files.txt')
         result = []
-        with codecs.open(record_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line == './':
-                    break
-                p = os.path.normpath(os.path.join(self.path, line))
-                result.append((p, _md5(p), _size(p)))
+        if os.path.exists(record_path):
+            with codecs.open(record_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line == './':
+                        break
+                    p = os.path.normpath(os.path.join(self.path, line))
+                    result.append((p, _md5(p), _size(p)))
         return result
 
     def list_distinfo_files(self, local=False):
