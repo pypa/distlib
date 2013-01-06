@@ -724,12 +724,11 @@ class DependencyFinder(object):
                 raise ValueError('Ill-formed provides field: %r' % p)
             version = version[1:-1]  # trim off parentheses
         # Name in lower case for case-insensitivity
-        name = name.lower()
-        return name, version
+        return name.lower(), version
 
     def add_distribution(self, dist):
         logger.debug('adding distribution %s', dist)
-        name = dist.name.lower()
+        name = dist.key
         self.dists_by_name[name] = dist
         self.dists[(name, dist.version)] = dist
         for p in dist.provides:
@@ -739,7 +738,7 @@ class DependencyFinder(object):
 
     def remove_distribution(self, dist):
         logger.debug('removing distribution %s', dist)
-        name = dist.name.lower()
+        name = dist.key
         del self.dists_by_name[name]
         del self.dists[(name, dist.version)]
         for p in dist.provides:
@@ -761,7 +760,7 @@ class DependencyFinder(object):
 
     def find_providers(self, reqt):
         matcher = self.get_matcher(reqt)
-        name = matcher.name.lower()   # case-insensitive
+        name = matcher.key   # case-insensitive
         result = set()
         provided = self.provided
         if name in provided:
@@ -810,7 +809,7 @@ class DependencyFinder(object):
         install_dists = set([odist])
         while todo:
             dist = todo.pop()
-            name = dist.name.lower()
+            name = dist.key # case-insensitive
             if name not in self.dists_by_name:
                 self.add_distribution(dist)
             else:
@@ -835,7 +834,7 @@ class DependencyFinder(object):
                         logger.debug('Cannot satisfy %r', r)
                         problems.add(('unsatisfied', r))
                     else:
-                        n, v = provider.name.lower(), provider.version
+                        n, v = provider.key, provider.version
                         if (n, v) not in self.dists:
                             todo.add(provider)
                         providers.add(provider)
@@ -844,7 +843,7 @@ class DependencyFinder(object):
                             logger.debug('Adding %s to install_dists',
                                          provider.name_and_version)
                 for p in providers:
-                    name = p.name.lower()
+                    name = p.key
                     if name not in self.dists_by_name:
                         self.reqts.setdefault(p, set()).add(r)
                     else:

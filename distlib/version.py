@@ -107,6 +107,7 @@ class Matcher(_Common):
             raise ValueError('Not valid: %r' % s)
         groups = m.groups('')
         self.name = groups[0].strip()
+        self.key = self.name.lower()    # for case-insensitive comparisons
         clist = []
         if groups[2]:
             constraints = [c.strip() for c in groups[2].split(',')]
@@ -140,15 +141,14 @@ class Matcher(_Common):
 
     def __eq__(self, other):
         self._check_compatible(other)
-        return (self.name.lower() == other.name.lower()
-                and self._parts == other._parts)
+        return (self.key == other.key and self._parts == other._parts)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     # See http://docs.python.org/reference/datamodel#object.__hash__
     def __hash__(self):
-        return hash(self.name.lower()) + hash(self._parts)
+        return hash(self.key) + hash(self._parts)
 
 # A marker used in the second and third parts of the `parts` tuple, for
 # versions that don't have those segments, to sort properly. An example

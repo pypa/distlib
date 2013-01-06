@@ -50,7 +50,7 @@ class _Cache(object):
     def add(self, dist):
         if dist.path not in self.path:
             self.path[dist.path] = dist
-            self.name.setdefault(dist.name.lower(), []).append(dist)
+            self.name.setdefault(dist.key, []).append(dist)
 
 class DistributionPath(object):
     """
@@ -184,7 +184,7 @@ class DistributionPath(object):
         name = name.lower()
         if not self._cache_enabled:
             for dist in self._yield_distributions():
-                if dist.name.lower() == name:
+                if dist.key == name:
                     result = dist
                     break
         else:
@@ -326,6 +326,7 @@ class Distribution(object):
     def __init__(self, metadata):
         self.metadata = metadata
         self.name = metadata.name
+        self.key = self.name.lower()    # for case-insensitive comparisons
         self.version = metadata.version
         self.locator = None
         self.md5_digest = None
@@ -375,13 +376,13 @@ class Distribution(object):
             name = req.split()[0]
             matcher = scheme.matcher(name)
 
-        name = matcher.name.lower()   # case-insensitive
+        name = matcher.key   # case-insensitive
 
         result = False
         # Note this is similar to code in make_graph - to be refactored
         for p in self.provides:
             vm = scheme.matcher(p)
-            if vm.name.lower() != name:
+            if vm.key != name:
                 continue
             version = vm.exact_version
             assert version
@@ -749,22 +750,24 @@ class EggInfoDistribution(BaseInstalledDistribution):
     requested = True    # as we have no way of knowing, assume it was
 
     def __init__(self, path, env=None):
+        def set_name_and_version(s, n, v):
+            s.name = n
+            s.key = n.lower()   # for case-insensitive comparisons
+            s.version = v
+
         self.path = path
         self.dist_path  = env
         if env and env._cache_enabled and path in env._cache_egg.path:
             metadata = env._cache_egg.path[path].metadata
-            self.name = metadata['Name']
-            self.version = metadata['Version']
+            set_name_and_version(self, metadata['Name'], metadata['Version'])
         else:
             metadata = self._get_metadata(path)
 
             # Need to be set before caching
-            self.name = metadata['Name']
-            self.version = metadata['Version']
+            set_name_and_version(self, metadata['Name'], metadata['Version'])
 
             if env and env._cache_enabled:
                 env._cache_egg.add(self)
-
         super(EggInfoDistribution, self).__init__(metadata, path, env)
 
     def _get_metadata(self, path):
@@ -1084,7 +1087,7 @@ def make_graph(dists, scheme='default'):
                 name = req.split()[0]
                 matcher = scheme.matcher(name)
 
-            name = matcher.name.lower()   # case-insensitive
+            name = matcher.key   # case-insensitive
 
             matched = False
             if name in provided:
