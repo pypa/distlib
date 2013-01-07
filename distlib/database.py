@@ -853,10 +853,12 @@ class EggInfoDistribution(BaseInstalledDistribution):
             with codecs.open(record_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     line = line.strip()
-                    if line == './':
-                        break
                     p = os.path.normpath(os.path.join(self.path, line))
-                    result.append((p, _md5(p), _size(p)))
+                    # "./" is present as a marker between installed files
+                    # and installation metadata files
+                    if not os.path.isdir(p):
+                        result.append((p, _md5(p), _size(p)))
+            result.append((record_path, None, None))
         return result
 
     def list_distinfo_files(self, local=False):
