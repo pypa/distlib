@@ -92,10 +92,10 @@ class Matcher(_Common):
     _operators = {
         "<": lambda x, y: x < y,
         ">": lambda x, y: x > y,
-        "<=": lambda x, y: str(x).startswith(str(y)) or x < y,
-        ">=": lambda x, y: str(x).startswith(str(y)) or x > y,
-        "==": lambda x, y: str(x).startswith(str(y)),
-        "!=": lambda x, y: not str(x).startswith(str(y)),
+        "<=": lambda x, y: x == y or x < y,
+        ">=": lambda x, y: x == y or x > y,
+        "==": lambda x, y: x == y,
+        "!=": lambda x, y: x != y,
     }
 
     def __init__(self, s):
@@ -268,6 +268,14 @@ class UnlimitedMajorVersion(Version):
 
 class NormalizedMatcher(Matcher):
     version_class = NormalizedVersion
+
+    _operators = dict(Matcher._operators)
+    _operators.update({
+        "<=": lambda x, y: str(x).startswith(str(y)) or x < y,
+        ">=": lambda x, y: str(x).startswith(str(y)) or x > y,
+        "==": lambda x, y: str(x).startswith(str(y)),
+        "!=": lambda x, y: not str(x).startswith(str(y)),
+    })
 
 _REPLACEMENTS = (
     (re.compile('[.+-]$'), ''),                     # remove trailing puncts
@@ -558,7 +566,7 @@ def adaptive_key(s):
 class AdaptiveVersion(NormalizedVersion):
     def parse(self, s): return adaptive_key(s)
 
-class AdaptiveMatcher(Matcher):
+class AdaptiveMatcher(NormalizedMatcher):
     version_class = AdaptiveVersion
 
 
