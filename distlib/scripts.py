@@ -20,8 +20,11 @@ logger = logging.getLogger(__name__)
 FIRST_LINE_RE = re.compile(b'^#!.*pythonw?[0-9.]*([ \t].*)?$')
 SCRIPT_TEMPLATE = '''%(shebang)s
 if __name__ == '__main__':
+    import sys, re
+
     def _resolve(module, func):
-        mod = __import__(module)
+        __import__(module)
+        mod = sys.modules[module]
         parts = func.split('.')
         result = getattr(mod, parts.pop(0))
         for p in parts:
@@ -29,7 +32,6 @@ if __name__ == '__main__':
         return result
 
     try:
-        import sys, re
         sys.argv[0] = re.sub('-script.pyw?$', '', sys.argv[0])
 
         func = _resolve('%(module)s', '%(func)s')
