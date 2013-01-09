@@ -712,10 +712,6 @@ class DependencyFinder(object):
     def __init__(self, locator=None):
         self.locator = locator or default_locator
         self.scheme = get_scheme(self.locator.scheme)
-        self.provided = {}
-        self.dists = {}
-        self.dists_by_name = {}
-        self.reqts = {}
 
     def get_name_and_version(self, p):
         comps = p.strip().rsplit(' ', 1)
@@ -800,12 +796,19 @@ class DependencyFinder(object):
         return result
 
     def find(self, requirement, tests=False):
+        self.provided = {}
+        self.dists = {}
+        self.dists_by_name = {}
+        self.reqts = {}
+
         if isinstance(requirement, Distribution):
             dist = odist = requirement
+            logger.debug('passed %s as requirement', odist)
         else:
             dist = odist = self.locator.locate(requirement)
             if dist is None:
                 raise ValueError('Unable to locate %r' % requirement)
+            logger.debug('located %s', odist)
         dist.requested = True
         problems = set()
         todo = set([dist])
@@ -861,4 +864,5 @@ class DependencyFinder(object):
             if dist.build_time_dependency:
                 logger.debug('%s is a build-time dependency only.',
                              dist.name_and_version)
+        logger.debug('find done for %s', odist)
         return dists, problems
