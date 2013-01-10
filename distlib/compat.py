@@ -113,10 +113,21 @@ except AttributeError:  # pragma: no cover
 try:
     from tokenize import detect_encoding
 except ImportError: # pragma: no cover
-    from codecs import BOM_UTF8
+    from codecs import BOM_UTF8, lookup
     import re
 
     cookie_re = re.compile("coding[:=]\s*([-\w.]+)")
+
+    def _get_normal_name(orig_enc):
+        """Imitates get_normal_name in tokenizer.c."""
+        # Only care about the first 12 characters.
+        enc = orig_enc[:12].lower().replace("_", "-")
+        if enc == "utf-8" or enc.startswith("utf-8-"):
+            return "utf-8"
+        if enc in ("latin-1", "iso-8859-1", "iso-latin-1") or \
+           enc.startswith(("latin-1-", "iso-8859-1-", "iso-latin-1-")):
+            return "iso-8859-1"
+        return orig_enc
 
     def detect_encoding(readline):
         """
