@@ -709,7 +709,15 @@ default_locator = AggregatingLocator(
 locate = default_locator.locate
 
 class DependencyFinder(object):
+    """
+    Locate dependencies for distributions.
+    """
+
     def __init__(self, locator=None):
+        """
+        Initialise an instance, using the specified locator
+        to locate distributions.
+        """
         self.locator = locator or default_locator
         self.scheme = get_scheme(self.locator.scheme)
 
@@ -796,6 +804,27 @@ class DependencyFinder(object):
         return result
 
     def find(self, requirement, tests=False):
+        """
+        Find a distribution matching requirement and all distributions
+        it depends on. Use the ``tests`` argument to determine whether
+        distributions used only for testing should be included in the
+        results. Allow ``requirement`` to be either a :class:`Distribution`
+        instance or a string expressing a requirement.
+
+        Return a set of :class:`Distribution` instances and a set of
+        problems.
+
+        The distributions returned should be such that they have the
+        :attr:`required` attribute set to ``True`` if they were
+        from the ``requirement`` passed to ``find()``, and they have the
+        :attr:`build_time_dependency` attribute set to ``True`` unless they
+        are post-installation dependencies of the ``requirement``.
+
+        The problems should be a tuple consisting of the string
+        ``'unsatisfied'`` and the requirement which couldn't be satisfied
+        by any distribution known to the locator.
+        """
+
         self.provided = {}
         self.dists = {}
         self.dists_by_name = {}

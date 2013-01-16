@@ -58,7 +58,7 @@ best practices, ``packaging`` suffered from some drawbacks, too:
 How Distlib can help
 --------------------
 
-The idea behind Distlib is expressed in `this python-dev post
+The idea behind Distlib is expressed in `this python-dev mailing-list post
 <http://mail.python.org/pipermail/python-dev/2012-September/121716.html>`_,
 though a different name was suggested for the library. Basically, Distlib
 contains the implementations of the packaging PEPs and other low-level
@@ -96,7 +96,7 @@ Distlib currently offers the following features:
   the ability to scan for dependencies and building dependency graphs.
 * The package ``distlib.glob``, which implements globbing functionality
   such as the ability to use ``**`` in patterns to specify recursing into
-  subdirectories.
+  subdirectories. (This may be merged into the ``distlib.util`` package.)
 * The package ``distlib.resources``, which allows access to data files stored
   in Python packages, both in the file system and in .zip files.
 * The package ``distlib.scripts``, which allows installing of scripts with

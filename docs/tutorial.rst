@@ -154,9 +154,18 @@ Distribution properties
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Once you have a :class:`Distribution` instance, you can use it to get more
-information about the distribution. For example, the ``metadata`` attribute
-gives access to the distribution's metadata (see :ref:`use-metadata` for more
-information).
+information about the distribution. For example:
+
+* The ``metadata`` attribute gives access to the distribution's metadata
+  (see :ref:`use-metadata` for more information).
+
+* The ``name_and_version`` attribute shows the name and version in the format
+  ``name (X.Y)``.
+
+* The ``key`` attribute holds the distribution's name in lower-case, as you
+  generally want to search for distributions without regard to case
+  sensitivity.
+
 
 .. _dist-exports:
 
@@ -411,8 +420,11 @@ Let's see how wrapping a callable works. Consider the following file::
     #!/usr/bin/python
 
     if __name__ == '__main__':
+        import sys, re
+
         def _resolve(module, func):
-            mod = __import__(module)
+            __import__(module)
+            mod = sys.modules[module]
             parts = func.split('.')
             result = getattr(mod, parts.pop(0))
             for p in parts:
@@ -420,7 +432,6 @@ Let's see how wrapping a callable works. Consider the following file::
             return result
 
         try:
-            import sys, re
             sys.argv[0] = re.sub('-script.pyw?$', '', sys.argv[0])
 
             func = _resolve('foo', 'main')
@@ -625,6 +636,10 @@ The following locators are provided:
   :class:`AggregatingLocator` to satisfy requirements from installed
   distributions before looking elsewhere for them.
 
+* :class:`JSONLocator` -- this uses an improved JSON metadata schema and
+  returns data on all versions of a distribution, including dependencies,
+  using a single network request.
+
 * :class:`AggregatingLocator` -- this takes a list of other aggregators and
   delegates finding projects to them. It can either return the first result
   found (i.e. from the first aggregator in the list provided which returns a
@@ -644,26 +659,20 @@ distributions registered on PyPI::
 
 This is implemented using the XML-RPC API.
 
-   The Locator API is very bare-bones at the moment, but additional features will
-   be added in due course. A very bare-bones command-line script which exercises
-   these locators is to be found `here <https://gist.github.com/3886402>`_, and
-   feedback will be gratefully received from anyone who tries it out.
+Apart from :class:`JSONLocator`, none of the locators currently returns enough
+metadata to allow dependency resolution to be carried out, but that is a result
+of the fact that metadata relating to dependencies are not indexed, and would
+require not just downloading the distribution archives and inspection of
+contained metadata files, but potentially also introspecting setup.py! This is
+the downside of having vital information only available via keyword arguments
+to the :func:`setup` call: hopefully, a move to fully declarative metadata will
+facilitate indexing it and allowing the provision of improved features.
 
-   None of the locators currently returns enough metadata to allow dependency
-   resolution to be carried out, but that is a result of the fact that metadata
-   relating to dependencies are not indexed, and would require not just downloading
-   the distribution archives and inspection of contained metadata files, but
-   potentially also introspecting setup.py! This is the downside of having vital
-   information only available via keyword arguments to the :func:`setup` call:
-   hopefully, a move to fully declarative metadata will facilitate indexing it and
-   allowing the provision of features currently provided by ``setuptools`` (e.g.
-   hints for downloads -- ``'dependency _links'``).
+The locators will skip binary distributions (``.egg`` files are currently
+treated as binary distributions).
 
-   The locators will skip binary distributions (``.egg`` files are currently
-   treated as binary distributions).
-
-   The PyPI locator classes don't yet support the use of mirrors, but that can be
-   added in due course -- once the basic functionality is working satisfactorily.
+The PyPI locator classes don't yet support the use of mirrors, but that can be
+added in due course -- once the basic functionality is working satisfactorily.
 
 Next steps
 ----------

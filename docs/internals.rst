@@ -6,6 +6,156 @@ Distlib's design
 This is the section containing some discussion of how ``distlib``'s design was
 arrived at, as and when time permits.
 
+The ``locators`` API
+--------------------
+
+This section describes the design of the ``distlib`` API relating to accessing
+distribution metadata, whether stored locally or in indexes like PyPI.
+
+The problem we're trying to solve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+People who use distributions need to locate, download and install them.
+Distributions can be found in a number of places, such as:
+
+* An Internet index such as `The Python Packages Index (PyPI)
+  <http://pypi.python.org>`_, or a mirror thereof.
+* Other Internet resources, such as the developer's website, or a source
+  code repository such as GitHub, BitBucket, Google Code or similar.
+* File systems, whether local to one computer or shared between several.
+* Distributions which have already been installed, and are available in the
+  ``sys.path`` of a running Python interpreter.
+
+When we're looking for distributions, we don't always know exactly what we
+want: often, we just want the latest version, but it's not uncommon to want
+a specific older version, or perhaps the most recent version that meets some
+constraints on the version. Since we need to be concerned with matching
+versions, we need to consider the version schemes in use (see
+:ref:`version-api`).
+
+It's useful to separate the notion of a *project* from a distribution: The
+project is the version-independent part of the distribution, i.e. it's
+described by the *name* of the distribution and encompasses all released
+distributions which use that name.
+
+We often don't just want a single distribution, either: a common requirement,
+when installing a distribution, is to locate all distributions that it relies
+on, which aren't already installed. So we need a *dependency finder*, which
+itself needs to locate depended-upon distributions, and recursively search for
+dependencies until all that are available have been found.
+
+We may need to distinguish between different types of dependencies:
+
+* Post-installation dependencies. These are needed by the distribution after it
+  has been installed, and is in use.
+* Build dependencies. These are needed for building and/or installing the
+  distribution, but are not needed by the distribution itself after
+  installation.
+* Test dependencies. These are only needed for testing the distribution, but
+  are not needed by the distribution itself after installation.
+
+When testing a distribution, we need all three types of dependencies. When
+installing a distribution, we need the first two, but not the third.
+
+A minimal solution
+^^^^^^^^^^^^^^^^^^
+
+Locating distributions
+~~~~~~~~~~~~~~~~~~~~~~
+
+It seems that the simplest API to locate a distribution would look like
+``locate(requirement)``, where ``requirement`` is a string giving the
+distribution name and optional version constraints. Given that we know that
+distributions can be found in different places, it's best to consider a
+:class:`Locator` class which has a :meth:`locate` method with a corresponding
+signature, with subclasses for each of the different types of location that
+distributions inhabit. It's also reasonable to provide a default locator in
+a module attribute :attr:`default_locator`, and a module-level :func:`locate`
+function which calls the :meth:`locate` method on the default locator.
+
+Since we'll often need to locate all the versions of a project before picking
+one, we can imagine that a locator would need a :meth:`get_project` method for
+fetching all versions of a project; and since we will be likely to want to use
+caching, we can assume there will be a :meth:`_get_project` method to do the
+actual work of fetching the version data, which the higher-level
+:meth:`get_project` will call (and probably cache). So our locator base class
+will look something like this::
+
+    class Locator(object):
+        """
+        Locate distributions.
+        """
+
+        def __init__(self, version_scheme='default'):
+            """
+            Initialise a locator with the specified version scheme.
+            """
+
+        def locate(self, requirement):
+            """
+            Locate the highest-version distribution which satisfies
+            the constraints in ``requirement``, and return a
+            ``Distribution`` instance if found, or else ``None``.
+            """
+
+        def get_project(self, name):
+            """
+            Return all known distributions for a project named ``name``,
+            returning a dictionary mapping version to ``Distribution``
+            instance, or an empty dictionary if nothing was found.
+            Use _get_project to do the actual work, and cache the results for
+            future use.
+            """
+
+        def _get_project(self, name):
+            """
+            Return all known distributions for a project named ``name``,
+            returning a dictionary mapping version to ``Distribution``
+            instance, or an empty dictionary if nothing was found.
+            """
+
+
+Finding dependencies
+~~~~~~~~~~~~~~~~~~~~
+
+A dependency finder will depend on a locator to locate dependencies. A simple
+approach will be to consider a :class:`DependencyFinder` class which takes a
+locator as a constructor argument. It might look something like this::
+
+    class DependenyFinder(object):
+        """
+        Locate dependencies for distributions.
+        """
+
+        def __init__(self, locator):
+            """
+            Initialise an instance, using the specified locator
+            to locate distributions.
+            """
+
+        def find(self, requirement, tests=False):
+            """
+            Find a distribution matching requirement and all distributions
+            it depends on. Use the ``tests`` argument to determine whether
+            distributions used only for testing should be included in the
+            results. Allow ``requirement`` to be either a :class:`Distribution`
+            instance or a string expressing a requirement.
+
+            Return a set of :class:`Distribution` instances and a set of
+            problems.
+
+            The distributions returned should be such that they have the
+            :attr:`required` attribute set to ``True`` if they were
+            from the ``requirement`` passed to ``find()``, and they have the
+            :attr:`build_time_dependency` attribute set to ``True`` unless they
+            are post-installation dependencies of the ``requirement``.
+
+            The problems should be a tuple consisting of the string
+            ``'unsatisfied'`` and the requirement which couldn't be satisfied
+            by any distribution known to the locator.
+            """
+
+
 The ``resources`` API
 ---------------------
 
@@ -389,6 +539,9 @@ whereas the following would be invalid::
   [a,]
   [a,,b]
   [a=,b,c]
+
+
+.. _version-api:
 
 The ``version`` API
 -------------------
