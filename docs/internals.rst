@@ -122,7 +122,7 @@ A dependency finder will depend on a locator to locate dependencies. A simple
 approach will be to consider a :class:`DependencyFinder` class which takes a
 locator as a constructor argument. It might look something like this::
 
-    class DependenyFinder(object):
+    class DependencyFinder(object):
         """
         Locate dependencies for distributions.
         """
