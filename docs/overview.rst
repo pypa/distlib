@@ -94,9 +94,6 @@ Distlib currently offers the following features:
   logic. Support is also provided for non-installed distributions (i.e.
   distributions registered with metadata on an index like PyPI), including
   the ability to scan for dependencies and building dependency graphs.
-* The package ``distlib.glob``, which implements globbing functionality
-  such as the ability to use ``**`` in patterns to specify recursing into
-  subdirectories. (This may be merged into the ``distlib.util`` package.)
 * The package ``distlib.resources``, which allows access to data files stored
   in Python packages, both in the file system and in .zip files.
 * The package ``distlib.scripts``, which allows installing of scripts with
@@ -106,7 +103,10 @@ Distlib currently offers the following features:
   PyPI (XML-RPC or via the "simple" interface) or local directories.
 * The package ``distlib.util``, which contains miscellaneous functions and
   classes which are useful in packaging, but which do not fit neatly into
-  one of the other packages in ``distlib``.
+  one of the other packages in ``distlib``.* The package implements enhanced
+  globbing functionality such as the ability to use ``**`` in patterns to
+  specify recursing into subdirectories.
+
 
 
 Python version and platform compatibility

@@ -26,7 +26,7 @@ from distlib.database import (InstalledDistribution, EggInfoDistribution,
                               get_required_dists, get_dependent_dists)
 from distlib.util import get_resources_dests, ExportEntry
 
-from test_glob import GlobTestCaseBase
+from test_util import GlobTestCaseBase
 from support import LoggingCatcher, requires_zlib
 
 logger = logging.getLogger(__name__)
