@@ -15,6 +15,7 @@ import shutil
 import socket
 import sys
 import time
+import zipfile
 
 from . import DistlibException
 from .compat import (string_types, shutil, urlopen, cache_from_source,
@@ -814,6 +815,20 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
     finally:
         if archive:
             archive.close()
+
+
+def zip_dir(directory):
+    """zip a directory tree into a BytesIO object"""
+    result = BytesIO()
+    dlen = len(directory) + 1
+    with zipfile.ZipFile(result, "w") as zf:
+        for root, dirs, files in os.walk(directory):
+            for name in files:
+                full = os.path.join(root, name)
+                rel = root[dlen:]
+                dest = os.path.join(rel, name)
+                zf.write(full, dest)
+    return result
 
 #
 # Simple progress bar
