@@ -554,42 +554,59 @@ class Metadata(object):
 
         return missing, warnings
 
-    def todict(self):
+    def todict(self, skip_missing=False):
         """Return fields as a dict.
 
         Field names will be converted to use the underscore-lowercase style
         instead of hyphen-mixed case (i.e. home_page instead of Home-page).
         """
         self.set_metadata_version()
-        data = {
-            'metadata_version': self['Metadata-Version'],
-            'name': self['Name'],
-            'version': self['Version'],
-            'summary': self['Summary'],
-            'home_page': self['Home-page'],
-            'author': self['Author'],
-            'author_email': self['Author-email'],
-            'license': self['License'],
-            'description': self['Description'],
-            'keywords': self['Keywords'],
-            'platform': self['Platform'],
-            'classifier': self['Classifier'],
-            'download_url': self['Download-URL'],
-        }
+
+        mapping_1_0 = (
+            ('metadata_version', 'Metadata-Version'),
+            ('name', 'Name'),
+            ('version', 'Version'),
+            ('summary', 'Summary'),
+            ('home_page', 'Home-page'),
+            ('author', 'Author'),
+            ('author_email', 'Author-email'),
+            ('license', 'License'),
+            ('description', 'Description'),
+            ('keywords', 'Keywords'),
+            ('platform', 'Platform'),
+            ('classifier', 'Classifier'),
+            ('download_url', 'Download-URL'),
+        )
+
+        data = {}
+        for key, field_name in mapping_1_0:
+            if not skip_missing or field_name in self._fields:
+                data[key] = self[field_name]
 
         if self['Metadata-Version'] == '1.2':
-            data['requires_dist'] = self['Requires-Dist']
-            data['requires_python'] = self['Requires-Python']
-            data['requires_external'] = self['Requires-External']
-            data['provides_dist'] = self['Provides-Dist']
-            data['obsoletes_dist'] = self['Obsoletes-Dist']
-            data['project_url'] = [','.join(url) for url in
-                                   self['Project-URL']]
+            mapping_1_2 = (
+                ('requires_dist', 'Requires-Dist'),
+                ('requires_python', 'Requires-Python'),
+                ('requires_external', 'Requires-External'),
+                ('provides_dist', 'Provides-Dist'),
+                ('obsoletes_dist', 'Obsoletes-Dist'),
+                ('project_url', 'Project-URL'),
+            )
+            for key, field_name in mapping_1_2:
+                if not skip_missing or field_name in self._fields:
+                    if key != 'project_url':
+                        data[key] = self[field_name]
+                    else:
+                        data[key] = [','.join(u) for u in self[field_name]]
 
         elif self['Metadata-Version'] == '1.1':
-            data['provides'] = self['Provides']
-            data['requires'] = self['Requires']
-            data['obsoletes'] = self['Obsoletes']
+            mapping_1_1 = (
+                ('provides', 'Provides'),
+                ('requires', 'Requires'),
+                ('obsoletes', 'Obsoletes'),
+            )
+            if not skip_missing or field_name in self._fields:
+                data[key] = self[field_name]
 
         return data
 
