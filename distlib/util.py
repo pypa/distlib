@@ -6,6 +6,7 @@ import codecs
 from collections import deque
 import contextlib
 from glob import iglob as std_iglob
+import io
 import json
 import logging
 import os
@@ -819,7 +820,7 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
 
 def zip_dir(directory):
     """zip a directory tree into a BytesIO object"""
-    result = BytesIO()
+    result = io.BytesIO()
     dlen = len(directory) + 1
     with zipfile.ZipFile(result, "w") as zf:
         for root, dirs, files in os.walk(directory):
