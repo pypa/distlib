@@ -158,7 +158,7 @@ class Index(object):
             ':action': 'file_upload',
             'protcol_version': '1',
             'filetype': filetype,
-            'pyversion': source,
+            'pyversion': pyversion,
             'md5_digest': digest,
         })
         files = [('content', os.path.basename(filename), file_data)]
