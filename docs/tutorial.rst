@@ -46,6 +46,15 @@ http://www.red-dove.com/distlib/coverage/
 
 These are updated as and when time permits.
 
+Note that the index tests are configured, by default, to use a local test
+server, though they can be configured to run against PyPI itself. This local
+test server is not bundled with ``distlib``, but is available from:
+
+https://raw.github.com/vsajip/pypiserver/standalone/pypi-server-standalone.py
+
+This is a slightly modified version of Ralf Schmitt's `pypiserver
+<https://github.com/schmir/pypiserver>`_. To use, the script needs to be copied
+to the ``tests`` folder of the ``distlib`` distribution.
 
 First steps
 -----------
@@ -241,6 +250,311 @@ allow you to analyse the relationships between a set of distributions:
 
 The graph returned by :func:`make_graph` is an instance of
 :class:`DependencyGraph`.
+
+Using the locators API
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: distlib.locators
+
+Overview
+~~~~~~~~
+
+To locate a distribution in an index, we can use the :func:`locate` function.
+This returns a potentially downloadable distribution (in the sense that it
+has a download URL - of course, there are no guarantees that there will
+actually be a downloadable resource at that URL). The return value is an
+instance of :class:`distlib.database.Distribution` which can be queried for
+any distributions it requires, so that they can also be located if desired.
+Here is a basic example::
+
+      >>> from distlib.locators import locate
+      >>> flask = locate('flask')
+      >>> flask
+      <Distribution Flask (0.9) [http://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz]>
+      >>> dependencies = [locate(r) for r in flask.get_requirements('install')]
+      >>> from pprint import pprint
+      >>> pprint(dependencies)
+      [<Distribution Werkzeug (0.8.3) [http://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.8.3.tar.gz]>,
+      <Distribution Jinja2 (2.6) [http://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.6.tar.gz]>]
+      >>>
+
+The values returned by :meth:`get_requirements` are just strings. Here's another example,
+showing a little more detail::
+
+      >>> authy = locate('authy')
+      >>> authy.get_requirements('install')
+      [u'httplib2 (>= 0.7, < 0.8)', u'simplejson']
+      >>> authy
+      <Distribution authy (0.0.4) [http://pypi.python.org/packages/source/a/authy/authy-0.0.4.tar.gz]>
+      >>> deps = [locate(r) for r in authy.get_requirements('install')]
+      >>> pprint(deps)
+      [<Distribution httplib2 (0.7.6) [http://pypi.python.org/packages/source/h/httplib2/httplib2-0.7.6.tar.gz]>,
+      <Distribution simplejson (2.6.2) [http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.2.tar.gz]>]
+      >>>
+
+Note that the constraints on the dependencies were honoured by :func:`locate`.
+
+
+Under the hood
+~~~~~~~~~~~~~~
+
+Under the hood, :func:`locate` uses *locators*. Locators are a mechanism for
+finding distributions from a range of sources. Although the ``pypi`` subpackage
+has been copied from ``distutils2`` to ``distlib``, there may be benefits in a
+higher-level API, and so the ``distlib.locators`` package has been created as
+an experiment. Locators are objects which locate distributions. A locator
+instance's :meth:`get_project` method is called, passing in a project name: The
+method returns a dictionary containing information about distribution releases
+found for that project. The keys of the returned dictionary are versions, and
+the values are instances of :class:`distlib.database.Distribution`.
+
+The following locators are provided:
+
+* :class:`DirectoryLocator` -- this is instantiated with a base directory and
+  will look for archives in the file system tree under that directory. Name
+  and version information is inferred from the filenames of archives, and the
+  amount of information returned about the download is minimal.
+
+* :class:`PyPIRPCLocator`. -- This takes a base URL for the RPC service and
+  will locate packages using PyPI's XML-RPC API. This locator is a little slow
+  (the scraping interface seems to work faster) and case-sensitive. For
+  example, searching for ``'flask'`` will throw up no results, but you get the
+  expected results when searching from ``'Flask'``. This appears to be a
+  limitation of the underlying XML-RPC API. Note that 20 versions of a
+  project necessitate 41 network calls (one to get the versions, and
+  two more for each version -- one to get the metadata, and another to get the
+  downloads information).
+
+* :class:`PyPIJSONLocator`. -- This takes a base URL for the JSON service and
+  will locate packages using PyPI's JSON API. This locator is case-sensitive. For
+  example, searching for ``'flask'`` will throw up no results, but you get the
+  expected results when searching from ``'Flask'``. This appears to be a
+  limitation of the underlying JSON API. Note that unlike the XML-RPC service,
+  only non-hidden releases will be returned.
+
+* :class:`SimpleScrapingLocator` -- this takes a base URL for the site to
+  scrape, and locates packages using a similar approach to the
+  ``PackageFinder`` class in ``pip``, or as documented in the ``setuptools``
+  documentation as the approach used by ``easy_install``.
+
+* :class:`DistPathLocator` -- this takes a :class:`DistributionPath` instance
+  and locates installed distributions. This can be used with
+  :class:`AggregatingLocator` to satisfy requirements from installed
+  distributions before looking elsewhere for them.
+
+* :class:`JSONLocator` -- this uses an improved JSON metadata schema and
+  returns data on all versions of a distribution, including dependencies,
+  using a single network request.
+
+* :class:`AggregatingLocator` -- this takes a list of other aggregators and
+  delegates finding projects to them. It can either return the first result
+  found (i.e. from the first aggregator in the list provided which returns a
+  non-empty result), or a merged result from all the aggregators in the list.
+
+There is a default locator, available at :attr:`distlib.locators.default_locator`.
+
+The ``locators`` package also contains a function,
+:func:`get_all_distribution_names`, which retrieves the names of all
+distributions registered on PyPI::
+
+      >>> from distlib.locators import get_all_distribution_names
+      >>> names = get_all_package_names()
+      >>> len(names)
+      24801
+      >>>
+
+This is implemented using the XML-RPC API.
+
+Apart from :class:`JSONLocator`, none of the locators currently returns enough
+metadata to allow dependency resolution to be carried out, but that is a result
+of the fact that metadata relating to dependencies are not indexed, and would
+require not just downloading the distribution archives and inspection of
+contained metadata files, but potentially also introspecting setup.py! This is
+the downside of having vital information only available via keyword arguments
+to the :func:`setup` call: hopefully, a move to fully declarative metadata will
+facilitate indexing it and allowing the provision of improved features.
+
+The locators will skip binary distributions (``.egg`` files are currently
+treated as binary distributions).
+
+The PyPI locator classes don't yet support the use of mirrors, but that can be
+added in due course -- once the basic functionality is working satisfactorily.
+
+.. _use-index:
+
+Using the index API
+^^^^^^^^^^^^^^^^^^^
+
+You can use the ``distlib.index`` package to perform operations relating to a
+package index compatible with PyPI. This includes things like registering a
+project, uploading a distribution or uploading documentation.
+
+Overview
+~~~~~~~~
+
+You access index functionality through an instance of the :class:`Index` class.
+This is instantiated with the URL of the repository (which can be omitted if
+you want to use PyPI itself)::
+
+    >>> from distlib.index import Index
+    >>> index = Index()
+    >>> index.url
+    'http://pypi.python.org/pypi'
+
+To use a local test server, you might do this::
+
+    >>> index = Index('http://localhost:8080/')
+
+Registering a project
+~~~~~~~~~~~~~~~~~~~~~
+
+Registering a project can be done using a :class:`Metadata` instance which
+holds the index metadata used for registering. A simple example::
+
+    >>> from distlib.metadata import Metadata
+    >>> metadata = Metadata()
+    >>> metadata['Name'] = 'tatterdemalion'
+    >>> metadata['Version'] = '0.1'
+    >>> # other fields omitted
+    >>> response = index.register(metadata)
+
+The :meth:`register` method returns an HTTP response, such as might be returned
+by a call to ``urlopen``. If an error occurs, a :class:`HTTPError` will be
+raised. Otherwise, the ``response.code`` should be 200.
+
+Uploading a source distribution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To upload a source distribution, you need to do the following as a minimum::
+
+    >>> metadata = ... # get a populated Metadata instance
+    >>> response = index.upload_file(metadata, archive_name)
+
+The :meth:`upload_file` method returns an HTTP response or, in case of error,
+raises an :class:`HTTPError`.
+
+Uploading binary distributions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When uploading binary distributions, you need to specify the file type and
+Python version, as in the following example::
+
+    >>> response = index.upload_file(metadata, archive_name,
+    ...                              filetype='bdist_dumb',
+    ...                              pyversion='2.6')
+
+
+Signing a distribution
+~~~~~~~~~~~~~~~~~~~~~~
+
+To sign a distribution, you will typically need GnuPG. The default
+implementation looks for ``gpg`` or ``gpg2`` on the path, but if not available
+there, you can can explicitly specify an absbolute path indicating where the
+signing program is to be found::
+
+    >>> index.gpg = '/path/to/gpg'
+
+If the location of the signing key is not the default location, you can specify
+that too::
+
+    >>> index.gpg_home = '/path/to/keys'
+
+where the ``keys`` folder will hold the GnuPG key database (files like
+``pubring.gpg``, ``secring.gpg``, and ``trustdb.gpg``).
+
+Once these are set, you can sign the archive before uploading, as follows::
+
+    >>> response = index.upload_file(metadata, archive_name,
+    ...                              signer='Test User',
+    ...                              sign_password='secret')
+
+When you sign a distribution, both the distribution and the signature are
+uploaded to the index.
+
+Verifying signatures
+~~~~~~~~~~~~~~~~~~~~
+
+For any archive downloaded from an index, you can retrieve any signature by
+just appending ``.asc`` to the path portion of the download URL for the
+archive, and downloading that. Then ``gpg`` can be used to verify the
+signature like this::
+
+    $ gpg --verify myproject-0.1.zip.asc myproject-0.1.zip
+
+
+Uploading documentation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+To upload documentation, you need to specify the metadata and the directory
+which is the root of the documentation (typically, if you use Sphinx to
+build your documentation, this will be something like
+``<project>/docs/_build/html``)::
+
+    >>> response = index.upload_documentation(metadata, doc_dir)
+
+The :meth:`upload_documentation` method returns an HTTP response or, in case of
+error, raises an :class:`HTTPError`. The call will zip up the entire contents
+of the passed directory ``doc_dir`` and upload the zip file to the index.
+
+Authentication
+~~~~~~~~~~~~~~
+
+Operations which update the index (all of the above) will require
+authenticated requests. You can specify a username and password to use for
+requests sent to the index::
+
+    >>> index.username = 'test'
+    >>> index.password = 'secret'
+
+For your convenience, these will be automatically read from any ``.pypirc``
+file which you have; if it contains entries for multiple indexes, a
+``repository`` key in ``.pypirc`` must match ``index.url`` to identify which
+username and password are to be read from ``.pypirc``. Note that to ensure
+compatibility, ``distlib`` uses ``distutils`` code to read the ``.pypirc``
+configuration. Thus, given the ``.pypirc`` file::
+
+    [distutils]
+    index-servers =
+        pypi
+        test
+
+    [pypi]
+    username: me
+    password: my_strong_password
+
+    [test]
+    repository: http://localhost:8080/
+    username: test
+    password: secret
+
+you would see the following::
+
+    >>> index = Index()
+    >>> index.username
+    'me'
+    >>> index.password
+    'my_strong_password'
+    >>> index = Index('http://localhost:8080/')
+    >>> index.username
+    'test'
+    >>> index.password
+    'secret'
+
+Saving a default configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you don't have a ``.pypirc`` file but want to save one, you can do this by
+setting the username and password and calling the :meth:`save_configuration`
+method::
+
+    >>> index = Index()
+    >>> index.username = 'fred'
+    >>> index.password = 'flintstone'
+    >>> index.save_configuration()
+
+This will use ``distutils`` code to save a default ``.pypirc`` file which
+specifies a single index - PyPI - with the specified username and password.
+
 
 .. _use-metadata:
 
@@ -545,134 +859,6 @@ However, you can't mix and match versions of different types::
       TypeError: cannot compare NormalizedVersion('1.0.0') and SemanticVersion('1.0.0')
       >>>
 
-Using the locators API
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. currentmodule:: distlib.locators
-
-Overview
-~~~~~~~~
-
-To locate a distribution in an index, we can use the :func:`locate` function.
-This returns a potentially downloadable distribution (in the sense that it
-has a download URL - of course, there are no guarantees that there will
-actually be a downloadable resource at that URL). The return value is an
-instance of :class:`distlib.database.Distribution` which can be queried for
-any distributions it requires, so that they can also be located if desired.
-Here is a basic example::
-
-      >>> from distlib.locators import locate
-      >>> flask = locate('flask')
-      >>> flask
-      <Distribution Flask (0.9) [http://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz]>
-      >>> dependencies = [locate(r) for r in flask.get_requirements('install')]
-      >>> from pprint import pprint
-      >>> pprint(dependencies)
-      [<Distribution Werkzeug (0.8.3) [http://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.8.3.tar.gz]>,
-      <Distribution Jinja2 (2.6) [http://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.6.tar.gz]>]
-      >>>
-
-The values returned by :meth:`get_requirements` are just strings. Here's another example,
-showing a little more detail::
-
-      >>> authy = locate('authy')
-      >>> authy.get_requirements('install')
-      [u'httplib2 (>= 0.7, < 0.8)', u'simplejson']
-      >>> authy
-      <Distribution authy (0.0.4) [http://pypi.python.org/packages/source/a/authy/authy-0.0.4.tar.gz]>
-      >>> deps = [locate(r) for r in authy.get_requirements('install')]
-      >>> pprint(deps)
-      [<Distribution httplib2 (0.7.6) [http://pypi.python.org/packages/source/h/httplib2/httplib2-0.7.6.tar.gz]>,
-      <Distribution simplejson (2.6.2) [http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.2.tar.gz]>]
-      >>>
-
-Note that the constraints on the dependencies were honoured by :func:`locate`.
-
-
-Under the hood
-~~~~~~~~~~~~~~
-
-Under the hood, :func:`locate` uses *locators*. Locators are a mechanism for
-finding distributions from a range of sources. Although the ``pypi`` subpackage
-has been copied from ``distutils2`` to ``distlib``, there may be benefits in a
-higher-level API, and so the ``distlib.locators`` package has been created as
-an experiment. Locators are objects which locate distributions. A locator
-instance's :meth:`get_project` method is called, passing in a project name: The
-method returns a dictionary containing information about distribution releases
-found for that project. The keys of the returned dictionary are versions, and
-the values are instances of :class:`distlib.database.Distribution`.
-
-The following locators are provided:
-
-* :class:`DirectoryLocator` -- this is instantiated with a base directory and
-  will look for archives in the file system tree under that directory. Name
-  and version information is inferred from the filenames of archives, and the
-  amount of information returned about the download is minimal.
-
-* :class:`PyPIRPCLocator`. -- This takes a base URL for the RPC service and
-  will locate packages using PyPI's XML-RPC API. This locator is a little slow
-  (the scraping interface seems to work faster) and case-sensitive. For
-  example, searching for ``'flask'`` will throw up no results, but you get the
-  expected results when searching from ``'Flask'``. This appears to be a
-  limitation of the underlying XML-RPC API. Note that 20 versions of a
-  project necessitate 41 network calls (one to get the versions, and
-  two more for each version -- one to get the metadata, and another to get the
-  downloads information).
-
-* :class:`PyPIJSONLocator`. -- This takes a base URL for the JSON service and
-  will locate packages using PyPI's JSON API. This locator is case-sensitive. For
-  example, searching for ``'flask'`` will throw up no results, but you get the
-  expected results when searching from ``'Flask'``. This appears to be a
-  limitation of the underlying JSON API. Note that unlike the XML-RPC service,
-  only non-hidden releases will be returned.
-
-* :class:`SimpleScrapingLocator` -- this takes a base URL for the site to
-  scrape, and locates packages using a similar approach to the
-  ``PackageFinder`` class in ``pip``, or as documented in the ``setuptools``
-  documentation as the approach used by ``easy_install``.
-
-* :class:`DistPathLocator` -- this takes a :class:`DistributionPath` instance
-  and locates installed distributions. This can be used with
-  :class:`AggregatingLocator` to satisfy requirements from installed
-  distributions before looking elsewhere for them.
-
-* :class:`JSONLocator` -- this uses an improved JSON metadata schema and
-  returns data on all versions of a distribution, including dependencies,
-  using a single network request.
-
-* :class:`AggregatingLocator` -- this takes a list of other aggregators and
-  delegates finding projects to them. It can either return the first result
-  found (i.e. from the first aggregator in the list provided which returns a
-  non-empty result), or a merged result from all the aggregators in the list.
-
-There is a default locator, available at :attr:`distlib.locators.default_locator`.
-
-The ``locators`` package also contains a function,
-:func:`get_all_distribution_names`, which retrieves the names of all
-distributions registered on PyPI::
-
-      >>> from distlib.locators import get_all_distribution_names
-      >>> names = get_all_package_names()
-      >>> len(names)
-      24801
-      >>>
-
-This is implemented using the XML-RPC API.
-
-Apart from :class:`JSONLocator`, none of the locators currently returns enough
-metadata to allow dependency resolution to be carried out, but that is a result
-of the fact that metadata relating to dependencies are not indexed, and would
-require not just downloading the distribution archives and inspection of
-contained metadata files, but potentially also introspecting setup.py! This is
-the downside of having vital information only available via keyword arguments
-to the :func:`setup` call: hopefully, a move to fully declarative metadata will
-facilitate indexing it and allowing the provision of improved features.
-
-The locators will skip binary distributions (``.egg`` files are currently
-treated as binary distributions).
-
-The PyPI locator classes don't yet support the use of mirrors, but that can be
-added in due course -- once the basic functionality is working satisfactorily.
 
 Next steps
 ----------

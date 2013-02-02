@@ -1,5 +1,8 @@
 \.(py[co]|log|zip|coverage)$
 tests/run/
 docs/_build/
-MANIFEST|distlib-vcsid
+MANIFEST|distlib-vcsid|cover
+tests/passwords
+tests/pypi-server-standalone.py
 (dist|htmlcov|build)/
+_testdist-0.1/

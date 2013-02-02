@@ -1,0 +1,14 @@
+Metadata-Version: 1.2
+Name: {username}_testdist
+Version: 0.1
+Summary: A test project for distlib
+Description: This distribution is a test for distlib.
+Keywords:
+Home-page: http://pypi.python.org/pypi/{username}_testdist/
+Author: Test User
+Author-email: test.user@testusers.org
+Maintainer: Test User
+Maintainer-email: test.user@testusers.org
+License: Copyright (C) 2013 by Test User. See LICENSE for details.
+Download-URL: UNKNOWN
+Requires-Python: UNKNOWN

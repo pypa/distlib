@@ -1,0 +1,20 @@
+{{
+  "source": {{
+    "modules": [
+      "testdist"
+    ]
+  }},
+  "version": "1",
+  "metadata": {{
+    "maintainer": "Test User",
+    "name": "{username}_testdist",
+    "license": "Copyright (C) 2013 by Test User.",
+    "author": "Test User",
+    "home-page": "http://pypi.python.org/pypi/{username}_testdist/",
+    "summary": "A test project for distlib",
+    "version": "0.1",
+    "maintainer-email": "test.user@testusers.org",
+    "author-email": "test.user@testusers.org",
+    "description": "This distribution is a test for distlib."
+  }}
+}}

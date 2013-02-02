@@ -82,25 +82,29 @@ Main features
 
 Distlib currently offers the following features:
 
-* The package ``distlib.version``, which implements version specifiers as
-  defined by :pep:`386`, but also support for working with "legacy" versions
-  (``setuptools``/``distribute``) and semantic versions.
-* The package ``distlib.metadata``, which implements distribution metadata as
-  defined by :pep:`345`, :pep:`314` and :pep:`241`.
-* The package ``distlib.markers``, which implements environment markers as
-  defined by :pep:`345`.
 * The package ``distlib.database``, which implements a database of installed
   distributions, as defined by :pep:`376`, and distribution dependency graph
   logic. Support is also provided for non-installed distributions (i.e.
   distributions registered with metadata on an index like PyPI), including
   the ability to scan for dependencies and building dependency graphs.
+* The package ``distlib.index``, which implements an interface to perform
+  operations on an index, such as registering a project, uploading a
+  distribution or uploading documentation.
+* The package ``distlib.metadata``, which implements distribution metadata as
+  defined by :pep:`345`, :pep:`314` and :pep:`241`.
+* The package ``distlib.markers``, which implements environment markers as
+  defined by :pep:`345`.
+* The package ``distlib.locators``, which allows finding distributions, whether
+  on PyPI (XML-RPC or via the "simple" interface), local directories or some
+  other source.
 * The package ``distlib.resources``, which allows access to data files stored
   in Python packages, both in the file system and in .zip files.
 * The package ``distlib.scripts``, which allows installing of scripts with
   adjustment of shebang lines and support for native Windows executable
   launchers.
-* The package ``distlib.locators``, which allows finding distributions on
-  PyPI (XML-RPC or via the "simple" interface) or local directories.
+* The package ``distlib.version``, which implements version specifiers as
+  defined by :pep:`386`, but also support for working with "legacy" versions
+  (``setuptools``/``distribute``) and semantic versions.
 * The package ``distlib.util``, which contains miscellaneous functions and
   classes which are useful in packaging, but which do not fit neatly into
   one of the other packages in ``distlib``.* The package implements enhanced
