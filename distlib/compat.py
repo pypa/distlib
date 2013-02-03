@@ -27,7 +27,8 @@ if sys.version_info[0] < 3:
 
     import urllib2
     from urllib2 import (Request, urlopen, URLError, HTTPError,
-                         HTTPBasicAuthHandler, HTTPPasswordMgr, build_opener)
+                         HTTPBasicAuthHandler, HTTPPasswordMgr,
+                         HTTPSHandler, build_opener)
     import httplib
     import xmlrpclib
     import Queue as queue
@@ -62,7 +63,7 @@ else:
     from urllib.request import (urlopen, urlretrieve, Request, url2pathname,
                                 pathname2url, URLopener, FancyURLopener,
                                 HTTPBasicAuthHandler, HTTPPasswordMgr,
-                                build_opener)
+                                HTTPSHandler, build_opener)
     from urllib.error import HTTPError, URLError
     import http.client as httplib
     import urllib.request as urllib2
