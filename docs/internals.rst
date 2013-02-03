@@ -681,7 +681,7 @@ Python ecosystem are:
   :pep:`386` in `this section
   <http://www.python.org/dev/peps/pep-0386/#setuptools>`_ -- it's perhaps the
   most widely used Python version scheme, but since it tries to be very
-  lexible and work with a wide range of conventions, it ends up allowing a
+  flexible and work with a wide range of conventions, it ends up allowing a
   very chaotic mess of version conventions in the Python community as a whole.
 
 * The proposed versioning scheme described in :pep:`386`, in `this section

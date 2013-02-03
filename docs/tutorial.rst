@@ -56,6 +56,9 @@ This is a slightly modified version of Ralf Schmitt's `pypiserver
 <https://github.com/schmir/pypiserver>`_. To use, the script needs to be copied
 to the ``tests`` folder of the ``distlib`` distribution.
 
+If the server script is not available, the tests which use it will be skipped.
+
+
 First steps
 -----------
 

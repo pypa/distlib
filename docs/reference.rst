@@ -261,7 +261,7 @@ Classes
    .. attribute:: adjacency_list
 
       Dictionary mapping distributions to a list of ``(other, label)`` tuples
-      where  ``other`` is a distribution and the edge is labeled with ``label``
+      where  ``other`` is a distribution and the edge is labelled with ``label``
       (i.e. the version specifier, if such was provided).
 
    .. attribute:: reverse_list
@@ -750,7 +750,7 @@ Classes
                 during dependency resolution. Currently, if this set is non-
                 empty, it will contain 2-tuples whose first element is the
                 string 'unsatisfied' and whose second element is a requirement
-                which couldn't be satisified.
+                which couldn't be satisfied.
 
                 In the set of :class:`Distribution` instances returned, some
                 attributes will be set:
@@ -862,7 +862,7 @@ Classes
       :param filetype: The type of the file being uploaded. This would have
                        values such as ``sdist`` (for a source distribution),
                        ``bdist_wininst`` for a Windows installer, and so on.
-                       Consult the ``dstutils`` documentation for the full
+                       Consult the ``distutils`` documentation for the full
                        set of possible values.
       :param pyversion: The Python version this distribution is compatible
                         with. If it's a pure-Python distribution, the value
