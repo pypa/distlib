@@ -15,7 +15,7 @@ from distlib.util import zip_dir
 
 logger = logging.getLogger(__name__)
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 class IndexTestCase(unittest.TestCase):
     run_test_server = True
@@ -197,3 +197,15 @@ class IndexTestCase(unittest.TestCase):
             data = response.read()
             expected = b'This is dummy documentation'
             self.assertIn(expected, data)
+
+    def test_verify_signature(self):
+        self.index.gpg_home = os.path.join(HERE, 'keys')
+        sig_file = os.path.join(HERE, 'good.bin.asc')
+        good_file = os.path.join(HERE, 'good.bin')
+        bad_file = os.path.join(HERE, 'bad.bin')
+        self.assertTrue(self.index.verify_signature(sig_file, good_file))
+        self.assertFalse(self.index.verify_signature(sig_file, bad_file))
+
+
+if __name__ == '__main__':
+    unittest.main()

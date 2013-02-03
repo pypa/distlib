@@ -10,8 +10,7 @@ import tempfile
 from threading import Thread
 
 from distlib.compat import (xmlrpclib, configparser, HTTPBasicAuthHandler,
-                            Request, HTTPPasswordMgr, urlparse, build_opener,
-                            queue)
+                            Request, HTTPPasswordMgr, urlparse, build_opener)
 from distlib.metadata import Metadata
 from distlib.util import cached_property, zip_dir
 
@@ -89,12 +88,14 @@ class Index(object):
         request = self.encode_request(d.items(), [])
         return self.send_request(request, self.password_manager)
 
-    def reader(self, name, stream):
+    def reader(self, name, stream, outbuf):
         while True:
             s = stream.readline()
             if not s:
                 break
-            logger.debug('%s: %s' % (name, s.decode('utf-8').rstrip()))
+            s = s.decode('utf-8').rstrip()
+            outbuf.append(s)
+            logger.debug('%s: %s' % (name, s))
         stream.close()
 
     def get_sign_command(self, filename, signer, sign_password):
@@ -110,30 +111,38 @@ class Index(object):
         logger.debug('invoking: %s', ' '.join(cmd))
         return cmd, sf
 
-    def sign_file(self, filename, signer, sign_password):
-        cmd, sig_file = self.get_sign_command(filename, signer, sign_password)
+    def run_command(self, cmd, input_data=None):
         kwargs = {
             'stdout': subprocess.PIPE,
             'stderr': subprocess.PIPE,
         }
-        if sign_password is not None:
+        if input_data is not None:
             kwargs['stdin'] = subprocess.PIPE
+        stdout = []
+        stderr = []
         p = subprocess.Popen(cmd, **kwargs)
-        t1 = Thread(target=self.reader, args=('stdout', p.stdout))
+        # We don't use communicate() here because we may need to
+        # get clever with interacting with the command
+        t1 = Thread(target=self.reader, args=('stdout', p.stdout, stdout))
         t1.start()
-        t2 = Thread(target=self.reader, args=('stderr', p.stderr))
+        t2 = Thread(target=self.reader, args=('stderr', p.stderr, stderr))
         t2.start()
-        if sign_password is not None:
-            sign_password = sign_password.encode('utf-8')
-            p.stdin.write(sign_password)
+        if input_data is not None:
+            p.stdin.write(input_data)
             p.stdin.close()
 
         p.wait()
         t1.join()
         t2.join()
-        if p.returncode != 0:
+        return p.returncode, stdout, stderr
+
+    def sign_file(self, filename, signer, sign_password):
+        cmd, sig_file = self.get_sign_command(filename, signer, sign_password)
+        rc, stdout, stderr = self.run_command(cmd,
+                                              sign_password.encode('utf-8'))
+        if rc != 0:
             raise ValueError('sign command failed with error '
-                             'code %s' % p.returncode)
+                             'code %s' % rc)
         return sig_file
 
     def upload_file(self, metadata, filename, signer=None, sign_password=None,
@@ -189,6 +198,22 @@ class Index(object):
         files = [('content', name, zip_data)]
         request = self.encode_request(fields, files)
         return self.send_request(request, self.password_manager)
+
+    def get_verify_command(self, signature_filename, data_filename):
+        cmd = [self.gpg, '--status-fd', '2', '--no-tty']
+        if self.gpg_home:
+            cmd.extend(['--homedir', self.gpg_home])
+        cmd.extend(['--verify', signature_filename, data_filename])
+        logger.debug('invoking: %s', ' '.join(cmd))
+        return cmd
+
+    def verify_signature(self, signature_filename, data_filename):
+        cmd = self.get_verify_command(signature_filename, data_filename)
+        rc, stdout, stderr = self.run_command(cmd)
+        if rc not in (0, 1):
+            raise ValueError('verify command failed with error '
+                             'code %s' % rc)
+        return rc == 0
 
     def send_request(self, req, password_manager):
         opener = build_opener(HTTPBasicAuthHandler(password_manager))

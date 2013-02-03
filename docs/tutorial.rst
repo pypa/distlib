@@ -476,10 +476,25 @@ Verifying signatures
 
 For any archive downloaded from an index, you can retrieve any signature by
 just appending ``.asc`` to the path portion of the download URL for the
-archive, and downloading that. Then ``gpg`` can be used to verify the
-signature like this::
+archive, and downloading that. The index class offers a
+:meth:`verify_signature` method for validating a signature. Before invoking it,
+you may need to specify the location of the signing key::
 
-    $ gpg --verify myproject-0.1.zip.asc myproject-0.1.zip
+    >>> index.gpg_home = '/path/to/keys'
+
+If you have files 'good.bin', 'bad.bin' which are different from each other,
+and 'good.bin.asc' has the signature for 'good.bin', then you can verify
+signatures like this::
+
+    >>> index.verify_signature('good.bin.asc', 'good.bin')
+    True
+    >>> index.verify_signature('good.bin.asc', 'bad.bin')
+    False
+
+Note that if you don't have the ``gpg`` or ``gpg2`` programs on the path, you
+may need to specify the location of the verifier program explicitly::
+
+    >>> index.gpg = '/path/to/gpg'
 
 
 Uploading documentation
