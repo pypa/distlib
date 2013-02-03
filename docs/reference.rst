@@ -801,6 +801,132 @@ Variables
    This attribute holds a locator which is used by :func:`locate` to locate
    distributions.
 
+The ``distlib.index`` package
+--------------------------------
+
+.. currentmodule:: distlib.index
+
+Classes
+^^^^^^^^
+
+.. class:: PackageIndex
+
+   This class represents a package index which is compatible with PyPI, the
+   Python Package Index. It allows you to register projects, upload source
+   and binary distributions (with support for digital signatures), upload
+   documentation, verify signatures and get a list of hosts which are mirrors
+   for the index.
+
+   Methods:
+
+   .. method:: __init__(url=None, mirror_host=None)
+
+   Initialise an instance, setting instance attributes named from the keyword
+   arguments.
+
+   :param url: The root URL for the index. If not specified, the URL for PyPI
+               is used ('http://pypi.python.org/pypi').
+   :param mirror_host: The DNS name for a host which can be used to
+                       determine available mirror hosts for the index. If not
+                       specified, the value 'last.pypi.python.org' is used.
+
+   .. method:: register(metadata)
+
+      Register a project with the index.
+
+      :param metadata: A :class:`~distlib.metadata.Metadata` instance. This
+                       should have at least the ``Name`` and ``Version``
+                       fields set, and ideally as much metadata as possible
+                       about this distribution. Though it might seem odd to
+                       have to specify a version when you are initially
+                       registering a project, this is required by PyPI. You
+                       can see this in PyPI's Web UI when you click the
+                       "Package submission" link in the left-hand side menu.
+      :returns: An ``urllib`` HTTP response returned by the index. If an error
+                occurs, an :class:`HTTPError` exception will be raised.
+
+   .. method:: upload_file(metadata, filename, signer=None, sign_password=None, filetype='sdist', pyversion='source')
+
+      Upload a distribution to the index.
+
+      :param metadata: A :class:`~distlib.metadata.Metadata` instance. This
+                       should have at least the ``Name`` and ``Version``
+                       fields set, and ideally as much metadata as possible
+                       about this distribution.
+      :param file_name: The path to the file which is to be uploaded.
+      :param signer: If specified, this needs to be a string identifying the
+                     GnuPG private key which is to be used for signing the
+                     distribution.
+      :param sign_password: The passphrase which allows access to the private
+                            key used for the signature.
+      :param filetype: The type of the file being uploaded. This would have
+                       values such as ``sdist`` (for a source distribution),
+                       ``bdist_wininst`` for a Windows installer, and so on.
+                       Consult the ``dstutils`` documentation for the full
+                       set of possible values.
+      :param pyversion: The Python version this distribution is compatible
+                        with. If it's a pure-Python distribution, the value
+                        to use would be ``source`` - for distributions which
+                        are for specific Python versions, you would use the
+                        Python version in the form ``X.Y``.
+      :returns: An ``urllib`` HTTP response returned by the index. If an error
+                occurs, an :class:`HTTPError` exception will be raised.
+
+   .. method:: upload_documentation(metadata, doc_dir)
+
+      Upload HTML documentation to the index. The contents of the specified
+      directory tree will be packed into a .zip file which is then uploaded
+      to the index.
+
+      :param metadata: A :class:`~distlib.metadata.Metadata` instance. This
+                       should have at least the ``Name`` and ``Version``
+                       fields set.
+      :param doc_dir: The path to the root directory for the HTML
+                      documentation. This directory should be the one that
+                      contains ``index.html``.
+      :returns: An ``urllib`` HTTP response returned by the index. If an error
+                occurs, an :class:`HTTPError` exception will be raised.
+
+   .. method:: verify_signature(self, signature_filename, data_filename)
+
+      Verify a digital signature against a downloaded distribution.
+
+      :param signature_filename: The path to the file which contains the
+                                 digital signature.
+      :param data_filename: The path to the file which was supposedly signed
+                            to obtain the signature in ``signature_filename``.
+      :returns: ``True`` if the signature can be verified, else ``False``. If
+                an error occurs (e.g. unable to locate the public key used to
+                verify the signature), a ``ValueError`` is raised.
+
+   Additional attributes:
+
+   .. attribute:: username
+
+      The username to use when authenticating with the index.
+
+   .. attribute:: password
+
+      The password to use when authenticating with the index.
+
+   .. attribute:: gpg
+
+      The path to the signing and verification program.
+
+   .. attribute:: gpg_home
+
+      The location of the key database for the signing and verification
+      program.
+
+   .. attribute:: mirrors
+
+      The list of hosts which are mirrors for this index.
+
+   .. attribute:: boundary
+
+      The boundary value to use when MIME-encoding requests to be sent to the
+      index. This should be a byte-string.
+
 The ``distlib.util`` package
 -------------------------------
 

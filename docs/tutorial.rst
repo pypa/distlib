@@ -392,9 +392,9 @@ project, uploading a distribution or uploading documentation.
 Overview
 ~~~~~~~~
 
-You access index functionality through an instance of the :class:`PackageIndex` class.
-This is instantiated with the URL of the repository (which can be omitted if
-you want to use PyPI itself)::
+You access index functionality through an instance of the
+:class:`PackageIndex` class. This is instantiated with the URL of the
+repository (which can be omitted if you want to use PyPI itself)::
 
     >>> from distlib.index import PackageIndex
     >>> index = PackageIndex()
