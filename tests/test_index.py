@@ -9,7 +9,7 @@ import sys
 import unittest
 
 from distlib.compat import urlopen, HTTPError, URLError
-from distlib.index import Index, DEFAULT_MIRROR_HOST
+from distlib.index import PackageIndex, DEFAULT_MIRROR_HOST
 from distlib.metadata import Metadata, MetadataMissingError
 from distlib.util import zip_dir
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-class IndexTestCase(unittest.TestCase):
+class PackageIndexTestCase(unittest.TestCase):
     run_test_server = True
     test_server_url = 'http://localhost:8080/'
 
@@ -58,12 +58,12 @@ class IndexTestCase(unittest.TestCase):
                 cls.sink.close()
 
     def setUp(self):
-        if self.run_test_server:
-            self.index = Index(self.test_server_url)
+        if not self.run_test_server:
+            self.index = PackageIndex()
+        else:
+            self.index = PackageIndex(self.test_server_url)
             self.index.username = 'test'
             self.index.password = 'secret'
-        else:
-            self.index = Index()
 
     def test_mirrors(self):
         "Test list of mirrors"

@@ -20,7 +20,7 @@ DEFAULT_MIRROR_HOST = 'last.pypi.python.org'
 DEFAULT_INDEX = 'http://pypi.python.org/pypi'
 DEFAULT_REALM = 'pypi'
 
-class Index(object):
+class PackageIndex(object):
 
     boundary = b'----------ThIs_Is_tHe_distlib_index_bouNdaRY_$'
 

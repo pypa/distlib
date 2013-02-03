@@ -186,20 +186,20 @@ A minimal solution
 The distutils approach was to have several separate command classes called
 ``register``, ``upload`` and ``upload_doc``, where really all that was needed
 was some methods. That's the approach ``distlib`` takes, by implementing a
-:class:`Index` class with :meth:`register`, :meth:`upload_file` and
-:meth:`upload_documentation` methods. The :class:`Index` class contains no
-user interface code whatsoever: that's assumed to be the domain of the
+:class:`PackageIndex` class with :meth:`register`, :meth:`upload_file` and
+:meth:`upload_documentation` methods. The :class:`PackageIndex` class contains
+no user interface code whatsoever: that's assumed to be the domain of the
 packaging tool. The packaging tool is expected to get the required information
 from a user using whatever means the developers of that tool deem to be the
-most appropriate; the required attributes are then set on the :class:`Index`
-instance. (Examples of this kind of information: user name, password, whether
-the user wants to save a default configuration, where the signing program and
-its keys live.)
+most appropriate; the required attributes are then set on the
+:class:`PackageIndex` instance. (Examples of this kind of information: user
+name, password, whether the user wants to save a default configuration, where
+the signing program and its keys live.)
 
 The minimal interface to provide the required functionality thus looks like
 this::
 
-    class Index(object):
+    class PackageIndex(object):
         def __init__(self, url=None, mirror_host=None):
             """
             Initialise an instance using a specific index URL, and
@@ -234,7 +234,7 @@ this::
             archiving the directory contents into a .zip file.
             """
 
-The following additional attributes can be identified on :class:`Index`
+The following additional attributes can be identified on :class:`PackageIndex`
 instances:
 
 * ``username`` - the username to use for authentication.

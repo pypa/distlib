@@ -392,18 +392,18 @@ project, uploading a distribution or uploading documentation.
 Overview
 ~~~~~~~~
 
-You access index functionality through an instance of the :class:`Index` class.
+You access index functionality through an instance of the :class:`PackageIndex` class.
 This is instantiated with the URL of the repository (which can be omitted if
 you want to use PyPI itself)::
 
-    >>> from distlib.index import Index
-    >>> index = Index()
+    >>> from distlib.index import PackageIndex
+    >>> index = PackageIndex()
     >>> index.url
     'http://pypi.python.org/pypi'
 
 To use a local test server, you might do this::
 
-    >>> index = Index('http://localhost:8080/')
+    >>> index = PackageIndex('http://localhost:8080/')
 
 Registering a project
 ~~~~~~~~~~~~~~~~~~~~~
@@ -544,12 +544,12 @@ configuration. Thus, given the ``.pypirc`` file::
 
 you would see the following::
 
-    >>> index = Index()
+    >>> index = PackageIndex()
     >>> index.username
     'me'
     >>> index.password
     'my_strong_password'
-    >>> index = Index('http://localhost:8080/')
+    >>> index = PackageIndex('http://localhost:8080/')
     >>> index.username
     'test'
     >>> index.password
@@ -562,7 +562,7 @@ If you don't have a ``.pypirc`` file but want to save one, you can do this by
 setting the username and password and calling the :meth:`save_configuration`
 method::
 
-    >>> index = Index()
+    >>> index = PackageIndex()
     >>> index.username = 'fred'
     >>> index.password = 'flintstone'
     >>> index.save_configuration()
