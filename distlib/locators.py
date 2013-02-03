@@ -189,8 +189,7 @@ class Locator(object):
             md['Name'] = name
             md['Version'] = version
             dist = Distribution(md)
-        if 'md5_digest' in info:
-            dist.md5_digest = info['md5_digest']
+        dist.md5_digest = info.get('md5_digest')
         if 'python-version' in info:
             md['Requires-Python'] = info['python-version']
         if md['Download-URL'] != info['url']:
@@ -253,8 +252,7 @@ class PyPIRPCLocator(Locator):
             if urls:
                 info = urls[0]
                 metadata['Download-URL'] = info['url']
-                if 'md5_digest' in info:
-                    dist.md5_digest = info['md5_digest']
+                dist.md5_digest = info.get('md5_digest')
                 dist.locator = self
                 result[v] = dist
         return result
@@ -284,8 +282,7 @@ class PyPIJSONLocator(Locator):
             if urls:
                 info = urls[0]
                 md['Download-URL'] = info['url']
-                if 'md5_digest' in info:
-                    dist.md5_digest = info['md5_digest']
+                dist.md5_digest = info.get('md5_digest')
                 dist.locator = self
                 result[md.version] = dist
         except Exception as e:
@@ -641,6 +638,7 @@ class JSONLocator(Locator):
                 md['Version'] = version = info['version']
                 md['Download-URL'] = info['url']
                 dist = Distribution(md)
+                dist.md5_digest = info.get('digest')
                 md.dependencies = info.get('requirements', {})
                 result[version] = dist
         return result
