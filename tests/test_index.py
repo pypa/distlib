@@ -6,10 +6,9 @@ import shutil
 import socket
 import subprocess
 import sys
-import time
 import unittest
 
-from distlib.compat import urlopen, HTTPError
+from distlib.compat import urlopen, HTTPError, URLError
 from distlib.index import Index, DEFAULT_MIRROR_HOST
 from distlib.metadata import Metadata, MetadataMissingError
 from distlib.util import zip_dir
@@ -37,18 +36,25 @@ class IndexTestCase(unittest.TestCase):
             pkgdir = os.path.join(HERE, 'packages')
             if not os.path.isdir(pkgdir):
                 os.mkdir(pkgdir)
-            with open(os.devnull, 'w') as sink:
-                cmd = [sys.executable, 'pypi-server-standalone.py',
-                       '-P', 'passwords', 'packages']
-                cls.server = subprocess.Popen(cmd, stdout=sink,
-                                              stderr=sink, cwd=HERE)
-                time.sleep(0.1)   # wait for server to start up
+            cls.sink = sink = open(os.devnull, 'w')
+            cmd = [sys.executable, 'pypi-server-standalone.py',
+                   '-P', 'passwords', 'packages']
+            cls.server = subprocess.Popen(cmd, stdout=sink, stderr=sink,
+                                          cwd=HERE)
+            # wait for the server to start up
+            response = None
+            while response is None:
+                try:
+                    response = urlopen('http://localhost:8080/')
+                except URLError:
+                    pass
 
     @classmethod
     def tearDownClass(cls):
         if cls.run_test_server:
             if cls.server and cls.server.returncode is None:
                 cls.server.kill()
+                cls.sink.close()
 
     def setUp(self):
         if self.run_test_server:
