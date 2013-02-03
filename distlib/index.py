@@ -84,10 +84,10 @@ class Index(object):
         d = metadata.todict(True)
         d[':action'] = 'verify'
         request = self.encode_request(d.items(), [])
-        response = self.post_request(request, self.password_manager)
+        response = self.send_request(request, self.password_manager)
         d[':action'] = 'submit'
         request = self.encode_request(d.items(), [])
-        return self.post_request(request, self.password_manager)
+        return self.send_request(request, self.password_manager)
 
     def reader(self, name, stream):
         while True:
@@ -170,7 +170,7 @@ class Index(object):
             shutil.rmtree(os.path.dirname(sig_file))
         logger.debug('files: %s', files)
         request = self.encode_request(d.items(), files)
-        return self.post_request(request, self.password_manager)
+        return self.send_request(request, self.password_manager)
 
     def upload_documentation(self, metadata, doc_dir):
         self.check_credentials()
@@ -188,9 +188,9 @@ class Index(object):
                   ('name', name), ('version', version)]
         files = [('content', name, zip_data)]
         request = self.encode_request(fields, files)
-        return self.post_request(request, self.password_manager)
+        return self.send_request(request, self.password_manager)
 
-    def post_request(self, req, password_manager):
+    def send_request(self, req, password_manager):
         opener = build_opener(HTTPBasicAuthHandler(password_manager))
         return opener.open(req)
 

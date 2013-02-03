@@ -19,6 +19,7 @@ HERE = os.path.dirname(__file__)
 
 class IndexTestCase(unittest.TestCase):
     run_test_server = True
+    test_server_url = 'http://localhost:8080/'
 
     @classmethod
     def setUpClass(cls):
@@ -45,7 +46,7 @@ class IndexTestCase(unittest.TestCase):
             response = None
             while response is None:
                 try:
-                    response = urlopen('http://localhost:8080/')
+                    response = urlopen(cls.test_server_url)
                 except URLError:
                     pass
 
@@ -58,7 +59,7 @@ class IndexTestCase(unittest.TestCase):
 
     def setUp(self):
         if self.run_test_server:
-            self.index = Index('http://localhost:8080/')
+            self.index = Index(self.test_server_url)
             self.index.username = 'test'
             self.index.password = 'secret'
         else:
@@ -133,18 +134,21 @@ class IndexTestCase(unittest.TestCase):
         self.assertEqual(response.code, 200)
 
     def remove_package(self, name, version):
-        "Remove package. Only works with test server."
+        """
+        Remove package. Only works with test server; PyPI would require
+        some scraping to get CSRF tokens into the request.
+        """
         d = {
             ':action': 'remove_pkg',
             'name': name,
             'version': version,
-            'submit_remove': 'OK',
+            'submit_remove': 'Remove',
             'submit_ok': 'OK',
         }
         self.index.check_credentials()
         request = self.index.encode_request(d.items(), [])
         try:
-            response = self.index.post_request(request,
+            response = self.index.send_request(request,
                                                self.index.password_manager)
         except HTTPError as e:
             if e.getcode() != 404:
