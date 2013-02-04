@@ -499,6 +499,21 @@ may need to specify the location of the verifier program explicitly::
 
     >>> index.gpg = '/path/to/gpg'
 
+Some caveats about verified signatures
+++++++++++++++++++++++++++++++++++++++
+
+In order to be able to perform signature verification, you'll have to ensure
+that the public keys of whoever signed those distributions are in your key
+store (where you set ``index.gpg_home`` to point to). However, having these
+keys shouldn't give you a false sense of security; unless you can be sure that
+those keys actually belong to the people or organisations they purport to
+represent, the signature has no real value, even if it is verified without
+error. For you to be able to trust a key, it would need to be signed by
+someone you trust, who vouches for it - and this requires there to be either
+a signature from a valid certifying authority (e.g. Verisign, Thawte etc.) or
+a `Web of Trust <http://wikipedia.org/wiki/Web_of_trust>`_ around the keys that
+you want to rely on.
+
 
 Uploading documentation
 ~~~~~~~~~~~~~~~~~~~~~~~
