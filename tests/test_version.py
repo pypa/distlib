@@ -217,6 +217,7 @@ class VersionTestCase(unittest.TestCase):
         self.assertTrue(NM('Ho (<3.0,!=2.5)').match('2.6.0'))
         self.assertFalse(NM('Ho (<3.0,!=2.6)').match('2.6.0'))
         self.assertTrue(NM('Ho (2.5)').match('2.5.4'))
+        self.assertFalse(NM('Ho (2.5)').match('2.50'))
         self.assertFalse(NM('Ho (!=2.5)').match('2.5.2'))
         self.assertTrue(NM('Hey (<=2.5)').match('2.5.9'))
         self.assertFalse(NM('Hey (<=2.5)').match('2.6.0'))

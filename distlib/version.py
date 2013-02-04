@@ -266,15 +266,27 @@ class NormalizedVersion(Version):
 class UnlimitedMajorVersion(Version):
     def parse(self, s): return normalized_key(s, False)
 
+# We want '2.5' to match '2.5.4' but not '2.50'.
+
+def _match_at_front(x, y):
+    if x == y:
+        return True
+    x = str(x)
+    y = str(y)
+    if not x.startswith(y):
+        return False
+    n = len(y)
+    return x[n] == '.'
+
 class NormalizedMatcher(Matcher):
     version_class = NormalizedVersion
 
     _operators = dict(Matcher._operators)
     _operators.update({
-        "<=": lambda x, y: str(x).startswith(str(y)) or x < y,
-        ">=": lambda x, y: str(x).startswith(str(y)) or x > y,
-        "==": lambda x, y: str(x).startswith(str(y)),
-        "!=": lambda x, y: not str(x).startswith(str(y)),
+        "<=": lambda x, y: _match_at_front(x, y) or x < y,
+        ">=": lambda x, y: _match_at_front(x, y) or x > y,
+        "==": lambda x, y: _match_at_front(x, y),
+        "!=": lambda x, y: not _match_at_front(x, y),
     })
 
 _REPLACEMENTS = (
