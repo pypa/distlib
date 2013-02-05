@@ -14,13 +14,15 @@ import py_compile
 import re
 import shutil
 import socket
+import ssl
 import sys
 import time
 import zipfile
 
 from . import DistlibException
 from .compat import (string_types, shutil, urlopen, cache_from_source,
-                     raw_input)
+                     raw_input, httplib, HTTPSHandler as BaseHTTPSHandler,
+                     URLError)
 
 logger = logging.getLogger(__name__)
 
@@ -1015,3 +1017,72 @@ class FileList(object):
                             break
                         d = os.path.dirname(d)
         return sorted(files)
+
+#
+# HTTPSConnection which verifies certificates/matches domains
+#
+
+class HTTPSConnection(httplib.HTTPSConnection):
+    ca_certs = None # set this to the path to the certs file (.pem)
+    check_domain = True
+
+    def match_domain(self, host, cert_host):
+        host_parts = host.split('.')
+        cert_parts = cert_host.split('.')
+        nhost = len(host_parts)
+        ncert = len(cert_parts)
+        if nhost > ncert:
+            result = False
+        else:
+            # allow site.com to match *.site.com
+            while nhost < ncert:
+                host_parts.insert(0, '*')
+                nhost += 1
+            result = True
+            while host_parts:
+                hp = host_parts.pop()
+                cp = cert_parts.pop()
+                if hp == cp or cp == '*':
+                    continue
+                if cp[-1] == '*' and hp.startswith(cp[:-1]):
+                    continue
+                if cp[0] == '*' and hp.endswith(cp[1:]):
+                    continue
+                result = False
+                break
+        return result
+
+    def connect(self):
+        sock = socket.create_connection((self.host, self.port), self.timeout)
+        if self._tunnel_host:
+            self.sock = sock
+            self._tunnel()
+        kwargs = {
+        }
+        if self.ca_certs:
+            kwargs['cert_reqs'] = ssl.CERT_REQUIRED
+            kwargs['ca_certs'] = self.ca_certs
+        self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
+                                    **kwargs)
+        if self.ca_certs:
+            cert_subject = self.sock.getpeercert()['subject']
+            cert_dict = {}
+            for c in cert_subject:
+                cert_dict.update(c)
+            cert_host = cert_dict['commonName']
+            if self.check_domain and not self.match_domain(self.host,
+                                                           cert_host):
+                raise URLError('Domain mismatch: %s vs. %s' % (self.host,
+                                                               cert_host))
+
+class HTTPSHandler(BaseHTTPSHandler):
+    def __init__(self, ca_certs=None, check_domain=True,
+                 conn_class=HTTPSConnection):
+        BaseHTTPSHandler.__init__(self)
+        self.conn_class = conn_class
+        if ca_certs:
+            conn_class.ca_certs = ca_certs
+            conn_class.check_domain = check_domain
+
+    def https_open(self, req):
+        return self.do_open(self.conn_class, req)
