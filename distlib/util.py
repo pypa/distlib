@@ -1024,7 +1024,7 @@ class FileList(object):
 
 class HTTPSConnection(httplib.HTTPSConnection):
     ca_certs = None # set this to the path to the certs file (.pem)
-    check_domain = True
+    check_domain = False
 
     def match_domain(self, host, cert_host):
         host_parts = host.split('.')
@@ -1067,6 +1067,10 @@ class HTTPSConnection(httplib.HTTPSConnection):
         # We can't use ssl.wrap_socket since it doesn't have the
         # server_hostname kwarg. It's only a one-liner calling SSLSocket,
         # anyway - at least on 2.6/2.7/3.2/3.3.
+        # According to Antoine we're supposed to use SSLContext, but that
+        # doesn't exist on 2.x. Because the SSLSocket constructor is not
+        # a public API, this code may need to be changed to have completely
+        # separate code paths for 2.x and 3.x :-(
         self.sock = ssl.SSLSocket(sock, self.key_file, self.cert_file,
                                   **kwargs)
         if self.ca_certs:
@@ -1075,15 +1079,23 @@ class HTTPSConnection(httplib.HTTPSConnection):
             for c in cert_subject:
                 cert_dict.update(c)
             cert_host = cert_dict['commonName']
+            #import pdb; pdb.set_trace()
             if self.check_domain and not self.match_domain(self.host,
                                                            cert_host):
                 raise URLError('Domain mismatch: %s vs. %s' % (self.host,
                                                                cert_host))
 
+class DomainCheckingHTTPSConnection(HTTPSConnection):
+    check_domain = True
+
 class HTTPSHandler(BaseHTTPSHandler):
-    def __init__(self, ca_certs=None, check_domain=True,
-                 conn_class=HTTPSConnection):
+    def __init__(self, ca_certs, check_domain=True, conn_class=None):
         BaseHTTPSHandler.__init__(self)
+        if conn_class is None:
+            if check_domain:
+                conn_class = DomainCheckingHTTPSConnection
+            else:
+                conn_class = HTTPSConnection
         self.conn_class = conn_class
         if ca_certs:
             conn_class.ca_certs = ca_certs
