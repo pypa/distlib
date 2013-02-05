@@ -31,7 +31,8 @@ class PackageIndex(object):
         scheme, netloc, path, params, query, frag = urlparse(self.url)
         if params or query or frag or scheme not in ('http', 'https'):
             raise ValueError('invalid repository: %s' % self.url)
-        self.password_manager = None
+        self.password_handler = None
+        self.ssl_verifier = None
         self.gpg = None
         self.gpg_home = None
         with open(os.devnull, 'w') as sink:
@@ -70,10 +71,10 @@ class PackageIndex(object):
     def check_credentials(self):
         if self.username is None or self.password is None:
             raise ValueError('username and password must be set')
-        if self.password_manager is None:
-            self.password_manager = pm = HTTPPasswordMgr()
-            _, netloc, _, _, _, _ = urlparse(self.url)
-            pm.add_password(self.realm, netloc, self.username, self.password)
+        pm = HTTPPasswordMgr()
+        _, netloc, _, _, _, _ = urlparse(self.url)
+        pm.add_password(self.realm, netloc, self.username, self.password)
+        self.password_handler = HTTPBasicAuthHandler(pm)
 
     def register(self, metadata):
         self.check_credentials()
@@ -83,10 +84,10 @@ class PackageIndex(object):
         d = metadata.todict(True)
         d[':action'] = 'verify'
         request = self.encode_request(d.items(), [])
-        response = self.send_request(request, self.password_manager)
+        response = self.send_request(request)
         d[':action'] = 'submit'
         request = self.encode_request(d.items(), [])
-        return self.send_request(request, self.password_manager)
+        return self.send_request(request)
 
     def reader(self, name, stream, outbuf):
         while True:
@@ -179,7 +180,7 @@ class PackageIndex(object):
             shutil.rmtree(os.path.dirname(sig_file))
         logger.debug('files: %s', files)
         request = self.encode_request(d.items(), files)
-        return self.send_request(request, self.password_manager)
+        return self.send_request(request)
 
     def upload_documentation(self, metadata, doc_dir):
         self.check_credentials()
@@ -197,7 +198,7 @@ class PackageIndex(object):
                   ('name', name), ('version', version)]
         files = [('content', name, zip_data)]
         request = self.encode_request(fields, files)
-        return self.send_request(request, self.password_manager)
+        return self.send_request(request)
 
     def get_verify_command(self, signature_filename, data_filename):
         cmd = [self.gpg, '--status-fd', '2', '--no-tty']
@@ -215,8 +216,13 @@ class PackageIndex(object):
                              'code %s' % rc)
         return rc == 0
 
-    def send_request(self, req, password_manager):
-        opener = build_opener(HTTPBasicAuthHandler(password_manager))
+    def send_request(self, req):
+        handlers = []
+        if self.password_handler:
+            handlers.append(self.password_handler)
+        if self.ssl_verifier:
+            handlers.append(self.ssl_verifier)
+        opener = build_opener(*handlers)
         return opener.open(req)
 
     def encode_request(self, fields, files):

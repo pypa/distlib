@@ -148,8 +148,7 @@ class PackageIndexTestCase(unittest.TestCase):
         self.index.check_credentials()
         request = self.index.encode_request(d.items(), [])
         try:
-            response = self.index.send_request(request,
-                                               self.index.password_manager)
+            response = self.index.send_request(request)
         except HTTPError as e:
             if e.getcode() != 404:
                 raise
