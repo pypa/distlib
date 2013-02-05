@@ -609,7 +609,8 @@ attribute of the index to a suitably configured instance. For example::
 By default, the handler will attempt to match domains, including wildcard
 matching. This means that (for example) you access ``foo.org`` or
 ``www.foo.org`` which have a certificate for ``*.foo.org``, the domains will
-match. If the domains don't match, the handler raises :class:`URLError`.
+match. If the domains don't match, the handler raises a
+:class:`CertificateError` (a subclass of :class:`ValueError`).
 
 Domain mismatches can, however, happen for valid reasons. Say a hosting server
 ``bar.com`` hosts ``www.foo.org``, which we are trying to access using SSL. If

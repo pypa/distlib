@@ -22,7 +22,7 @@ import zipfile
 from . import DistlibException
 from .compat import (string_types, shutil, urlopen, cache_from_source,
                      raw_input, httplib, HTTPSHandler as BaseHTTPSHandler,
-                     URLError)
+                     URLError, match_hostname)
 
 logger = logging.getLogger(__name__)
 
@@ -1026,32 +1026,6 @@ class HTTPSConnection(httplib.HTTPSConnection):
     ca_certs = None # set this to the path to the certs file (.pem)
     check_domain = False
 
-    def match_domain(self, host, cert_host):
-        host_parts = host.split('.')
-        cert_parts = cert_host.split('.')
-        nhost = len(host_parts)
-        ncert = len(cert_parts)
-        if nhost > ncert:
-            result = False
-        else:
-            # allow site.com to match *.site.com
-            while nhost < ncert:
-                host_parts.insert(0, '*')
-                nhost += 1
-            result = True
-            while host_parts:
-                hp = host_parts.pop()
-                cp = cert_parts.pop()
-                if hp == cp or cp == '*':
-                    continue
-                if cp[-1] == '*' and hp.startswith(cp[:-1]):
-                    continue
-                if cp[0] == '*' and hp.endswith(cp[1:]):
-                    continue
-                result = False
-                break
-        return result
-
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
@@ -1074,28 +1048,20 @@ class HTTPSConnection(httplib.HTTPSConnection):
         self.sock = ssl.SSLSocket(sock, self.key_file, self.cert_file,
                                   **kwargs)
         if self.ca_certs:
-            cert_subject = self.sock.getpeercert()['subject']
-            cert_dict = {}
-            for c in cert_subject:
-                cert_dict.update(c)
-            cert_host = cert_dict['commonName']
-            #import pdb; pdb.set_trace()
-            if self.check_domain and not self.match_domain(self.host,
-                                                           cert_host):
-                raise URLError('Domain mismatch: %s vs. %s' % (self.host,
-                                                               cert_host))
+            if self.check_domain:
+                cert = self.sock.getpeercert()
+                match_hostname(cert, self.host)
 
 class DomainCheckingHTTPSConnection(HTTPSConnection):
     check_domain = True
 
 class HTTPSHandler(BaseHTTPSHandler):
-    def __init__(self, ca_certs, check_domain=True, conn_class=None):
+    def __init__(self, ca_certs, check_domain=True):
         BaseHTTPSHandler.__init__(self)
-        if conn_class is None:
-            if check_domain:
-                conn_class = DomainCheckingHTTPSConnection
-            else:
-                conn_class = HTTPSConnection
+        if check_domain:
+            conn_class = DomainCheckingHTTPSConnection
+        else:
+            conn_class = HTTPSConnection
         self.conn_class = conn_class
         if ca_certs:
             conn_class.ca_certs = ca_certs
