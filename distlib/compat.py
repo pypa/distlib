@@ -18,7 +18,7 @@ if sys.version_info[0] < 3:
     from ._backport import shutil
     from urlparse import urlparse, urlunparse, urljoin, urlsplit, urlunsplit
     from urllib import (urlretrieve, quote as _quote, unquote, url2pathname,
-                        pathname2url, URLopener, FancyURLopener)
+                        pathname2url, ContentTooShortError)
 
     def quote(s):
         if isinstance(s, unicode):
@@ -61,10 +61,10 @@ else:
     from urllib.parse import (urlparse, urlunparse, urljoin, splituser, quote,
                               unquote, urlsplit, urlunsplit)
     from urllib.request import (urlopen, urlretrieve, Request, url2pathname,
-                                pathname2url, URLopener, FancyURLopener,
+                                pathname2url,
                                 HTTPBasicAuthHandler, HTTPPasswordMgr,
                                 HTTPSHandler, build_opener)
-    from urllib.error import HTTPError, URLError
+    from urllib.error import HTTPError, URLError, ContentTooShortError
     import http.client as httplib
     import urllib.request as urllib2
     import xmlrpc.client as xmlrpclib
