@@ -1062,8 +1062,13 @@ class HTTPSConnection(httplib.HTTPSConnection):
         if self.ca_certs:
             kwargs['cert_reqs'] = ssl.CERT_REQUIRED
             kwargs['ca_certs'] = self.ca_certs
-        self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
-                                    **kwargs)
+            if getattr(ssl, 'HAS_SNI', False):
+                kwargs['server_hostname'] = self.host
+        # We can't use ssl.wrap_socket since it doesn't have the
+        # server_hostname kwarg. It's only a one-liner calling SSLSocket,
+        # anyway - at least on 2.6/2.7/3.2/3.3.
+        self.sock = ssl.SSLSocket(sock, self.key_file, self.cert_file,
+                                  **kwargs)
         if self.ca_certs:
             cert_subject = self.sock.getpeercert()['subject']
             cert_dict = {}
