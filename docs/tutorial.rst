@@ -573,6 +573,57 @@ you would see the following::
     >>> index.password
     'secret'
 
+Verifying HTTPS connections
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Although Python has full support for SSL, it does not, by default, verify SSL
+connections to servers. That's because in order to do so, a set of certificates
+which certify the identity of the server needs to be provided (see `the
+relevant Python documentation
+<http://docs.python.org/3/library/ssl.html#certificates>`_ for details).
+
+Support for verifying SSL connections is provided in distlib through a handler,
+:class:`distlib.util.HTTPSHandler`. To use it, set the ``ssl_verifier``
+attribute of the index to a suitably configured instance. For example::
+
+    >>> from distlib.util import HTTPSHandler
+    >>> verifier = HTTPSHandler(ca_certs='/path/to/root/certs.pem')
+    >>> index.ssl_verifier = verifier
+
+By default, the handler will attempt to match domains, including wildcard
+matching. This means that (for example) you access ``foo.org`` or
+``www.foo.org`` which have a certificate for ``*.foo.org``, the domains will
+match. If the domains don't match, the handler raises :class:`URLError`.
+
+Domain mismatches can, however, happen for valid reasons. Say a hosting server
+``bar.com`` hosts ``www.foo.org``, which we are trying to access using SSL. If
+the server holds a certificate for ``www.foo.org``, it will present it to the
+client, as long as both support `Server Name Indication (SNI)
+<http://wikipedia.org/wiki/Server_Name_Indication>`_. While ``distlib``
+supports SNI where Python supports it, Python 2.x does not include SNI support.
+For this or some other reason , you may wish to turn domain matching off. To do
+so, just set an attribute on the verifier::
+
+    >>> verifier.check_domain = False
+
+
+Getting hold of root certificates
++++++++++++++++++++++++++++++++++
+
+At the time of writing, you can find a file in the appropriate format on the
+`cURL website <http://curl.haxx.se/docs/caextract.html>`_. Just download the
+``caert.pem`` file and pass the path to it when instantiating your verifier.
+
+
+.. note::
+   The main PyPI server, http://pypi.python.org/, currently does not have an
+   SSL certificate which is recognised by (for example) mainstream browsers.
+   That's because the server is currently certified by CACert.org, whose root
+   certificate is not included in the trusted roots pre-installed into these
+   browsers. If you want to verify using the CACert.org root certificate, you
+   will need to get the root certificate and ensure that it's included in
+   the file you supply to ``HTTPSHandler``.
+
 Saving a default configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

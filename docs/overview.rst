@@ -89,7 +89,9 @@ Distlib currently offers the following features:
   the ability to scan for dependencies and building dependency graphs.
 * The package ``distlib.index``, which implements an interface to perform
   operations on an index, such as registering a project, uploading a
-  distribution or uploading documentation.
+  distribution or uploading documentation. Support is included for verifying
+  SSL connections (with domain matching) and signing/verifying packages using
+  GnuPG.
 * The package ``distlib.metadata``, which implements distribution metadata as
   defined by :pep:`345`, :pep:`314` and :pep:`241`.
 * The package ``distlib.markers``, which implements environment markers as
