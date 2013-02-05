@@ -22,7 +22,7 @@ import zipfile
 from . import DistlibException
 from .compat import (string_types, shutil, urlopen, cache_from_source,
                      raw_input, httplib, HTTPSHandler as BaseHTTPSHandler,
-                     URLError, match_hostname)
+                     URLError, match_hostname, CertificateError)
 
 logger = logging.getLogger(__name__)
 
@@ -1068,4 +1068,11 @@ class HTTPSHandler(BaseHTTPSHandler):
             conn_class.check_domain = check_domain
 
     def https_open(self, req):
-        return self.do_open(self.conn_class, req)
+        try:
+            return self.do_open(self.conn_class, req)
+        except URLError as e:
+            if 'certificate verify failed' in str(e.reason):
+                raise CertificateError('Unable to verify server certificate '
+                                       'for %s' % req.host)
+            else:
+                raise
