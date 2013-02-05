@@ -6,7 +6,8 @@ import shutil
 import socket
 import subprocess
 import sys
-import unittest
+
+from compat import unittest
 
 from distlib.compat import urlopen, HTTPError, URLError
 from distlib.index import PackageIndex, DEFAULT_MIRROR_HOST
