@@ -612,7 +612,7 @@ Getting hold of root certificates
 
 At the time of writing, you can find a file in the appropriate format on the
 `cURL website <http://curl.haxx.se/docs/caextract.html>`_. Just download the
-``caert.pem`` file and pass the path to it when instantiating your verifier.
+``cacert.pem`` file and pass the path to it when instantiating your verifier.
 
 
 .. note::
