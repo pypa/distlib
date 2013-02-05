@@ -58,6 +58,22 @@ to the ``tests`` folder of the ``distlib`` distribution.
 
 If the server script is not available, the tests which use it will be skipped.
 
+PYPI availability
+^^^^^^^^^^^^^^^^^
+
+If PyPI is unavailable or slow, then some of the tests can fail or become
+painfully slow. To skip tests that might be sometimes slow, set the
+``SKIP_SLOW`` environment variable::
+
+    $ SKIP_SLOW=1 python setup.py test
+
+on Posix, or::
+
+    C:\> set SKIP_SLOW=1
+    C:\> python setup.py test
+
+on Windows.
+
 
 First steps
 -----------
@@ -587,7 +603,7 @@ Support for verifying SSL connections is provided in distlib through a handler,
 attribute of the index to a suitably configured instance. For example::
 
     >>> from distlib.util import HTTPSHandler
-    >>> verifier = HTTPSHandler(ca_certs='/path/to/root/certs.pem')
+    >>> verifier = HTTPSHandler('/path/to/root/certs.pem')
     >>> index.ssl_verifier = verifier
 
 By default, the handler will attempt to match domains, including wildcard
@@ -602,9 +618,9 @@ client, as long as both support `Server Name Indication (SNI)
 <http://wikipedia.org/wiki/Server_Name_Indication>`_. While ``distlib``
 supports SNI where Python supports it, Python 2.x does not include SNI support.
 For this or some other reason , you may wish to turn domain matching off. To do
-so, just set an attribute on the verifier::
+so, instantiate the verifier like this::
 
-    >>> verifier.check_domain = False
+    >>> verifier = HTTPSHandler('/path/to/root/certs.pem', False)
 
 
 Getting hold of root certificates
