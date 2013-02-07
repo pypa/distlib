@@ -1034,52 +1034,57 @@ class FileList(object):
 
 class HTTPSConnection(httplib.HTTPSConnection):
     ca_certs = None # set this to the path to the certs file (.pem)
-    check_domain = False
+    check_domain = True # only used if ca_certs is not None
 
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
-        kwargs = {
-        }
-        if self.ca_certs:
-            kwargs['cert_reqs'] = ssl.CERT_REQUIRED
-            kwargs['ca_certs'] = self.ca_certs
-            if getattr(ssl, 'HAS_SNI', False):
-                kwargs['server_hostname'] = self.host
-        # We can't use ssl.wrap_socket since it doesn't have the
-        # server_hostname kwarg. It's only a one-liner calling SSLSocket,
-        # anyway - at least on 2.6/2.7/3.2/3.3.
-        # According to Antoine we're supposed to use SSLContext, but that
-        # doesn't exist on 2.x. Because the SSLSocket constructor is not
-        # a public API, this code may need to be changed to have completely
-        # separate code paths for 2.x and 3.x :-(
-        self.sock = ssl.SSLSocket(sock, self.key_file, self.cert_file,
-                                  **kwargs)
-        if self.ca_certs:
-            if self.check_domain:
-                cert = self.sock.getpeercert()
-                match_hostname(cert, self.host)
 
-class DomainCheckingHTTPSConnection(HTTPSConnection):
-    check_domain = True
+        if not hasattr(ssl, 'SSLContext'):
+            # For 2.x
+            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
+                                        cert_reqs=ssl.CERT_REQUIRED,
+                                        ca_certs=self.ca_certs)
+        else:
+            # For 3.x, we have SNI support (we only support >= 3.2)
+            context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+            context.options |= ssl.OP_NO_SSLv2
+            if self.cert_file:
+                context.load_cert_chain(self.cert_file, self.key_file)
+            if self.ca_certs:
+                context.verify_mode = ssl.CERT_REQUIRED
+                context.load_verify_locations(cafile=self.ca_certs)
+            self.sock = context.wrap_socket(sock, server_hostname=self.host)
+        if self.ca_certs and self.check_domain:
+            match_hostname(self.sock.getpeercert(), self.host)
 
 class HTTPSHandler(BaseHTTPSHandler):
     def __init__(self, ca_certs, check_domain=True):
         BaseHTTPSHandler.__init__(self)
-        if check_domain:
-            conn_class = DomainCheckingHTTPSConnection
-        else:
-            conn_class = HTTPSConnection
-        self.conn_class = conn_class
-        if ca_certs:
-            conn_class.ca_certs = ca_certs
-            conn_class.check_domain = check_domain
+        self.ca_certs = ca_certs
+        self.check_domain = check_domain
+
+    def _conn_maker(self, *args, **kwargs):
+        """
+        This is called to create a connection instance. Normally you'd
+        pass a connection class to do_open, but it doesn't actually check for
+        a class, and just expects a callable. As long as we behave just as a
+        constructor would have, we should be OK. If it ever changes so that
+        we *must* pass a class, we'll create an UnsafeHTTPSConnection class
+        which just sets check_domain to False in the class definition, and
+        choose which one to pass to do_open.
+        """
+        result = HTTPSConnection(*args, **kwargs)
+        if self.ca_certs:
+            result.ca_certs = self.ca_certs
+            result.check_domain = self.check_domain
+        return result
 
     def https_open(self, req):
         try:
-            return self.do_open(self.conn_class, req)
+            return self.do_open(self._conn_maker, req)
         except URLError as e:
             if 'certificate verify failed' in str(e.reason):
                 raise CertificateError('Unable to verify server certificate '
