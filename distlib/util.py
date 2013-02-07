@@ -16,12 +16,14 @@ import shutil
 import socket
 import ssl
 import sys
+import tarfile
 import time
 import zipfile
 
 from . import DistlibException
-from .compat import (string_types, shutil, urlopen, cache_from_source,
-                     raw_input, httplib, HTTPSHandler as BaseHTTPSHandler,
+from .compat import (string_types, text_type, shutil, raw_input,
+                     cache_from_source, urlopen,
+                     httplib, HTTPSHandler as BaseHTTPSHandler,
                      URLError, match_hostname, CertificateError)
 
 logger = logging.getLogger(__name__)
@@ -775,10 +777,10 @@ ARCHIVE_EXTENSIONS = ('.tar.gz', '.tar.bz2', '.tar', '.zip',
                       '.tgz', '.tbz', '.whl')
 
 def unarchive(archive_filename, dest_dir, format=None, check=True):
-    import tarfile
-    import zipfile
 
     def check_path(path):
+        if not isinstance(path, text_type):
+            path = path.decode('utf-8')
         p = os.path.abspath(os.path.join(dest_dir, path))
         if not p.startswith(dest_dir) or p[plen] != os.sep:
             raise ValueError('path outside destination: %r' % p)
@@ -813,8 +815,16 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
                 names = archive.getnames()
                 for name in names:
                     check_path(name)
-
+        if format != 'zip' and sys.version_info[0] < 3:
+            # See Python issue 17153. If the dest path contains Unicode,
+            # tarfile extraction fails on Python 2.x if a member path name
+            # contains non-ASCII characters - it leads to an implicit
+            # bytes -> unicode conversion using ASCII to decode.
+            for tarinfo in archive.getmembers():
+                if not isinstance(tarinfo.name, text_type):
+                    tarinfo.name = tarinfo.name.decode('utf-8')
         archive.extractall(dest_dir)
+
     finally:
         if archive:
             archive.close()
@@ -866,7 +876,7 @@ class Progress(object):
 
     def start(self):
         self.update(self.min)
-        return self             # allows x = ProgressBar().start()
+        return self
 
     def stop(self):
         if self.max is not None:
@@ -984,29 +994,29 @@ class FileList(object):
     def add_include(self, pattern):
         pattern = os.path.join(self.base, pattern)
         files = self.files
-        added = list(iglob(pattern))
+        added = set(iglob(pattern))
         if not added:
             if os.path.exists(pattern):
                 files.add(pattern)
         else:
-            for f in added:
-                files.add(f)
+            files |= added
 
     def add_exclude(self, pattern):
         pattern = os.path.join(self.base, pattern)
         files = self.files
-        removed = list(iglob(pattern))
+        removed = set(iglob(pattern))
         if not removed:
             if pattern in files:
                 files.remove(pattern)
         else:
-            for f in removed:
-                if f in files:
-                    files.remove(f)
+            files -= removed
 
     def get_files(self, wantdirs=False):
         files = self.files
-        if wantdirs:
+        dirs = filter(os.path.isdir, files)
+        if not wantdirs:
+            files -= set(dirs)
+        else:
             for f in files.copy():
                 if f.startswith(self.base):
                     d = os.path.dirname(f)
