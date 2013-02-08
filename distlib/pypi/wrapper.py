@@ -56,10 +56,10 @@ class ClientWrapper(object):
     """
 
     def __init__(self, default_index='simple', index_classes=_WRAPPER_INDEXES,
-                 indexes={}, mappings=_WRAPPER_MAPPINGS):
+                 indexes=None, mappings=_WRAPPER_MAPPINGS):
         self._projects = {}
         self._mappings = mappings
-        self._indexes = indexes
+        self._indexes = indexes or {}
         self._default_index = default_index
 
         # instantiate the classes and set their _project attribute to the one

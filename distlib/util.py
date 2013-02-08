@@ -727,7 +727,7 @@ class Sequencer(object):
             # Consider successors
             try:
                 successors = graph[node]
-            except:
+            except Exception:
                 successors = []
             for successor in successors:
                 if successor not in lowlinks:
@@ -1036,6 +1036,7 @@ class HTTPSConnection(httplib.HTTPSConnection):
     ca_certs = None # set this to the path to the certs file (.pem)
     check_domain = True # only used if ca_certs is not None
 
+    # noinspection PyPropertyAccess
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:

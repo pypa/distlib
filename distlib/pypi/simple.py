@@ -263,7 +263,7 @@ class Crawler(BaseClient):
                 return True
         return False
 
-    def _register_release(self, release=None, release_info={}):
+    def _register_release(self, release=None, release_info=None):
         """Register a new release.
 
         Both a release or a dict of release_info can be provided, the preferred
@@ -271,6 +271,7 @@ class Crawler(BaseClient):
 
         Return the list of existing releases for the given project.
         """
+        if not release_info: release_info = {}
         # Check if the project already has a list of releases (refering to
         # the project name). If not, create a new release list.
         # Then, add the release to the list.

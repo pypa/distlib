@@ -19,9 +19,9 @@ class TestCommand(distutils.core.Command):
         import sys
         import unittest
 
-        verbosity = 1
-        if '-v' in sys.argv:
-            verbosity = 2
+        #verbosity = 1
+        #if '-v' in sys.argv:
+        #    verbosity = 2
         sys.path.append(join(dirname(__file__), 'tests'))
         import test_all
         test_all.main()

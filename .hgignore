@@ -1,6 +1,7 @@
 \.(py[co]|log|zip|coverage)$
 tests/run/
 docs/_build/
+.idea/
 MANIFEST|distlib-vcsid|cover
 tests/passwords
 tests/pypi-server-standalone.py

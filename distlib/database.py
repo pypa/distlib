@@ -961,8 +961,7 @@ class DependencyGraph(object):
 
     def repr_node(self, dist, level=1):
         """Prints only a subgraph"""
-        output = []
-        output.append(self._repr_dist(dist))
+        output = [self._repr_dist(dist)]
         for other, label in self.adjacency_list[dist]:
             dist = self._repr_dist(other)
             if label is not None:

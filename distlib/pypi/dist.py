@@ -429,8 +429,7 @@ class ReleasesList(IndexReference):
         internally to sort the releases.
         """
 
-        sort_by = []
-        sort_by.append("version")
+        sort_by = ["version"]
 
         self.releases.sort(
             key=lambda i: tuple(getattr(i, arg) for arg in sort_by),

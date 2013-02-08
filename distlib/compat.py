@@ -286,7 +286,10 @@ except ImportError: # pragma: no cover
         return default, [first, second]
 
 # For converting & <-> &amp; etc.
-from cgi import escape
+try:
+    from html import escape
+except ImportError:
+    from cgi import escape
 unescape = HTMLParser().unescape
 
 try:
@@ -635,8 +638,9 @@ except ImportError: # pragma: no cover
             self[key] = default
             return default
 
-        def __repr__(self, _repr_running={}):
+        def __repr__(self, _repr_running=None):
             'od.__repr__() <==> repr(od)'
+            if not _repr_running: _repr_running = {}
             call_key = id(self), _get_ident()
             if call_key in _repr_running:
                 return '...'
