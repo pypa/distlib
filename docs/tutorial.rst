@@ -490,6 +490,35 @@ Once these are set, you can sign the archive before uploading, as follows::
 When you sign a distribution, both the distribution and the signature are
 uploaded to the index.
 
+Downloading files
+~~~~~~~~~~~~~~~~~
+
+The :class:`PackageIndex` class contains a utility method which allows you to
+download distributions (and other files, such as signatures)::
+
+    >>> index.download_file(url, destfile, digest=None, reporthook=None)
+
+This is similar in function to :func:`urlretrieve` in the standard library.
+Provide a ``digest`` if you want the call to check that the has digest of the
+downloaded file matches a specific value: if not provided, no matching is done.
+The value passed can just be a plain string in the case of an MD5 digest or, if
+you want to specify the hashing algorithm to use, specify a tuple such as
+``(sha1, '0123456789abcdef...'). The hashing algorithm must be one that's
+supported by the :mod:`hashlib` module.
+
+Benefits to using this method over plain :func:`urlretrieve` are:
+
+* It will use the ``ssl_verifier``, if set, to ensure that the download is
+  coming from where you think it is.
+* It will compute the digest as it downloads, saving you to have to load the
+  downloaded file to compute its digest.
+
+Note that the url you download from doesn't actually need to be on the index --
+in theory, it could be from some other site. Note that if you have an
+``ssl_verifier`` set on the index, it will perform its checks according to
+whichever ``url`` you supply - whether it's a resource on the index or not.
+
+
 Verifying signatures
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -497,7 +526,7 @@ For any archive downloaded from an index, you can retrieve any signature by
 just appending ``.asc`` to the path portion of the download URL for the
 archive, and downloading that. The index class offers a
 :meth:`verify_signature` method for validating a signature. Before invoking it,
-you may need to specify the location of the signing key::
+you may need to specify the location of the signing public key::
 
     >>> index.gpg_home = '/path/to/keys'
 
@@ -529,6 +558,11 @@ someone you trust, who vouches for it - and this requires there to be either
 a signature from a valid certifying authority (e.g. Verisign, Thawte etc.) or
 a `Web of Trust <http://wikipedia.org/wiki/Web_of_trust>`_ around the keys that
 you want to rely on.
+
+An index may itself countersign distributions (so *it* deals with the keys of
+the distribution publishers, but you need only deal with the public signing
+key belonging to the index). If you trust the index, you can trust the verified
+signature if it's signed by the index.
 
 
 Uploading documentation
@@ -622,6 +656,28 @@ For this or some other reason , you may wish to turn domain matching off. To do
 so, instantiate the verifier like this::
 
     >>> verifier = HTTPSHandler('/path/to/root/certs.pem', False)
+
+Ensuring that *only* HTTPS connections are made
++++++++++++++++++++++++++++++++++++++++++++++++
+
+You may want to ensure that traffic is *only* HTTPS for a particular
+interaction with a server - for example:
+
+* Deal with a Man-In-The-Middle proxy server which listens on port 443
+  but talks HTTP rather than HTTPS
+* Deal with situations where an index page obtained via HTTPS contains
+  links with a scheme of ``http`` rather than ``https``.
+
+To do this, instead of using :class:`HTTPSHandler` as shown above,
+use the :class:`HTTPSOnlyHandler` class instead, which disallows any
+HTTP traffic. It's used in the same way as :class:`HTTPSHandler`::
+
+    >>> from distlib.util import HTTPSOnlyHandler
+    >>> verifier = HTTPSOnlyHandler('/path/to/root/certs.pem')
+    >>> index.ssl_verifier = verifier
+
+Note that with this handler, you can't make *any* HTTP connections at all -
+it will raise :class:`URLError` if you try.
 
 
 Getting hold of root certificates

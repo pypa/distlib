@@ -216,6 +216,58 @@ class PackageIndex(object):
                              'code %s' % rc)
         return rc == 0
 
+    def download_file(self, url, destfile, digest=None, reporthook=None):
+        if digest is None:
+            digester = None
+        else:
+            if isinstance(digest, (list, tuple)):
+                hasher, digest = digest
+            else:
+                hasher = 'md5'
+            digester = getattr(hashlib, hasher)()
+        # The following code is equivalent to urlretrieve.
+        # We need to do it this way so that we can compute the
+        # digest of the file as we go.
+        with open(destfile, 'wb') as dfp:
+            # addinfourl is not a context manager on 2.x
+            # so we have to use try/finally
+            sfp = self.send_request(Request(url))
+            try:
+                headers = sfp.info()
+                blocksize = 8192
+                size = -1
+                read = 0
+                blocknum = 0
+                if "content-length" in headers:
+                    size = int(headers["Content-Length"])
+                if reporthook:
+                    reporthook(blocknum, blocksize, size)
+                while True:
+                    block = sfp.read(blocksize)
+                    if not block:
+                        break
+                    read += len(block)
+                    dfp.write(block)
+                    if digester:
+                        digester.update(block)
+                    blocknum += 1
+                    if reporthook:
+                        reporthook(blocknum, blocksize, size)
+            finally:
+                sfp.close()
+
+        # check that we got the whole file, if we can
+        if size >= 0 and read < size:
+            raise ContentTooShortError(
+                'retrieval incomplete: got only %d out of %d bytes'
+                % (read, size))
+        # if we have a digest, it must match.
+        if digester:
+            actual = digester.hexdigest()
+            if digest != actual:
+                raise ValueError('MD5 digest mismatch for %s: expected %s, '
+                                 'got %s' % (df, digest, actual))
+
     def send_request(self, req):
         handlers = []
         if self.password_handler:

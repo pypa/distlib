@@ -22,8 +22,8 @@ import zipfile
 
 from . import DistlibException
 from .compat import (string_types, text_type, shutil, raw_input,
-                     cache_from_source, urlopen,
-                     httplib, HTTPSHandler as BaseHTTPSHandler,
+                     cache_from_source, urlopen, httplib,
+                     HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
                      URLError, match_hostname, CertificateError)
 
 logger = logging.getLogger(__name__)
@@ -560,13 +560,13 @@ def _get_external_data(url):
 
 
 def get_project_data(name):
-    url = ('http://www.red-dove.com/pypi/projects/'
+    url = ('https://www.red-dove.com/pypi/projects/'
            '%s/%s/project.json' % (name[0].upper(), name))
     result = _get_external_data(url)
     return result
 
 def get_package_data(name, version):
-    url = ('http://www.red-dove.com/pypi/projects/'
+    url = ('https://www.red-dove.com/pypi/projects/'
            '%s/%s/package-%s.json' % (name[0].upper(), name, version))
     result = _get_external_data(url)
     return result
@@ -1092,3 +1092,17 @@ class HTTPSHandler(BaseHTTPSHandler):
                                        'for %s' % req.host)
             else:
                 raise
+
+#
+# To prevent against mixing HTTP traffic with HTTPS (examples: A Man-In-The-
+# Middle proxy using HTTP listens on port 443, or an index mistakenly serves
+# HTML containing a http://xyz link when it should be https://xyz),
+# you can use the following handler class, which does not allow HTTP traffic.
+#
+# It works by inheriting from HTTPHandler - so build_opener won't add a
+# handler for HTTP itself.
+#
+class HTTPSOnlyHandler(HTTPSHandler, HTTPHandler):
+    def http_open(self, req):
+        raise URLError('Unexpected HTTP request on what should be a secure '
+                       'connection: %s' % req)
