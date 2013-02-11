@@ -7,7 +7,8 @@
 import os
 import sys
 import platform
-import unittest
+
+from compat import unittest
 
 from distlib.compat import python_implementation
 from distlib.markers import interpret
