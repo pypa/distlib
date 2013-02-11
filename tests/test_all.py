@@ -7,7 +7,8 @@ import logging
 import os
 import shutil
 import sys
-import unittest
+
+from compat import unittest
 
 # Always find our sources first
 sys.path.insert(0, '..')

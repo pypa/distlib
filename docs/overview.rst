@@ -96,6 +96,8 @@ Distlib currently offers the following features:
   defined by :pep:`345`, :pep:`314` and :pep:`241`.
 * The package ``distlib.markers``, which implements environment markers as
   defined by :pep:`345`.
+* The package ``distlib.manifest``, which implements lists of files used
+  in packaging source distributions.
 * The package ``distlib.locators``, which allows finding distributions, whether
   on PyPI (XML-RPC or via the "simple" interface), local directories or some
   other source.

@@ -503,15 +503,15 @@ Provide a ``digest`` if you want the call to check that the has digest of the
 downloaded file matches a specific value: if not provided, no matching is done.
 The value passed can just be a plain string in the case of an MD5 digest or, if
 you want to specify the hashing algorithm to use, specify a tuple such as
-``(sha1, '0123456789abcdef...'). The hashing algorithm must be one that's
+``(sha1, '0123456789abcdef...')``. The hashing algorithm must be one that's
 supported by the :mod:`hashlib` module.
 
 Benefits to using this method over plain :func:`urlretrieve` are:
 
 * It will use the ``ssl_verifier``, if set, to ensure that the download is
   coming from where you think it is.
-* It will compute the digest as it downloads, saving you to have to load the
-  downloaded file to compute its digest.
+* It will compute the digest as it downloads, saving you from having to read
+  the whole of the downloaded file just to compute its digest.
 
 Note that the url you download from doesn't actually need to be on the index --
 in theory, it could be from some other site. Note that if you have an
@@ -1017,6 +1017,158 @@ However, you can't mix and match versions of different types::
       raise TypeError('cannot compare %r and %r' % (self, other))
       TypeError: cannot compare NormalizedVersion('1.0.0') and SemanticVersion('1.0.0')
       >>>
+
+.. _use-manifest:
+
+Using the manifest API
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: distlib.manifest
+
+You can use the ``distlib.manifest`` API to construct lists of files when
+creating distributions. This functionality is an improved version of the
+equivalent functionality in ``distutils``, where it was not a public API.
+
+You can create instances of the :class:`Manifest` class to work with a set
+of files rooted in a particular directory::
+
+    >>> from distlib.manifest import Manifest
+    >>> manifest = Manifest('/path/to/my/sources')
+
+This sets the :attr:`base` attribute to the passed in root directory. You can
+add one or multiple files using names relative to the base directory::
+
+    >>> manifest.add('abc')
+    >>> manifest.add_many(['def', 'ghi'])
+
+As a result of the above two statements, the manifest will consist of
+``'/path/to/my/sources/abc'``, ``'/path/to/my/sources/def'`` and
+``'/path/to/my/sources/ghi'``. No check is made regarding the existence of
+these files.
+
+You can get all the files below the base directory of the manifest::
+
+    >>> manifest.findall()
+
+This will populate the :attr:`allfiles` attribute of ``manifest`` with
+a list of all files in the directory tree rooted at the base. However,
+the manifest is still empty::
+
+    >>> manifest.files
+    >>> set()
+
+You can populate the manifest - the :attr:`files` attribute - by running
+a number of *directives*, using the :meth:`process_directive` method. Each
+directive will either add files from :attr:`allfiles` to :attr:`files`, or
+remove files from :attr:`allfiles` if they were added by a previous directive.
+A directive is a string which must have a specific syntax: malformed lines will
+result in a :class:`DistlibException` being raised. The following directives
+are available: they are compatible with the syntax of ``MANIFEST.in`` files
+processed by ``distutils``.
+
+Consider the following directory tree::
+
+    testsrc/
+    ├── keep
+    │   └── keep.txt
+    ├── LICENSE
+    ├── README.txt
+    └── subdir
+        ├── lose
+        │   └── lose.txt
+        ├── somedata.txt
+        └── subsubdir
+            └── somedata.bin
+
+This will be used to illustrate how the directives work, in the following
+sections.
+
+
+The ``include`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This takes the form of the word ``include`` (case-sensitive) followed by a
+number of file-name patterns (as used in ``MANIFEST.in`` in ``distutils``). All
+files in :attr:`allfiles`` matching the patterns (considered relative to the
+base directory) are added to :attr:`files`. For example::
+
+    >>> manifest.process_directive('include R*.txt LIC* keep/*.txt')
+
+This will add ``README.txt``, ``LICENSE`` and ``keep/keep.txt`` to the
+manifest.
+
+
+The ``exclude`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This takes the form of the word ``exclude`` (case-sensitive) followed by a
+number of file-name patterns (as used in ``MANIFEST.in`` in ``distutils``). All
+files in :attr:`files`` matching the patterns (considered relative to the
+base directory) are removed from :attr:`files`. For example::
+
+    >>> manifest.process_directive('exclude LIC*')
+
+This will remove 'LICENSE' from the manifest, as it was added in the section
+above.
+
+
+The ``global-include`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This works just like ``include``, but will add matching files at all levels of
+the directory tree::
+
+    >>> manifest.process_directive('global-include *.txt')
+
+This will add ``subdir/somedata.txt`` and ``subdir/lose/lose.txt' from the
+manifest.
+
+
+The ``global-exclude`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This works just like ``exclude``, but will remove matching files at all levels
+of the directory tree::
+
+    >>> manifest.process_directive('global-exclude l*.txt')
+
+This will remove ``subdir/lose/lose.txt' from the manifest.
+
+
+The ``recursive-include`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This directive takes a directory name (relative to the base) and a set of
+patterns. The patterns are used as in ``global-include``, but only for files
+under the specified directory::
+
+    >>> manifest.process_directive('recursive-include subdir l*.txt')
+
+This will add ``subdir/lose/lose.txt' back to the manifest.
+
+The ``recursive-exclude`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This works like ``recursive-include``, but excludes matching files under the
+specified directory if they were already added by a previous directive::
+
+    >>> manifest.process_directive('recursive-exclude subdir lose*')
+
+This will remove ``subdir/lose/lose.txt' from the manifest again.
+
+
+The ``graft`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This directive takes the name of a directory (relative to the base) and copies
+all the names under it from :attr:`allfiles` to :attr:`files`.
+
+
+The ``prune`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This directive takes the name of a directory (relative to the base) and removes
+all the names under it from :attr:`files`.
 
 
 Next steps
