@@ -167,6 +167,32 @@ class cached_property(object):
         #obj.__dict__[self.func.__name__] = value = self.func(obj)
         return value
 
+def convert_path(pathname):
+    """Return 'pathname' as a name that will work on the native filesystem.
+
+    The path is split on '/' and put back together again using the current
+    directory separator.  Needed because filenames in the setup script are
+    always supplied in Unix style, and have to be converted to the local
+    convention before we can actually use them in the filesystem.  Raises
+    ValueError on non-Unix-ish systems if 'pathname' either starts or
+    ends with a slash.
+    """
+    if os.sep == '/':
+        return pathname
+    if not pathname:
+        return pathname
+    if pathname[0] == '/':
+        raise ValueError("path '%s' cannot be absolute" % pathname)
+    if pathname[-1] == '/':
+        raise ValueError("path '%s' cannot end with '/'" % pathname)
+
+    paths = pathname.split('/')
+    while os.curdir in paths:
+        paths.remove(os.curdir)
+    if not paths:
+        return os.curdir
+    return os.path.join(*paths)
+
 
 class FileOperator(object):
     def __init__(self, dry_run=False):
@@ -182,32 +208,6 @@ class FileOperator(object):
     def record_as_written(self, path):
         if self.record:
             self.files_written.add(path)
-
-    def convert_path(self, pathname):
-        """Return 'pathname' as a name that will work on the native filesystem.
-
-        The path is split on '/' and put back together again using the current
-        directory separator.  Needed because filenames in the setup script are
-        always supplied in Unix style, and have to be converted to the local
-        convention before we can actually use them in the filesystem.  Raises
-        ValueError on non-Unix-ish systems if 'pathname' either starts or
-        ends with a slash.
-        """
-        if os.sep == '/':
-            return pathname
-        if not pathname:
-            return pathname
-        if pathname[0] == '/':
-            raise ValueError("path '%s' cannot be absolute" % pathname)
-        if pathname[-1] == '/':
-            raise ValueError("path '%s' cannot end with '/'" % pathname)
-
-        paths = pathname.split('/')
-        while os.curdir in paths:
-            paths.remove(os.curdir)
-        if not paths:
-            return os.curdir
-        return os.path.join(*paths)
 
     def newer(self, source, target):
         """Tell if the target is newer than the source.

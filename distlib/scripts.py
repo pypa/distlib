@@ -12,7 +12,7 @@ import sys
 from . import DistlibException
 from .compat import sysconfig, fsencode, detect_encoding
 from .resources import finder
-from .util import FileOperator, get_export_entry
+from .util import FileOperator, get_export_entry, convert_path
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ class ScriptMaker(object):
 
     def _copy_script(self, script, filenames):
         adjust = False
-        script = self._fileop.convert_path(script)
+        script = convert_path(script)
         outname = os.path.join(self.target_dir, os.path.basename(script))
         filenames.append(outname)
         script = os.path.join(self.source_dir, script)
