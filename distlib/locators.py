@@ -54,10 +54,13 @@ class RedirectHandler(BaseRedirectHandler):
             return
         urlparts = urlparse(newurl)
         if urlparts.scheme == '':
-            newurl = urljoin(req.full_url, newurl)
-            headers.replace_header(key, newurl)
-        return super(RedirectHandler, self).http_error_302(req, fp, code, msg,
-                                                           headers)
+            newurl = urljoin(req.get_full_url(), newurl)
+            if hasattr(headers, 'replace_header'):
+                headers.replace_header(key, newurl)
+            else:
+                headers[key] = newurl
+        return BaseRedirectHandler.http_error_302(self, req, fp, code, msg,
+                                                  headers)
 
     http_error_301 = http_error_303 = http_error_307 = http_error_302
 
