@@ -204,6 +204,8 @@ class PackageIndexTestCase(unittest.TestCase):
             self.assertIn(expected, data)
 
     def test_verify_signature(self):
+        if not self.index.gpg:
+            raise unittest.SkipTest('gpg not available')
         self.index.gpg_home = os.path.join(HERE, 'keys')
         sig_file = os.path.join(HERE, 'good.bin.asc')
         good_file = os.path.join(HERE, 'good.bin')
@@ -226,6 +228,7 @@ class PackageIndexTestCase(unittest.TestCase):
         self.addCleanup(cleanup)
         return server
 
+    @unittest.skipIf(sys.platform == 'darwin', 'Temporarily not on OS X')
     @unittest.skipIf(sys.version_info[0] < 3, 'Temporarily on 3.x only')
     def test_ssl_verification(self):
         certfile = os.path.join(HERE, 'keycert.pem')
@@ -236,6 +239,7 @@ class PackageIndexTestCase(unittest.TestCase):
         response = self.index.send_request(req)
         self.assertEqual(response.code, 200)
 
+    @unittest.skipIf(sys.platform == 'darwin', 'Temporarily not on OS X')
     @unittest.skipIf(sys.version_info[0] < 3, 'Temporarily on 3.x only')
     def test_download(self):
         digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt

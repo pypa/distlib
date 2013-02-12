@@ -209,6 +209,9 @@ class PackageIndex(object):
         return cmd
 
     def verify_signature(self, signature_filename, data_filename):
+        if not self.gpg:
+            raise DistlibException('verification unavailable because gpg '
+                                   'unavailable')
         cmd = self.get_verify_command(signature_filename, data_filename)
         rc, stdout, stderr = self.run_command(cmd)
         if rc not in (0, 1):
