@@ -23,7 +23,10 @@ logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-PYPIRC = os.path.expandvars('$HOME/.pypirc')
+if 'HOME' in os.environ:
+    PYPIRC = os.path.expandvars('$HOME/.pypirc')
+else:
+    PYPIRC = None
 
 class PackageIndexTestCase(unittest.TestCase):
     run_test_server = True
@@ -237,7 +240,8 @@ class PackageIndexTestCase(unittest.TestCase):
         self.index.username = None
         self.assertRaises(DistlibException, self.index.check_credentials)
 
-    @unittest.skipIf(os.path.exists(PYPIRC), 'because $HOME/.pypirc exists')
+    @unittest.skipIf(PYPIRC is None or os.path.exists(PYPIRC),
+                    'because $HOME/.pypirc is unavailable for use')
     def test_save_configuration(self):
         try:
             self.index.save_configuration()
