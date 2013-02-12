@@ -1069,7 +1069,12 @@ class HTTPSConnection(httplib.HTTPSConnection):
                     kwargs['server_hostname'] = self.host
             self.sock = context.wrap_socket(sock, **kwargs)
         if self.ca_certs and self.check_domain:
-            match_hostname(self.sock.getpeercert(), self.host)
+            try:
+                match_hostname(self.sock.getpeercert(), self.host)
+            except CertificateError:
+                self.sock.shutdown(socket.SHUT_RDWR)
+                self.sock.close()
+                raise
 
 class HTTPSHandler(BaseHTTPSHandler):
     def __init__(self, ca_certs, check_domain=True):
