@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+PYPIRC = os.path.expandvars('$HOME/.pypirc')
+
 class PackageIndexTestCase(unittest.TestCase):
     run_test_server = True
     test_server_url = 'http://localhost:8080/'
@@ -173,6 +175,8 @@ class PackageIndexTestCase(unittest.TestCase):
         self.index.gpg_home = os.path.join(HERE, 'keys')
         try:
             zip_name = os.path.join(HERE, '%s.zip' % self.testdir)
+            self.assertRaises(DistlibException, self.index.upload_file, md,
+                              'random-' + zip_name, 'Test User', 'tuser')
             response = self.index.upload_file(md, zip_name,
                                               'Test User', 'tuser')
             self.assertEqual(response.code, 200)
@@ -193,6 +197,12 @@ class PackageIndexTestCase(unittest.TestCase):
         md = Metadata()
         md.update(self.get_index_metadata(data))
         d = os.path.join(d, 'doc')
+        # Non-existent directory
+        self.assertRaises(DistlibException, self.index.upload_documentation,
+                          md, d+'-random')
+        # Directory with no index.html
+        self.assertRaises(DistlibException, self.index.upload_documentation,
+                          md, HERE)
         response = self.index.upload_documentation(md, d)
         self.assertEqual(response.code, 200)
         if not self.run_test_server:
@@ -206,16 +216,34 @@ class PackageIndexTestCase(unittest.TestCase):
     def test_verify_signature(self):
         if not self.index.gpg:
             raise unittest.SkipTest('gpg not available')
-        self.index.gpg_home = os.path.join(HERE, 'keys')
         sig_file = os.path.join(HERE, 'good.bin.asc')
         good_file = os.path.join(HERE, 'good.bin')
         bad_file = os.path.join(HERE, 'bad.bin')
+        gpg = self.index.gpg
+        self.index.gpg = None
+        self.assertRaises(DistlibException, self.index.verify_signature,
+                          sig_file, good_file)
+        self.index.gpg = gpg
+        # Not pointing to keycd tests
+        self.assertRaises(DistlibException, self.index.verify_signature,
+                          sig_file, good_file)
+        self.index.gpg_home = os.path.join(HERE, 'keys')
         self.assertTrue(self.index.verify_signature(sig_file, good_file))
         self.assertFalse(self.index.verify_signature(sig_file, bad_file))
 
     def test_invalid(self):
         self.assertRaises(DistlibException, PackageIndex,
                           'ftp://ftp.python.org/')
+        self.index.username = None
+        self.assertRaises(DistlibException, self.index.check_credentials)
+
+    @unittest.skipIf(os.path.exists(PYPIRC), 'because $HOME/.pypirc exists')
+    def test_save_configuration(self):
+        try:
+            self.index.save_configuration()
+            self.assertTrue(os.path.exists(PYPIRC))
+        finally:
+            os.remove(PYPIRC)
 
     def make_https_server(self, certfile):
         server = HTTPSServerThread(certfile)

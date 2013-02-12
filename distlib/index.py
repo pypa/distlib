@@ -324,7 +324,7 @@ class PackageIndex(object):
         result = []
         try:
             host = socket.gethostbyname_ex(self.mirror_host)[0]
-        except socket.gaierror:
+        except socket.gaierror: # pragma: no cover
             host = None
         if host:
             last, rest = host.split('.', 1)
