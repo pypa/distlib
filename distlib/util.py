@@ -545,6 +545,9 @@ def split_filename(filename, project_name=None):
 def _get_external_data(url):
     result = {}
     try:
+        # urlopen might fail if it runs into redirections,
+        # because of Python issue #13696. Fixed in locators
+        # using a custom redirect handler.
         resp = urlopen(url)
         headers = resp.info()
         if headers.get('Content-Type') != 'application/json':

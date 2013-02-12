@@ -13,9 +13,10 @@ import re
 import threading
 import zlib
 
-from .compat import (xmlrpclib, urljoin, urlopen, urlparse, urlunparse,
+from .compat import (xmlrpclib, urljoin, urlparse, urlunparse,
                      url2pathname, pathname2url, queue, quote,
-                     unescape, string_types,
+                     unescape, string_types, build_opener,
+                     HTTPRedirectHandler as BaseRedirectHandler,
                      Request, HTTPError, URLError)
 from .database import Distribution, DistributionPath
 from .metadata import Metadata
@@ -35,6 +36,31 @@ def get_all_distribution_names(url=None):
     client = xmlrpclib.ServerProxy(url)
     return client.list_packages()
 
+class RedirectHandler(BaseRedirectHandler):
+    # There's a bug in the base version for some 3.2.x
+    # (e.g. 3.2.2 on Ubuntu Oneiric). If a Location header
+    # returns e.g. /abc, it bails because it says the scheme ''
+    # is bogus, when actually it should use the request's
+    # URL for the scheme. See Python issue #13696.
+    def http_error_302(self, req, fp, code, msg, headers):
+        # Some servers (incorrectly) return multiple Location headers
+        # (so probably same goes for URI).  Use first header.
+        newurl = None
+        for key in ('location', 'uri'):
+            if key in headers:
+                newurl = headers[key]
+                break
+        if newurl is None:
+            return
+        urlparts = urlparse(newurl)
+        if urlparts.scheme == '':
+            newurl = urljoin(req.full_url, newurl)
+            headers.replace_header(key, newurl)
+        return super(RedirectHandler, self).http_error_302(req, fp, code, msg,
+                                                           headers)
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_302
+
 class Locator(object):
     source_extensions = ('.tar.gz', '.tar.bz2', '.tar', '.zip', '.tgz', '.tbz')
     binary_extensions = ('.egg', '.exe', '.whl')
@@ -46,6 +72,9 @@ class Locator(object):
     def __init__(self, scheme='default'):
         self._cache = {}
         self.scheme = scheme
+        # Because of bugs in some of the handlers on some of the platforms,
+        # we use our own opener rather than just using urlopen.
+        self.opener = build_opener(RedirectHandler())
 
     def _get_scheme(self):
         return self._scheme
@@ -272,7 +301,7 @@ class PyPIJSONLocator(Locator):
         result = {}
         url = urljoin(self.base_url, '%s/json' % quote(name))
         try:
-            resp = urlopen(url)
+            resp = self.opener.open(url)
             data = resp.read().decode() # for now
             d = json.loads(data)
             md = Metadata(scheme=self.scheme)
@@ -288,6 +317,7 @@ class PyPIJSONLocator(Locator):
         except Exception as e:
             logger.exception('JSON fetch failed: %s', e)
         return result
+
 
 class Page(object):
     "This class represents a scraped HTML page."
@@ -524,7 +554,7 @@ class SimpleScrapingLocator(Locator):
                 req = Request(url, headers={'Accept-encoding': 'identity'})
                 try:
                     logger.debug('Fetching %s', url)
-                    resp = urlopen(req, timeout=self.timeout)
+                    resp = self.opener.open(req, timeout=self.timeout)
                     logger.debug('Fetched %s', url)
                     headers = resp.info()
                     content_type = headers.get('Content-Type', '')
