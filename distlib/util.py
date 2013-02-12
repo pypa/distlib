@@ -1045,8 +1045,12 @@ class HTTPSConnection(httplib.HTTPSConnection):
 
         if not hasattr(ssl, 'SSLContext'):
             # For 2.x
+            if self.ca_certs:
+                cert_reqs = ssl.CERT_REQUIRED
+            else:
+                cert_reqs = ssl.CERT_NONE
             self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
-                                        cert_reqs=ssl.CERT_REQUIRED,
+                                        cert_reqs=cert_reqs,
                                         ssl_version=ssl.PROTOCOL_SSLv23,
                                         ca_certs=self.ca_certs)
         else:
