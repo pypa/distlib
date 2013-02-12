@@ -228,7 +228,6 @@ class PackageIndexTestCase(unittest.TestCase):
         self.addCleanup(cleanup)
         return server
 
-    @unittest.skipIf(sys.platform == 'darwin', 'Temporarily not on OS X')
     def test_ssl_verification(self):
         certfile = os.path.join(HERE, 'keycert.pem')
         server = self.make_https_server(certfile)
@@ -238,7 +237,6 @@ class PackageIndexTestCase(unittest.TestCase):
         response = self.index.send_request(req)
         self.assertEqual(response.code, 200)
 
-    @unittest.skipIf(sys.platform == 'darwin', 'Temporarily not on OS X')
     def test_download(self):
         digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt
         certfile = os.path.join(HERE, 'keycert.pem')
