@@ -1,20 +1,26 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012 The Python Software Foundation.
+# Copyright (C) 2012-2013 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 import codecs
-import functools
 import os
 import logging
 import logging.handlers
 import shutil
+import socket
+import ssl
+import sys
 import tempfile
+import threading
 import weakref
 
-from compat import unittest
+from compat import (unittest, HTTPServer as BaseHTTPServer,
+                    SimpleHTTPRequestHandler, urlparse)
 
 from distlib import logger
+
+HERE = os.path.dirname(__file__)
 
 class _TestHandler(logging.handlers.BufferingHandler, object):
     # stolen and adapted from test.support
@@ -175,6 +181,67 @@ class EnvironRestorer(object):
         for key in self._added:
             os.environ.pop(key, None)
         super(EnvironRestorer, self).tearDown()
+
+class HTTPRequestHandler(SimpleHTTPRequestHandler):
+
+    server_version = "TestHTTPS/1.0"
+    # Avoid hanging when a request gets interrupted by the client
+    timeout = 5
+
+    def translate_path(self, path):
+        return os.path.join(HERE, 'testsrc', 'README.txt')
+
+    def log_message(self, format, *args):
+        pass
+
+class HTTPSServer(BaseHTTPServer):
+    # Adapted from the one in Python's test suite.
+    def __init__(self, server_address, handler_class, certfile):
+        BaseHTTPServer.__init__(self, server_address, handler_class)
+        self.certfile = certfile
+
+    def get_request(self):
+        try:
+            sock, addr = self.socket.accept()
+            if hasattr(ssl, 'SSLContext'):
+                context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+                context.load_cert_chain(self.certfile)
+                sock = context.wrap_socket(sock, server_side=True)
+            else:
+                ssl.wrap_socket(sock, server_side=True,
+                                certfile=self.certfile,
+                                keyfile=self.certfile,
+                                ssl_version=ssl.PROTOCOL_SSLv23)
+        except socket.error as e:
+            # socket errors are silenced by the caller, print them here
+            sys.stderr.write("Got an error:\n%s\n" % e)
+            raise
+        return sock, addr
+
+class HTTPSServerThread(threading.Thread):
+
+    def __init__(self, certfile):
+        self.flag = None
+        self.server = HTTPSServer(('localhost', 0),
+                                  HTTPRequestHandler, certfile)
+        self.port = self.server.server_port
+        threading.Thread.__init__(self)
+        self.daemon = True
+
+    def start(self, flag=None):
+        self.flag = flag
+        threading.Thread.start(self)
+
+    def run(self):
+        if self.flag:
+            self.flag.set()
+        try:
+            self.server.serve_forever(0.05)
+        finally:
+            self.server.server_close()
+
+    def stop(self):
+        self.server.shutdown()
 
 try:
     import docutils

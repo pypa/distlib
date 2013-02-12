@@ -4,15 +4,20 @@ import logging
 import os
 import shutil
 import socket
+import ssl
 import subprocess
 import sys
+import tempfile
+import threading
 
-from compat import unittest
+from compat import unittest, Request
+from support import HTTPSServerThread
 
+from distlib import DistlibException
 from distlib.compat import urlopen, HTTPError, URLError
 from distlib.index import PackageIndex, DEFAULT_MIRROR_HOST
 from distlib.metadata import Metadata, MetadataMissingError
-from distlib.util import zip_dir
+from distlib.util import zip_dir, HTTPSHandler
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +37,11 @@ class PackageIndexTestCase(unittest.TestCase):
                              'will be skipped.')
                 return
             pwdfn = os.path.join(HERE, 'passwords')
-            if not os.path.exists(pwdfn):
+            if not os.path.exists(pwdfn):   # pragma: no cover
                 with open(pwdfn, 'w') as f:
                     f.write('test:secret\n')
             pkgdir = os.path.join(HERE, 'packages')
-            if not os.path.isdir(pkgdir):
+            if not os.path.isdir(pkgdir):   # pragma: no cover
                 os.mkdir(pkgdir)
             cls.sink = sink = open(os.devnull, 'w')
             cmd = [sys.executable, 'pypi-server-standalone.py',
@@ -93,7 +98,7 @@ class PackageIndexTestCase(unittest.TestCase):
             result[new_key] = result.pop(key)
         return result
 
-    def check_server_available(self):
+    def check_pypi_server_available(self):
         if self.run_test_server and not self.server:
             raise unittest.SkipTest('test server not available')
 
@@ -104,7 +109,7 @@ class PackageIndexTestCase(unittest.TestCase):
         self.dist_version = '0.1'
         self.testdir = '%s-%s' % (self.dist_project, self.dist_version)
         destdir = os.path.join(HERE, self.testdir)
-        if not os.path.isdir(destdir):
+        if not os.path.isdir(destdir):  # pragma : no cover
             srcdir = os.path.join(HERE, 'testdist-0.1')
             shutil.copytree(srcdir, destdir)
             for fn in os.listdir(destdir):
@@ -122,7 +127,7 @@ class PackageIndexTestCase(unittest.TestCase):
 
     def test_register(self):
         "Test registration"
-        self.check_server_available()
+        self.check_pypi_server_available()
         self.check_testdist_available()
         d = os.path.join(HERE, self.testdir)
         data = self.load_package_metadata(d)
@@ -156,7 +161,7 @@ class PackageIndexTestCase(unittest.TestCase):
 
     def test_upload(self):
         "Test upload"
-        self.check_server_available()
+        self.check_pypi_server_available()
         self.check_testdist_available()
         if self.run_test_server:
             self.remove_package(self.dist_project, self.dist_version)
@@ -181,7 +186,7 @@ class PackageIndexTestCase(unittest.TestCase):
 
     def test_upload_documentation(self):
         "Test upload of documentation"
-        self.check_server_available()
+        self.check_pypi_server_available()
         self.check_testdist_available()
         d = os.path.join(HERE, self.testdir)
         data = self.load_package_metadata(d)
@@ -206,6 +211,55 @@ class PackageIndexTestCase(unittest.TestCase):
         self.assertTrue(self.index.verify_signature(sig_file, good_file))
         self.assertFalse(self.index.verify_signature(sig_file, bad_file))
 
+    def test_invalid(self):
+        self.assertRaises(DistlibException, PackageIndex,
+                          'ftp://ftp.python.org/')
+
+    def make_https_server(self, certfile):
+        server = HTTPSServerThread(certfile)
+        flag = threading.Event()
+        server.start(flag)
+        flag.wait()
+        def cleanup():
+            server.stop()
+            server.join()
+        self.addCleanup(cleanup)
+        return server
+
+    @unittest.skipIf(sys.version_info[0] < 3, 'Temporarily on 3.x only')
+    def test_ssl_verification(self):
+        certfile = os.path.join(HERE, 'keycert.pem')
+        server = self.make_https_server(certfile)
+        url = 'https://localhost:%d/' % server.port
+        req = Request(url)
+        self.index.ssl_verifier = HTTPSHandler(certfile)
+        response = self.index.send_request(req)
+        self.assertEqual(response.code, 200)
+
+    @unittest.skipIf(sys.version_info[0] < 3, 'Temporarily on 3.x only')
+    def test_download(self):
+        digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt
+        certfile = os.path.join(HERE, 'keycert.pem')
+        server = self.make_https_server(certfile)
+        url = 'https://localhost:%d/README.txt' % server.port
+        fd, fn = tempfile.mkstemp()
+        os.close(fd)
+        self.addCleanup(os.remove, fn)
+        with open(os.path.join(HERE, 'testsrc', 'README.txt'), 'rb') as f:
+            data = f.read()
+        self.index.download_file(url, fn)   # no digest
+        with open(fn, 'rb') as f:
+            self.assertEqual(data, f.read())
+        self.index.download_file(url, fn, digest)
+        with open(fn, 'rb') as f:
+            self.assertEqual(data, f.read())
+        reporthook = lambda *args: None
+        self.index.download_file(url, fn, ('md5', digest), reporthook)
+        with open(fn, 'rb') as f:
+            self.assertEqual(data, f.read())
+        # bad digest
+        self.assertRaises(DistlibException, self.index.download_file, url, fn,
+                          digest[:-1] + '8')
 
 if __name__ == '__main__':
     unittest.main()

@@ -21,8 +21,13 @@ if _ver[0] < 3:
     from SimpleHTTPServer import SimpleHTTPRequestHandler
     from BaseHTTPServer import HTTPServer
     text_type = unicode
+    from urllib import unquote
+    from urllib2 import Request
+    from urlparse import urlparse
 else:
     import queue
     from xmlrpc.server import SimpleXMLRPCServer
     from http.server import HTTPServer, SimpleHTTPRequestHandler
     text_type = str
+    from urllib.parse import urlparse, unquote
+    from urllib.request import Request
