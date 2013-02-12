@@ -1039,7 +1039,7 @@ class HTTPSConnection(httplib.HTTPSConnection):
     # noinspection PyPropertyAccess
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
-        if self._tunnel_host:
+        if getattr(self, '_tunnel_host', False):
             self.sock = sock
             self._tunnel()
 
