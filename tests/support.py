@@ -208,10 +208,10 @@ class HTTPSServer(BaseHTTPServer):
                 context.load_cert_chain(self.certfile)
                 sock = context.wrap_socket(sock, server_side=True)
             else:
-                ssl.wrap_socket(sock, server_side=True,
-                                certfile=self.certfile,
-                                keyfile=self.certfile,
-                                ssl_version=ssl.PROTOCOL_SSLv23)
+                sock = ssl.wrap_socket(sock, server_side=True,
+                                       certfile=self.certfile,
+                                       keyfile=self.certfile,
+                                       ssl_version=ssl.PROTOCOL_SSLv23)
         except socket.error as e:
             # socket errors are silenced by the caller, print them here
             sys.stderr.write("Got an error:\n%s\n" % e)
