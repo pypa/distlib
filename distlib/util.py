@@ -1047,6 +1047,7 @@ class HTTPSConnection(httplib.HTTPSConnection):
             # For 2.x
             self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
                                         cert_reqs=ssl.CERT_REQUIRED,
+                                        ssl_version=ssl.PROTOCOL_SSLv23,
                                         ca_certs=self.ca_certs)
         else:
             # For 3.x, we have SNI support (we only support >= 3.2)
