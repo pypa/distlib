@@ -9,9 +9,9 @@ import subprocess
 import tempfile
 from threading import Thread
 
+from distlib import DistlibException
 from distlib.compat import (xmlrpclib, configparser, HTTPBasicAuthHandler,
                             Request, HTTPPasswordMgr, urlparse, build_opener)
-from distlib.metadata import Metadata
 from distlib.util import cached_property, zip_dir
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class PackageIndex(object):
         self.read_configuration()
         scheme, netloc, path, params, query, frag = urlparse(self.url)
         if params or query or frag or scheme not in ('http', 'https'):
-            raise ValueError('invalid repository: %s' % self.url)
+            raise DistlibException('invalid repository: %s' % self.url)
         self.password_handler = None
         self.ssl_verifier = None
         self.gpg = None
@@ -70,7 +70,7 @@ class PackageIndex(object):
 
     def check_credentials(self):
         if self.username is None or self.password is None:
-            raise ValueError('username and password must be set')
+            raise DistlibException('username and password must be set')
         pm = HTTPPasswordMgr()
         _, netloc, _, _, _, _ = urlparse(self.url)
         pm.add_password(self.realm, netloc, self.username, self.password)
@@ -142,15 +142,15 @@ class PackageIndex(object):
         rc, stdout, stderr = self.run_command(cmd,
                                               sign_password.encode('utf-8'))
         if rc != 0:
-            raise ValueError('sign command failed with error '
-                             'code %s' % rc)
+            raise DistlibException('sign command failed with error '
+                                   'code %s' % rc)
         return sig_file
 
     def upload_file(self, metadata, filename, signer=None, sign_password=None,
                     filetype='sdist', pyversion='source'):
         self.check_credentials()
         if not os.path.exists(filename):
-            raise ValueError('not found: %s' % filename)
+            raise DistlibException('not found: %s' % filename)
         missing, warnings = metadata.check(True)    # strict check
         logger.debug('result of check: missing: %s, warnings: %s',
                      missing, warnings)
@@ -185,10 +185,10 @@ class PackageIndex(object):
     def upload_documentation(self, metadata, doc_dir):
         self.check_credentials()
         if not os.path.isdir(doc_dir):
-            raise ValueError('not a directory: %r' % doc_dir)
+            raise DistlibException('not a directory: %r' % doc_dir)
         fn = os.path.join(doc_dir, 'index.html')
         if not os.path.exists(fn):
-            raise ValueError('not found: %r' % fn)
+            raise DistlibException('not found: %r' % fn)
         missing, warnings = metadata.check(True)    # strict check
         logger.debug('result of check: missing: %s, warnings: %s',
                      missing, warnings)
@@ -212,7 +212,7 @@ class PackageIndex(object):
         cmd = self.get_verify_command(signature_filename, data_filename)
         rc, stdout, stderr = self.run_command(cmd)
         if rc not in (0, 1):
-            raise ValueError('verify command failed with error '
+            raise DistlibException('verify command failed with error '
                              'code %s' % rc)
         return rc == 0
 
@@ -258,15 +258,16 @@ class PackageIndex(object):
 
         # check that we got the whole file, if we can
         if size >= 0 and read < size:
-            raise ContentTooShortError(
+            raise DistlibException(
                 'retrieval incomplete: got only %d out of %d bytes'
                 % (read, size))
         # if we have a digest, it must match.
         if digester:
             actual = digester.hexdigest()
             if digest != actual:
-                raise ValueError('MD5 digest mismatch for %s: expected %s, '
-                                 'got %s' % (df, digest, actual))
+                raise DistlibException('MD5 digest mismatch for %s: expected '
+                                       '%s, got %s' % (destfile, digest,
+                                                       actual))
 
     def send_request(self, req):
         handlers = []
@@ -325,10 +326,10 @@ class PackageIndex(object):
         if host:
             last, rest = host.split('.', 1)
             n = len(last)
-            hostlist = (''.join(w) for w in itertools.chain.from_iterable(
+            host_list = (''.join(w) for w in itertools.chain.from_iterable(
                         itertools.product(ascii_lowercase, repeat=i)
                         for i in range(1, n + 1)))
-            for s in hostlist:
+            for s in host_list:
                 result.append('.'.join((s, rest)))
                 if s == last:
                     break
