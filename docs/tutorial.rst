@@ -509,7 +509,7 @@ supported by the :mod:`hashlib` module.
 Benefits to using this method over plain :func:`urlretrieve` are:
 
 * It will use the ``ssl_verifier``, if set, to ensure that the download is
-  coming from where you think it is.
+  coming from where you think it is (see :ref:`verify-https`).
 * It will compute the digest as it downloads, saving you from having to read
   the whole of the downloaded file just to compute its digest.
 
@@ -622,6 +622,8 @@ you would see the following::
     'test'
     >>> index.password
     'secret'
+
+.. _verify-https:
 
 Verifying HTTPS connections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
