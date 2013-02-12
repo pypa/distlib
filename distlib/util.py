@@ -1054,15 +1054,17 @@ class HTTPSConnection(httplib.HTTPSConnection):
                                         ssl_version=ssl.PROTOCOL_SSLv23,
                                         ca_certs=self.ca_certs)
         else:
-            # For 3.x, we have SNI support (we only support >= 3.2)
             context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             context.options |= ssl.OP_NO_SSLv2
             if self.cert_file:
                 context.load_cert_chain(self.cert_file, self.key_file)
+            kwargs = {}
             if self.ca_certs:
                 context.verify_mode = ssl.CERT_REQUIRED
                 context.load_verify_locations(cafile=self.ca_certs)
-            self.sock = context.wrap_socket(sock, server_hostname=self.host)
+                if getattr(ssl, 'HAS_SNI', False):
+                    kwargs['server_hostname'] = self.host
+            self.sock = context.wrap_socket(sock, **kwargs)
         if self.ca_certs and self.check_domain:
             match_hostname(self.sock.getpeercert(), self.host)
 
