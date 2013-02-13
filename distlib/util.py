@@ -989,47 +989,6 @@ def _iglob(path_glob):
                     yield file
 
 
-class FileList(object):
-    def __init__(self, base):
-        self.base = os.path.abspath(base)
-        self.files = set()
-
-    def add_include(self, pattern):
-        pattern = os.path.join(self.base, pattern)
-        files = self.files
-        added = set(iglob(pattern))
-        if not added:
-            if os.path.exists(pattern):
-                files.add(pattern)
-        else:
-            files |= added
-
-    def add_exclude(self, pattern):
-        pattern = os.path.join(self.base, pattern)
-        files = self.files
-        removed = set(iglob(pattern))
-        if not removed:
-            if pattern in files:
-                files.remove(pattern)
-        else:
-            files -= removed
-
-    def get_files(self, wantdirs=False):
-        files = self.files
-        dirs = filter(os.path.isdir, files)
-        if not wantdirs:
-            files -= set(dirs)
-        else:
-            for f in files.copy():
-                if f.startswith(self.base):
-                    d = os.path.dirname(f)
-                    while d:
-                        assert d != '/'
-                        files.add(d)
-                        if d == self.base:
-                            break
-                        d = os.path.dirname(d)
-        return sorted(files)
 
 #
 # HTTPSConnection which verifies certificates/matches domains

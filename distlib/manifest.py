@@ -28,6 +28,7 @@ class Manifest(object):
 
     def __init__(self, base=None):
         self.base = os.path.abspath(os.path.normpath(base or os.getcwd()))
+        self.prefix = self.base + os.sep
         self.allfiles = None
         self.files = set()
 
@@ -63,15 +64,34 @@ class Manifest(object):
                     push(fullname)
 
     def add(self, item):
-        self.files.add(os.path.join(self.base, item))
+        if not item.startswith(self.prefix):
+            item = os.path.join(self.base, item)
+        self.files.add(os.path.normpath(item))
 
     def add_many(self, items):
-        self.files |= set([os.path.join(self.base, i) for i in items])
+        for item in items:
+            self.add(item)
 
-    def sorted(self):
-        # Not a strict lexical sort!
+    def sorted(self, wantdirs=False):
+        """
+        Return sorted files in directory order
+        """
+        def add_dir(dirs, d):
+            dirs.add(d)
+            logger.debug('add_dir added %s', d)
+            if d != self.base:
+                parent, _ = os.path.split(d)
+                assert parent not in ('', '/')
+                add_dir(dirs, parent)
+
+        files = self.files
+        if wantdirs:
+            dirs = set()
+            for f in files:
+                add_dir(dirs, os.path.dirname(f))
+            files |= dirs
         return [os.path.join(*path_tuple) for path_tuple in
-                sorted(os.path.split(path) for path in self.files)]
+                sorted(os.path.split(path) for path in files)]
 
     def clear(self):
         """Clear all collected files."""
