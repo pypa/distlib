@@ -384,14 +384,21 @@ class UtilTestCase(unittest.TestCase):
         data = get_package_data('config', '0.3.5')
         self.assertFalse(data)
 
+def _speed_range(min_speed, max_speed):
+    return tuple(['%d KB/s' % s for s in range(min_speed,
+                                               max_speed + 1)])
+
 class ProgressTestCase(unittest.TestCase):
     def test_basic(self):
+
+        # These ranges may need tweaking to cater for especially slow
+        # machines
         if os.name == 'nt':
-            speed1 = '20 KB/s'
-            speed2 = '22 KB/s'
+            speed1 = _speed_range(20, 20)
+            speed2 = _speed_range(22, 22)
         else:
-            speed1 = '19 KB/s'
-            speed2 = '22 KB/s'
+            speed1 = _speed_range(19, 19)
+            speed2 = _speed_range(22, 22)
         expected = (
             (' 10 %', 'ETA : 00:00:04', speed1),
             (' 20 %', 'ETA : 00:00:04', speed1),
@@ -411,18 +418,18 @@ class ProgressTestCase(unittest.TestCase):
             p, e, s = expected[i]
             self.assertEqual(bar.percentage, p)
             self.assertEqual(bar.ETA, e)
-            self.assertEqual(bar.speed, s)
+            self.assertIn(bar.speed, s)
         bar.stop()
         p, e, s = expected[i + 1]
         self.assertEqual(bar.percentage, p)
         self.assertEqual(bar.ETA, e)
-        self.assertEqual(bar.speed, s)
+        self.assertIn(bar.speed, s)
 
     def test_unknown(self):
         if os.name == 'nt':
-            speed = '20 KB/s'
+            speed = _speed_range(20, 20)
         else:
-            speed = '19 KB/s'
+            speed = _speed_range(19, 19)
         expected = (
             (' ?? %', 'ETA : ??:??:??', speed),
             (' ?? %', 'ETA : ??:??:??', speed),
@@ -442,12 +449,12 @@ class ProgressTestCase(unittest.TestCase):
             p, e, s = expected[i]
             self.assertEqual(bar.percentage, p)
             self.assertEqual(bar.ETA, e)
-            self.assertEqual(bar.speed, s)
+            self.assertIn(bar.speed, s)
         bar.stop()
         p, e, s = expected[i + 1]
         self.assertEqual(bar.percentage, p)
         self.assertEqual(bar.ETA, e)
-        self.assertEqual(bar.speed, s)
+        self.assertIn(bar.speed, s)
 
 class FileOpsTestCase(unittest.TestCase):
 
