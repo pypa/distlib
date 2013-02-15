@@ -189,11 +189,13 @@ class LocatorTestCase(unittest.TestCase):
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
         self.assertEqual(actual, ['Jinja2 (2.6)'])
-        dists, problems = finder.find('Jinja2 (2.6)[i18n]')
+        dists, problems = finder.find('Jinja2 [i18n] (2.6)')
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
         self.assertEqual(actual[-1], 'Jinja2 (2.6)')
         self.assertTrue(actual[0].startswith('Babel ('))
+        actual = [d.build_time_dependency for d in dists]
+        self.assertEqual(actual, [False, False])
 
     def test_get_all_dist_names(self):
         for url in (None, PYPI_RPC_HOST):
@@ -217,7 +219,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertFalse(dist.matches_requirement('config (0.3.6)'))
 
     def test_dist_reqts_extras(self):
-        r = 'config (<=0.3.5)[doc,test]'
+        r = 'config[doc,test](<=0.3.5)'
         dist = default_locator.locate(r)
         self.assertIsNotNone(dist)
         self.assertTrue(dist.matches_requirement(r))

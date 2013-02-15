@@ -63,8 +63,8 @@ CONSTRAINTS = (r'\(\s*(?P<c1>' + BARE_CONSTRAINTS + r')\s*\)|(?P<c2>' +
 
 EXTRA_LIST = IDENT + '(' + COMMA + IDENT + ')*'
 EXTRAS = r'\[\s*(?P<ex>' + EXTRA_LIST + r')?\s*\]'
-REQUIREMENT = ('(?P<dn>'  + IDENT + r')\s*(' + CONSTRAINTS + r')?(\s*' +
-               EXTRAS + ')?$')
+REQUIREMENT = ('(?P<dn>'  + IDENT + r')\s*(' + EXTRAS + r'\s*)?(\s*' +
+               CONSTRAINTS + ')?$')
 REQUIREMENT_RE = re.compile(REQUIREMENT)
 
 #
