@@ -909,6 +909,8 @@ class DependencyFinder(object):
                 treqts = set()
             else:
                 treqts = set(dist.get_requirements('test'))
+                if extras and 'test' in d:
+                    treqts |= set(d['test'])
             all_reqts = ireqts | sreqts | treqts | ereqts
             for r in all_reqts:
                 providers = self.find_providers(r)

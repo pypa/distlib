@@ -167,15 +167,15 @@ class LocatorTestCase(unittest.TestCase):
         finder = DependencyFinder(locator)
         dists, problems = finder.find('irc (5.0.1)')
         self.assertFalse(problems)
-        expected = sorted([d.name_and_version for d in dists])
-        self.assertEqual(expected, ['hgtools (2.0.2)', 'irc (5.0.1)',
-                                    'pytest-runner (1.2)'])
+        actual = sorted([d.name_and_version for d in dists])
+        self.assertEqual(actual, ['hgtools (2.0.2)', 'irc (5.0.1)',
+                                  'pytest-runner (1.2)'])
         dists, problems = finder.find('irc (5.0.1)', True)  # include tests
         self.assertFalse(problems)
-        expected = sorted([d.name_and_version for d in dists])
-        self.assertEqual(expected, ['hgtools (2.0.2)', 'irc (5.0.1)',
-                                    'py (1.4.12)', 'pytest (2.3.4)',
-                                    'pytest-runner (1.2)'])
+        actual = sorted([d.name_and_version for d in dists])
+        self.assertEqual(actual, ['hgtools (2.0.2)', 'irc (5.0.1)',
+                                  'py (1.4.12)', 'pytest (2.3.4)',
+                                  'pytest-runner (1.2)'])
 
         g = make_graph(dists)
         slist, cycle = g.topological_sort()
@@ -183,6 +183,17 @@ class LocatorTestCase(unittest.TestCase):
         names = [d.name for d in slist]
         self.assertEqual(names, ['py', 'hgtools', 'pytest',
                                  'pytest-runner', 'irc'])
+
+        # Test with extras
+        dists, problems = finder.find('Jinja2 (2.6)')
+        self.assertFalse(problems)
+        actual = sorted([d.name_and_version for d in dists])
+        self.assertEqual(actual, ['Jinja2 (2.6)'])
+        dists, problems = finder.find('Jinja2 (2.6)[i18n]')
+        self.assertFalse(problems)
+        actual = sorted([d.name_and_version for d in dists])
+        self.assertEqual(actual[-1], 'Jinja2 (2.6)')
+        self.assertTrue(actual[0].startswith('Babel ('))
 
     def test_get_all_dist_names(self):
         for url in (None, PYPI_RPC_HOST):
