@@ -904,7 +904,10 @@ class DependencyFinder(object):
                     if extra not in d:
                         logger.warning('Requested extra not known: %r', extra)
                     else:
-                        ereqts |= set(d[extra])
+                        s = set(d[extra])
+                        ereqts |= s
+                        if extra not in ('doc', 'test'):
+                            ireqts |= s
             if not tests or dist not in install_dists:
                 treqts = set()
             else:
