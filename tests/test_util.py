@@ -15,7 +15,7 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
-                          iglob, RICH_GLOB,
+                          iglob, RICH_GLOB, parse_requirement,
                           FileOperator, is_string_sequence, get_package_data)
 
 
@@ -349,6 +349,7 @@ class UtilTestCase(unittest.TestCase):
 
         for name, cls, mode, lister in good_archives:
             td = tempfile.mkdtemp()
+            archive = None
             try:
                 name = os.path.join(HERE, name)
                 unarchive(name, td)
@@ -359,6 +360,8 @@ class UtilTestCase(unittest.TestCase):
                     self.assertTrue(os.path.exists(p))
             finally:
                 shutil.rmtree(td)
+                if archive:
+                    archive.close()
 
         for name in bad_archives:
             name = os.path.join(HERE, name)
@@ -699,3 +702,33 @@ class GlobTestCase(GlobTestCaseBase):
         ]
         for pattern in invalids:
             self.assertRaises(ValueError, iglob, pattern)
+
+    def test_parse_requirement(self):
+        #Invalid requirements
+        self.assertIsNone(parse_requirement(''))
+        self.assertIsNone(parse_requirement('a ('))
+        self.assertIsNone(parse_requirement('a/'))
+        self.assertIsNone(parse_requirement('a$'))
+        self.assertIsNone(parse_requirement('a ()'))
+        self.assertIsNone(parse_requirement('a ['))
+        self.assertIsNone(parse_requirement('a () []'))
+
+        # Valid requirements
+        def validate(r, values):
+            self.assertEqual(r.name, values[0])
+            self.assertEqual(r.constraints, values[1])
+            self.assertEqual(r.extras, values[2])
+
+        r = parse_requirement('a')
+        validate(r, ('a', None, None))
+        r = parse_requirement('a 1.2')
+        validate(r, ('a', [('==', '1.2')], None))
+        r = parse_requirement('a >= 1.2, <2.0,!=1.7')
+        validate(r, ('a', [('>=', '1.2'), ('<', '2.0'), ('!=', '1.7')], None))
+        r = parse_requirement('a >= 1.2, <2.0 [ab,cd , ef]')
+        validate(r, ('a', [('>=', '1.2'), ('<', '2.0')], ['ab', 'cd', 'ef']))
+        r = parse_requirement('a[]')
+        validate(r, ('a', None, None))
+
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()

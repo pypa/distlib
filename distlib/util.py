@@ -28,6 +28,79 @@ from .compat import (string_types, text_type, shutil, raw_input,
 
 logger = logging.getLogger(__name__)
 
+class Container(object):
+    """
+    A generic container for when multiple values need to be returned
+    """
+    pass
+
+#
+# Requirement parsing code for name + optional constraints + optional extras
+#
+# e.g. 'foo >= 1.2, < 2.0 [bar, baz]'
+#
+# The regex can seem a bit hairy, so we build it up out of smaller pieces
+# which are manageable.
+#
+
+COMMA = r'\s*,\s*'
+COMMA_RE = re.compile(COMMA)
+
+IDENT = r'(\w|[.-])+'
+RELOP = '([<>=!]=)|[<>]'
+
+#
+# The first relop is optional - if absent, will be taken as '=='
+#
+BARE_CONSTRAINTS = ('(' + RELOP + r')?\s*(' + IDENT + ')(' + COMMA + '(' +
+                    RELOP + r')\s*(' + IDENT + '))*')
+
+#
+# Either the bare constraints or the bare constraints in parentheses
+#
+CONSTRAINTS = (r'\(\s*(?P<c1>' + BARE_CONSTRAINTS + r')\s*\)|(?P<c2>' +
+               BARE_CONSTRAINTS + '\s*)')
+
+EXTRA_LIST = IDENT + '(' + COMMA + IDENT + ')*'
+EXTRAS = r'\[\s*(?P<ex>' + EXTRA_LIST + r')?\s*\]'
+REQUIREMENT = ('(?P<dn>'  + IDENT + r')\s*(' + CONSTRAINTS + r')?(\s*' +
+               EXTRAS + ')?$')
+REQUIREMENT_RE = re.compile(REQUIREMENT)
+
+#
+# Used to scan through the constraints
+#
+RELOP_IDENT = '(?P<op>' + RELOP + r')\s*(?P<vn>' + IDENT + ')'
+RELOP_IDENT_RE = re.compile(RELOP_IDENT)
+
+def parse_requirement(s):
+
+    def get_constraint(m):
+        d = m.groupdict()
+        return d['op'], d['vn']
+
+    result = None
+    m = REQUIREMENT_RE.match(s)
+    if m:
+        result = Container()
+        d = m.groupdict()
+        result.name = d['dn']
+        cons = d['c1'] or d['c2']
+        if not cons:
+            cons = None
+        else:
+            if cons[0] not in '<>!=':
+                cons = '==' + cons
+            iterator = RELOP_IDENT_RE.finditer(cons)
+            cons = [get_constraint(m) for m in iterator]
+        result.constraints = cons
+        if not d['ex']:
+            extras = None
+        else:
+            extras = COMMA_RE.split(d['ex'])
+        result.extras = extras
+    return result
+
 
 def parse_requires(req_path):
     """Create a list of dependencies from a requires.txt file.
@@ -49,46 +122,31 @@ def parse_requires(req_path):
                 for s in yield_lines(ss):
                     yield s
 
-    _REQUIREMENT = re.compile(
-        r'(?P<name>[-A-Za-z0-9_.]+)\s*'
-        r'(?P<first>(?:<|<=|!=|==|>=|>)[-A-Za-z0-9_.]+)?\s*'
-        r'(?P<rest>(?:\s*,\s*(?:<|<=|!=|==|>=|>)[-A-Za-z0-9_.]+)*)\s*'
-        r'(?P<extras>\[.*\])?')
-
     reqs = []
     try:
         with open(req_path, 'r') as fp:
             requires = fp.read()
     except IOError:
-        return None
+        return reqs
 
     for line in yield_lines(requires):
+        line = line.strip()
         if line.startswith('['):
-            logger.warning('extensions in requires.txt are not supported')
+            logger.warning('Unexpected line: quitting requirement scan: %r',
+                           line)
             break
+        r = parse_requirement(line)
+        if not r:
+            logger.warning('Not recognised as a requirement: %r', line)
+            continue
+        if r.extras:
+            logger.warning('extra requirements in requires.txt are '
+                           'not supported')
+        if not r.constraints:
+            reqs.append(r.name)
         else:
-            match = _REQUIREMENT.match(line.strip())
-            if not match:
-                # this happens when we encounter extras; since they
-                # are written at the end of the file we just exit
-                break
-            else:
-                if match.group('extras'):
-                    # msg = ('extra requirements are not supported '
-                    # '(used by %r %s)', self.name, self.version)
-                    msg = 'extra requirements are not supported'
-                    logger.warning(msg)
-                name = match.group('name')
-                version = None
-                if match.group('first'):
-                    version = match.group('first')
-                    if match.group('rest'):
-                        version += match.group('rest')
-                    version = version.replace(' ', '')  # trim spaces
-                if version is None:
-                    reqs.append(name)
-                else:
-                    reqs.append('%s (%s)' % (name, version))
+            cons = ', '.join('%s%s' % c for c in r.constraints)
+            reqs.append('%s (%s)' % (r.name, cons))
     return reqs
 
 
