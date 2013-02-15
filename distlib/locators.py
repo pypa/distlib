@@ -896,11 +896,20 @@ class DependencyFinder(object):
 
             ireqts = set(dist.get_requirements('install'))
             sreqts = set(dist.get_requirements('setup'))
+            ereqts = set()
+            extras = dist.extras
+            if extras:
+                d = dist.get_requirements('extras')
+                for extra in extras:
+                    if extra not in d:
+                        logger.warning('Requested extra not known: %r', extra)
+                    else:
+                        ereqts |= set(d[extra])
             if not tests or dist not in install_dists:
                 treqts = set()
             else:
                 treqts = set(dist.get_requirements('test'))
-            all_reqts = ireqts | sreqts | treqts
+            all_reqts = ireqts | sreqts | treqts | ereqts
             for r in all_reqts:
                 providers = self.find_providers(r)
                 if not providers:
