@@ -201,5 +201,13 @@ class LocatorTestCase(unittest.TestCase):
         r = 'config (<=0.3.5)'
         dist = default_locator.locate(r)
         self.assertIsNotNone(dist)
+        self.assertIsNone(dist.extras)
         self.assertTrue(dist.matches_requirement(r))
         self.assertFalse(dist.matches_requirement('config (0.3.6)'))
+
+    def test_dist_reqts_extras(self):
+        r = 'config (<=0.3.5)[doc,test]'
+        dist = default_locator.locate(r)
+        self.assertIsNotNone(dist)
+        self.assertTrue(dist.matches_requirement(r))
+        self.assertEqual(dist.extras, ['doc', 'test'])

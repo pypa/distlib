@@ -21,7 +21,7 @@ from .compat import (xmlrpclib, urljoin, urlparse, urlunparse,
 from .database import Distribution, DistributionPath
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
-                   split_filename, get_project_data)
+                   split_filename, get_project_data, parse_requirement)
 from .version import get_scheme, UnsupportedVersionError
 
 logger = logging.getLogger(__name__)
@@ -233,10 +233,18 @@ class Locator(object):
     def locate(self, requirement):
         """
         Find the most recent distribution which matches the given
-        matcher, using the provided scheme.
+        requirement.
         """
         result = None
         scheme = get_scheme(self.scheme)
+        r = parse_requirement(requirement)
+        if r is None:
+            raise ValueError('Not a valid requirement: %r' % requirement)
+        if r.extras:
+            # lose the extras part of the requirement
+            i = requirement.find('[')
+            assert i > 0, 'expected to find a [ in a requirement with extras'
+            requirement = requirement[:i]
         matcher = scheme.matcher(requirement)
         logger.debug('matcher: %s (%s)', matcher, type(matcher).__name__)
         versions = self.get_project(matcher.name)
@@ -257,6 +265,8 @@ class Locator(object):
             if slist:
                 logger.debug('sorted list: %s', slist)
                 result = versions[slist[-1]]
+        if result and r.extras:
+            result.extras = r.extras
         return result
 
 

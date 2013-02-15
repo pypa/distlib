@@ -323,6 +323,11 @@ class Distribution(object):
     present (in other words, whether the package was installed by user
     request or it was installed as a dependency)."""
 
+    extras = None
+    """
+    Set to a list of requested extras if specified in a requirement.
+    """
+
     def __init__(self, metadata):
         self.metadata = metadata
         self.name = metadata.name

@@ -430,7 +430,7 @@ class ProgressTestCase(unittest.TestCase):
 
     def test_unknown(self):
         if os.name == 'nt':
-            speed = _speed_range(20, 20)
+            speed = _speed_range(19, 20)
         else:
             speed = _speed_range(19, 19)
         expected = (
