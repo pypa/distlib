@@ -293,5 +293,5 @@ class PackageIndexTestCase(unittest.TestCase):
         self.assertRaises(DistlibException, self.index.download_file, url, fn,
                           digest[:-1] + '8')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()
