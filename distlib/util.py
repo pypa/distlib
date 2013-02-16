@@ -17,6 +17,7 @@ import socket
 import ssl
 import sys
 import tarfile
+import tempfile
 import time
 import zipfile
 
@@ -190,6 +191,14 @@ def proceed(prompt, allowed_chars, error_prompt=None, default=None):
             if error_prompt:
                 p = '%c: %s\n%s' % (c, error_prompt, prompt)
     return c
+
+@contextlib.contextmanager
+def tempdir():
+    td = tempfile.mkdtemp()
+    try:
+        yield td
+    finally:
+        shutil.rmtree(td)
 
 @contextlib.contextmanager
 def chdir(d):
