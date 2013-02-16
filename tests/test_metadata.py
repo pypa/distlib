@@ -497,8 +497,5 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                                    'obsoletes': ['my.pkg (splat)']})
 
 
-def test_suite():
-    return unittest.makeSuite(MetadataTestCase)
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()

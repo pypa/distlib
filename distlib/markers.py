@@ -1,205 +1,174 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012 The Python Software Foundation.
+# Copyright (C) 2012-2013 Vinay Sajip.
+# Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 """Parser for the environment markers micro-language defined in PEP 345."""
 
+import ast
 import os
 import sys
 import platform
-from tokenize import generate_tokens, NAME, OP, STRING, ENDMARKER
 
-from .compat import StringIO, python_implementation
+from .compat import python_implementation, string_types
 
 __all__ = ['interpret']
-
-
-# allowed operators
-_OPERATORS = {'==': lambda x, y: x == y,
-              '!=': lambda x, y: x != y,
-              '>': lambda x, y: x > y,
-              '>=': lambda x, y: x >= y,
-              '<': lambda x, y: x < y,
-              '<=': lambda x, y: x <= y,
-              'in': lambda x, y: x in y,
-              'not in': lambda x, y: x not in y}
-
-
-def _operate(operation, x, y):
-    return _OPERATORS[operation](x, y)
 
 def _in_venv():
     if hasattr(sys, 'real_prefix'):
         # virtualenv venvs
         result = True
     else:
-        # PEP 405 venvs
+        # PEp 405 venvs
         result = sys.prefix != getattr(sys, 'base_prefix', None)
     return result
 
-# restricted set of variables
-_VARS = {
-    'sys.platform': sys.platform,
-    'python_version': '%s.%s' % sys.version_info[:2],
-    # FIXME parsing sys.platform is not reliable, but there is no other
-    # way to get e.g. 2.7.2+, and the PEP is defined with sys.version
-    'python_full_version': sys.version.split(' ', 1)[0],
-    'os.name': os.name,
-    'platform.version': platform.version(),
-    'platform.machine': platform.machine(),
-    'platform.python_implementation': python_implementation(),
-    'platform.in_venv': str(_in_venv()),
-}
+class Evaluator(object):
 
+    operators = {
+        'eq': lambda x, y: x == y,
+        'gt': lambda x, y: x > y,
+        'gte': lambda x, y: x >= y,
+        'in': lambda x, y: x in y,
+        'lt': lambda x, y: x < y,
+        'lte': lambda x, y: x <= y,
+        'not': lambda x: not x,
+        'noteq': lambda x, y: x != y,
+        'notin': lambda x, y: x not in y,
+    }
 
-class _Operation(object):
+    allowed_values = {
+        'sys.platform': sys.platform,
+        'python_version': '%s.%s' % sys.version_info[:2],
+        # parsing sys.platform is not reliable, but there is no other
+        # way to get e.g. 2.7.2+, and the PEP is defined with sys.version
+        'python_full_version': sys.version.split(' ', 1)[0],
+        'os.name': os.name,
+        'platform.in_venv': str(_in_venv()),
+        'platform.version': platform.version(),
+        'platform.machine': platform.machine(),
+        'platform.python_implementation': platform.python_implementation(),
+    }
 
-    def __init__(self, execution_context=None):
-        self.left = None
-        self.op = None
-        self.right = None
-        if execution_context is None:
-            execution_context = {}
-        self.execution_context = execution_context
+    def __init__(self, context=None):
+        self.context = context or {}
+        self.source = None
 
-    def _get_var(self, name):
-        if name in self.execution_context:
-            return self.execution_context[name]
-        return _VARS[name]
+    def get_fragment(self, offset):
+        fragment_len = 10
+        s = '%r' % (self.source[offset:offset + fragment_len])
+        if offset + fragment_len < len(self.source):
+            s += '...'
+        return s
 
-    def __repr__(self):
-        return '%s %s %s' % (self.left, self.op, self.right)
+    def get_handler(self, node_type):
+        return getattr(self, 'do_%s' % node_type, None)
 
-    def _is_string(self, value):
-        if value is None or len(value) < 2:
-            return False
-        for delimiter in '"\'':
-            if value[0] == value[-1] == delimiter:
-                return True
-        return False
+    def evaluate(self, node, filename=None):
+        if isinstance(node, string_types):
+            self.source = node
+            kwargs = {'mode': 'eval'}
+            if filename:
+                kwargs['filename'] = filename
+            try:
+                node = ast.parse(node, **kwargs)
+            except SyntaxError as e:
+                s = self.get_fragment(e.offset)
+                raise SyntaxError('syntax error %s' % s)
+        node_type = node.__class__.__name__.lower()
+        handler = self.get_handler(node_type)
+        if handler is None:
+            if self.source is None:
+                s = '(source not available)'
+            else:
+                s = self.get_fragment(node.col_offset)
+            raise SyntaxError("don't know how to evaluate %r %s" % (
+                node_type, s))
+        return handler(node)
 
-    def _is_name(self, value):
-        return value in _VARS
+    def get_attr_key(self, node):
+        assert isinstance(node, ast.Attribute), 'attribute node expected'
+        return '%s.%s' % (node.value.id, node.attr)
 
-    def _convert(self, value):
-        if value in _VARS:
-            return self._get_var(value)
-        return value.strip('"\'')
-
-    def _check_name(self, value):
-        if value not in _VARS:
-            raise NameError(value)
-
-    def _nonsense_op(self):
-        msg = 'This operation is not supported : "%s"' % self
-        raise SyntaxError(msg)
-
-    def __call__(self):
-        # make sure we do something useful
-        if self._is_string(self.left):
-            if self._is_string(self.right):
-                self._nonsense_op()
-            self._check_name(self.right)
+    def do_attribute(self, node):
+        valid = True
+        if not isinstance(node.value, ast.Name):
+            valid = False
         else:
-            if not self._is_string(self.right):
-                self._nonsense_op()
-            self._check_name(self.left)
+            key = self.get_attr_key(node)
+            valid = key in self.context or key in self.allowed_values
+        if not valid:
+            raise SyntaxError('invalid expression: %s' % key)
+        if key in self.context:
+            result = self.context[key]
+        else:
+            result = self.allowed_values[key]
+        return result
 
-        if self.op not in _OPERATORS:
-            raise TypeError('Operator not supported "%s"' % self.op)
+    def do_boolop(self, node):
+        result = self.evaluate(node.values[0])
+        is_or = node.op.__class__ is ast.Or
+        is_and = node.op.__class__ is ast.And
+        assert is_or or is_and
+        if (is_and and result) or (is_or and not result):
+            for n in node.values[1:]:
+                result = self.evaluate(n)
+                if (is_or and result) or (is_and and not result):
+                    break
+        return result
 
-        left = self._convert(self.left)
-        right = self._convert(self.right)
-        return _operate(self.op, left, right)
+    def do_compare(self, node):
+        def sanity_check(lhsnode, rhsnode):
+            valid = True
+            if isinstance(lhsnode, ast.Str) and isinstance(rhsnode, ast.Str):
+                valid = False
+            elif (isinstance(lhsnode, ast.Attribute)
+                  and isinstance(rhsnode, ast.Attribute)):
+                klhs = self.get_attr_key(lhsnode)
+                krhs = self.get_attr_key(rhsnode)
+                valid = klhs != krhs
+            if not valid:
+                s = self.get_fragment(node.col_offset)
+                raise SyntaxError('Invalid comparison: %s' % s)
 
+        lhsnode = node.left
+        lhs = self.evaluate(lhsnode)
+        result = True
+        for op, rhsnode in zip(node.ops, node.comparators):
+            sanity_check(lhsnode, rhsnode)
+            op = op.__class__.__name__.lower()
+            if op not in self.operators:
+                raise SyntaxError('unsupported operation: %r' % op)
+            rhs = self.evaluate(rhsnode)
+            result = self.operators[op](lhs, rhs)
+            if not result:
+                break
+            lhs = rhs
+            lhsnode = rhsnode
+        return result
 
-class _OR(object):
-    def __init__(self, left, right=None):
-        self.left = left
-        self.right = right
+    def do_expression(self, node):
+        return self.evaluate(node.body)
 
-    def filled(self):
-        return self.right is not None
+    def do_name(self, node):
+        valid = False
+        if node.id in self.context:
+            valid = True
+            result = self.context[node.id]
+        elif node.id in self.allowed_values:
+            valid = True
+            result = self.allowed_values[node.id]
+        if not valid:
+            raise SyntaxError('invalid expression: %s' % node.id)
+        return result
 
-    def __repr__(self):
-        return 'OR(%r, %r)' % (self.left, self.right)
-
-    def __call__(self):
-        return self.left() or self.right()
-
-
-class _AND(object):
-    def __init__(self, left, right=None):
-        self.left = left
-        self.right = right
-
-    def filled(self):
-        return self.right is not None
-
-    def __repr__(self):
-        return 'AND(%r, %r)' % (self.left, self.right)
-
-    def __call__(self):
-        return self.left() and self.right()
+    def do_str(self, node):
+        return node.s
 
 
 def interpret(marker, execution_context=None):
-    """Interpret a marker and return a result depending on environment."""
-    marker = marker.strip()
-    ops = []
-    op_starting = True
-    for token in generate_tokens(StringIO(marker).readline):
-        # Unpack token
-        toktype, tokval, rowcol, line, logical_line = token
-        if toktype not in (NAME, OP, STRING, ENDMARKER):
-            raise SyntaxError('Type not supported "%s"' % tokval)
-
-        if op_starting:
-            op = _Operation(execution_context)
-            if len(ops) > 0:
-                last = ops[-1]
-                if isinstance(last, (_OR, _AND)) and not last.filled():
-                    last.right = op
-                else:
-                    ops.append(op)
-            else:
-                ops.append(op)
-            op_starting = False
-        else:
-            op = ops[-1]
-
-        if (toktype == ENDMARKER or
-            (toktype == NAME and tokval in ('and', 'or'))):
-            if toktype == NAME and tokval == 'and':
-                ops.append(_AND(ops.pop()))
-            elif toktype == NAME and tokval == 'or':
-                ops.append(_OR(ops.pop()))
-            op_starting = True
-            continue
-
-        if isinstance(op, (_OR, _AND)) and op.right is not None:
-            op = op.right
-
-        if ((toktype in (NAME, STRING) and tokval not in ('in', 'not'))
-            or (toktype == OP and tokval == '.')):
-            if op.op is None:
-                if op.left is None:
-                    op.left = tokval
-                else:
-                    op.left += tokval
-            else:
-                if op.right is None:
-                    op.right = tokval
-                else:
-                    op.right += tokval
-        elif toktype == OP or tokval in ('in', 'not'):
-            if tokval == 'in' and op.op == 'not':
-                op.op = 'not in'
-            else:
-                op.op = tokval
-
-    for op in ops:
-        if not op():
-            return False
-    return True
+    """
+    Interpret a marker and return a result depending on environment.
+    """
+    return Evaluator(execution_context).evaluate(marker.strip())

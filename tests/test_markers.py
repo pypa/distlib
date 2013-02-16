@@ -80,9 +80,11 @@ class MarkersTestCase(unittest.TestCase):
         self.assertTrue(interpret('python_version == "0.1"',
                                   {'python_version': '0.1'}))
 
+        # parentheses and extra
+        self.assertTrue(interpret("(sys.platform != 'win32' or "
+                                   "python_version == '2.4') and "
+                                   "extra == 'quux'",
+                                   {'extra': 'quux'}))
 
-def test_suite():
-    return unittest.makeSuite(MarkersTestCase)
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()
