@@ -572,12 +572,16 @@ class InstalledDistribution(BaseInstalledDistribution):
         for result in self._get_records():
             yield result
 
-    def write_installed_files(self, paths, dry_run=False):
+    def write_installed_files(self, paths, prefix, dry_run=False):
         """
         Writes the ``RECORD`` file, using the ``paths`` iterable passed in. Any
         existing ``RECORD`` file is silently overwritten.
+
+        prefix is used to determine when to write absolute paths.
         """
+        prefix = os.path.join(prefix, '')
         base = os.path.dirname(self.path)
+        base_under_prefix = base.startswith(prefix)
         base = os.path.join(base, '')
         record_path = os.path.join(self.path, 'RECORD')
         logger.info('creating %s', record_path)
@@ -597,7 +601,7 @@ class InstalledDistribution(BaseInstalledDistribution):
                     size = os.path.getsize(path)
                     with open(path, 'rb') as fp:
                         hash = self.get_hash(fp.read())
-                    if path.startswith(base):
+                    if path.startswith(base) or (path.startswith(prefix) and base_under_prefix):
                         path = os.path.relpath(path, base)
                     writer.writerow((path, hash, size))
 

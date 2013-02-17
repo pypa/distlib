@@ -172,7 +172,8 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
             # Write the files using write_installed_files.
             # list_installed_files should read and match.
             dist = self.cls(distinfo_dir)
-            dist.write_installed_files(get_files(dist_location))
+            prefix = os.path.dirname(dist_location)
+            dist.write_installed_files(get_files(dist_location), prefix)
 
             with open(record_file) as fp:
                 record_reader = csv.reader(fp, lineterminator='\n')
@@ -340,7 +341,8 @@ class TestEggInfoDistribution(CommonDistributionTests,
             record_file = os.path.join(egginfo_dir, 'installed-files.txt')
 
             dist = self.cls(egginfo_dir)
-            #dist.write_installed_files(get_files(dist_location))
+            #prefix = os.path.dirname(dist_location)
+            #dist.write_installed_files(get_files(dist_location), prefix)
 
             record_data = {}
             if os.path.exists(record_file):
@@ -1126,5 +1128,5 @@ def test_suite():
     return suite
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main(defaultTest='test_suite')
