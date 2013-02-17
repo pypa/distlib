@@ -307,6 +307,22 @@ class FileOperator(object):
         if self.record:
             self.files_written.add(outfile)
 
+    def copy_stream(self, instream, outfile, encoding=None):
+        assert not os.path.isdir(outfile)
+        self.ensure_dir(os.path.dirname(outfile))
+        logger.info('Copying stream %s to %s', instream, outfile)
+        if not self.dry_run:
+            if encoding is None:
+                outstream = open(outfile, 'wb')
+            else:
+                outstream = codecs.open(outfile, 'w', encoding=encoding)
+            try:
+                shutil.copyfileobj(instream, outstream)
+            finally:
+                outstream.close()
+        if self.record:
+            self.files_written.add(outfile)
+
     def write_binary_file(self, path, data):
         self.ensure_dir(os.path.dirname(path))
         if not self.dry_run:
