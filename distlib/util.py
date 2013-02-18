@@ -386,6 +386,7 @@ class FileOperator(object):
             py_compile.compile(path, dpath, diagpath, True) # raise on error
         if self.record:
             self.files_written.add(dpath)
+        return dpath
 
     def ensure_removed(self, path):
         if os.path.exists(path):
