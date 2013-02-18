@@ -110,7 +110,6 @@ if sys.version_info[0] < 3:
             raise CertificateError("no appropriate commonName or "
                 "subjectAltName fields were found")
 
-
 else:
     from io import StringIO
     string_types = str,
@@ -138,6 +137,22 @@ else:
     filter = filter
 
     from ssl import match_hostname, CertificateError
+
+# ZipFile is a context manager in 2.7, but not in 2.6
+
+from zipfile import ZipFile as BaseZipFile
+
+if hasattr(BaseZipFile, '__enter__'):
+    ZipFile = BaseZipFile
+else:
+    class ZipFile(BaseZipFile):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc_info):
+            self.close()
+            # return None, so if an exception occurred, it will propagate
+del BaseZipFile
 
 try:
     from platform import python_implementation

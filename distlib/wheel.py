@@ -23,7 +23,7 @@ import zipfile
 
 import distlib
 from distlib import DistlibException
-from distlib.compat import sysconfig
+from distlib.compat import sysconfig, ZipFile
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.scripts import ScriptMaker
 from distlib.util import FileOperator, convert_path
@@ -318,7 +318,7 @@ class Wheel(object):
         archive_paths.append((ap, p))
         # Now, ready to build the zip file
         pathname = os.path.join(self.dirname, self.filename)
-        with zipfile.ZipFile(pathname, 'w', zipfile.ZIP_DEFLATED) as zf:
+        with ZipFile(pathname, 'w', zipfile.ZIP_DEFLATED) as zf:
             for ap, p in archive_paths:
                 zf.write(p, ap)
         return pathname
@@ -337,7 +337,7 @@ class Wheel(object):
 
         wrapper = codecs.getreader('utf-8')
 
-        with zipfile.ZipFile(pathname, 'r') as zf:
+        with ZipFile(pathname, 'r') as zf:
             with zf.open(wheel_metadata_name) as bwf:
                 wf = wrapper(bwf)
                 message = message_from_file(wf)
