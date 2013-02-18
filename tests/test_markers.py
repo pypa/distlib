@@ -12,17 +12,11 @@ from compat import unittest
 
 from distlib.compat import python_implementation
 from distlib.markers import interpret
+from distlib.util import in_venv
 
 class MarkersTestCase(unittest.TestCase):
 
     def test_interpret(self):
-        def in_venv():
-            if hasattr(sys, 'real_prefix'):
-                result = True
-            else:
-                result = sys.prefix != getattr(sys, 'base_prefix', None)
-            return result
-
         sys_platform = sys.platform
         version = sys.version.split()[0]
         os_name = os.name

@@ -12,17 +12,9 @@ import sys
 import platform
 
 from .compat import python_implementation, string_types
+from .util import in_venv
 
 __all__ = ['interpret']
-
-def _in_venv():
-    if hasattr(sys, 'real_prefix'):
-        # virtualenv venvs
-        result = True
-    else:
-        # PEp 405 venvs
-        result = sys.prefix != getattr(sys, 'base_prefix', None)
-    return result
 
 class Evaluator(object):
 
@@ -45,7 +37,7 @@ class Evaluator(object):
         # way to get e.g. 2.7.2+, and the PEP is defined with sys.version
         'python_full_version': sys.version.split(' ', 1)[0],
         'os.name': os.name,
-        'platform.in_venv': str(_in_venv()),
+        'platform.in_venv': str(in_venv()),
         'platform.version': platform.version(),
         'platform.machine': platform.machine(),
         'platform.python_implementation': platform.python_implementation(),

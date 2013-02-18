@@ -175,6 +175,16 @@ def get_resources_dests(resources_root, rules):
     return destinations
 
 
+def in_venv():
+    if hasattr(sys, 'real_prefix'):
+        # virtualenv venvs
+        result = True
+    else:
+        # PEP 405 venvs
+        result = sys.prefix != getattr(sys, 'base_prefix', None)
+    return result
+
+
 def proceed(prompt, allowed_chars, error_prompt=None, default=None):
     p = prompt
     while True:
