@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 # TODO update docs
 
 DIST_FILES = ('INSTALLER', 'METADATA', 'RECORD', 'REQUESTED', 'RESOURCES',
-              'EXPORTS')
+              'EXPORTS', 'SHARED')
 
 DISTINFO_EXT = '.dist-info'
 
@@ -605,7 +605,8 @@ class InstalledDistribution(BaseInstalledDistribution):
                     size = os.path.getsize(path)
                     with open(path, 'rb') as fp:
                         hash = self.get_hash(fp.read())
-                    if path.startswith(base) or (path.startswith(prefix) and base_under_prefix):
+                    if path.startswith(base) or (base_under_prefix and
+                                                 path.startswith(prefix)):
                         path = os.path.relpath(path, base)
                     writer.writerow((path, hash, size))
 
@@ -648,6 +649,33 @@ class InstalledDistribution(BaseInstalledDistribution):
                         if actual_hash != hash_value:
                             mismatches.append((path, 'hash', hash_value, actual_hash))
         return mismatches
+
+    @cached_property
+    def shared_locations(self):
+        result = {}
+        shared_path = os.path.join(self.path, 'SHARED')
+        if os.path.isfile(shared_path):
+            with codecs.open(shared_path, 'r', encoding='utf-8') as f:
+                lines = f.read().splitlines()
+            for line in lines:
+                key, value = line.split('=', 1)
+                result[key] = value
+        return result
+
+    def write_shared_locations(self, paths, dry_run=False):
+        shared_path = os.path.join(self.path, 'SHARED')
+        logger.info('creating %s', shared_path)
+        if dry_run:
+            return
+        lines = []
+        for key in ('prefix', 'lib', 'headers', 'scripts', 'data'):
+            path = paths[key]
+            if os.path.isdir(paths[key]):
+                lines.append('%s=%s' % (key,  path))
+
+        with codecs.open(shared_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(lines))
+        return shared_path
 
     def uses(self, path):
         """
