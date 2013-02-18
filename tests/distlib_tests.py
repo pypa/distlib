@@ -20,6 +20,8 @@ from test_scripts import ScriptTestCase
 from test_version import (VersionTestCase, CompatibilityTestCase,
                           LegacyVersionTestCase, SemanticVersionTestCase,
                           AdaptiveVersionTestCase)
+from test_wheel import WheelTestCase
+
 if _ver == (2, 6):
     from test_shutil import TestCopyFile, TestMove, TestShutil
     from test_sysconfig import TestSysConfig, MakefileTests
