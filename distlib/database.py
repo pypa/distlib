@@ -7,11 +7,12 @@
 
 from __future__ import unicode_literals
 
-import os
+import base64
 import codecs
 import csv
 import hashlib
 import logging
+import os
 import sys
 import zipimport
 
@@ -454,7 +455,9 @@ class BaseInstalledDistribution(Distribution):
         else:
             hasher = getattr(hashlib, hasher)
             prefix = '%s=' % self.hasher
-        return '%s%s' % (prefix, hasher(data).hexdigest())
+        digest = hasher(data).digest()
+        digest = base64.urlsafe_b64encode(digest).rstrip(b'=').decode('ascii')
+        return '%s%s' % (prefix, digest)
 
 class InstalledDistribution(BaseInstalledDistribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
@@ -462,6 +465,7 @@ class InstalledDistribution(BaseInstalledDistribution):
     instantiated., or uses a passed in Metadata instance (useful for when
     dry-run mode is being used)."""
 
+    hasher = 'sha256'
 
     def __init__(self, path, metadata=None, env=None):
         if env and env._cache_enabled and path in env._cache.path:
@@ -622,7 +626,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         mismatches = []
         base = os.path.dirname(self.path)
         record_path = os.path.join(self.path, 'RECORD')
-        for path, hash, size in self.list_installed_files():
+        for path, hash_value, size in self.list_installed_files():
             if not os.path.isabs(path):
                 path = os.path.join(base, path)
             if path == record_path:
@@ -633,11 +637,16 @@ class InstalledDistribution(BaseInstalledDistribution):
                 actual_size = str(os.path.getsize(path))
                 if size and actual_size != size:
                     mismatches.append((path, 'size', size, actual_size))
-                elif hash:
+                elif hash_value:
+                    if '=' in hash_value:
+                        hasher = hash_value.split('=', 1)[0]
+                    else:
+                        hasher = None
+
                     with open(path, 'rb') as f:
-                        actual_hash = self.get_hash(f.read())
-                        if actual_hash != hash:
-                            mismatches.append((path, 'hash', hash, actual_hash))
+                        actual_hash = self.get_hash(f.read(), hasher)
+                        if actual_hash != hash_value:
+                            mismatches.append((path, 'hash', hash_value, actual_hash))
         return mismatches
 
     def uses(self, path):

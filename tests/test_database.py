@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012 The Python Software Foundation.
+# Copyright (C) 2012-2013 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
+
+import base64
 import os
 import csv
 import hashlib
@@ -137,10 +139,16 @@ class CommonDistributionTests(FakeDistsMixin):
                 dist.hasher = hasher
                 actual = dist.get_hash(data)
                 if hasher is None:
-                    expected = hashlib.md5(data).hexdigest()
+                    digester = hashlib.md5(data)
                 else:
-                    expected = '%s=%s' % (hasher,
-                        getattr(hashlib, hasher)(data).hexdigest())
+                    digester = getattr(hashlib, hasher)(data)
+                digest = digester.digest()
+                digest = base64.urlsafe_b64encode(digest).rstrip(b'=')
+                digest = digest.decode('ascii')
+                if hasher is None:
+                    expected = digest
+                else:
+                    expected = '%s=%s' % (hasher, digest)
                 self.assertEqual(actual, expected)
 
 class TestDistribution(CommonDistributionTests, unittest.TestCase):
