@@ -33,7 +33,8 @@ class Container(object):
     """
     A generic container for when multiple values need to be returned
     """
-    pass
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
 #
 # Requirement parsing code for name + optional constraints + optional extras
@@ -83,9 +84,7 @@ def parse_requirement(s):
     result = None
     m = REQUIREMENT_RE.match(s)
     if m:
-        result = Container()
         d = m.groupdict()
-        result.name = d['dn']
         cons = d['c1'] or d['c2']
         if not cons:
             cons = None
@@ -94,12 +93,11 @@ def parse_requirement(s):
                 cons = '==' + cons
             iterator = RELOP_IDENT_RE.finditer(cons)
             cons = [get_constraint(m) for m in iterator]
-        result.constraints = cons
         if not d['ex']:
             extras = None
         else:
             extras = COMMA_RE.split(d['ex'])
-        result.extras = extras
+        result = Container(name=d['dn'], constraints=cons, extras=extras)
     return result
 
 
