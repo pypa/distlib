@@ -79,6 +79,11 @@ def install_dist(distname, workdir):
             result[dn] = libdir
             break
     convert_egg_info(libdir, workdir)
+    dp = DistributionPath([libdir])
+    dist = next(dp.get_distributions())
+    md = dist.metadata
+    result['name'] = md['Name']
+    result['version'] = md['Version']
     return result
 
 
@@ -143,18 +148,18 @@ class WheelTestCase(unittest.TestCase):
         dstdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, dstdir)
 
-        paths = install_dist(dist, srcdir)
-        paths['prefix'] = srcdir
+        info = install_dist(dist, srcdir)
+        info['prefix'] = srcdir
         w = Wheel()
         w.dirname = srcdir
-        pathname = w.build(paths)
+        pathname = w.build(info)
         self.assertTrue(os.path.exists(pathname))
 
-        paths = {'prefix': dstdir}
+        info = {'prefix': dstdir}
         for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
-            paths[key] = os.path.join(dstdir, key)
+            info[key] = os.path.join(dstdir, key)
         w = Wheel(pathname)
-        w.install(paths)
+        w.install(info)
         os.remove(pathname)
         sm = Manifest(srcdir)
         sm.findall()

@@ -212,11 +212,11 @@ class Wheel(object):
                 writer.writerow(row)
             writer.writerow((os.path.relpath(record_path, base), '', ''))
 
-    def build(self, paths):
+    def build(self, info):
         """
         Build a wheel from files in the specified paths.
         """
-        libkey = list(filter(lambda o: o in paths, ('purelib',
+        libkey = list(filter(lambda o: o in info, ('purelib',
                                                     'platlib')))[0]
         if libkey == 'platlib':
             is_pure = 'false'
@@ -227,12 +227,9 @@ class Wheel(object):
             self.abi = ['none']
             self.arch = ['any']
 
-        libdir = paths[libkey]
-        dp = DistributionPath([libdir])
-        dist = next(dp.get_distributions())
-        md = dist.metadata
-        self.name = md['Name']
-        self.version = md['Version']
+        libdir = info[libkey]
+        self.name = info['name']
+        self.version = info['version']
 
         name_ver = '%s-%s' % (self.name, self.version)
         data_dir = '%s.data' % name_ver
@@ -242,7 +239,7 @@ class Wheel(object):
 
         # First, stuff which is not in site-packages
         for key in ('data', 'headers', 'scripts'):
-            path = paths[key]
+            path = info[key]
             if os.path.isdir(path):
                 for root, dirs, files in os.walk(path):
                     for fn in files:
@@ -323,7 +320,7 @@ class Wheel(object):
                 zf.write(p, ap)
         return pathname
 
-    def install(self, paths, dry_run=False):
+    def install(self, info, dry_run=False):
         """
         Install a wheel to the specified paths.
         """
@@ -342,9 +339,9 @@ class Wheel(object):
                 wf = wrapper(bwf)
                 message = message_from_file(wf)
             if message['Root-Is-Purelib'] == 'true':
-                libdir = paths['purelib']
+                libdir = info['purelib']
             else:
-                libdir = paths['platlib']
+                libdir = info['platlib']
             records = {}
             with zf.open(record_name) as bf:
                 wf = wrapper(bf)
@@ -388,7 +385,7 @@ class Wheel(object):
 
                     if arcname.startswith(data_pfx):
                         _, where, rp = arcname.split(os.sep, 2)
-                        outfile = os.path.join(paths[where], convert_path(rp))
+                        outfile = os.path.join(info[where], convert_path(rp))
                     else:
                         # meant for site-packages.
                         if arcname in (wheel_metadata_name, record_name):
@@ -424,15 +421,15 @@ class Wheel(object):
                 dist = InstalledDistribution(p)
 
                 # Write SHARED
-                paths = dict(paths) # don't change passed in dict
-                del paths['purelib']
-                del paths['platlib']
-                paths['lib'] = libdir
-                p = dist.write_shared_locations(paths, dry_run)
+                info = dict(info) # don't change passed in dict
+                del info['purelib']
+                del info['platlib']
+                info['lib'] = libdir
+                p = dist.write_shared_locations(info, dry_run)
                 outfiles.append(p)
 
                 # Write RECORD
-                dist.write_installed_files(outfiles, paths['prefix'],
+                dist.write_installed_files(outfiles, info['prefix'],
                                            dry_run)
 
             except Exception as e:
