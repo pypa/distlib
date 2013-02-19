@@ -659,7 +659,10 @@ class InstalledDistribution(BaseInstalledDistribution):
                 lines = f.read().splitlines()
             for line in lines:
                 key, value = line.split('=', 1)
-                result[key] = value
+                if key == 'namespace':
+                    result.setdefault(key, []).append(value)
+                else:
+                    result[key] = value
         return result
 
     def write_shared_locations(self, paths, dry_run=False):
@@ -672,6 +675,8 @@ class InstalledDistribution(BaseInstalledDistribution):
             path = paths[key]
             if os.path.isdir(paths[key]):
                 lines.append('%s=%s' % (key,  path))
+        for ns in paths.get('namespace', ()):
+            lines.append('namespace=%s' % ns)
 
         with codecs.open(shared_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
