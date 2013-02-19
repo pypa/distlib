@@ -21,7 +21,7 @@ from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 PYPI_RPC_HOST = 'http://python.org/pypi'
-PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'http://pypi.python.org')
+PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.python.org')
 
 class LocatorTestCase(unittest.TestCase):
 
@@ -58,7 +58,7 @@ class LocatorTestCase(unittest.TestCase):
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     def test_scraper(self):
-        locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
+        locator = SimpleScrapingLocator('https://pypi.python.org/simple/')
         for name in ('sarge', 'Sarge'):
             result = locator.get_project(name)
             self.assertIn('0.1', result)
@@ -77,10 +77,10 @@ class LocatorTestCase(unittest.TestCase):
     def test_unicode_project_name(self):
         # Just checking to see that no exceptions are raised.
         NAME = '\u2603'
-        locator = SimpleScrapingLocator('http://pypi.python.org/simple/')
+        locator = SimpleScrapingLocator('https://pypi.python.org/simple/')
         result = locator.get_project(NAME)
         self.assertFalse(result)
-        locator = PyPIJSONLocator('http://pypi.python.org/pypi/')
+        locator = PyPIJSONLocator('https://pypi.python.org/pypi/')
         result = locator.get_project(NAME)
         self.assertFalse(result)
 
@@ -130,7 +130,7 @@ class LocatorTestCase(unittest.TestCase):
     def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
-        loc2 = SimpleScrapingLocator('http://pypi.python.org/simple/',
+        loc2 = SimpleScrapingLocator('https://pypi.python.org/simple/',
                                      timeout=1.0)
         locator = AggregatingLocator(loc1, loc2)
         exp1 = os.path.join(HERE, 'fake_archives', 'subdir',
@@ -161,7 +161,7 @@ class LocatorTestCase(unittest.TestCase):
     def test_dependency_finder(self):
         locator = AggregatingLocator(
             JSONLocator(),
-            SimpleScrapingLocator('http://pypi.python.org/simple/',
+            SimpleScrapingLocator('https://pypi.python.org/simple/',
                                   timeout=3.0),
             scheme='legacy')
         finder = DependencyFinder(locator)

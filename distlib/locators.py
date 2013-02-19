@@ -744,7 +744,7 @@ class AggregatingLocator(Locator):
 
 default_locator = AggregatingLocator(
                     JSONLocator(),
-                    SimpleScrapingLocator('http://pypi.python.org/simple/',
+                    SimpleScrapingLocator('https://pypi.python.org/simple/',
                                           timeout=3.0))
 
 locate = default_locator.locate
