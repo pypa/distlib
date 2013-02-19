@@ -18,7 +18,6 @@ import tempfile
 
 from compat import unittest
 
-import distlib
 from distlib.database import DistributionPath
 from distlib.manifest import Manifest
 from distlib.wheel import Wheel, PYVER
@@ -165,7 +164,7 @@ class WheelTestCase(unittest.TestCase):
         for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
             paths[key] = os.path.join(dstdir, key)
         w = Wheel(pathname)
-        w.install(info)
+        w.install(paths)
         os.remove(pathname)
         sm = Manifest(srcdir)
         sm.findall()
