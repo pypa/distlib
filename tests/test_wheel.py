@@ -151,6 +151,8 @@ class WheelTestCase(unittest.TestCase):
         info = install_dist(dist, srcdir)
         info['prefix'] = srcdir
         w = Wheel()
+        w.name = info.pop('name')
+        w.version = info.pop('version')
         w.dirname = srcdir
         pathname = w.build(info)
         self.assertTrue(os.path.exists(pathname))
