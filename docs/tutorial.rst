@@ -1020,6 +1020,234 @@ However, you can't mix and match versions of different types::
       TypeError: cannot compare NormalizedVersion('1.0.0') and SemanticVersion('1.0.0')
       >>>
 
+
+.. _use-wheel:
+
+Using the wheel API
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: distlib.wheel
+
+You can use the ``distlib.wheel`` package to build and install from files in
+the Wheel format, defined in :pep:`427`.
+
+Building wheels
+~~~~~~~~~~~~~~~
+
+Building wheels is straightforward::
+
+    from distlib.wheel import Wheel
+
+    wheel = Wheel()
+
+    # Set the distribution's identity
+    wheel.name = 'name_of_distribution'
+    wheel.version = '0.1'
+
+    # Set the tags you need, if the defaults don't fit your needs.
+    # The filename will be computed automatically.
+    wheel.pyver = ['py32']
+    wheel.abi = ['none']
+    wheel.arch = ['linux_x86_64']
+
+    # Indicate where the files to go in the wheel are to be found
+    paths = {
+        'prefix': '/path/to/installation/prefix',
+        'purelib': '/path/to/purelib',  # only one of purelib
+        'platlib': '/path/to/platlib',  # or platlib should be set
+        'scripts': '/path/to/scripts',
+        'headers': '/path/to/headers',
+        'data': '/path/to/data',
+    }
+
+    wheel.dirname = '/where/you/want/the/wheel/to/go'
+    # Now build
+    wheel.build(paths)
+
+If the ``'data'``, ``'headers'`` and ``'scripts'`` keys are absent, or point to
+paths which don't exist, nothing will be added to the wheel for these
+categories. The ``'prefix'`` key and one of ``'purelib'`` or ``'platlib'``
+*must* be provided, and the paths referenced should exist.
+
+
+Installing from wheels
+~~~~~~~~~~~~~~~~~~~~~~
+
+Installing from wheels is similarly straightforward. You just need to indicate
+where you want the files in the wheel to be installed::
+
+    from distlib.wheel import Wheel
+
+    wheel = Wheel('/path/to/my_dist-0.1-py32-none-any.whl')
+
+    # Indicate where the files in the wheel are to be installed to.
+    # All the keys should point to writable paths.
+    paths = {
+        'prefix': '/path/to/installation/prefix',
+        'purelib': '/path/to/purelib',
+        'platlib': '/path/to/platlib',
+        'scripts': '/path/to/scripts',
+        'headers': '/path/to/headers',
+        'data': '/path/to/data',
+    }
+
+    # Now install. The method accepts a ``dry_run`` keyword
+    # argument which goes through the installation procedure
+    # but doesn't actually install anything.
+    wheel.install(paths)
+
+
+Although work is afoot to add wheel support to ``pip``, you don't need this
+to build wheels for existing PyPI distributions if you use ``distlib``. The
+following script shows how you can use an unpatched, vanilla ``pip`` to
+build wheels::
+
+    # -*- coding: utf-8 -*-
+    #
+    # Copyright (C) 2013 Vinay Sajip. License: MIT
+    #
+
+    import optparse     # for 2.6
+    import os
+    import re
+    import shutil
+    import subprocess
+    import sys
+    import tempfile
+
+    from distlib.database import DistributionPath
+    from distlib.manifest import Manifest
+    from distlib.util import parse_requirement
+    from distlib.wheel import Wheel
+
+    EGG_INFO_RE = re.compile(r'(-py\d\.\d)?\.egg-info', re.I)
+
+    INSTALLED_DISTS = DistributionPath(include_egg=True)
+
+    def convert_egg_info(libdir, prefix):
+        files = os.listdir(libdir)
+        ei = list(filter(lambda d: d.endswith('.egg-info'), files))[0]
+        olddn = os.path.join(libdir, ei)
+        di = EGG_INFO_RE.sub('.dist-info', ei)
+        newdn = os.path.join(libdir, di)
+        os.rename(olddn, newdn)
+        renames = {
+            'PKG-INFO': 'METADATA',
+        }
+        files = os.listdir(newdn)
+        for oldfn in files:
+            pn = os.path.join(newdn, oldfn)
+            if oldfn in renames:
+                os.rename(pn, os.path.join(newdn, renames[oldfn]))
+            else:
+                os.remove(pn)
+        manifest = Manifest(os.path.dirname(libdir))
+        manifest.findall()
+        dp = DistributionPath([libdir])
+        dist = next(dp.get_distributions())
+        dist.write_installed_files(manifest.allfiles, prefix)
+
+    def install_dist(distname, workdir):
+        pfx = '--install-option='
+        purelib = pfx + '--install-purelib=%s/purelib' % workdir
+        platlib = pfx + '--install-platlib=%s/platlib' % workdir
+        headers = pfx + '--install-headers=%s/headers' % workdir
+        scripts = pfx + '--install-scripts=%s/scripts' % workdir
+        data = pfx + '--install-data=%s/data' % workdir
+        cmd = ['pip', 'install',
+               '--index-url', 'https://pypi.python.org/simple/',
+               '--timeout', '3', '--default-timeout', '3',
+               purelib, platlib, headers, scripts, data, distname]
+        result = {
+            'scripts': os.path.join(workdir, 'scripts'),
+            'headers': os.path.join(workdir, 'headers'),
+            'data': os.path.join(workdir, 'data'),
+        }
+        p = subprocess.Popen(cmd, shell=False, stdout=sys.stdout,
+                             stderr=subprocess.STDOUT)
+        stdout, _ = p.communicate()
+        if p.returncode:
+            raise ValueError('pip failed to install %s:\n%s' % (distname, stdout))
+        for dn in ('purelib', 'platlib'):
+            libdir = os.path.join(workdir, dn)
+            if os.path.isdir(libdir):
+                result[dn] = libdir
+                break
+        convert_egg_info(libdir, workdir)
+        dp = DistributionPath([libdir])
+        dist = next(dp.get_distributions())
+        md = dist.metadata
+        result['name'] = md['Name']
+        result['version'] = md['Version']
+        return result
+
+    def build_wheel(distname, options):
+        result = None
+        r = parse_requirement(distname)
+        if not r:
+            print('Invalid requirement: %r' % distname)
+        else:
+            dist = INSTALLED_DISTS.get_distribution(r.name)
+            if dist:
+                print('Can\'t build a wheel from already-installed '
+                      'distribution %s' % dist.name_and_version)
+            else:
+                workdir = tempfile.mkdtemp() # where the Wheel input files will live
+                try:
+                    paths = install_dist(distname, workdir)
+                    paths['prefix'] = workdir
+                    wheel = Wheel()
+                    wheel.name = paths.pop('name')
+                    wheel.version = paths.pop('version')
+                    wheel.dirname = options.destdir
+                    wheel.build(paths)
+                    result = wheel
+                finally:
+                    shutil.rmtree(workdir)
+        return result
+
+    def main(args=None):
+        parser = optparse.OptionParser(usage='%prog [options] requirement [requirement ...]')
+        parser.add_option('-d', '--dest', dest='destdir', metavar='DESTDIR',
+                          default=os.getcwd())
+        options, args = parser.parse_args(args)
+        if not args:
+            parser.print_usage()
+        else:
+            built = []
+            for arg in args:
+                wheel = build_wheel(arg, options)
+                if wheel:
+                    built.append(wheel)
+            if built:
+                if options.destdir == os.getcwd():
+                    dest = ''
+                else:
+                    dest = ' in %s' % options.destdir
+                print('The following wheels were built%s:' % dest)
+                for wheel in built:
+                    print('  %s' % wheel.filename)
+
+    if __name__ == '__main__':
+        import logging; logging.basicConfig(format='%(message)s')
+        try:
+            rc = main()
+        except Exception as e:
+            logging.exception('Failed')
+            rc = 1
+        sys.exit(rc)
+
+This script, ``wheeler.py``, is also available `here
+<https://gist.github.com/vsajip/4988471>`_.
+
+.. note::
+   It can't be used to build wheels from existing distributions, as ``pip`` will
+   either refuse to install to custom locations (because it views a distribution
+   as already installed), or will try to upgrade and thus uninstall the existing
+   distribution, even though installation is requested to a custom location (and
+   uninstallation is not desirable).
+
+
 .. _use-manifest:
 
 Using the manifest API

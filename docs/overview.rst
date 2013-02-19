@@ -109,6 +109,8 @@ Distlib currently offers the following features:
 * The package ``distlib.version``, which implements version specifiers as
   defined by :pep:`386`, but also support for working with "legacy" versions
   (``setuptools``/``distribute``) and semantic versions.
+* The package ``distlib.wheel``, which provides support for building and
+  installing from the Wheel format for binary distributions (see :pep:`427`).
 * The package ``distlib.util``, which contains miscellaneous functions and
   classes which are useful in packaging, but which do not fit neatly into
   one of the other packages in ``distlib``.* The package implements enhanced
