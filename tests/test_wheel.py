@@ -63,16 +63,20 @@ def install_dist(distname, workdir):
     headers = pfx + '--install-headers=%s/headers' % workdir
     scripts = pfx + '--install-scripts=%s/scripts' % workdir
     data = pfx + '--install-data=%s/data' % workdir
-    cmd = ['pip', 'install', purelib, platlib, headers, scripts,
-           data, distname]
+    cmd = ['pip', 'install',
+           '--index-url', 'https://pypi.python.org/simple/',
+           '--timeout', '3', '--default-timeout', '3',
+           purelib, platlib, headers, scripts, data, distname]
     result = {
         'scripts': os.path.join(workdir, 'scripts'),
         'headers': os.path.join(workdir, 'headers'),
         'data': os.path.join(workdir, 'data'),
     }
-    with open(os.devnull, 'w') as junk:
-        subprocess.check_call(cmd, shell=False, stdout=junk,
-                              stderr=subprocess.STDOUT)
+    p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+    stdout, _ = p.communicate()
+    if p.returncode:
+        raise ValueError('pip failed to install %s:\n%s' % (distname, stdout))
     for dn in ('purelib', 'platlib'):
         libdir = os.path.join(workdir, dn)
         if os.path.isdir(libdir):
@@ -182,10 +186,14 @@ class WheelTestCase(unittest.TestCase):
     def test_build_and_install_plat(self):
         self.do_build_and_install('hiredis == 0.1.1')
 
+    @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
+                                               '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_data(self):
         self.do_build_and_install('Werkzeug == 0.4')
 
+    @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
+                                               '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_scripts(self):
         self.do_build_and_install('Babel == 0.9.6')
