@@ -21,7 +21,7 @@ from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 PYPI_RPC_HOST = 'http://python.org/pypi'
-PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.python.org')
+PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.python.org/simple/')
 
 class LocatorTestCase(unittest.TestCase):
 
@@ -50,7 +50,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.name, 'sarge')
         self.assertEqual(dist.version, '0.1')
         self.assertEqual(dist.download_url,
-                         'https://pypi.python.org/packages/source/s/sarge/'
+                         'http://pypi.python.org/packages/source/s/sarge/'
                          'sarge-0.1.tar.gz')
         self.assertEqual(dist.md5_digest,
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
@@ -131,7 +131,7 @@ class LocatorTestCase(unittest.TestCase):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
         loc2 = SimpleScrapingLocator('https://pypi.python.org/simple/',
-                                     timeout=1.0)
+                                     timeout=3.0)
         locator = AggregatingLocator(loc1, loc2)
         exp1 = os.path.join(HERE, 'fake_archives', 'subdir',
                             'subsubdir', 'Flask-0.9.tar.gz')
