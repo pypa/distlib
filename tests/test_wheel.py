@@ -152,18 +152,18 @@ class WheelTestCase(unittest.TestCase):
         dstdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, dstdir)
 
-        info = install_dist(dist, srcdir)
-        info['prefix'] = srcdir
+        paths = install_dist(dist, srcdir)
+        paths['prefix'] = srcdir
         w = Wheel()
-        w.name = info.pop('name')
-        w.version = info.pop('version')
+        w.name = paths.pop('name')
+        w.version = paths.pop('version')
         w.dirname = srcdir
-        pathname = w.build(info)
+        pathname = w.build(paths)
         self.assertTrue(os.path.exists(pathname))
 
-        info = {'prefix': dstdir}
+        paths = {'prefix': dstdir}
         for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
-            info[key] = os.path.join(dstdir, key)
+            paths[key] = os.path.join(dstdir, key)
         w = Wheel(pathname)
         w.install(info)
         os.remove(pathname)
