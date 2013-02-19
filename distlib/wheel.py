@@ -237,6 +237,8 @@ class Wheel(object):
 
         # First, stuff which is not in site-packages
         for key in ('data', 'headers', 'scripts'):
+            if key not in paths:
+                continue
             path = paths[key]
             if os.path.isdir(path):
                 for root, dirs, files in os.walk(path):
