@@ -50,7 +50,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.name, 'sarge')
         self.assertEqual(dist.version, '0.1')
         self.assertEqual(dist.download_url,
-                         'http://pypi.python.org/packages/source/s/sarge/'
+                         'https://pypi.python.org/packages/source/s/sarge/'
                          'sarge-0.1.tar.gz')
         self.assertEqual(dist.md5_digest,
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
@@ -66,7 +66,7 @@ class LocatorTestCase(unittest.TestCase):
             self.assertEqual(dist.name, 'sarge')
             self.assertEqual(dist.version, '0.1')
             self.assertEqual(dist.download_url,
-                             'http://pypi.python.org/packages/source/s/sarge/'
+                             'https://pypi.python.org/packages/source/s/sarge/'
                              'sarge-0.1.tar.gz')
             self.assertEqual(dist.md5_digest,
                              '961ddd9bc085fdd8b248c6dd96ceb1c8')
@@ -135,7 +135,7 @@ class LocatorTestCase(unittest.TestCase):
         locator = AggregatingLocator(loc1, loc2)
         exp1 = os.path.join(HERE, 'fake_archives', 'subdir',
                             'subsubdir', 'Flask-0.9.tar.gz')
-        exp2 = 'http://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz'
+        exp2 = 'https://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz'
         result = locator.get_project('flask')
         self.assertEqual(len(result), 1)
         self.assertIn('0.9', result)
