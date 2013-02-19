@@ -402,8 +402,14 @@ class Wheel(object):
                                     raise DistlibException('digest mismatch on '
                                                            'write for %s' % outfile)
                         if bc and outfile.endswith('.py'):
-                            pyc = fileop.byte_compile(outfile)
-                            outfiles.append(pyc)
+                            try:
+                                pyc = fileop.byte_compile(outfile)
+                                outfiles.append(pyc)
+                            except Exception:
+                                # Don't give up if byte-compilation fails,
+                                # but log it and perhaps warn the user
+                                logger.warning('Byte-compilation failed',
+                                               exc_info=True)
                     else:
                         workname = os.path.join(workdir, os.path.basename(arcname))
                         with zf.open(arcname) as bf:

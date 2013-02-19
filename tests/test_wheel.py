@@ -182,12 +182,10 @@ class WheelTestCase(unittest.TestCase):
     def test_build_and_install_plat(self):
         self.do_build_and_install('hiredis == 0.1.1')
 
-    @unittest.skipIf(sys.version_info[0] == 3, 'this test distribution is 2.x only')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_data(self):
         self.do_build_and_install('Werkzeug == 0.4')
 
-    @unittest.skipIf(sys.version_info[0] == 3, 'this test distribution is 2.x only')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_scripts(self):
         self.do_build_and_install('Babel == 0.9.6')
