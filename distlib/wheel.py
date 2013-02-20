@@ -23,7 +23,7 @@ import zipfile
 
 import distlib
 from distlib import DistlibException
-from distlib.compat import sysconfig, ZipFile
+from distlib.compat import sysconfig, ZipFile, fsdecode, text_type
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.scripts import ScriptMaker
 from distlib.util import FileOperator, convert_path
@@ -204,7 +204,7 @@ class Wheel(object):
         return hash_kind, result
 
     def write_record(self, records, record_path, base):
-        with codecs.open(record_path, 'w', encoding='utf-8') as f:
+        with open(record_path, 'w') as f:
             writer = csv.writer(f, delimiter=str(','),
                                 lineterminator=str('\n'),
                                 quotechar=str('"'))
@@ -243,7 +243,7 @@ class Wheel(object):
             if os.path.isdir(path):
                 for root, dirs, files in os.walk(path):
                     for fn in files:
-                        p = os.path.join(root, fn)
+                        p = fsdecode(os.path.join(root, fn))
                         rp = os.path.relpath(p, path)
                         ap = os.path.join(data_dir, key, rp)
                         archive_paths.append((ap, p))
@@ -263,6 +263,7 @@ class Wheel(object):
                 # At the top level only, save distinfo for later
                 # and skip it for now
                 for i, dn in enumerate(dirs):
+                    dn = fsdecode(dn)
                     if dn.endswith('.dist-info'):
                         distinfo = os.path.join(root, dn)
                         del dirs[i]
@@ -271,7 +272,7 @@ class Wheel(object):
 
             for fn in files:
                 # comment out next suite to leave .pyc files in
-                if fn.endswith(('.pyc', '.pyo')):
+                if fsdecode(fn).endswith(('.pyc', '.pyo')):
                     continue
                 p = os.path.join(root, fn)
                 rp = os.path.relpath(p, path)
@@ -281,7 +282,7 @@ class Wheel(object):
         files = os.listdir(distinfo)
         for fn in files:
             if fn not in ('RECORD', 'INSTALLER'):
-                p = os.path.join(distinfo, fn)
+                p = fsdecode(os.path.join(distinfo, fn))
                 ap = os.path.join(info_dir, fn)
                 archive_paths.append((ap, p))
 
@@ -317,6 +318,7 @@ class Wheel(object):
         pathname = os.path.join(self.dirname, self.filename)
         with ZipFile(pathname, 'w', zipfile.ZIP_DEFLATED) as zf:
             for ap, p in archive_paths:
+                logger.debug('Wrote %s to %s in wheel', p, ap)
                 zf.write(p, ap)
         return pathname
 

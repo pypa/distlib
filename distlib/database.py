@@ -591,24 +591,27 @@ class InstalledDistribution(BaseInstalledDistribution):
         logger.info('creating %s', record_path)
         if dry_run:
             return
-        with codecs.open(record_path, 'w', encoding='utf-8') as f:
+        with open(record_path, 'w') as f:
             writer = csv.writer(f, delimiter=str(','),
                                 lineterminator=str('\n'),
                                 quotechar=str('"'))
             for path in paths:
                 if os.path.isdir(path) or path.endswith(('.pyc', '.pyo')):
                     # do not put size and hash, as in PEP-376
-                    if path.startswith(base):
-                        path = os.path.relpath(path, base)
-                    writer.writerow((path, '', ''))
+                    hash_value = size = ''
                 else:
-                    size = os.path.getsize(path)
+                    size = '%d' % os.path.getsize(path)
                     with open(path, 'rb') as fp:
-                        hash = self.get_hash(fp.read())
-                    if path.startswith(base) or (base_under_prefix and
+                        hash_value = self.get_hash(fp.read())
+                if path.startswith(base) or (base_under_prefix and
                                                  path.startswith(prefix)):
-                        path = os.path.relpath(path, base)
-                    writer.writerow((path, hash, size))
+                    path = os.path.relpath(path, base)
+                if sys.version_info[0] < 3:
+                    # On 2.x, csv doesn't like Unicode.
+                    path = path.encode('utf-8')
+                    hash_value = hash_value.encode('utf-8')
+                    size = size.encode('utf-8')
+                writer.writerow((path, hash_value, size))
 
             # add the RECORD file itself
             if record_path.startswith(base):
