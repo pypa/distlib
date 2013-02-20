@@ -199,12 +199,28 @@ except NameError:   # pragma: no cover
 
 try:
     fsencode = os.fsencode
+    fsdecode = os.fsdecode
 except AttributeError:  # pragma: no cover
+    _fsencoding = sys.getfilesystemencoding()
+    if _fsencoding == 'mbcs':
+        _fserrors = 'strict'
+    else:
+        _fserrors = 'surrogateescape'
+
     def fsencode(filename):
         if isinstance(filename, bytes):
             return filename
-        elif isinstance(filename, str):
-            return filename.encode(sys.getfilesystemencoding())
+        elif isinstance(filename, text_type):
+            return filename.encode(_fsencoding, _fserrors)
+        else:
+            raise TypeError("expect bytes or str, not %s" %
+                            type(filename).__name__)
+
+    def fsdecode(filename):
+        if isinstance(filename, text_type):
+            return filename
+        elif isinstance(filename, bytes):
+            return filename.decode(_fsencoding, _fserrors)
         else:
             raise TypeError("expect bytes or str, not %s" %
                             type(filename).__name__)
