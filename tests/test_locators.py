@@ -50,7 +50,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.name, 'sarge')
         self.assertEqual(dist.version, '0.1')
         self.assertEqual(dist.download_url,
-                         'http://pypi.python.org/packages/source/s/sarge/'
+                         'https://pypi.python.org/packages/source/s/sarge/'
                          'sarge-0.1.tar.gz')
         self.assertEqual(dist.md5_digest,
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
