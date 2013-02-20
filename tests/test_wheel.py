@@ -20,7 +20,7 @@ from compat import unittest
 
 from distlib.database import DistributionPath
 from distlib.manifest import Manifest
-from distlib.wheel import Wheel, PYVER
+from distlib.wheel import Wheel, PYVER, ARCH, compatible_tags
 
 try:
     with open(os.devnull, 'wb') as junk:
@@ -144,6 +144,16 @@ class WheelTestCase(unittest.TestCase):
             self.assertTrue(w.filename.endswith(ENDING))
             for attr, value in zip(attrs, values):
                 self.assertEqual(getattr(w, attr), value)
+
+    def test_compatible_tags(self):
+
+        self.assertEqual(PYVER, 'py%d%d' % sys.version_info[:2])
+
+        tags = compatible_tags()
+        self.assertIn((PYVER, 'none', 'any'), tags)
+        self.assertIn((PYVER[:-1], 'none', 'any'), tags)
+        this_arch = filter(lambda o: o[-1] == ARCH, tags)
+        self.assertTrue(this_arch)
 
     def do_build_and_install(self, dist):
         srcdir = tempfile.mkdtemp()

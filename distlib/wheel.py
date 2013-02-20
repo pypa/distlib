@@ -248,7 +248,7 @@ class Wheel(object):
                         rp = os.path.relpath(p, path)
                         ap = os.path.join(data_dir, key, rp)
                         archive_paths.append((ap, p))
-                        if key == 'scripts' and not p.endwith('.exe'):
+                        if key == 'scripts' and not p.endswith('.exe'):
                             with open(p, 'rb') as f:
                                 data = f.read()
                             data = self.process_shebang(data)
