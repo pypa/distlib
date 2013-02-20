@@ -248,7 +248,7 @@ class Wheel(object):
                         rp = os.path.relpath(p, path)
                         ap = os.path.join(data_dir, key, rp)
                         archive_paths.append((ap, p))
-                        if key == 'scripts':
+                        if key == 'scripts' and not p.endwith('.exe'):
                             with open(p, 'rb') as f:
                                 data = f.read()
                             data = self.process_shebang(data)
@@ -387,7 +387,7 @@ class Wheel(object):
                     is_script = arcname.startswith(script_pfx)
 
                     if arcname.startswith(data_pfx):
-                        _, where, rp = arcname.split(os.sep, 2)
+                        _, where, rp = arcname.split('/', 2)
                         outfile = os.path.join(paths[where], convert_path(rp))
                     else:
                         # meant for site-packages.
