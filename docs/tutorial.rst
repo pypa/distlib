@@ -1097,6 +1097,9 @@ where you want the files in the wheel to be installed::
     wheel.install(paths)
 
 
+Using vanilla pip to build wheels for existing distributions on PyPI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Although work is afoot to add wheel support to ``pip``, you don't need this
 to build wheels for existing PyPI distributions if you use ``distlib``. The
 following script shows how you can use an unpatched, vanilla ``pip`` to
@@ -1107,6 +1110,7 @@ build wheels::
     # Copyright (C) 2013 Vinay Sajip. License: MIT
     #
 
+    import logging
     import optparse     # for 2.6
     import os
     import re
@@ -1115,7 +1119,12 @@ build wheels::
     import sys
     import tempfile
 
-    from distlib.database import DistributionPath
+    logger = logging.getLogger('wheeler')
+
+    from distlib.compat import string_types
+    from distlib.database import DistributionPath, make_graph
+    from distlib.locators import (JSONLocator, SimpleScrapingLocator,
+                                  AggregatingLocator, DependencyFinder)
     from distlib.manifest import Manifest
     from distlib.util import parse_requirement
     from distlib.wheel import Wheel
@@ -1143,9 +1152,10 @@ build wheels::
                 os.remove(pn)
         manifest = Manifest(os.path.dirname(libdir))
         manifest.findall()
+        paths = manifest.allfiles
         dp = DistributionPath([libdir])
         dist = next(dp.get_distributions())
-        dist.write_installed_files(manifest.allfiles, prefix)
+        dist.write_installed_files(paths, prefix)
 
     def install_dist(distname, workdir):
         pfx = '--install-option='
@@ -1155,7 +1165,8 @@ build wheels::
         scripts = pfx + '--install-scripts=%s/scripts' % workdir
         data = pfx + '--install-data=%s/data' % workdir
         cmd = ['pip', 'install',
-               '--index-url', 'https://pypi.python.org/simple/',
+               '--no-deps', '--quiet',
+               '--index-url', 'http://pypi.python.org/simple/',
                '--timeout', '3', '--default-timeout', '3',
                purelib, platlib, headers, scripts, data, distname]
         result = {
@@ -1163,6 +1174,7 @@ build wheels::
             'headers': os.path.join(workdir, 'headers'),
             'data': os.path.join(workdir, 'data'),
         }
+        print('Pipping %s ...' % distname)
         p = subprocess.Popen(cmd, shell=False, stdout=sys.stdout,
                              stderr=subprocess.STDOUT)
         stdout, _ = p.communicate()
@@ -1209,11 +1221,58 @@ build wheels::
     def main(args=None):
         parser = optparse.OptionParser(usage='%prog [options] requirement [requirement ...]')
         parser.add_option('-d', '--dest', dest='destdir', metavar='DESTDIR',
-                          default=os.getcwd())
+                          default=os.getcwd(), help='Where you want the wheels '
+                          'to be put')
+        parser.add_option('-n', '--no-deps', dest='deps', default=True,
+                          action='store_false')
         options, args = parser.parse_args(args)
         if not args:
             parser.print_usage()
         else:
+            if options.deps:
+                # collect all the requirements, including dependencies
+                u = 'http://pypi.python.org/simple/'
+                locator = AggregatingLocator(JSONLocator(),
+                                             SimpleScrapingLocator(u, timeout=3.0),
+                                             scheme='legacy')
+                finder = DependencyFinder(locator)
+                wanted = set()
+                for arg in args:
+                    r = parse_requirement(arg)
+                    if not r.constraints:
+                        dname = r.name
+                    else:
+                        dname = '%s (%s)' % (r.name, ', '.join(r.constraints))
+                    print('Finding the dependencies of %s ...' % arg)
+                    dists, problems = finder.find(dname)
+                    if problems:
+                        print('There were some problems resolving dependencies '
+                              'for %r.' % arg)
+                        for _, info in problems:
+                            print('  Unsatisfied requirement %r' % info)
+                    wanted |= dists
+                want_ordered = True # set to False to skip ordering
+                if not want_ordered:
+                    wanted = list(wanted)
+                else:
+                    graph = make_graph(wanted, scheme=locator.scheme)
+                    slist, cycle = graph.topological_sort()
+                    if cycle:
+                        # Now sort the remainder on dependency count.
+                        cycle = sorted(cycle, reverse=True,
+                                       key=lambda d: len(graph.reverse_list[d]))
+                    wanted = slist + cycle
+
+                    # get rid of any installed distributions from the list
+                    for w in list(wanted):
+                        dist = INSTALLED_DISTS.get_distribution(w.name)
+                        if dist or w.name in ('setuptools', 'distribute'):
+                            wanted.remove(w)
+
+                    # converted wanted list to pip-style requirements
+                    args = ['%s==%s' % (dist.name, dist.version) for dist in wanted]
+
+            # Now go build
             built = []
             for arg in args:
                 wheel = build_wheel(arg, options)
@@ -1229,16 +1288,39 @@ build wheels::
                     print('  %s' % wheel.filename)
 
     if __name__ == '__main__':
-        import logging; logging.basicConfig(format='%(message)s')
+        logging.basicConfig(format='%(levelname)-8s %(name)s %(message)s',
+                            filename='wheeler.log', filemode='w')
         try:
             rc = main()
         except Exception as e:
-            logging.exception('Failed')
+            logger.exception('Failed. Check the log.')
             rc = 1
         sys.exit(rc)
 
 This script, ``wheeler.py``, is also available `here
-<https://gist.github.com/vsajip/4988471>`_.
+<https://gist.github.com/vsajip/4988471>`_. Note that by default, it downloads
+dependencies of any distribution you specify and builds separate wheels for
+each distribution. It's smart about not repeating work if dependencies are
+common across multiple distributions you specify::
+
+    $ python wheeler.py pygments flask
+    Finding the dependencies of pygments ...
+    Finding the dependencies of flask ...
+    Pipping Werkzeug==0.8.3 ...
+    Pipping Jinja2==2.6 ...
+    Pipping Pygments==1.6 ...
+    Pipping Flask==0.9 ...
+    The following wheels were built:
+      Werkzeug-0.8.3-py27-none-any.whl
+      Jinja2-2.6-py27-none-any.whl
+      Pygments-1.6-py27-none-any.whl
+      Flask-0.9-py27-none-any.whl
+
+You can opt to not build dependent wheels by specifying --no-deps on the
+command line.
+
+Note that the script also currently uses an http: URL for PyPI -- this may need
+to change to an https: URL in the future.
 
 .. note::
    It can't be used to build wheels from existing distributions, as ``pip`` will
