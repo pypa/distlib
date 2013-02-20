@@ -9,6 +9,7 @@ import os
 import re
 
 from . import DistlibException
+from .compat import fsdecode
 from .util import convert_path
 
 
@@ -59,7 +60,7 @@ class Manifest(object):
                 stat = os.stat(fullname)
                 mode = stat.st_mode
                 if S_ISREG(mode):
-                    allfiles.append(fullname)
+                    allfiles.append(fsdecode(fullname))
                 elif S_ISDIR(mode) and not S_ISLNK(mode):
                     push(fullname)
 
