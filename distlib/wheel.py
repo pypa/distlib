@@ -373,7 +373,7 @@ class Wheel(object):
             try:
                 for zinfo in zf.infolist():
                     arcname = zinfo.filename
-                    row = records[arcname]
+                    row = records[convert_path(arcname)]
                     if row[2] and str(zinfo.file_size) != row[2]:
                         raise DistlibException('size mismatch for %s' % arcname)
                     if row[1]:
@@ -393,7 +393,7 @@ class Wheel(object):
                         # meant for site-packages.
                         if arcname in (wheel_metadata_name, record_name):
                             continue
-                        outfile = os.path.join(libdir, arcname)
+                        outfile = os.path.join(libdir, convert_path(arcname))
                     if not is_script:
                         with zf.open(arcname) as bf:
                             fileop.copy_stream(bf, outfile)
@@ -416,7 +416,8 @@ class Wheel(object):
                                 logger.warning('Byte-compilation failed',
                                                exc_info=True)
                     else:
-                        workname = os.path.join(workdir, os.path.basename(arcname))
+                        fn = os.path.basename(convert_path(arcname))
+                        workname = os.path.join(workdir, fn)
                         with zf.open(arcname) as bf:
                             fileop.copy_stream(bf, workname)
 
