@@ -75,10 +75,13 @@ class MarkersTestCase(unittest.TestCase):
                                   {'python_version': '0.1'}))
 
         # parentheses and extra
-        self.assertTrue(interpret("(sys.platform != 'win32' or "
-                                   "python_version == '2.4') and "
-                                   "extra == 'quux'",
-                                   {'extra': 'quux'}))
+        if sys.platform != 'win32':
+            relop = '!='
+        else:
+            relop = '=='
+        expression = ("(sys.platform %s 'win32' or python_version == '2.4') "
+                      "and extra == 'quux'" % relop)
+        self.assertTrue(interpret(expression, {'extra': 'quux'}))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
