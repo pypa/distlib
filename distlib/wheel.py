@@ -15,6 +15,7 @@ import hashlib
 import imp
 import logging
 import os
+import posixpath
 import re
 import shutil
 import sys
@@ -331,8 +332,8 @@ class Wheel(object):
         data_dir = '%s.data' % name_ver
         info_dir = '%s.dist-info' % name_ver
 
-        wheel_metadata_name = os.path.join(info_dir, 'WHEEL')
-        record_name = os.path.join(info_dir, 'RECORD')
+        wheel_metadata_name = posixpath.join(info_dir, 'WHEEL')
+        record_name = posixpath.join(info_dir, 'RECORD')
 
         wrapper = codecs.getreader('utf-8')
 
@@ -354,8 +355,8 @@ class Wheel(object):
                     p = row[0]
                     records[p] = row
 
-            data_pfx = os.path.join(data_dir, '')
-            script_pfx = os.path.join(data_dir, 'scripts', '')
+            data_pfx = posixpath.join(data_dir, '')
+            script_pfx = posixpath.join(data_dir, 'scripts', '')
 
             fileop = FileOperator(dry_run=dry_run)
             fileop.record = True    # so we can rollback if needed
