@@ -191,7 +191,8 @@ class WheelTestCase(unittest.TestCase):
     def test_build_and_install_pure(self):
         self.do_build_and_install('sarge == 0.1')
 
-    @unittest.skipIf(os.name == 'nt', 'test is not likely to work on Windows')
+    @unittest.skipIf(sys.platform != 'linux2', 'The test distribution only '
+                                               'builds on Linux')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_plat(self):
         self.do_build_and_install('hiredis == 0.1.1')
