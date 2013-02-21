@@ -234,6 +234,11 @@ class Wheel(object):
         data_dir = '%s.data' % name_ver
         info_dir = '%s.dist-info' % name_ver
 
+        if os.sep == '/':
+            to_posix = lambda o: o
+        else:
+            to_posix = lambda o: o.replace(os.sep, '/')
+
         archive_paths = []
 
         # First, stuff which is not in site-packages
@@ -246,7 +251,7 @@ class Wheel(object):
                     for fn in files:
                         p = fsdecode(os.path.join(root, fn))
                         rp = os.path.relpath(p, path)
-                        ap = os.path.join(data_dir, key, rp)
+                        ap = to_posix(os.path.join(data_dir, key, rp))
                         archive_paths.append((ap, p))
                         if key == 'scripts' and not p.endswith('.exe'):
                             with open(p, 'rb') as f:
@@ -284,7 +289,7 @@ class Wheel(object):
         for fn in files:
             if fn not in ('RECORD', 'INSTALLER'):
                 p = fsdecode(os.path.join(distinfo, fn))
-                ap = os.path.join(info_dir, fn)
+                ap = to_posix(os.path.join(info_dir, fn))
                 archive_paths.append((ap, p))
 
         wheel_metadata = [
@@ -297,7 +302,7 @@ class Wheel(object):
         p = os.path.join(distinfo, 'WHEEL')
         with open(p, 'w') as f:
             f.write('\n'.join(wheel_metadata))
-        ap = os.path.join(info_dir, 'WHEEL')
+        ap = to_posix(os.path.join(info_dir, 'WHEEL'))
         archive_paths.append((ap, p))
 
         # Now, at last, RECORD.
@@ -313,7 +318,7 @@ class Wheel(object):
 
         p = os.path.join(distinfo, 'RECORD')
         self.write_record(records, p, libdir)
-        ap = os.path.join(info_dir, 'RECORD')
+        ap = to_posix(os.path.join(info_dir, 'RECORD'))
         archive_paths.append((ap, p))
         # Now, ready to build the zip file
         pathname = os.path.join(self.dirname, self.filename)
