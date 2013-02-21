@@ -368,7 +368,8 @@ class Wheel(object):
             # for script copying/shebang processing
             workdir = tempfile.mkdtemp()
             # set target dir later
-            maker = ScriptMaker(workdir, None, fileop=fileop)
+            maker = ScriptMaker(workdir, None, fileop=fileop,
+                                add_launchers=False)    # may need to revisit this
 
             try:
                 for zinfo in zf.infolist():
@@ -384,7 +385,8 @@ class Wheel(object):
                         if digest != value:
                             raise DistlibException('digest mismatch for %s' % arcname)
 
-                    is_script = arcname.startswith(script_pfx)
+                    is_script = (arcname.startswith(script_pfx)
+                                 and not arcname.endswith('.exe'))
 
                     if arcname.startswith(data_pfx):
                         _, where, rp = arcname.split('/', 2)
