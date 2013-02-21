@@ -62,6 +62,12 @@ NAME_VERSION_RE = re.compile(r'''
 
 SHEBANG_RE = re.compile(br'\s*#![^\r\n]*')
 
+if os.sep == '/':
+    to_posix = lambda o: o
+else:
+    to_posix = lambda o: o.replace(os.sep, '/')
+
+
 def compatible_tags():
     """
     Return (pyver, abi, arch) tuples compatible with this Python.
@@ -211,7 +217,8 @@ class Wheel(object):
                                 quotechar=str('"'))
             for row in records:
                 writer.writerow(row)
-            writer.writerow((os.path.relpath(record_path, base), '', ''))
+            p = to_posix(os.path.relpath(record_path, base))
+            writer.writerow((p, '', ''))
 
     def build(self, paths):
         """
@@ -233,11 +240,6 @@ class Wheel(object):
         name_ver = '%s-%s' % (self.name, self.version)
         data_dir = '%s.data' % name_ver
         info_dir = '%s.dist-info' % name_ver
-
-        if os.sep == '/':
-            to_posix = lambda o: o
-        else:
-            to_posix = lambda o: o.replace(os.sep, '/')
 
         archive_paths = []
 
@@ -281,7 +283,7 @@ class Wheel(object):
                 if fsdecode(fn).endswith(('.pyc', '.pyo')):
                     continue
                 p = os.path.join(root, fn)
-                rp = os.path.relpath(p, path)
+                rp = to_posix(os.path.relpath(p, path))
                 archive_paths.append((rp, p))
 
         # Now distinfo. Assumed to be flat, i.e. os.listdir is enough.
@@ -379,7 +381,7 @@ class Wheel(object):
             try:
                 for zinfo in zf.infolist():
                     arcname = zinfo.filename
-                    row = records[convert_path(arcname)]
+                    row = records[arcname]
                     if row[2] and str(zinfo.file_size) != row[2]:
                         raise DistlibException('size mismatch for %s' % arcname)
                     if row[1]:
