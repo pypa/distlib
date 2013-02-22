@@ -23,16 +23,17 @@ import tempfile
 import zipfile
 
 import distlib
-from distlib import DistlibException
-from distlib.compat import sysconfig, ZipFile, fsdecode, text_type
-from distlib.database import DistributionPath, InstalledDistribution
-from distlib.scripts import ScriptMaker
-from distlib.util import FileOperator, convert_path
+from . import DistlibException
+from .compat import sysconfig, ZipFile, fsdecode, text_type
+from .database import DistributionPath, InstalledDistribution
+from .scripts import ScriptMaker
+from .util import FileOperator, convert_path
+
 
 logger = logging.getLogger(__name__)
 
 PYVER = sysconfig.get_config_var('py_version_nodot')
-if not PYVER:
+if not PYVER:   # pragma: no cover
     PYVER = '%s%s' % sys.version_info[:2]
 PYVER = 'py' + PYVER
 
@@ -451,7 +452,7 @@ class Wheel(object):
                 dist.write_installed_files(outfiles, paths['prefix'],
                                            dry_run)
 
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.exception('installation failed.')
                 fileop.rollback()
                 raise
