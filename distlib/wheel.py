@@ -290,7 +290,7 @@ class Wheel(object):
         # Now distinfo. Assumed to be flat, i.e. os.listdir is enough.
         files = os.listdir(distinfo)
         for fn in files:
-            if fn not in ('RECORD', 'INSTALLER'):
+            if fn not in ('RECORD', 'INSTALLER', 'SHARED'):
                 p = fsdecode(os.path.join(distinfo, fn))
                 ap = to_posix(os.path.join(info_dir, fn))
                 archive_paths.append((ap, p))
