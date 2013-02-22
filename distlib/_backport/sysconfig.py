@@ -15,6 +15,7 @@ try:
 except ImportError:
     import ConfigParser as configparser
 
+
 __all__ = [
     'get_config_h_filename',
     'get_config_var',
@@ -29,16 +30,62 @@ __all__ = [
     'parse_config_h',
 ]
 
-# let's read the configuration file
-# XXX _CONFIG_DIR will be set by the Makefile later
-_CONFIG_DIR = os.path.normpath(os.path.dirname(__file__))
-_CONFIG_FILE = os.path.join(_CONFIG_DIR, 'sysconfig.cfg')
+
+def _safe_realpath(path):
+    try:
+        return realpath(path)
+    except OSError:
+        return path
+
+
+if sys.executable:
+    _PROJECT_BASE = os.path.dirname(_safe_realpath(sys.executable))
+else:
+    # sys.executable can be empty if argv[0] has been changed and Python is
+    # unable to retrieve the real program name
+    _PROJECT_BASE = _safe_realpath(os.getcwd())
+
+if os.name == "nt" and "pcbuild" in _PROJECT_BASE[-8:].lower():
+    _PROJECT_BASE = _safe_realpath(os.path.join(_PROJECT_BASE, pardir))
+# PC/VS7.1
+if os.name == "nt" and "\\pc\\v" in _PROJECT_BASE[-10:].lower():
+    _PROJECT_BASE = _safe_realpath(os.path.join(_PROJECT_BASE, pardir, pardir))
+# PC/AMD64
+if os.name == "nt" and "\\pcbuild\\amd64" in _PROJECT_BASE[-14:].lower():
+    _PROJECT_BASE = _safe_realpath(os.path.join(_PROJECT_BASE, pardir, pardir))
+
+
+def is_python_build():
+    for fn in ("Setup.dist", "Setup.local"):
+        if os.path.isfile(os.path.join(_PROJECT_BASE, "Modules", fn)):
+            return True
+    return False
+
+_PYTHON_BUILD = is_python_build()
+
+_cfg_read = False
+
+def _ensure_cfg_read():
+    global _cfg_read
+    if not _cfg_read:
+        from distlib.resources import finder
+        _finder = finder('distlib._backport')
+        _cfgfile = _finder.find('sysconfig.cfg')
+        with _cfgfile.as_stream() as s:
+            _SCHEMES.readfp(s)
+        if _PYTHON_BUILD:
+            for scheme in ('posix_prefix', 'posix_home'):
+                _SCHEMES.set(scheme, 'include', '{srcdir}/Include')
+                _SCHEMES.set(scheme, 'platinclude', '{projectbase}/.')
+
+        _cfg_read = True
+
+
 _SCHEMES = configparser.RawConfigParser()
-_SCHEMES.read(_CONFIG_FILE)
 _VAR_REPL = re.compile(r'\{([^{]*?)\}')
 
-
 def _expand_globals(config):
+    _ensure_cfg_read()
     if config.has_section('globals'):
         globals = config.items('globals')
     else:
@@ -68,7 +115,7 @@ def _expand_globals(config):
         for option, value in config.items(section):
             config.set(section, option, _VAR_REPL.sub(_replacer, value))
 
-_expand_globals(_SCHEMES)
+#_expand_globals(_SCHEMES)
 
  # FIXME don't rely on sys.version here, its format is an implementation detail
  # of CPython, use sys.version_info or sys.hexversion
@@ -79,43 +126,6 @@ _PREFIX = os.path.normpath(sys.prefix)
 _EXEC_PREFIX = os.path.normpath(sys.exec_prefix)
 _CONFIG_VARS = None
 _USER_BASE = None
-
-
-def _safe_realpath(path):
-    try:
-        return realpath(path)
-    except OSError:
-        return path
-
-if sys.executable:
-    _PROJECT_BASE = os.path.dirname(_safe_realpath(sys.executable))
-else:
-    # sys.executable can be empty if argv[0] has been changed and Python is
-    # unable to retrieve the real program name
-    _PROJECT_BASE = _safe_realpath(os.getcwd())
-
-if os.name == "nt" and "pcbuild" in _PROJECT_BASE[-8:].lower():
-    _PROJECT_BASE = _safe_realpath(os.path.join(_PROJECT_BASE, pardir))
-# PC/VS7.1
-if os.name == "nt" and "\\pc\\v" in _PROJECT_BASE[-10:].lower():
-    _PROJECT_BASE = _safe_realpath(os.path.join(_PROJECT_BASE, pardir, pardir))
-# PC/AMD64
-if os.name == "nt" and "\\pcbuild\\amd64" in _PROJECT_BASE[-14:].lower():
-    _PROJECT_BASE = _safe_realpath(os.path.join(_PROJECT_BASE, pardir, pardir))
-
-
-def is_python_build():
-    for fn in ("Setup.dist", "Setup.local"):
-        if os.path.isfile(os.path.join(_PROJECT_BASE, "Modules", fn)):
-            return True
-    return False
-
-_PYTHON_BUILD = is_python_build()
-
-if _PYTHON_BUILD:
-    for scheme in ('posix_prefix', 'posix_home'):
-        _SCHEMES.set(scheme, 'include', '{srcdir}/Include')
-        _SCHEMES.set(scheme, 'platinclude', '{projectbase}/.')
 
 
 def _subst_vars(path, local_vars):
@@ -433,6 +443,7 @@ def get_paths(scheme=_get_default_scheme(), vars=None, expand=True):
     ``scheme`` is the install scheme name. If not provided, it will
     return the default scheme for the current platform.
     """
+    _ensure_cfg_read()
     if expand:
         return _expand_vars(scheme, vars)
     else:
