@@ -802,6 +802,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
     file ``PKG-INFO`` under that directory."""
 
     requested = True    # as we have no way of knowing, assume it was
+    shared_locations = {}
 
     def __init__(self, path, env=None):
         def set_name_and_version(s, n, v):
