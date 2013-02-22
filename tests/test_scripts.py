@@ -12,7 +12,9 @@ import tempfile
 from compat import unittest
 
 from distlib import DistlibException
+from distlib.compat import fsencode
 from distlib.scripts import ScriptMaker
+from distlib.util import get_executable
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -27,12 +29,7 @@ class ScriptTestCase(unittest.TestCase):
         shutil.rmtree(self.maker.target_dir)
 
     def test_shebangs(self):
-        if sys.platform == 'darwin' and ('__VENV_LAUNCHER__'
-                                         in os.environ):
-            executable =  os.environ['__VENV_LAUNCHER__']
-        else:
-            executable = sys.executable
-        executable = executable.encode('utf-8')
+        executable = fsencode(get_executable())
         for fn in ('foo.py', 'script1.py', 'script2.py', 'script3.py',
                    'shell.sh'):
             files = self.maker.make(fn)

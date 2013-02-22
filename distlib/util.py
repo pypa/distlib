@@ -181,7 +181,16 @@ def in_venv():
         result = True
     else:
         # PEP 405 venvs
-        result = sys.prefix != getattr(sys, 'base_prefix', None)
+        result = sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
+    return result
+
+
+def get_executable():
+    if sys.platform == 'darwin' and ('__VENV_LAUNCHER__'
+                                     in os.environ):
+        result =  os.environ['__VENV_LAUNCHER__']
+    else:
+        result = sys.executable
     return result
 
 

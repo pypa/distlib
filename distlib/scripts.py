@@ -12,7 +12,7 @@ import sys
 from . import DistlibException
 from .compat import sysconfig, fsencode, detect_encoding
 from .resources import finder
-from .util import FileOperator, get_export_entry, convert_path
+from .util import FileOperator, get_export_entry, convert_path, get_executable
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +58,7 @@ class ScriptMaker(object):
 
     def _get_shebang(self, encoding, post_interp=b''):
         if not sysconfig.is_python_build():
-            if sys.platform == 'darwin' and ('__VENV_LAUNCHER__'
-                                             in os.environ):
-                executable =  os.environ['__VENV_LAUNCHER__']
-            else:
-                executable = sys.executable
+            executable = get_executable()
         elif hasattr(sys, 'base_prefix') and sys.prefix != sys.base_prefix:
             executable = os.path.join(
                 sysconfig.get_path('scripts'),
