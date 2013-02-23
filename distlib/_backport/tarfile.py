@@ -67,7 +67,11 @@ except NameError:
 # from tarfile import *
 __all__ = ["TarFile", "TarInfo", "is_tarfile", "TarError"]
 
-from ..compat import builtins
+if sys.version_info[0] < 3:
+    import __builtin__ as builtins
+else:
+    import builtins
+
 _open = builtins.open   # Since 'open' is TarFile.open
 
 #---------------------------------------------------------
