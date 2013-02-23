@@ -18,6 +18,7 @@ import tempfile
 
 from compat import unittest
 
+from distlib.compat import ZipFile
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
 from distlib.wheel import Wheel, PYVER, IMPVER, ARCH, ABI, compatible_tags
@@ -160,7 +161,17 @@ class WheelTestCase(unittest.TestCase):
             self.assertEqual(expected[key], getattr(wheel, key))
         fn = os.path.join(wheel.dirname, wheel.filename)
         self.assertTrue(os.path.exists(fn))
-        #TODO check wheel contents
+        name, version = wheel.name, wheel.version
+        with ZipFile(fn, 'r') as zf:
+            for key in ('scripts', 'headers', 'data'):
+                arcname = '%s-%s.data/%s/%s_file.txt' % (name, version,
+                                                         key, key)
+                with zf.open(arcname) as bf:
+                    data = bf.read()
+                expected = ('dummy data - %s' % key).encode('utf-8')
+                if key == 'scripts':
+                    expected = b'#!python\n' + expected
+                self.assertTrue(data, expected)
 
     def test_build_tags(self):
         workdir = tempfile.mkdtemp()
@@ -196,6 +207,19 @@ class WheelTestCase(unittest.TestCase):
             'filename': 'dummy-0.1-%s-none-any.whl' % PYVER,
         }
         self.check_built_wheel(wheel, expected)
+        # Make a pure wheel with custom tags
+        pyver = [PYVER[:-1], PYVER]
+        wheel.build(paths, {'pyver': pyver})
+        expected = {
+            'name': name,
+            'version': version,
+            'pyver': pyver,
+            'abi': ['none'],
+            'arch': ['any'],
+            'filename': 'dummy-0.1-%s-none-any.whl' % '.'.join(pyver),
+        }
+        self.check_built_wheel(wheel, expected)
+
         # Make a non-pure wheel with default tags
         paths.pop('purelib')
         paths['platlib'] = platlib
@@ -205,7 +229,6 @@ class WheelTestCase(unittest.TestCase):
         expected['arch'] = [ARCH]
         expected['filename'] = 'dummy-0.1-%s-%s-%s.whl' % (IMPVER, ABI, ARCH)
         self.check_built_wheel(wheel, expected)
-
 
     def do_build_and_install(self, dist):
         srcdir = tempfile.mkdtemp()
