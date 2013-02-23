@@ -32,10 +32,21 @@ from .util import FileOperator, convert_path
 
 logger = logging.getLogger(__name__)
 
-PYVER = sysconfig.get_config_var('py_version_nodot')
-if not PYVER:   # pragma: no cover
-    PYVER = '%s%s' % sys.version_info[:2]
-PYVER = 'py' + PYVER
+
+if hasattr(sys, 'pypy_version_info'):
+    IMP_PREFIX = 'pp'
+elif sys.platform.startswith('java'):
+    IMP_PREFIX = 'jy'
+elif sys.platform == 'cli':
+    IMP_PREFIX = 'ip'
+else:
+    IMP_PREFIX = 'cp'
+
+VER_SUFFIX = sysconfig.get_config_var('py_version_nodot')
+if not VER_SUFFIX:   # pragma: no cover
+    VER_SUFFIX = '%s%s' % sys.version_info[:2]
+PYVER = 'py' + VER_SUFFIX
+IMPVER = IMP_PREFIX + VER_SUFFIX
 
 ARCH = distutils.util.get_platform().replace('-', '_').replace('.', '_')
 
@@ -73,17 +84,8 @@ def compatible_tags():
     """
     Return (pyver, abi, arch) tuples compatible with this Python.
     """
-    if hasattr(sys, 'pypy_version_info'):
-        pyimp = 'pp'
-    elif sys.platform.startswith('java'):
-        pyimp = 'jy'
-    elif sys.platform == 'cli':
-        pyimp = 'ip'
-    else:
-        pyimp = 'cp'
-
-    versions = [PYVER[2:]]
-    major = PYVER[2]
+    versions = [VER_SUFFIX]
+    major = VER_SUFFIX[0]
     for minor in range(sys.version_info[1] - 1, - 1, -1):
         versions.append(''.join([major, str(minor)]))
 
@@ -99,15 +101,15 @@ def compatible_tags():
 
     # Most specific - our Python version, ABI and arch
     for abi in abis:
-        result.append((''.join((pyimp, versions[0])), abi, ARCH))
+        result.append((''.join((IMP_PREFIX, versions[0])), abi, ARCH))
 
-    # where no ABI / arch dependency, but pyimp dependency
+    # where no ABI / arch dependency, but IMP_PREFIX dependency
     for i, version in enumerate(versions):
-        result.append((''.join((pyimp, version)), 'none', 'any'))
+        result.append((''.join((IMP_PREFIX, version)), 'none', 'any'))
         if i == 0:
-            result.append((''.join((pyimp, version[0])), 'none', 'any'))
+            result.append((''.join((IMP_PREFIX, version[0])), 'none', 'any'))
 
-    # no pyimp, ABI or arch dependency
+    # no IMP_PREFIX, ABI or arch dependency
     for i, version in enumerate(versions):
         result.append((''.join(('py', version)), 'none', 'any'))
         if i == 0:
@@ -221,20 +223,25 @@ class Wheel(object):
             p = to_posix(os.path.relpath(record_path, base))
             writer.writerow((p, '', ''))
 
-    def build(self, paths):
+    def build(self, paths, tags=None):
         """
         Build a wheel from files in specified paths.
         """
         libkey = list(filter(lambda o: o in paths, ('purelib',
                                                     'platlib')))[0]
+        if tags is None:
+            tags = {}
+
         if libkey == 'platlib':
             is_pure = 'false'
-            self.abi = [ABI]
-            self.arch = [ARCH]
+            self.pyver = tags.get('pyver', [IMPVER])
+            self.abi = tags.get('abi', [ABI])
+            self.arch = tags.get('arch', [ARCH])
         else:
             is_pure = 'true'
-            self.abi = ['none']
-            self.arch = ['any']
+            self.pyver = tags.get('pyver', [PYVER])
+            self.abi = tags.get('abi', ['none'])
+            self.arch = tags.get('arch', ['any'])
 
         libdir = paths[libkey]
 
