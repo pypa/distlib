@@ -225,23 +225,27 @@ class Wheel(object):
 
     def build(self, paths, tags=None):
         """
-        Build a wheel from files in specified paths.
+        Build a wheel from files in specified paths, and use any specified tags
+        when determining the name of the wheel.
         """
-        libkey = list(filter(lambda o: o in paths, ('purelib',
-                                                    'platlib')))[0]
         if tags is None:
             tags = {}
 
+        libkey = list(filter(lambda o: o in paths, ('purelib', 'platlib')))[0]
         if libkey == 'platlib':
             is_pure = 'false'
-            self.pyver = tags.get('pyver', [IMPVER])
-            self.abi = tags.get('abi', [ABI])
-            self.arch = tags.get('arch', [ARCH])
+            default_pyver = [IMPVER]
+            default_abi = [ABI]
+            default_arch = [ARCH]
         else:
             is_pure = 'true'
-            self.pyver = tags.get('pyver', [PYVER])
-            self.abi = tags.get('abi', ['none'])
-            self.arch = tags.get('arch', ['any'])
+            default_pyver = [PYVER]
+            default_abi = ['none']
+            default_arch = ['any']
+
+        self.pyver = tags.get('pyver', default_pyver)
+        self.abi = tags.get('abi', default_abi)
+        self.arch = tags.get('arch', default_arch)
 
         libdir = paths[libkey]
 

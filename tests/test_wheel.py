@@ -18,9 +18,9 @@ import tempfile
 
 from compat import unittest
 
-from distlib.database import DistributionPath
+from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
-from distlib.wheel import Wheel, PYVER, ARCH, compatible_tags
+from distlib.wheel import Wheel, PYVER, IMPVER, ARCH, ABI, compatible_tags
 
 try:
     with open(os.devnull, 'wb') as junk:
@@ -154,6 +154,58 @@ class WheelTestCase(unittest.TestCase):
         self.assertIn((PYVER[:-1], 'none', 'any'), tags)
         this_arch = filter(lambda o: o[-1] == ARCH, tags)
         self.assertTrue(this_arch)
+
+    def check_built_wheel(self, wheel, expected):
+        for key in expected:
+            self.assertEqual(expected[key], getattr(wheel, key))
+        fn = os.path.join(wheel.dirname, wheel.filename)
+        self.assertTrue(os.path.exists(fn))
+        #TODO check wheel contents
+
+    def test_build_tags(self):
+        workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workdir)
+        name = 'dummy'
+        version = '0.1'
+        paths = {'prefix': workdir}
+        for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
+            paths[key] = p = os.path.join(workdir, key)
+            os.makedirs(p)
+            fn = os.path.join(p, '%s_file.txt' % key)
+            with open(fn, 'w') as f:
+                f.write('dummy data - %s' % key)
+            if key in ('purelib', 'platlib'):
+                p = os.path.join(p, '%s-%s.dist-info' % (name, version))
+                os.makedirs(p)
+                fn = os.path.join(p, 'RECORD')
+
+        purelib = paths.pop('purelib')
+        platlib = paths.pop('platlib')
+
+        # Make a pure wheel with default tags
+        paths['purelib'] = purelib
+        wheel = Wheel('%s-%s' % (name, version))
+        wheel.dirname = workdir
+        wheel.build(paths)
+        expected = {
+            'name': name,
+            'version': version,
+            'pyver': [PYVER],
+            'abi': ['none'],
+            'arch': ['any'],
+            'filename': 'dummy-0.1-%s-none-any.whl' % PYVER,
+        }
+        self.check_built_wheel(wheel, expected)
+        # Make a non-pure wheel with default tags
+        paths.pop('purelib')
+        paths['platlib'] = platlib
+        wheel.build(paths)
+        expected['pyver'] = [IMPVER]
+        expected['abi'] = [ABI]
+        expected['arch'] = [ARCH]
+        expected['filename'] = 'dummy-0.1-%s-%s-%s.whl' % (IMPVER, ABI, ARCH)
+        self.check_built_wheel(wheel, expected)
+
 
     def do_build_and_install(self, dist):
         srcdir = tempfile.mkdtemp()
