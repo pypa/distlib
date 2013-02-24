@@ -40,6 +40,10 @@ in the top-level directory of the package. You can of course also run
 to install the package (perhaps invoking with ``sudo`` if you need
 to install to a protected location).
 
+Continuous integration test results are available at:
+
+https://travis-ci.org/vsajip/distlib
+
 Coverage results are available at:
 
 http://www.red-dove.com/distlib/coverage/

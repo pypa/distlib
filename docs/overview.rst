@@ -138,6 +138,10 @@ Coverage results are available at:
 
 http://www.red-dove.com/distlib/coverage/
 
+Continuous integration test results are available at:
+
+https://travis-ci.org/vsajip/distlib
+
 The source repository for the project is on BitBucket:
 
 https://bitbucket.org/vinay.sajip/distlib/
