@@ -166,12 +166,18 @@ class ZipResourceFinder(ResourceFinder):
     """
     def __init__(self, module):
         super(ZipResourceFinder, self).__init__(module)
-        self.prefix_len = 1 + len(self.loader.archive)
-        self.index = sorted(self.loader._files)
+        archive = self.loader.archive
+        self.prefix_len = 1 + len(archive)
+        # PyPy doesn't have a _files attr on zipimporter, and you can't set one
+        if hasattr(self.loader, '_files'):
+            self._files = self.loader._files
+        else:
+            self._files = zipimport._zip_directory_cache[archive]
+        self.index = sorted(self._files)
 
     def _find(self, path):
         path = path[self.prefix_len:]
-        if path in self.loader._files:
+        if path in self._files:
             result = True
         else:
             if path[-1] != os.sep:
@@ -200,7 +206,7 @@ class ZipResourceFinder(ResourceFinder):
 
     def get_size(self, resource):
         path = resource.path[self.prefix_len:]
-        return self.loader._files[path][3]
+        return self._files[path][3]
 
     def get_resources(self, resource):
         path = resource.path[self.prefix_len:]
