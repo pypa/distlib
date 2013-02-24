@@ -21,7 +21,8 @@ def main():
         verbosity = 2
     loader = unittest.TestLoader()
     runner = unittest.TextTestRunner(verbosity=verbosity)
-    runner.run(loader.loadTestsFromModule(distlib_tests))
+    results = runner.run(loader.loadTestsFromModule(distlib_tests))
+    return not results.wasSuccessful()
 
 if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath(__file__))
@@ -33,4 +34,4 @@ if __name__ == '__main__':
     fn = os.path.join(rundir, 'test_all_%d.%d.log' % sys.version_info[:2])
     logging.basicConfig(level=logging.DEBUG, filename=fn, filemode='w',
                         format='%(levelname)-8s %(name)-20s %(message)s')
-    main()
+    sys.exit(main())

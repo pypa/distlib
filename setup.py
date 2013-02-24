@@ -9,6 +9,7 @@ import distutils.core
 from distutils.sysconfig import get_python_lib
 from os.path import join, dirname, abspath
 import re
+import sys
 
 import distlib
 
@@ -22,7 +23,7 @@ class TestCommand(distutils.core.Command):
 
         sys.path.append(join(dirname(__file__), 'tests'))
         import test_all
-        test_all.main()
+        sys.exit(test_all.main())
 
     def initialize_options(self):
         pass
