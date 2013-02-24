@@ -85,19 +85,24 @@ def parse_requirement(s):
     m = REQUIREMENT_RE.match(s)
     if m:
         d = m.groupdict()
+        name = d['dn']
         cons = d['c1'] or d['c2']
         if not cons:
             cons = None
+            constr = ''
+            rs = d['dn']
         else:
             if cons[0] not in '<>!=':
                 cons = '==' + cons
             iterator = RELOP_IDENT_RE.finditer(cons)
             cons = [get_constraint(m) for m in iterator]
+            rs = '%s (%s)' % (name, ', '.join(['%s %s' % con for con in cons]))
         if not d['ex']:
             extras = None
         else:
             extras = COMMA_RE.split(d['ex'])
-        result = Container(name=d['dn'], constraints=cons, extras=extras)
+        result = Container(name=name, constraints=cons, extras=extras,
+                           requirement=rs, source=s)
     return result
 
 

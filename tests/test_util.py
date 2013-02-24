@@ -718,17 +718,20 @@ class GlobTestCase(GlobTestCaseBase):
             self.assertEqual(r.name, values[0])
             self.assertEqual(r.constraints, values[1])
             self.assertEqual(r.extras, values[2])
+            self.assertEqual(r.requirement, values[3])
 
         r = parse_requirement('a')
-        validate(r, ('a', None, None))
+        validate(r, ('a', None, None, 'a'))
         r = parse_requirement('a 1.2')
-        validate(r, ('a', [('==', '1.2')], None))
+        validate(r, ('a', [('==', '1.2')], None, 'a (== 1.2)'))
         r = parse_requirement('a >= 1.2, <2.0,!=1.7')
-        validate(r, ('a', [('>=', '1.2'), ('<', '2.0'), ('!=', '1.7')], None))
+        validate(r, ('a', [('>=', '1.2'), ('<', '2.0'), ('!=', '1.7')], None,
+                     'a (>= 1.2, < 2.0, != 1.7)'))
         r = parse_requirement('a [ab,cd , ef] >= 1.2, <2.0')
-        validate(r, ('a', [('>=', '1.2'), ('<', '2.0')], ['ab', 'cd', 'ef']))
+        validate(r, ('a', [('>=', '1.2'), ('<', '2.0')], ['ab', 'cd', 'ef'],
+                     'a (>= 1.2, < 2.0)'))
         r = parse_requirement('a[]')
-        validate(r, ('a', None, None))
+        validate(r, ('a', None, None, 'a'))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
