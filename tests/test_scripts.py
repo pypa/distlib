@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012 The Python Software Foundation.
+# Copyright (C) 2012-2013 Vinay Sajip.
+# Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 import os
@@ -12,7 +13,7 @@ import tempfile
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.compat import fsencode
+from distlib.compat import fsencode, sysconfig
 from distlib.scripts import ScriptMaker
 from distlib.util import get_executable
 
@@ -28,6 +29,8 @@ class ScriptTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.maker.target_dir)
 
+    @unittest.skipIf(sysconfig.is_python_build(), 'Test not appropriate for '
+                     'Python source builds')
     def test_shebangs(self):
         executable = fsencode(get_executable())
         for fn in ('foo.py', 'script1.py', 'script2.py', 'script3.py',

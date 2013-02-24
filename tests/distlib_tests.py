@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012 The Python Software Foundation.
+# Copyright (C) 2012-2013 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 import sys
@@ -27,7 +27,3 @@ if _ver == (2, 6):
     from test_sysconfig import TestSysConfig, MakefileTests
 from test_util import (UtilTestCase, ProgressTestCase, FileOpsTestCase,
                        GlobTestCase)
-from test_pypi_dist import TestDistInfo, TestReleaseInfo, TestReleasesList
-from test_pypi_server import PyPIServerTest
-from test_pypi_simple import SimpleCrawlerTestCase
-from test_pypi_xmlrpc import TestXMLRPCClient

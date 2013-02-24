@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2012-2013 Vinay Sajip.
+# Licensed to the Python Software Foundation under a contributor agreement.
+# See LICENSE.txt and CONTRIBUTORS.txt.
+#
 from itertools import islice
 import os
 import shutil

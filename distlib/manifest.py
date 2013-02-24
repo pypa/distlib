@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2012-2013 Python Software Foundation.
+# See LICENSE.txt and CONTRIBUTORS.txt.
+#
 """
 Class representing the list of files in a distribution.
 

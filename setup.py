@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012 The Python Software Foundation.
+# Copyright (C) 2013 Vinay Sajip.
+# Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 
@@ -35,8 +36,12 @@ distutils.core.setup(
     author='Vinay Sajip',
     author_email='vinay_sajip@red-dove.com',
     url='https://bitbucket.org/vinay.sajip/distlib',
+    download_url=('https://bitbucket.org/vinay.sajip/distlib/downloads/'
+                  'distlib-0.1.zip'),
     description='Distribution utilities',
-    long_description = 'Low-level components of distutils2/packaging',
+    long_description = ('Low-level components of distutils2/packaging, '
+                        'augmented with higher-level APIs for making '
+                        'packaging easier.'),
     license='BSD',
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -45,12 +50,17 @@ distutils.core.setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
         'Topic :: Software Development',
     ],
     platforms='any',
     packages=[
         'distlib',
-        'distlib.pypi',
         'distlib._backport',
     ],
     cmdclass={

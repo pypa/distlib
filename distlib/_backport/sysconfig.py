@@ -71,6 +71,7 @@ def _ensure_cfg_read():
         from distlib.resources import finder
         _finder = finder('distlib._backport')
         _cfgfile = _finder.find('sysconfig.cfg')
+        assert _cfgfile, 'sysconfig.cfg exists'
         with _cfgfile.as_stream() as s:
             _SCHEMES.readfp(s)
         if _PYTHON_BUILD:
