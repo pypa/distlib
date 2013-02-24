@@ -306,6 +306,7 @@ class TestSysConfig(unittest.TestCase):
         _main()
         self.assertGreater(len(sys.stdout.getvalue().split('\n')), 0)
 
+    @unittest.skipIf(sys.version_info[:2] == (2, 6), 'not reliable on 2.6')
     @unittest.skipIf(sys.platform == 'win32', 'does not apply to Windows')
     def test_ldshared_value(self):
         ldflags = sysconfig.get_config_var('LDFLAGS')

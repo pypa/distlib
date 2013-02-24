@@ -4,4 +4,5 @@ python:
     - "2.7"
     - "3.2"
     - "3.3"
-script: "python setup.py test"
+    - "pypy"
+script: "PYTHONHASHSEED=0 python setup.py test"
