@@ -266,6 +266,8 @@ class WheelTestCase(unittest.TestCase):
     def test_build_and_install_pure(self):
         self.do_build_and_install('sarge == 0.1')
 
+    @unittest.skipIf(hasattr(sys, 'pypy_version_info'), 'The test distribution'
+                                               ' does not build on PyPy')
     @unittest.skipIf(sys.platform != 'linux2', 'The test distribution only '
                                                'builds on Linux')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
