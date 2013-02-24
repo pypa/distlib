@@ -25,6 +25,7 @@ from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
                    split_filename, get_project_data, parse_requirement)
 from .version import get_scheme, UnsupportedVersionError
+from .wheel import Wheel, is_compatible, PYVER
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +72,7 @@ class Locator(object):
     binary_extensions = ('.egg', '.exe', '.whl')
     excluded_extensions = ('.pdf',)
 
-    # Leave out binaries from downloadables, for now.
-    downloadable_extensions = source_extensions
+    downloadable_extensions = source_extensions + ('.whl',)
 
     def __init__(self, scheme='default'):
         self._cache = {}
@@ -180,7 +180,29 @@ class Locator(object):
         origpath = path
         if path and path[-1] == '/':
             path = path[:-1]
-        if path.endswith(self.downloadable_extensions):
+        if path.endswith('.whl'):
+            try:
+                wheel = Wheel(path)
+                if is_compatible(wheel):
+                    if project_name is None:
+                        include = True
+                    else:
+                        include = same_project(wheel.name, project_name)
+                    if include:
+                        result = {
+                            'name': wheel.name,
+                            'version': wheel.version,
+                            'filename': wheel.filename,
+                            'url': urlunparse((scheme, netloc, origpath,
+                                               params, query, '')),
+                        }
+                        result['python-version'] = PYVER
+                        m = MD5_HASH.match(frag)
+                        if m:
+                            result['md5_digest'] = m.group(1)
+            except Exception as e:
+                logger.warning('invalid path for wheel: %s', path)
+        elif path.endswith(self.downloadable_extensions):
             path = filename = posixpath.basename(path)
             for ext in self.downloadable_extensions:
                 if path.endswith(ext):

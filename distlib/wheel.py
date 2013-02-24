@@ -469,3 +469,17 @@ class Wheel(object):
                 raise
             finally:
                 shutil.rmtree(workdir)
+
+COMPATIBLE_TAGS = compatible_tags()
+
+def is_compatible(wheel, tags=None):
+    if not isinstance(wheel, Wheel):
+        wheel = Wheel(wheel)    # assume it's a filename
+    result = False
+    if tags is None:
+        tags = COMPATIBLE_TAGS
+    for ver, abi, arch in tags:
+        if ver in wheel.pyver and abi in wheel.abi and arch in wheel.arch:
+            result = True
+            break
+    return result

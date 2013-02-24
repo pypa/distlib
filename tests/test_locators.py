@@ -103,6 +103,8 @@ class LocatorTestCase(unittest.TestCase):
             self.assertEqual(get_path(dist.download_url), expected)
         names = locator.get_distribution_names()
         expected = set(['Flask', 'python-gnupg', 'coverage', 'Django'])
+        if sys.version_info[:2] == (2, 7):
+            expected.add('config')
         self.assertEqual(names, expected)
 
     def test_path(self):
@@ -225,3 +227,6 @@ class LocatorTestCase(unittest.TestCase):
         self.assertIsNotNone(dist)
         self.assertTrue(dist.matches_requirement(r))
         self.assertEqual(dist.extras, ['doc', 'test'])
+
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()
