@@ -1044,12 +1044,6 @@ Building wheels is straightforward::
     wheel.name = 'name_of_distribution'
     wheel.version = '0.1'
 
-    # Set the tags you need, if the defaults don't fit your needs.
-    # The filename will be computed automatically.
-    wheel.pyver = ['py32']
-    wheel.abi = ['none']
-    wheel.arch = ['linux_x86_64']
-
     # Indicate where the files to go in the wheel are to be found
     paths = {
         'prefix': '/path/to/installation/prefix',
@@ -1068,6 +1062,36 @@ If the ``'data'``, ``'headers'`` and ``'scripts'`` keys are absent, or point to
 paths which don't exist, nothing will be added to the wheel for these
 categories. The ``'prefix'`` key and one of ``'purelib'`` or ``'platlib'``
 *must* be provided, and the paths referenced should exist.
+
+
+Customising tags during build
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, the :meth:`build` method will use default tags depending on whether
+or not the build is a pure-Python build:
+
+* For a pure-Python build, the ``pyver`` will be set to ``pyXY`` where ``XY``
+  is the version of the building Python. The ``abi`` tag will be ``none`` and
+  the ``arch`` tag will be ``any``.
+
+* For a build which is not pure-Python (i.e. contains C code), the ``pyver``
+  will be set to e.g. ``cpXY``, and the ``abi`` and ``arch`` tags will be
+  set according to the building Python.
+
+If you want to override these default tags, you can pass a ``tags`` parameter
+to the :meth:`build` method which has the tags you want to declare. For
+example, for a pure build where we know that the code in the wheel will be
+compatible with the major version of the building Python::
+
+    from wheel import PYVER
+    tags = {
+        'pyver': [PYVER[:-1], PYVER],
+    }
+    wheel.build(paths, tags)
+
+This would set the ``pyver`` tags to be ``pyX.pyXY`` where ``X`` and ``Y``
+relate to the building Python. You can similarly pass values using the ``abi``
+and ``arch`` keys in the ``tags`` dictionary.
 
 
 Installing from wheels
@@ -1095,6 +1119,11 @@ where you want the files in the wheel to be installed::
     # argument which goes through the installation procedure
     # but doesn't actually install anything.
     wheel.install(paths)
+
+Only one of the ``purelib`` or ``platlib`` paths will actually be written to
+(assuming that they are different, which isn't often the case). Which one it is
+depends on whether the wheel metadata declares that the wheel contains pure
+Python code.
 
 
 Using vanilla pip to build wheels for existing distributions on PyPI
@@ -1432,7 +1461,7 @@ the directory tree::
 
     >>> manifest.process_directive('global-include *.txt')
 
-This will add ``subdir/somedata.txt`` and ``subdir/lose/lose.txt' from the
+This will add ``subdir/somedata.txt`` and ``subdir/lose/lose.txt`` from the
 manifest.
 
 
@@ -1444,7 +1473,7 @@ of the directory tree::
 
     >>> manifest.process_directive('global-exclude l*.txt')
 
-This will remove ``subdir/lose/lose.txt' from the manifest.
+This will remove ``subdir/lose/lose.txt`` from the manifest.
 
 
 The ``recursive-include`` directive
@@ -1456,7 +1485,7 @@ under the specified directory::
 
     >>> manifest.process_directive('recursive-include subdir l*.txt')
 
-This will add ``subdir/lose/lose.txt' back to the manifest.
+This will add ``subdir/lose/lose.txt`` back to the manifest.
 
 The ``recursive-exclude`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1466,7 +1495,7 @@ specified directory if they were already added by a previous directive::
 
     >>> manifest.process_directive('recursive-exclude subdir lose*')
 
-This will remove ``subdir/lose/lose.txt' from the manifest again.
+This will remove ``subdir/lose/lose.txt`` from the manifest again.
 
 
 The ``graft`` directive

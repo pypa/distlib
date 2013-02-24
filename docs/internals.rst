@@ -901,6 +901,79 @@ concept of "final" versions, which is not in the PEP but which was in the
 value (there's no way to determine the "final" status of versions for many of
 the project releases registered on PyPI).
 
+
+The ``wheel`` API
+-----------------
+
+This section describes the design of the ``wheel`` API which failitates
+building and installing from *wheels*, the new binary distribution format for
+Python described in :pep:`427`.
+
+The problem we're trying to solve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are basically two operations which need to be performed on wheels:
+
+* Building a wheel from a source distribution.
+* Installing a distribution which has been packaged as a wheel.
+
+A minimal solution
+^^^^^^^^^^^^^^^^^^
+
+Since we're talking about wheels, it seems likely that a :class:`Wheel` class
+would be part of the design. This allows for extensibility over a purely
+function-based API. The :class:`Wheel` would be expected to have methods that
+support the required operations::
+
+    class Wheel(object):
+        def __init__(self, spec):
+            """
+            Initialise an instance from a specification. This can either be a
+            valid filename for a wheel (for when you want to work with an
+            existing wheel), or just the ``name-version-buildver`` portion of
+            a wheel's filename (for when you're going to build a wheel for a
+            known version and build of a named project).
+            """
+
+        def build(self, paths, tags=None):
+            """
+            Build a wheel. The ``name`, ``version`` and ``buildver`` should
+            already have been set correctly. The ``paths`` should be a
+            dictionary with keys 'prefix', 'scripts', 'headers', 'data' and one
+            of 'purelib' and 'platlib'. These must point to valid paths if
+            they are to be included in the wheel. The optional ``tags``
+            argument should, if specified, be a dictionary with optional keys
+            'pyver', 'abi' and 'arch' indicating lists of tags which
+            indicate environments with which the wheel is compatible.
+            """
+
+        def install(self, paths):
+            """
+            Install from a wheel. The ``paths`` should be a dictionary with
+            keys 'prefix', 'scripts', 'headers', 'data', 'purelib' and
+            'platlib'. These must point to valid paths to which files may
+            be written if they are in the wheel. Only one of the 'purelib'
+            and 'platlib' paths will be used (in the case where they are
+            different), depending on whether the wheel is for a pure-
+            Python distribution.
+            """
+
+In addition to the above, the following attributes can be identified for a
+:class:`Wheel` instance:
+
+* ``name`` -- the name of the distribution
+* ``version`` -- the version of the distribution
+* ``buildver`` -- the build tag for the distribution
+* ``pyver`` -- a list of Python versions with which the wheel is compatible
+* ``abi`` -- a list oa application binary interfaces (ABIs) with which the
+  wheel is compatible
+* ``arch`` -- a list of architectures with which the wheel is compatible
+* ``dirname`` -- The directory in which a wheel file is found/to be
+  created
+* ``filename`` -- The filename of the wheel (computed from the other
+  attributes)
+
+
 Next steps
 ----------
 
