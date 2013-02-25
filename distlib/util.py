@@ -5,6 +5,7 @@
 import codecs
 from collections import deque
 import contextlib
+import csv
 from glob import iglob as std_iglob
 import io
 import json
@@ -1260,3 +1261,63 @@ class ServerProxy(xmlrpclib.ServerProxy):
             kwargs['transport'] = t = tcls(timeout, use_datetime=use_datetime)
             self.transport = t
         xmlrpclib.ServerProxy.__init__(self, uri, **kwargs)
+
+#
+# CSV functionality. This is provided because on 2.x, the csv module can't
+# handle Unicode. However, we need to deal with Unicode in e.g. RECORD files.
+#
+
+def _csv_open(fn, mode, **kwargs):
+    if sys.version_info[0] < 3:
+        mode += 'b'
+    else:
+        kwargs['newline'] = ''
+    return open(fn, mode, **kwargs)
+
+
+class CSVBase(object):
+    defaults = {
+        'delimiter': str(','),      # The strs are used because we need native
+        'quotechar': str('"'),      # str in the csv API (2.x won't take
+        'lineterminator': str('\n') # Unicode)
+    }
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        self.stream.close()
+
+
+class CSVReader(CSVBase):
+    def __init__(self, fn, **kwargs):
+        self.stream = _csv_open(fn, 'r')
+        self.reader = csv.reader(self.stream, **self.defaults)
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        result = next(self.reader)
+        if sys.version_info[0] < 3:
+            for i, item in enumerate(result):
+                if not isinstance(item, text_type):
+                    result[i] = item.decode('utf-8')
+        return result
+
+    __next__ = next
+
+class CSVWriter(CSVBase):
+    def __init__(self, fn, **kwargs):
+        self.stream = _csv_open(fn, 'w')
+        self.writer = csv.writer(self.stream, **self.defaults)
+
+    def writerow(self, row):
+        if sys.version_info[0] < 3:
+            r = []
+            for item in row:
+                if isinstance(item, text_type):
+                    item = item.encode('utf-8')
+                r.append(item)
+            row = r
+        self.writer.writerow(row)
