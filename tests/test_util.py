@@ -406,8 +406,8 @@ class ProgressTestCase(unittest.TestCase):
             speed1 = _speed_range(20, 20)
             speed2 = _speed_range(22, 22)
         else:
-            speed1 = _speed_range(19, 19)
-            speed2 = _speed_range(22, 22)
+            speed1 = _speed_range(18, 19)
+            speed2 = _speed_range(21, 22)
         expected = (
             (' 10 %', 'ETA : 00:00:04', speed1),
             (' 20 %', 'ETA : 00:00:04', speed1),
