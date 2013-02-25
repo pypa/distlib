@@ -25,7 +25,7 @@ from .util import (cached_property, parse_credentials, ensure_slash,
                    split_filename, get_project_data, parse_requirement,
                    ServerProxy)
 from .version import get_scheme, UnsupportedVersionError
-from .wheel import Wheel, is_compatible, PYVER
+from .wheel import Wheel, is_compatible
 
 logger = logging.getLogger(__name__)
 
@@ -201,8 +201,9 @@ class Locator(object):
                             'filename': wheel.filename,
                             'url': urlunparse((scheme, netloc, origpath,
                                                params, query, '')),
+                            'python-version': ', '.join(
+                                ['.'.join(list(v[2:])) for v in wheel.pyver]),
                         }
-                        result['python-version'] = PYVER
                         m = MD5_HASH.match(frag)
                         if m:
                             result['md5_digest'] = m.group(1)
