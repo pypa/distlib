@@ -107,6 +107,22 @@ class LocatorTestCase(unittest.TestCase):
             expected.add('config')
         self.assertEqual(names, expected)
 
+    def test_dir_nonrecursive(self):
+        d = os.path.join(HERE, 'fake_archives')
+        locator = DirectoryLocator(d, recursive=False)
+        expected = os.path.join(HERE, 'fake_archives', 'subdir',
+                                'subsubdir', 'Flask-0.9.tar.gz')
+        def get_path(url):
+            t = urlparse(url)
+            return url2pathname(t.path)
+
+        for name in ('flask', 'Flask'):
+            result = locator.get_project(name)
+            self.assertEqual(result, {})
+        names = locator.get_distribution_names()
+        expected = set(['coverage'])
+        self.assertEqual(names, expected)
+
     def test_path(self):
         fakes = os.path.join(HERE, 'fake_dists')
         sys.path.insert(0, fakes)

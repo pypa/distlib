@@ -648,6 +648,7 @@ class SimpleScrapingLocator(Locator):
 
 class DirectoryLocator(Locator):
     def __init__(self, path, **kwargs):
+        self.recursive = kwargs.pop('recursive', True)
         super(DirectoryLocator, self).__init__(**kwargs)
         path = os.path.abspath(path)
         if not os.path.isdir(path):
@@ -674,6 +675,8 @@ class DirectoryLocator(Locator):
                     info = self.convert_url_to_download_info(url, name)
                     if info:
                         self._update_version_data(result, info)
+            if not self.recursive:
+                break
         return result
 
     def get_distribution_names(self):
@@ -691,6 +694,8 @@ class DirectoryLocator(Locator):
                     info = self.convert_url_to_download_info(url, None)
                     if info:
                         result.add(info['name'])
+            if not self.recursive:
+                break
         return result
 
 class JSONLocator(Locator):

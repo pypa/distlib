@@ -336,7 +336,9 @@ The following locators are provided:
 * :class:`DirectoryLocator` -- this is instantiated with a base directory and
   will look for archives in the file system tree under that directory. Name
   and version information is inferred from the filenames of archives, and the
-  amount of information returned about the download is minimal.
+  amount of information returned about the download is minimal. The locator
+  searches all subdirectories by default, but can be set to only look in the
+  specified directory by setting the ``recursive`` argument to ``False``.
 
 * :class:`PyPIRPCLocator`. -- This takes a base URL for the RPC service and
   will locate packages using PyPI's XML-RPC API. This locator is a little slow
