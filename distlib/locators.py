@@ -15,15 +15,15 @@ import re
 import threading
 import zlib
 
-from .compat import (xmlrpclib, urljoin, urlparse, urlunparse,
-                     url2pathname, pathname2url, queue, quote,
-                     unescape, string_types, build_opener,
+from .compat import (urljoin, urlparse, urlunparse, url2pathname, pathname2url,
+                     queue, quote, unescape, string_types, build_opener,
                      HTTPRedirectHandler as BaseRedirectHandler,
                      Request, HTTPError, URLError)
 from .database import Distribution, DistributionPath
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
-                   split_filename, get_project_data, parse_requirement)
+                   split_filename, get_project_data, parse_requirement,
+                   ServerProxy)
 from .version import get_scheme, UnsupportedVersionError
 from .wheel import Wheel, is_compatible, PYVER
 
@@ -36,7 +36,7 @@ HTML_CONTENT_TYPE = re.compile('text/html|application/x(ht)?ml')
 def get_all_distribution_names(url=None):
     if url is None:
         url = 'http://python.org/pypi'
-    client = xmlrpclib.ServerProxy(url)
+    client = ServerProxy(url, timeout=3.0)
     return client.list_packages()
 
 class RedirectHandler(BaseRedirectHandler):
@@ -71,6 +71,12 @@ class Locator(object):
     source_extensions = ('.tar.gz', '.tar.bz2', '.tar', '.zip', '.tgz', '.tbz')
     binary_extensions = ('.egg', '.exe', '.whl')
     excluded_extensions = ('.pdf',)
+
+    # A list of tags indicating which wheels you want to match. The default
+    # value of None matches against the tags compatible with the running
+    # Python. If you want to match other values, set wheel_tags on a locator
+    # instance to a list of tuples (pyver, abi, arch) which you want to match.
+    wheel_tags = None
 
     downloadable_extensions = source_extensions + ('.whl',)
 
@@ -183,7 +189,7 @@ class Locator(object):
         if path.endswith('.whl'):
             try:
                 wheel = Wheel(path)
-                if is_compatible(wheel):
+                if is_compatible(wheel, self.wheel_tags):
                     if project_name is None:
                         include = True
                     else:
@@ -298,7 +304,7 @@ class PyPIRPCLocator(Locator):
     def __init__(self, url, **kwargs):
         super(PyPIRPCLocator, self).__init__(**kwargs)
         self.base_url = url
-        self.client = xmlrpclib.ServerProxy(url)
+        self.client = ServerProxy(url, timeout=3.0)
 
     def get_distribution_names(self):
         """
