@@ -20,7 +20,7 @@ if sys.version_info[0] < 3:
     from ._backport import shutil
     from urlparse import urlparse, urlunparse, urljoin, urlsplit, urlunsplit
     from urllib import (urlretrieve, quote as _quote, unquote, url2pathname,
-                        pathname2url, ContentTooShortError)
+                        pathname2url, ContentTooShortError, splittype)
 
     def quote(s):
         if isinstance(s, unicode):
@@ -120,7 +120,7 @@ else:
     import configparser
     import shutil
     from urllib.parse import (urlparse, urlunparse, urljoin, splituser, quote,
-                              unquote, urlsplit, urlunsplit)
+                              unquote, urlsplit, urlunsplit, splittype)
     from urllib.request import (urlopen, urlretrieve, Request, url2pathname,
                                 pathname2url,
                                 HTTPBasicAuthHandler, HTTPPasswordMgr,
