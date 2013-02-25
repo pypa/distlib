@@ -6,7 +6,6 @@
 
 import base64
 import os
-import csv
 import hashlib
 import logging
 import random
@@ -26,7 +25,7 @@ from distlib.database import (InstalledDistribution, EggInfoDistribution,
                               BaseInstalledDistribution,
                               DistributionPath, make_graph,
                               get_required_dists, get_dependent_dists)
-from distlib.util import get_resources_dests, ExportEntry
+from distlib.util import get_resources_dests, ExportEntry, CSVReader
 
 from test_util import GlobTestCaseBase
 from support import LoggingCatcher, requires_zlib
@@ -183,8 +182,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
             prefix = os.path.dirname(dist_location)
             dist.write_installed_files(get_files(dist_location), prefix)
 
-            with open(record_file) as fp:
-                record_reader = csv.reader(fp, lineterminator='\n')
+            with CSVReader(record_file) as record_reader:
                 record_data = {}
                 for row in record_reader:
                     if row == []:
@@ -218,7 +216,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         self.assertFalse(dist.uses(false_path), 'dist %r is not supposed to '
                          'use %r' % (dist, true_path))
 
-    def test_open_distinfo_file(self):
+    def test_get_distinfo_file(self):
         # Test the retrieval of dist-info file objects.
         distinfo_name = 'choxie-2.0.0.9'
         other_distinfo_name = 'grammar-1.0a4'
@@ -235,20 +233,16 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         ]
 
         for distfile in distinfo_files:
-            value = dist.open_distinfo_file(distfile)
-            try:
-                self.assertIsInstance(value, file_type)
-                # Is it the correct file?
-                self.assertEqual(value.name,
-                                 os.path.join(distinfo_dir, distfile))
-            finally:
-                value.close()
+            value = dist.get_distinfo_file(distfile)
+            self.assertTrue(os.path.isfile(value))
+            self.assertEqual(value,
+                             os.path.join(distinfo_dir, distfile))
 
         # Test an absolute path that is part of another distributions dist-info
         other_distinfo_file = os.path.join(
             self.fake_dists_path, other_distinfo_name + '.dist-info',
             'REQUESTED')
-        self.assertRaises(DistlibException, dist.open_distinfo_file,
+        self.assertRaises(DistlibException, dist.get_distinfo_file,
                           other_distinfo_file)
         # Test for a file that should not exist
         self.assertRaises(DistlibException, dist.get_distinfo_file,

@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 
 import base64
 import codecs
-import csv
 import hashlib
 import logging
 import os
@@ -20,7 +19,8 @@ from . import DistlibException
 from .compat import StringIO, configparser
 from .version import get_scheme, UnsupportedVersionError
 from .metadata import Metadata
-from .util import parse_requires, cached_property, get_export_entry
+from .util import (parse_requires, cached_property, get_export_entry,
+                   CSVReader, CSVWriter)
 
 
 __all__ = ['Distribution', 'BaseInstalledDistribution',
@@ -491,11 +491,8 @@ class InstalledDistribution(BaseInstalledDistribution):
 
     def _get_records(self):
         results = []
-        record = self.open_distinfo_file('RECORD', preserve_newline=True)
-        try:
-            record_reader = csv.reader(record, delimiter=str(','),
-                                       lineterminator=str('\n'))
-
+        path = self.get_distinfo_file('RECORD')
+        with CSVReader(path) as record_reader:
             # Base location is parent dir of .dist-info dir
             #base_location = os.path.dirname(self.path)
             #base_location = os.path.abspath(base_location)
@@ -506,8 +503,6 @@ class InstalledDistribution(BaseInstalledDistribution):
                 #    path = path.replace('/', os.sep)
                 #    path = os.path.join(base_location, path)
                 results.append((path, checksum, size))
-        finally:
-            record.close()
         return results
 
     @cached_property
@@ -552,19 +547,13 @@ class InstalledDistribution(BaseInstalledDistribution):
             cp.write(f)
 
     def get_resource_path(self, relative_path):
-        resources_file = self.open_distinfo_file('RESOURCES',
-                preserve_newline=True)
-        try:
-            resources_reader = csv.reader(resources_file, delimiter=str(','),
-                                          lineterminator=str('\n'))
+        path = self.get_distinfo_file('RESOURCES')
+        with CSVReader(path) as resources_reader:
             for relative, destination in resources_reader:
                 if relative == relative_path:
                     return destination
-        finally:
-            resources_file.close()
-        raise KeyError(
-            'no resource file with relative path %r is installed' %
-            relative_path)
+        raise KeyError('no resource file with relative path %r '
+                       'is installed' % relative_path)
 
     def list_installed_files(self):
         """
@@ -591,10 +580,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         logger.info('creating %s', record_path)
         if dry_run:
             return
-        with open(record_path, 'w') as f:
-            writer = csv.writer(f, delimiter=str(','),
-                                lineterminator=str('\n'),
-                                quotechar=str('"'))
+        with CSVWriter(record_path) as writer:
             for path in paths:
                 if os.path.isdir(path) or path.endswith(('.pyc', '.pyo')):
                     # do not put size and hash, as in PEP-376
@@ -606,11 +592,6 @@ class InstalledDistribution(BaseInstalledDistribution):
                 if path.startswith(base) or (base_under_prefix and
                                                  path.startswith(prefix)):
                     path = os.path.relpath(path, base)
-                if sys.version_info[0] < 3:
-                    # On 2.x, csv doesn't like Unicode.
-                    path = path.encode('utf-8')
-                    hash_value = hash_value.encode('utf-8')
-                    size = size.encode('utf-8')
                 writer.writerow((path, hash_value, size))
 
             # add the RECORD file itself
@@ -729,47 +710,6 @@ class InstalledDistribution(BaseInstalledDistribution):
                                   path)
 
         return os.path.join(self.path, path)
-
-    def open_distinfo_file(self, path, binary=False, preserve_newline=False):
-        """
-        Returns a file located under the ``.dist-info`` directory. Returns a
-        ``file`` instance for the file pointed by *path*.
-
-        :parameter path: a ``'/'``-separated path relative to the
-                         ``.dist-info`` directory or an absolute path;
-                         If *path* is an absolute path and doesn't start
-                         with the ``.dist-info`` directory path,
-                         a :class:`DistlibException` is raised
-        :type path: string
-        :parameter binary: If *binary* is ``True``, opens the file in read-only
-                           binary mode (``rb``), otherwise opens it in
-                           read-only mode (``r``).
-        :parameter preserve_newline: If *preserve_newline* is ``True``, opens
-                                     the file with no newline translation
-                                     (``newline=''`` in Python 3, binary mode
-                                     in Python 2). In Python 3, this differs
-                                     from binary mode in that the reading the
-                                     file still returns strings, not bytes.
-        :rtype: file object
-        """
-        # XXX: There is no way to specify the file encoding. As RECORD is
-        # written in UTF8 (see write_installed_files) and that isn't the
-        # default on Windows, there is the potential for bugs here with
-        # Unicode filenames.
-        path = self.get_distinfo_file(path)
-        open_flags = 'r'
-
-        nl_arg = {}
-        if preserve_newline:
-            if sys.version_info[0] < 3:
-                binary = True
-            else:
-                nl_arg = {'newline': ''}
-
-        if binary:
-            open_flags += 'b'
-
-        return open(path, open_flags, **nl_arg)
 
     def list_distinfo_files(self):
         """

@@ -1291,7 +1291,10 @@ class CSVBase(object):
 
 class CSVReader(CSVBase):
     def __init__(self, fn, **kwargs):
-        self.stream = _csv_open(fn, 'r')
+        if 'stream' in kwargs:
+            self.stream = kwargs['stream']
+        else:
+            self.stream = _csv_open(fn, 'r')
         self.reader = csv.reader(self.stream, **self.defaults)
 
     def __iter__(self):

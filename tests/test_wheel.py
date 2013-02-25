@@ -7,7 +7,6 @@
 from __future__ import unicode_literals
 
 import codecs
-import csv
 import hashlib
 import os
 import re

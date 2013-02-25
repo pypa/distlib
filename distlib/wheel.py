@@ -8,7 +8,6 @@ from __future__ import unicode_literals
 
 import base64
 import codecs
-import csv
 import distutils.util
 from email import message_from_file
 import hashlib
@@ -27,7 +26,7 @@ from . import DistlibException
 from .compat import sysconfig, ZipFile, fsdecode, text_type
 from .database import DistributionPath, InstalledDistribution
 from .scripts import ScriptMaker
-from .util import FileOperator, convert_path
+from .util import FileOperator, convert_path, CSVReader, CSVWriter
 
 
 logger = logging.getLogger(__name__)
@@ -214,10 +213,7 @@ class Wheel(object):
         return hash_kind, result
 
     def write_record(self, records, record_path, base):
-        with open(record_path, 'w') as f:
-            writer = csv.writer(f, delimiter=str(','),
-                                lineterminator=str('\n'),
-                                quotechar=str('"'))
+        with CSVWriter(record_path) as writer:
             for row in records:
                 writer.writerow(row)
             p = to_posix(os.path.relpath(record_path, base))
@@ -367,12 +363,10 @@ class Wheel(object):
             records = {}
             with zf.open(record_name) as bf:
                 wf = wrapper(bf)
-                reader = csv.reader(wf, delimiter=str(','),
-                                    lineterminator=str('\n'),
-                                    quotechar=str('"'))
-                for row in reader:
-                    p = row[0]
-                    records[p] = row
+                with CSVReader(record_name, stream=wf) as reader:
+                    for row in reader:
+                        p = row[0]
+                        records[p] = row
 
             data_pfx = posixpath.join(data_dir, '')
             script_pfx = posixpath.join(data_dir, 'scripts', '')
