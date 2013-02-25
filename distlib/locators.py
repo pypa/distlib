@@ -195,7 +195,8 @@ class Locator(object):
                             'filename': wheel.filename,
                             'url': urlunparse((scheme, netloc, origpath,
                                                params, query, '')),
-                            'python-version': wheel.pyver,
+                            'python-version': ', '.join(
+                                ['.'.join(list(v[2:])) for v in wheel.pyver]),
                         }
                         m = MD5_HASH.match(frag)
                         if m:
