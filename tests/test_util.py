@@ -438,7 +438,7 @@ class ProgressTestCase(unittest.TestCase):
         if os.name == 'nt':
             speed = _speed_range(19, 20)
         else:
-            speed = _speed_range(19, 19)
+            speed = _speed_range(18, 19)
         expected = (
             (' ?? %', 'ETA : ??:??:??', speed),
             (' ?? %', 'ETA : ??:??:??', speed),
