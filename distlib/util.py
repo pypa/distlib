@@ -23,7 +23,7 @@ import zipfile
 
 from . import DistlibException
 from .compat import (string_types, text_type, shutil, raw_input,
-                     cache_from_source, urlopen, httplib,
+                     cache_from_source, urlopen, httplib, xmlrpclib, splittype,
                      HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
                      URLError, match_hostname, CertificateError)
 
@@ -1186,3 +1186,77 @@ class HTTPSOnlyHandler(HTTPSHandler, HTTPHandler):
     def http_open(self, req):
         raise URLError('Unexpected HTTP request on what should be a secure '
                        'connection: %s' % req)
+
+#
+# XML-RPC with timeouts
+#
+
+_ver_info = sys.version_info[:2]
+
+if _ver_info == (2, 6):
+    class HTTP(httplib.HTTP):
+        def __init__(self, host='', port=None, **kwargs):
+            if port == 0:   # 0 means use port 0, not the default port
+                port = None
+            self._setup(self._connection_class(host, port, **kwargs))
+
+
+    class HTTPS(httplib.HTTPS):
+        def __init__(self, host='', port=None, **kwargs):
+            if port == 0:   # 0 means use port 0, not the default port
+                port = None
+            self._setup(self._connection_class(host, port, **kwargs))
+
+
+class Transport(xmlrpclib.Transport):
+    def __init__(self, timeout, use_datetime=0):
+        self.timeout = timeout
+        xmlrpclib.Transport.__init__(self, use_datetime)
+
+    def make_connection(self, host):
+        h, eh, x509 = self.get_host_info(host)
+        if _ver_info == (2, 6):
+            result = HTTP(h, timeout=self.timeout)
+        else:
+            if not self._connection or host != self._connection[0]:
+                self._extra_headers = eh
+                self._connection = host, httplib.HTTPConnection(h)
+            result = self._connection[1]
+        return result
+
+class SafeTransport(xmlrpclib.SafeTransport):
+    def __init__(self, timeout, use_datetime=0):
+        self.timeout = timeout
+        xmlrpclib.SafeTransport.__init__(self, use_datetime)
+
+    def make_connection(self, host):
+        h, eh, kwargs = self.get_host_info(host)
+        if not kwargs:
+            kwargs = {}
+        kwargs['timeout'] = self.timeout
+        if _ver_info == (2, 6):
+            result = HTTPS(host, None, **kwargs)
+        else:
+            if not self._connection or host != self._connection[0]:
+                self._extra_headers = eh
+                self._connection = host, httplib.HTTPSConnection(h, None,
+                                                                 **kwargs)
+            result = self._connection[1]
+        return result
+
+
+class ServerProxy(xmlrpclib.ServerProxy):
+    def __init__(self, uri, **kwargs):
+        self.timeout = timeout = kwargs.pop('timeout', None)
+        # The above classes only come into play if a timeout
+        # is specified
+        if timeout is not None:
+            scheme, _ = splittype(uri)
+            use_datetime = kwargs.get('use_datetime', 0)
+            if scheme == 'https':
+                tcls = SafeTransport
+            else:
+                tcls = Transport
+            kwargs['transport'] = t = tcls(timeout, use_datetime=use_datetime)
+            self.transport = t
+        xmlrpclib.ServerProxy.__init__(self, uri, **kwargs)
