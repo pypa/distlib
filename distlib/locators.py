@@ -126,6 +126,15 @@ class Locator(object):
             self._cache[name] = result
         return result
 
+    def score_url(self, url):
+        """
+        Give an url a score which can be used to choose preferred URLs
+        for a given project release.
+        """
+        t = urlparse(url)
+        return (t.scheme != 'https', 'pypi.python.org' in t.netloc,
+                posixpath.basename(t.path))
+
     def prefer_url(self, url1, url2):
         """
         Choose one of two URLs where both are candidates for distribution
@@ -135,17 +144,12 @@ class Locator(object):
         The current implement favours http:// URLs over https://, archives
         from PyPI over those from other locations and then the archive name.
         """
-        def score(url):
-            t = urlparse(url)
-            return (t.scheme != 'https', 'pypi.python.org' in t.netloc,
-                    posixpath.basename(t.path))
-
         if url1 == 'UNKNOWN':
             result = url2
         else:
             result = url2
-            s1 = score(url1)
-            s2 = score(url2)
+            s1 = self.score_url(url1)
+            s2 = self.score_url(url2)
             if s1 > s2:
                 result = url1
             if result != url2:
