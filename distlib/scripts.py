@@ -59,7 +59,14 @@ class ScriptMaker(object):
         self.set_mode = False
         self._fileop = fileop or FileOperator(dry_run)
 
-    def _get_shebang(self, encoding, post_interp=b''):
+    def _get_alternate_executable(self, executable, flags):
+        if 'gui' in flags and os.name == 'nt':
+            dn, fn = os.path.split(executable)
+            fn = fn.replace('python', 'pythonw')
+            executable = os.path.join(dn, fn)
+        return executable
+
+    def _get_shebang(self, encoding, post_interp=b'', flags=None):
         if self.executable:
             executable = self.executable
         elif not sysconfig.is_python_build():
@@ -73,6 +80,9 @@ class ScriptMaker(object):
                 sysconfig.get_config_var('BINDIR'),
                'python%s%s' % (sysconfig.get_config_var('VERSION'),
                                sysconfig.get_config_var('EXE')))
+        if flags:
+            executable = self._get_alternate_executable(executable, flags)
+
         executable = fsencode(executable)
         shebang = b'#!' + executable + post_interp + b'\n'
         # Python parser starts to read a script using UTF-8 until
@@ -102,15 +112,8 @@ class ScriptMaker(object):
                                            module=entry.prefix,
                                            func=entry.suffix)
 
-    def _get_alternate_shebang(self, shebang, flags):
-        if 'gui' in flags and os.name == 'nt':
-            shebang = shebang.replace('python', 'pythonw')
-        return shebang
-
     def _make_script(self, entry, filenames):
-        shebang = self._get_shebang('utf-8').decode('utf-8')
-        if entry.flags:
-            shebang = self._get_alternate_shebang(shebang, entry.flags)
+        shebang = self._get_shebang('utf-8', flags=entry.flags).decode('utf-8')
         script = self._get_script_text(shebang, entry)
         outname = os.path.join(self.target_dir, entry.name)
         use_launcher = self.add_launchers and os.name == 'nt'
