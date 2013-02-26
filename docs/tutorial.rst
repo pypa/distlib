@@ -931,6 +931,18 @@ The other script, ``bar``, is different only in the essentials::
     ---
     >         func = _resolve('foo', 'other_main')
 
+
+Speifying a custom executable for shebangs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+You may need to specify a custom executable for shebang lines. To do this, set
+the :attr:`executable` attribute of a :class:`ScriptMaker` instance to the
+absolute Unicode path of the executable which you want to be written to the
+shebang lines of scripts. If not specified, the executable running the
+:class:`ScriptMaker` code is used.
+
+
 Using the version API
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -1122,9 +1134,11 @@ where you want the files in the wheel to be installed::
         'data': '/path/to/data',
     }
 
-    # Now install. The method accepts a ``dry_run`` keyword
-    # argument which goes through the installation procedure
-    # but doesn't actually install anything.
+    # Now install. The method accepts a ``dry_run`` keyword argument that goes
+    # through the installation procedure but doesn't actually install anything.
+    # It also accepts an ``executable`` keyword argument which, if specified,
+    # should be the absolute Unicode pathname of the executable you want to
+    # specify in the shebang lines of scripts installed from the wheel.
     wheel.install(paths)
 
 Only one of the ``purelib`` or ``platlib`` paths will actually be written to

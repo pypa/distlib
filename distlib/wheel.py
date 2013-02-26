@@ -338,9 +338,11 @@ class Wheel(object):
                 zf.write(p, ap)
         return pathname
 
-    def install(self, paths, dry_run=False):
+    def install(self, paths, dry_run=False, executable=None):
         """
-        Install a wheel to the specified paths.
+        Install a wheel to the specified paths. If ``executable`` is specified,
+        it should be the Unicode absolute path the to the executable written
+        into the shebang lines of any scripts installed.
         """
         pathname = os.path.join(self.dirname, self.filename)
         name_ver = '%s-%s' % (self.name, self.version)
@@ -383,7 +385,7 @@ class Wheel(object):
             # set target dir later
             maker = ScriptMaker(workdir, None, fileop=fileop,
                                 add_launchers=False)    # may need to revisit this
-
+            maker.executable = executable
             try:
                 for zinfo in zf.infolist():
                     arcname = zinfo.filename

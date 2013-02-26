@@ -248,7 +248,8 @@ class WheelTestCase(unittest.TestCase):
         for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
             paths[key] = os.path.join(dstdir, key)
         w = Wheel(pathname)
-        w.install(paths)
+        executable = os.path.join(paths['scripts'], 'python')
+        w.install(paths, executable=executable)
         os.remove(pathname)
         sm = Manifest(srcdir)
         sm.findall()

@@ -48,6 +48,8 @@ class ScriptMaker(object):
 
     script_template = SCRIPT_TEMPLATE
 
+    executable = None  # for shebangs
+
     def __init__(self, source_dir, target_dir, add_launchers=True,
                  dry_run=False, fileop=None):
         self.source_dir = source_dir
@@ -58,7 +60,9 @@ class ScriptMaker(object):
         self._fileop = fileop or FileOperator(dry_run)
 
     def _get_shebang(self, encoding, post_interp=b''):
-        if not sysconfig.is_python_build():
+        if self.executable:
+            executable = self.executable
+        elif not sysconfig.is_python_build():
             executable = get_executable()
         elif hasattr(sys, 'base_prefix') and sys.prefix != sys.base_prefix:
             executable = os.path.join(
@@ -98,10 +102,15 @@ class ScriptMaker(object):
                                            module=entry.prefix,
                                            func=entry.suffix)
 
+    def _get_alternate_shebang(self, shebang, flags):
+        if 'gui' in flags and os.name == 'nt':
+            shebang = shebang.replace('python', 'pythonw')
+        return shebang
+
     def _make_script(self, entry, filenames):
         shebang = self._get_shebang('utf-8').decode('utf-8')
-        if 'gui' in entry.flags and os.name == 'nt':
-            shebang = shebang.replace('python', 'pythonw')
+        if entry.flags:
+            shebang = self._get_alternate_shebang(shebang, entry.flags)
         script = self._get_script_text(shebang, entry)
         outname = os.path.join(self.target_dir, entry.name)
         use_launcher = self.add_launchers and os.name == 'nt'

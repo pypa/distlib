@@ -947,7 +947,7 @@ support the required operations::
             indicate environments with which the wheel is compatible.
             """
 
-        def install(self, paths):
+        def install(self, paths, dry_run=False, executable=None):
             """
             Install from a wheel. The ``paths`` should be a dictionary with
             keys 'prefix', 'scripts', 'headers', 'data', 'purelib' and
@@ -956,6 +956,13 @@ support the required operations::
             and 'platlib' paths will be used (in the case where they are
             different), depending on whether the wheel is for a pure-
             Python distribution.
+
+            The ``dry_run`` argument, if ``True``, goes through the motions
+            but doesn't actually install anything. The ``executable``, if
+            specified, should be the absolute Unicode pathname of the Python
+            interpreter to be specified in the shebang lines of installed
+            scripts. If not specified, the interpreter running the ``install``
+            method is used.
             """
 
 In addition to the above, the following attributes can be identified for a
