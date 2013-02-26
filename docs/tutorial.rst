@@ -338,7 +338,8 @@ The following locators are provided:
   and version information is inferred from the filenames of archives, and the
   amount of information returned about the download is minimal. The locator
   searches all subdirectories by default, but can be set to only look in the
-  specified directory by setting the ``recursive`` argument to ``False``.
+  specified directory by setting the ``recursive`` keyword argument to
+  ``False``.
 
 * :class:`PyPIRPCLocator`. -- This takes a base URL for the RPC service and
   will locate packages using PyPI's XML-RPC API. This locator is a little slow

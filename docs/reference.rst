@@ -641,13 +641,15 @@ Classes
    distribution archives. The locator scans all subdirectories recursively,
    unless the ``recursive`` flag is set to ``False``.
 
-   .. method:: __init__(base_dir, recursive, **kwargs)
+   .. method:: __init__(base_dir, **kwargs)
 
       :param base_dir: The base directory to scan for distribution archives.
       :type base_dir: str
-      :param recursive: Look in subdirectories (optional, defaults to True).
-      :type recursive: bool
-      :param  kwargs: Passed to base class constructor.
+      :param  kwargs: Passed to base class constructor, apart from the
+                      following keyword arguments:
+
+                      * ``recursive`` (defaults to ``True``) -- if ``False``,
+                        no recursion into subdirectories occurs.
 
 .. class:: PyPIRPCLocator(Locator)
 
