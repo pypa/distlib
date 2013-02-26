@@ -21,7 +21,7 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
-                          iglob, RICH_GLOB, parse_requirement,
+                          iglob, RICH_GLOB, parse_requirement, Container,
                           FileOperator, is_string_sequence, get_package_data)
 
 
@@ -384,13 +384,15 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(AssertionError, is_string_sequence, [])
 
     def test_package_data(self):
-        data = get_package_data('config', '0.3.6')
+        data = get_package_data(Container(name='config', version='0.3.6',
+                                metadata=None))
         self.assertTrue(data)
         self.assertTrue('metadata' in data)
         metadata = data['metadata']
         self.assertEqual(metadata['name'], 'config')
         self.assertEqual(metadata['version'], '0.3.6')
-        data = get_package_data('config', '0.3.5')
+        data = get_package_data(Container(name='config', version='0.3.5',
+                                metadata=None))
         self.assertFalse(data)
 
 def _speed_range(min_speed, max_speed):

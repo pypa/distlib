@@ -648,6 +648,9 @@ def split_filename(filename, project_name=None):
             result = m.group(1), m.group(3), pyver
     return result
 
+#
+# Extended metadata functionality
+#
 
 def _get_external_data(url):
     result = {}
@@ -675,11 +678,33 @@ def get_project_data(name):
     result = _get_external_data(url)
     return result
 
-def get_package_data(name, version):
+def get_package_data(dist):
+    name, version = dist.name, dist.version
     url = ('https://www.red-dove.com/pypi/projects/'
            '%s/%s/package-%s.json' % (name[0].upper(), name, version))
     result = _get_external_data(url)
+    if 'metadata' in result and dist.metadata:
+        update_metadata(dist.metadata, result)
     return result
+
+RENAMES = { # Temporary
+    'classifiers': 'Classifier',
+    'use_2to3': None,
+    'use_2to3_fixers': None,
+    'test_suite': None,
+}
+
+def update_metadata(metadata, pkginfo):
+    # update dist's metadata from received package data
+    assert metadata
+    assert 'metadata' in pkginfo
+    for k, v in pkginfo['metadata'].items():
+        k = k.replace('-', '_')
+        k = RENAMES.get(k, k)
+        if k is not None:
+            metadata[k] = v
+    metadata.set_metadata_version()
+
 
 #
 # Simple event pub/sub
@@ -750,7 +775,7 @@ class EventMixin(object):
                 logger.exception('Exception during event publication')
                 value = None
             result.append(value)
-        logger.debug('%s: args = %s, kwargs = %s, result = %s',
+        logger.debug('publish %s: args = %s, kwargs = %s, result = %s',
                      event, args, kwargs, result)
         return result
 
