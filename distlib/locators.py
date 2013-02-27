@@ -19,7 +19,7 @@ from .compat import (urljoin, urlparse, urlunparse, url2pathname, pathname2url,
                      queue, quote, unescape, string_types, build_opener,
                      HTTPRedirectHandler as BaseRedirectHandler,
                      Request, HTTPError, URLError)
-from .database import Distribution, DistributionPath
+from .database import Distribution, DistributionPath, make_dist
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
                    split_filename, get_project_data, parse_requirement,
@@ -252,10 +252,8 @@ class Locator(object):
             dist = result[version]
             md = dist.metadata
         else:
-            md = Metadata(scheme=self.scheme)
-            md['Name'] = name
-            md['Version'] = version
-            dist = Distribution(md)
+            dist = make_dist(name, version, scheme=self.scheme)
+            md = dist.metadata
         dist.md5_digest = info.get('md5_digest')
         if 'python-version' in info:
             md['Requires-Python'] = info['python-version']
@@ -716,14 +714,14 @@ class JSONLocator(Locator):
             for info in data.get('files', []):
                 if info['ptype'] != 'sdist' or info['pyversion'] != 'source':
                     continue
-                md = Metadata(scheme=self.scheme)
-                md['Name'] = data['name']
-                md['Version'] = version = info['version']
+                dist = make_dist(data['name'], info['version'],
+                                 scheme=self.scheme)
+                md = dist.metadata
                 md['Download-URL'] = info['url']
-                dist = Distribution(md)
                 dist.md5_digest = info.get('digest')
                 md.dependencies = info.get('requirements', {})
-                result[version] = dist
+                dist.exports = info.get('exports', {})
+                result[dist.version] = dist
         return result
 
 class DistPathLocator(Locator):

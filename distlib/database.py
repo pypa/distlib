@@ -1151,3 +1151,12 @@ def get_required_dists(dists, dist):
                 todo.append(pred)
 
     return req
+
+def make_dist(name, version, **kwargs):
+    """
+    A convenience method for making a dist given just a name and version.
+    """
+    md = Metadata(**kwargs)
+    md['Name'] = name
+    md['Version'] = version
+    return Distribution(md)
