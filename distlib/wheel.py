@@ -338,11 +338,15 @@ class Wheel(object):
                 zf.write(p, ap)
         return pathname
 
-    def install(self, paths, dry_run=False, executable=None):
+    def install(self, paths, dry_run=False, executable=None, warner=None):
         """
         Install a wheel to the specified paths. If ``executable`` is specified,
         it should be the Unicode absolute path the to the executable written
-        into the shebang lines of any scripts installed.
+        into the shebang lines of any scripts installed. If ``warner`` is
+        specified, it should be a callable, which will be called with two
+        tuples indicating the wheel version of this software and the wheel
+        version in the file, if there is a discrepancy in the versions.
+        This can be used to issue any warnings to raise any exceptions.
         """
         pathname = os.path.join(self.dirname, self.filename)
         name_ver = '%s-%s' % (self.name, self.version)
@@ -358,6 +362,11 @@ class Wheel(object):
             with zf.open(wheel_metadata_name) as bwf:
                 wf = wrapper(bwf)
                 message = message_from_file(wf)
+            wv = message['Wheel-Version'].split('.', 1)
+            file_version = tuple([int(i) for i in wv])
+            if (file_version != self.wheel_version) and warner:
+                warner(self.wheel_version, file_version)
+
             if message['Root-Is-Purelib'] == 'true':
                 libdir = paths['purelib']
             else:

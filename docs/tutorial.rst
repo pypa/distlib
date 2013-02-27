@@ -1136,9 +1136,15 @@ where you want the files in the wheel to be installed::
 
     # Now install. The method accepts a ``dry_run`` keyword argument that goes
     # through the installation procedure but doesn't actually install anything.
-    # It also accepts an ``executable`` keyword argument which, if specified,
-    # should be the absolute Unicode pathname of the executable you want to
-    # specify in the shebang lines of scripts installed from the wheel.
+    # It also accepts:
+    #
+    # - An ``executable`` keyword argument which, if specified, should be the
+    #   absolute Unicode pathname of the executable you want to specify in the
+    #   shebang lines of scripts installed from the wheel.
+    # - A ``warner`` keyword argument which, if specified, should be a callable
+    #   that will be called with (software_wheel_version, file_wheel_version)
+    #   if they differ. They will both be in the form (major_ver, minor_ver).
+    #
     wheel.install(paths)
 
 Only one of the ``purelib`` or ``platlib`` paths will actually be written to

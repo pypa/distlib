@@ -947,7 +947,7 @@ support the required operations::
             indicate environments with which the wheel is compatible.
             """
 
-        def install(self, paths, dry_run=False, executable=None):
+        def install(self, paths, dry_run=False, executable=None, warner=None):
             """
             Install from a wheel. The ``paths`` should be a dictionary with
             keys 'prefix', 'scripts', 'headers', 'data', 'purelib' and
@@ -962,7 +962,10 @@ support the required operations::
             specified, should be the absolute Unicode pathname of the Python
             interpreter to be specified in the shebang lines of installed
             scripts. If not specified, the interpreter running the ``install``
-            method is used.
+            method is used. The ``warner``, if specified, should be a callable
+            that will be called with (software_wheel_ver, file_wheel_ver)
+            if they differ. They will both be in the form of tuples
+            (major_ver, minor_ver).
             """
 
 In addition to the above, the following attributes can be identified for a

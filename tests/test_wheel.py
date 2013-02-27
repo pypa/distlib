@@ -30,6 +30,8 @@ try:
 except Exception:
     PIP_AVAILABLE = False
 
+HERE = os.path.dirname(__file__)
+
 EGG_INFO_RE = re.compile(r'(-py\d\.\d)?\.egg-info', re.I)
 
 def convert_egg_info(libdir, prefix):
@@ -261,6 +263,31 @@ class WheelTestCase(unittest.TestCase):
         omitted = omitted.pop()
         endings = os.path.join('.dist-info', 'WHEEL'), '.pyc', '.pyo'
         self.assertTrue(omitted.endswith(endings))
+
+    def test_version_incompatibility(self):
+        class Warner(object):
+            def __call__(self, wheel_version, file_version):
+                self.wheel_version = wheel_version
+                self.file_version = file_version
+
+        fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
+        dstdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, dstdir)
+        w = Wheel(fn)
+        paths = {'prefix': dstdir}
+        for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
+            paths[key] = os.path.join(dstdir, key)
+        warner = Warner()
+        w.install(paths, warner=warner)
+        self.assertEqual(warner.wheel_version, w.wheel_version)
+        self.assertEqual(warner.file_version, (2, 0))
+        # Now set the wheel's instance to the higher value and ensure
+        # warner isn't called
+        warner = Warner()
+        w.wheel_version = (2, 0)
+        w.install(paths, warner=warner)
+        self.assertFalse(hasattr(warner, 'wheel_version'))
+        self.assertFalse(hasattr(warner, 'file_version'))
 
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_pure(self):
