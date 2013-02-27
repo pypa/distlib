@@ -851,6 +851,11 @@ class EggInfoDistribution(BaseInstalledDistribution):
                     p = os.path.normpath(os.path.join(self.path, line))
                     # "./" is present as a marker between installed files
                     # and installation metadata files
+                    if not os.path.exists(p):
+                        logger.warning('Non-existent file: %s', p)
+                        if p.endswith(('.pyc', '.pyo')):
+                            continue
+                        #otherwise fall through and fail
                     if not os.path.isdir(p):
                         result.append((p, _md5(p), _size(p)))
             result.append((record_path, None, None))
