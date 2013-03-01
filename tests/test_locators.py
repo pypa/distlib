@@ -198,14 +198,14 @@ class LocatorTestCase(unittest.TestCase):
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
         self.assertEqual(actual, ['hgtools (2.0.2)', 'irc (5.0.1)',
-                                  'py (1.4.12)', 'pytest (2.3.4)',
+                                  'py (1.4.13)', 'pytest (2.3.4)',
                                   'pytest-runner (1.2)'])
 
         g = make_graph(dists)
         slist, cycle = g.topological_sort()
         self.assertFalse(cycle)
         names = [d.name for d in slist]
-        self.assertEqual(names, ['py', 'hgtools', 'pytest',
+        self.assertEqual(names, ['hgtools', 'py', 'pytest',
                                  'pytest-runner', 'irc'])
 
         # Test with extras
