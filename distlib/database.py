@@ -255,13 +255,21 @@ class DistributionPath(object):
                         break
 
     def get_file_path(self, name, relative_path):
-        """Return the path to a resource file."""
+        """
+        Return the path to a resource file.
+        """
         dist = self.get_distribution(name)
         if dist is None:
             raise LookupError('no distribution named %r found' % name)
         return dist.get_resource_path(relative_path)
 
     def get_exported_entries(self, category, name=None):
+        """
+        Return all of the exported entries in a particular category.
+
+        :param category: The category to search for entries.
+        :param name: If specified, only entries with that name are returned.
+        """
         for dist in self.get_distributions():
             r = dist.exports
             if category in r:
@@ -297,6 +305,11 @@ class Distribution(object):
     """
 
     def __init__(self, metadata):
+        """
+        Initialise an instance.
+        :param metadata: The instance of :class:`Metadata` describing this
+        distribution.
+        """
         self.metadata = metadata
         self.name = metadata.name
         self.key = self.name.lower()    # for case-insensitive comparisons
@@ -306,21 +319,38 @@ class Distribution(object):
 
     @property
     def download_url(self):
+        """
+        The download URL for this distribution.
+        """
         return self.metadata.download_url
 
     @property
+    def name_and_version(self):
+        """
+        A utility property which displays the name and version in parentheses.
+        """
+        return '%s (%s)' % (self.name, self.version)
+
+    @property
     def provides(self):
+        """
+        A set of distribution names and versions provided by this distribution.
+        :return: A set of "name (version)" strings.
+        """
         return set(self.metadata['Provides-Dist']
                    + self.metadata['Provides']
                    + ['%s (%s)' % (self.name, self.version)]
                   )
 
-    @property
-    def name_and_version(self):
-        return '%s (%s)' % (self.name, self.version)
-
     @cached_property
     def requires(self):
+        """
+        A set of requirements (dependencies of this distribution).
+        :return: A set of strings like "foo (>= 1.0, < 2.0, != 1.3)" where
+                 ``foo`` is the name of the distribution depended on, and
+                 the constraints indicate which versions of ``foo`` are
+                 acceptable to fulfill the requirement.
+        """
         return set(self.metadata['Requires-Dist']
                    + self.get_requirements('install')
                    + self.get_requirements('setup')
@@ -330,15 +360,31 @@ class Distribution(object):
     def get_requirements(self, key):
         """
         Get the requirements of a particular type
-        ('setup', 'install', 'test')
+        ('setup', 'install', 'test', 'extra:key').
         """
         result = []
+        parts = key.split(':', 1)
+        if len(parts) == 2:
+            key, extra = parts
+        else:
+            extra = None
         d = self.metadata.dependencies
         if key in d:
-            result = d[key]
+            if extra is None:
+                result = d[key]
+            else:
+                ed = d[key]
+                assert isinstance(ed, dict)
+                result = ed.get(extra, [])
         return result
 
     def matches_requirement(self, req):
+        """
+        Say if this instance matches (fulfills) a requirement.
+        :param req: The requirement to match.
+        :rtype req: str
+        :return: True if it matches, else False.
+        """
         scheme = get_scheme(self.metadata.scheme)
         try:
             matcher = scheme.matcher(req)
@@ -367,6 +413,9 @@ class Distribution(object):
         return result
 
     def __repr__(self):
+        """
+        Return a textual representation of this instance,
+        """
         if self.download_url:
             suffix = ' [%s]' % self.download_url
         else:
@@ -374,6 +423,13 @@ class Distribution(object):
         return '<Distribution %s (%s)%s>' % (self.name, self.version, suffix)
 
     def __eq__(self, other):
+        """
+        See if this distribution is the same as another.
+        :param other: The distribution to compare with. To be equal to one
+                      another. distributions must have the same type, name,
+                      version and download_url.
+        :return: True if it is the same, else False.
+        """
         if type(other) is not type(self):
             result = False
         else:
@@ -383,14 +439,31 @@ class Distribution(object):
         return result
 
     def __hash__(self):
+        """
+        Compute hash in a way which matches the equality test.
+        """
         return hash(self.name) + hash(self.version) + hash(self.download_url)
 
 
 class BaseInstalledDistribution(Distribution):
+    """
+    This is the base class for installed distributions (whether PEP 376 or
+    legacy).
+    """
 
     hasher = None
 
     def __init__(self, metadata, path, env=None):
+        """
+        Initialise an instance.
+        :param metadata: An instance of :class:`Metadata` which describes the
+                         distribution. This will normally have been initialised
+                         from a metadata file in the ``path``.
+        :param path:     The path of the ``.dist-info`` or ``.egg-info``
+                         directory for the distribution.
+        :param env:      This is normally the :class:`DistributionPath`
+                         instance where this distribution was found.
+        """
         super(BaseInstalledDistribution, self).__init__(metadata)
         self.path = path
         self.dist_path  = env
@@ -457,6 +530,12 @@ class InstalledDistribution(BaseInstalledDistribution):
         return "%s %s" % (self.name, self.version)
 
     def _get_records(self):
+        """
+        Get the list of installed files for the distribution
+        :return: A list of tuples of path, hash and size. Note that hash and
+                 size might be ``None`` for some entries. The path is exactly
+                 as stored in the file (which is as in PEP 376).
+        """
         results = []
         path = self.get_distinfo_file('RECORD')
         with CSVReader(path) as record_reader:
@@ -474,6 +553,12 @@ class InstalledDistribution(BaseInstalledDistribution):
 
     @cached_property
     def exports(self):
+        """
+        Return the information exported by this distribution.
+        :return: A dictionary of exports, mapping an export category to a list
+                 of :class:`ExportEntry` instances describing the individual
+                 export entries.
+        """
         result = {}
         rf = self.get_distinfo_file('EXPORTS')
         if os.path.exists(rf):
@@ -481,6 +566,15 @@ class InstalledDistribution(BaseInstalledDistribution):
         return result
 
     def read_exports(self, filename=None):
+        """
+        Read exports data from a file in .ini format.
+        :param filename: An absolute pathname of the file to read. If not
+                         specified, the EXPORTS file in the .dist-info
+                         directory of the distribution is read.
+        :return: A dictionary of exports, mapping an export category to a list
+                 of :class:`ExportEntry` instances describing the individual
+                 export entries.
+        """
         result = {}
         rf = filename or self.get_distinfo_file('EXPORTS')
         if os.path.exists(rf):
@@ -497,6 +591,15 @@ class InstalledDistribution(BaseInstalledDistribution):
         return result
 
     def write_exports(self, exports, filename=None):
+        """
+        Write a dictionary of exports to a file in .ini format.
+        :param exports: A dictionary of exports, mapping an export category to
+                        a list of :class:`ExportEntry` instances describing the
+                        individual export entries.
+        :param filename: The absolute pathname of the file to write to. If not
+                         specified, the EXPORTS file in the .dist-info
+                         directory is written to.
+        """
         rf = filename or self.get_distinfo_file('EXPORTS')
         cp = configparser.ConfigParser()
         for k, v in exports.items():
