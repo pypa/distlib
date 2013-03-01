@@ -2,7 +2,8 @@
 tests/run/
 docs/_build/
 .idea/
-MANIFEST|distlib-vcsid|cover
+MANIFEST$
+distlib-vcsid|cover
 tests/passwords
 tests/pypi-server-standalone.py
 (dist|htmlcov|build)/

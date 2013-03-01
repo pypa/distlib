@@ -1,0 +1,7 @@
+include README.rst LICENSE.txt CONTRIBUTORS.txt distlib/_backport/sysconfig.cfg distlib/*.exe
+recursive-include tests *
+global-exclude *.log __pycache__ *.pyc *.pyo
+exclude tests/*pypi*
+prune tests/pypiserver
+prune tests/packages
+exclude tests/passwords
