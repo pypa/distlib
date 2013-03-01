@@ -148,13 +148,6 @@ Functions to work with the database
 
    .. XXX does this work with prefixes or full file path only?
 
-.. function:: obsoletes_distribution(name, version=None, use_egg_info=False)
-
-   Return an iterator over all distributions that declare they obsolete *name*.
-   *version* is an optional argument to match only specific releases (see
-   :mod:`distlib.version`).  If *use_egg_info* is true, legacy egg
-   distributions will be considered as well.
-
 .. function:: provides_distribution(name, version=None, use_egg_info=False)
 
    Return an iterator over all distributions that declare they provide *name*.
@@ -308,27 +301,3 @@ full :class:`Distribution` object but just want to do something with its
    >>> info['Keywords']
    ['cooking', 'happiness']
    >>>
-
-Finding out obsoleted distributions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Now, we tackle a different problem, we are interested in finding out
-which distributions have been obsoleted. This can be easily done as follows::
-
-    import distlib.database
-
-    # iterate over all distributions in the system
-    for dist in distlib.database.get_distributions():
-        name, version = dist.name, dist.version
-        # find out which distributions obsolete this name/version combination
-        replacements = distlib.database.obsoletes_distribution(name, version)
-        if replacements:
-            print('%r %s is obsoleted by' % (name, version),
-                    ', '.join(repr(r.name) for r in replacements))
-
-This is how the output might look like:
-
-.. code-block:: none
-
-   'strawberry' 0.6 is obsoleted by 'choxie'
-   'grammar' 1.0a4 is obsoleted by 'towel-stuff'

@@ -30,25 +30,37 @@ __all__ = ['Distribution', 'BaseInstalledDistribution',
 
 logger = logging.getLogger(__name__)
 
-# TODO update docs
-
 DIST_FILES = ('INSTALLER', 'METADATA', 'RECORD', 'REQUESTED', 'RESOURCES',
               'EXPORTS', 'SHARED')
 
 DISTINFO_EXT = '.dist-info'
 
+
 class _Cache(object):
+    """
+    A simple cache mapping names and .dist-info paths to distributions
+    """
     def __init__(self):
+        """
+        Initialise an instance. There is normally one for each DistributionPath.
+        """
         self.name = {}
         self.path = {}
         self.generated = False
 
     def clear(self):
+        """
+        Clear the cache, setting it to its initial state.
+        """
         self.name.clear()
         self.path.clear()
         self.generated = False
 
     def add(self, dist):
+        """
+        Add a distribution to the cache.
+        :param dist: The distribution to add.
+        """
         if dist.path not in self.path:
             self.path[dist.path] = dist
             self.name.setdefault(dist.key, []).append(dist)
@@ -58,6 +70,14 @@ class DistributionPath(object):
     Represents a set of distributions installed on a path (typically sys.path).
     """
     def __init__(self, path=None, include_egg=False):
+        """
+        Create an instance from a path, optionally including legacy (distutils/
+        setuptools/distribute) distributions.
+        :param path: The path to use, as a list of directories. If not specified,
+                     sys.path is used.
+        :param include_egg: If True, this instance will look for and return legacy
+                            distributions as well as those based on PEP 376.
+        """
         if path is None:
             path = sys.path
         self.path = path
@@ -69,34 +89,25 @@ class DistributionPath(object):
         self._cache_enabled = True
         self._scheme = get_scheme('default')
 
-    def enable_cache(self):
-        """
-        Enables the internal cache.
+    def _get_cache_enabled(self):
+        return self._cache_enabled
 
-        Note that this function will not clear the cache in any case, for that
-        functionality see :meth:`clear_cache`.
-        """
-        self._cache_enabled = True
+    def _set_cache_enabled(self, value):
+        self._cache_enabled = value
 
-    def disable_cache(self):
-        """
-        Disables the internal cache.
-
-        Note that this function will not clear the cache in any case, for that
-        functionality see :meth:`clear_cache`.
-        """
-        self._cache_enabled = False
-
+    cache_enabled = property(_get_cache_enabled, _set_cache_enabled)
 
     def clear_cache(self):
-        """ Clears the internal cache. """
+        """
+        Clears the internal cache.
+        """
         self._cache.clear()
         self._cache_egg.clear()
 
 
     def _yield_distributions(self):
         """
-        Yield .dist-info and/or .egg(-info) distributions
+        Yield .dist-info and/or .egg(-info) distributions.
         """
         for path in self.path:
             realpath = os.path.realpath(path)
@@ -111,6 +122,10 @@ class DistributionPath(object):
                     yield EggInfoDistribution(dist_path, self)
 
     def _generate_cache(self):
+        """
+        Scan the path for distributions and populate the cache with
+        those that are found.
+        """
         gen_dist = not self._cache.generated
         gen_egg = self._include_egg and not self._cache_egg.generated
         if gen_dist or gen_egg:
@@ -126,7 +141,7 @@ class DistributionPath(object):
                 self._cache_egg.generated = True
 
     @classmethod
-    def distinfo_dirname(self, name, version):
+    def distinfo_dirname(cls, name, version):
         """
         The *name* and *version* parameters are converted into their
         filename-escaped form, i.e. any ``'-'`` characters are replaced
@@ -150,8 +165,8 @@ class DistributionPath(object):
 
     def get_distributions(self):
         """
-        Provides an iterator that looks for ``.dist-info`` directories
-        and returns :class:`InstalledDistribution` or
+        Provides an iterator that looks for distributions and returns
+        :class:`InstalledDistribution` or
         :class:`EggInfoDistribution` instances for each one of them.
 
         :rtype: iterator of :class:`InstalledDistribution` and
@@ -173,12 +188,12 @@ class DistributionPath(object):
 
     def get_distribution(self, name):
         """
-        Scans all distributions looking for a matching name.
+        Looks for a named distribution on the path.
 
         This function only returns the first result found, as no more than one
         value is expected. If nothing is found, ``None`` is returned.
 
-        :rtype: :class:`InstalledDistribution` or :class:`EggInfoDistribution`
+        :rtype: :class:`InstalledDistribution`, :class:`EggInfoDistribution`
                 or ``None``
         """
         result = None
@@ -196,39 +211,6 @@ class DistributionPath(object):
             elif self._include_egg and name in self._cache_egg.name:
                 result = self._cache_egg.name[name][0]
         return result
-
-
-    def obsoletes_distribution(self, name, version=None):
-        """
-        Iterates over all distributions to find which distributions obsolete
-        *name*.
-
-        If a *version* is provided, it will be used to filter the results.
-
-        :type name: string
-        :type version: string
-        :parameter name: The name to check for being obsoleted.
-        """
-        for dist in self.get_distributions():
-            obsoleted = (dist.metadata['Obsoletes-Dist'] +
-                         dist.metadata['Obsoletes'])
-            for obs in obsoleted:
-                o_components = obs.split(' ', 1)
-                if len(o_components) == 1 or version is None:
-                    if name == o_components[0]:
-                        yield dist
-                        break
-                else:
-                    try:
-                        matcher = self._scheme.matcher(obs)
-                    except ValueError:
-                        raise DistlibException(
-                            'distribution %r has ill-formed obsoletes field: '
-                            '%r' % (dist.name, obs))
-                    if name == o_components[0] and matcher.match(version):
-                        yield dist
-                        break
-
 
     def provides_distribution(self, name, version=None):
         """

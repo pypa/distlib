@@ -33,7 +33,7 @@ from support import LoggingCatcher, requires_zlib
 logger = logging.getLogger(__name__)
 
 # TODO Add a test for getting a distribution provided by another distribution
-# TODO Add a test for absolute pathed RECORD items (e.g. /etc/myapp/config.ini)
+# TODO Add a test for absolute path RECORD items (e.g. /etc/myapp/config.ini)
 # TODO Add tests from the former pep376 project (zipped site-packages, etc.)
 
 
@@ -425,8 +425,8 @@ class TestDatabase(LoggingCatcher,
         fake_dists_path = self.fake_dists_path
         for enabled in (True, False):
             if not enabled:
-                d.disable_cache()
-                ed.disable_cache()
+                d.cache_enabled = False
+                ed.cache_enabled = False
                 d.clear_cache()
                 ed.clear_cache()
 
@@ -553,36 +553,6 @@ class TestDatabase(LoggingCatcher,
 
         l = [dist.name for dist in ed.provides_distribution('banana', '!=0.4')]
         checkLists(l, [])
-
-    @requires_zlib
-    def test_obsoletes(self):
-        # Test looking for distributions based on what they obsolete
-        checkLists = lambda x, y: self.assertEqual(sorted(x), sorted(y))
-
-        d = DistributionPath()
-        ed = DistributionPath(include_egg=True)
-
-        l = [dist.name for dist in d.obsoletes_distribution('truffles', '1.0')]
-        checkLists(l, [])
-
-        l = [dist.name for dist in ed.obsoletes_distribution('truffles', '1.0')]
-        checkLists(l, ['cheese', 'bacon'])
-
-        l = [dist.name for dist in d.obsoletes_distribution('truffles', '0.8')]
-        checkLists(l, ['choxie'])
-
-        l = [dist.name for dist in ed.obsoletes_distribution('truffles', '0.8')]
-        checkLists(l, ['choxie', 'cheese'])
-
-        l = [dist.name for dist in d.obsoletes_distribution('truffles', '0.9.6')]
-        checkLists(l, ['choxie', 'towel-stuff'])
-
-        l = [dist.name for dist in d.obsoletes_distribution('truffles',
-                                                          '0.5.2.3')]
-        checkLists(l, ['choxie', 'towel-stuff'])
-
-        l = [dist.name for dist in d.obsoletes_distribution('truffles', '0.2')]
-        checkLists(l, ['towel-stuff'])
 
     @requires_zlib
     def test_yield_distribution(self):
