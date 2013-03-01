@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 MD5_HASH = re.compile('^md5=([a-f0-9]+)$')
 CHARSET = re.compile(r';\s*charset\s*=\s*(.*)\s*$', re.I)
 HTML_CONTENT_TYPE = re.compile('text/html|application/x(ht)?ml')
-DEFAULT_INDEX = 'http://pypi.python.org/pypi'
+DEFAULT_INDEX = 'http://python.org/pypi'
 
 def get_all_distribution_names(url=None):
     """
