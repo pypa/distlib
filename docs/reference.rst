@@ -1033,6 +1033,135 @@ Functions
                        ``'path.supports_unicode_filenames'``.
    :type dotted_path: str
 
+
+The ``distlib.wheel`` package
+-----------------------------
+
+This package has functionality which allows you to work with wheels (see :pep:`427`).
+
+
+Classes
+^^^^^^^
+
+.. class:: Wheel
+
+   This class represents wheels -- either existing wheels, or wheels to be built.
+
+   .. method:: __init__(spec)
+
+      Initialise an instance from a specification.
+
+      :param spec: This can either be a valid filename for a wheel (for when
+                   you want to work with an existing wheel), or just the
+                   ``name-version-buildver`` portion of a wheel's filename (for
+                   when you're going to build a wheel for a known version and
+                   build of a named project).
+      :type spec: str
+
+   .. method:: build(paths, tags=None)
+
+      Build a wheel. The ``name``, ``version`` and ``buildver`` should already
+      have been set correctly.
+
+      :param paths: This should be a dictionary with keys ``'prefix'``,
+                    ``'scripts'``, ``'headers'``, ``'data'`` and one of
+                    ``'purelib'`` or ``'platlib'``. These must point to valid
+                    paths if they are to be included in the wheel.
+      :param tags: If specified, this should be a dictionary with optional keys
+                   ``'pyver'``, ``'abi'`` and ``'arch'`` indicating lists of
+                   tags which indicate environments with which the wheel is
+                   compatible.
+
+   .. method:: install(self, paths, dry_run=False, executable=None,
+                       warner=None)
+
+      Install from a wheel.
+
+      :param paths: This should be a dictionary with keys ``'prefix'``,
+                    ``'scripts'``, ``'headers'``, ``'data'``, ``'purelib'``
+                    and ``'platlib'``. These must point to valid paths to which
+                    files may be written if they are in the wheel. Only one of
+                    the ``'purelib'`` and ``'platlib'`` paths will be used (in
+                    the case where they are different), depending on whether
+                    the wheel is for a pure-Python distribution.
+
+      :param dry_run: If ``True``, the method goes through the motions but
+                      doesn't actually install anything.
+      :param executable: If specified, this should be the absolute Unicode
+                         pathname of the Python interpreter to be specified in
+                         the shebang lines of installed scripts. If not
+                         specified, the interpreter running the ``install``
+                         method is used.
+      :param warner: If specified, this should be a callable that will be
+                     called with (``software_wheel_version``,
+                     ``file_wheel_version``) if they differ. They will both be
+                     in the form of tuples (``major_version``,
+                     ``minor_version``).
+
+
+
+   .. attribute:: name
+
+      The name of the distribution.
+
+   .. attribute:: version
+
+      The version of the distribution
+
+   .. attribute:: buildver
+
+      The build tag for the distribution.
+
+   .. attribute:: pyver
+
+      A list of Python versions with which the wheel is compatible. See
+      :pep:`427` and :pep:`425` for details.
+
+   .. attribute:: abi
+
+      A list of application binary interfaces (ABIs) with which the wheel is
+      compatible. See :pep:`427` and :pep:`425` for details.
+
+   .. attribute:: arch
+
+      A list of architectures with which the wheel is compatible. See
+      :pep:`427` and :pep:`425` for details.
+
+   .. attribute:: dirname
+
+      The directory in which a wheel file is found/to be created.
+
+   .. attribute:: filename
+
+      The filename of the wheel (computed from the other attributes)
+
+
+Functions
+^^^^^^^^^
+
+.. function:: compatible_tags()
+
+   Return a list of tags which are compatible with this Python implementation.
+
+   .. note:: Try to use :func:`is_compatible` in preference to this function,
+             which may be removed from the public API.
+
+   :return: A list of (``pyver``, ``abi``, ``arch``) tags which are compatible
+            with this Python implementation.
+
+.. function:: is_compatible(wheel, tags=None)
+
+   Indicate if a wheel is compatible with a set of tags. If any combination of
+   the tags of ``wheel`` is found in ``tags``, then the wheel is considered to
+   be compatible.
+
+   :param wheel: A :class:`Wheel` instance or the filename of a wheel.
+   :param tags: A set of tags to check for compatibility. If not specified,
+                it defaults to the set of tags which are compatible with this
+                Python implementation.
+   :return: ``True`` if compatible, else ``False``.
+
+
 Next steps
 ----------
 

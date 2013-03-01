@@ -975,7 +975,7 @@ In addition to the above, the following attributes can be identified for a
 * ``version`` -- the version of the distribution
 * ``buildver`` -- the build tag for the distribution
 * ``pyver`` -- a list of Python versions with which the wheel is compatible
-* ``abi`` -- a list oa application binary interfaces (ABIs) with which the
+* ``abi`` -- a list of application binary interfaces (ABIs) with which the
   wheel is compatible
 * ``arch`` -- a list of architectures with which the wheel is compatible
 * ``dirname`` -- The directory in which a wheel file is found/to be
