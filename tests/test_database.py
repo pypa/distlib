@@ -196,26 +196,6 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         super(TestDistribution, self).test_instantiation()
         self.assertIsInstance(self.dist.requested, bool)
 
-    def test_uses(self):
-        # Test to determine if a distribution uses a specified file.
-        # Criteria to test against
-        distinfo_name = 'grammar-1.0a4'
-        distinfo_dir = os.path.join(self.fake_dists_path,
-                                    distinfo_name + '.dist-info')
-        true_path = [self.fake_dists_path, distinfo_name,
-                     'grammar', 'utils.py']
-        true_path = os.path.join(*true_path)
-        false_path = [self.fake_dists_path, 'towel_stuff-0.1', 'towel_stuff',
-                      '__init__.py']
-        false_path = os.path.join(*false_path)
-
-        # Test if the distribution uses the file in question
-        dist = InstalledDistribution(distinfo_dir)
-        self.assertTrue(dist.uses(true_path), 'dist %r is supposed to use %r' %
-                        (dist, true_path))
-        self.assertFalse(dist.uses(false_path), 'dist %r is not supposed to '
-                         'use %r' % (dist, true_path))
-
     def test_get_distinfo_file(self):
         # Test the retrieval of dist-info file objects.
         distinfo_name = 'choxie-2.0.0.9'
@@ -481,16 +461,6 @@ class TestDatabase(LoggingCatcher,
         for name in ('cheese', 'bacon', 'banana', 'strawberry'):
             dist = ed.get_distribution(name)
             self.assertIsInstance(dist, EggInfoDistribution)
-            self.assertEqual(dist.name, name)
-
-    def test_get_file_users(self):
-        # Test the iteration of distributions that use a file.
-        name = 'towel_stuff-0.1'
-        path = os.path.join(self.fake_dists_path, name,
-                            'towel_stuff', '__init__.py')
-        d = DistributionPath()
-        for dist in d.get_file_users(path):
-            self.assertIsInstance(dist, InstalledDistribution)
             self.assertEqual(dist.name, name)
 
     @requires_zlib

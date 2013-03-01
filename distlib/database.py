@@ -254,21 +254,6 @@ class DistributionPath(object):
                         yield dist
                         break
 
-    def get_file_users(self, path):
-        """
-        Iterates over all distributions to find out which distributions use
-        *path*.
-
-        :parameter path: can be a local absolute path or a relative
-                         ``'/'``-separated path.
-        :type path: string
-        :rtype: iterator of :class:`InstalledDistribution` instances
-        """
-        for dist in self.get_distributions():
-            if dist.uses(path):
-                yield dist
-
-
     def get_file_path(self, name, relative_path):
         """Return the path to a resource file."""
         dist = self.get_distribution(name)
@@ -647,22 +632,6 @@ class InstalledDistribution(BaseInstalledDistribution):
         with codecs.open(shared_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
         return shared_path
-
-    def uses(self, path):
-        """
-        Returns ``True`` if path is listed in ``RECORD``. *path* can be a local
-        absolute path or a relative ``'/'``-separated path.
-
-        :rtype: boolean
-        """
-        base = os.path.dirname(self.path)
-        for p, checksum, size in self._get_records():
-            if not os.path.isabs(p):
-                p = os.path.join(base, p)
-            local_absolute = os.path.join(sys.prefix, p)
-            if path == p or path == local_absolute:
-                return True
-        return False
 
     def get_distinfo_file(self, path):
         """
