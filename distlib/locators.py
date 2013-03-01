@@ -15,6 +15,7 @@ import re
 import threading
 import zlib
 
+from . import DistlibException
 from .compat import (urljoin, urlparse, urlunparse, url2pathname, pathname2url,
                      queue, quote, unescape, string_types, build_opener,
                      HTTPRedirectHandler as BaseRedirectHandler,
@@ -296,7 +297,7 @@ class Locator(object):
         scheme = get_scheme(self.scheme)
         r = parse_requirement(requirement)
         if r is None:
-            raise ValueError('Not a valid requirement: %r' % requirement)
+            raise DistlibException('Not a valid requirement: %r' % requirement)
         if r.extras:
             # lose the extras part of the requirement
             i = requirement.find('[')
@@ -692,7 +693,7 @@ class SimpleScrapingLocator(Locator):
         result = set()
         page = self.get_page(self.base_url)
         if not page:
-            raise ValueError('Unable to get %s' % self.base_url)
+            raise DistlibException('Unable to get %s' % self.base_url)
         for match in self._distname_re.finditer(page.data):
             result.add(match.group(1))
         return result
@@ -716,7 +717,7 @@ class DirectoryLocator(Locator):
         super(DirectoryLocator, self).__init__(**kwargs)
         path = os.path.abspath(path)
         if not os.path.isdir(path):
-            raise ValueError('Not a directory: %r' % path)
+            raise DistlibException('Not a directory: %r' % path)
         self.base_dir = path
 
     def should_include(self, filename, parent):
@@ -902,7 +903,7 @@ class DependencyFinder(object):
         if len(comps) == 2:
             version = comps[1]
             if len(version) < 3 or version[0] != '(' or version[-1] != ')':
-                raise ValueError('Ill-formed provides field: %r' % p)
+                raise DistlibException('Ill-formed provides field: %r' % p)
             version = version[1:-1]  # trim off parentheses
         # Name in lower case for case-insensitivity
         return name.lower(), version
@@ -1052,7 +1053,7 @@ class DependencyFinder(object):
         else:
             dist = odist = self.locator.locate(requirement)
             if dist is None:
-                raise ValueError('Unable to locate %r' % requirement)
+                raise DistlibException('Unable to locate %r' % requirement)
             logger.debug('located %s', odist)
         dist.requested = True
         problems = set()

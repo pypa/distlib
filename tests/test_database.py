@@ -915,6 +915,10 @@ class DepGraphTestCase(LoggingCatcher,
         reqs = [d.name for d in get_required_dists(dists, towel)]
         self.checkLists(['bacon'], reqs)
 
+        # Check the invalid case: pass a dist not in the list
+        dists = dists[:-1]
+        self.assertRaises(DistlibException, get_required_dists, dists, coco)
+
     @requires_zlib
     def test_dependent_dists_egg(self):
         dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG, True)
@@ -938,6 +942,10 @@ class DepGraphTestCase(LoggingCatcher,
 
         deps = [d.name for d in get_dependent_dists(dists, cheese)]
         self.checkLists([], deps)
+
+        # Check the invalid case: pass a dist not in the list
+        dists = dists[:-1]
+        self.assertRaises(DistlibException, get_dependent_dists, dists, cheese)
 
     @requires_zlib
     def test_graph_to_dot(self):

@@ -150,7 +150,8 @@ class Wheel(object):
                 dirname, filename = os.path.split(filename)
                 m = FILENAME_RE.match(filename)
                 if not m:
-                    raise ValueError('Invalid name or filename: %r' % filename)
+                    raise DistlibException('Invalid name or '
+                                           'filename: %r' % filename)
                 if dirname:
                     self.dirname = dirname
                 self._filename = filename

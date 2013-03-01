@@ -17,6 +17,7 @@ import tempfile
 
 from compat import unittest
 
+from distlib import DistlibException
 from distlib.compat import ZipFile
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
@@ -125,7 +126,7 @@ class WheelTestCase(unittest.TestCase):
         )
 
         for name in names:
-            self.assertRaises(ValueError, Wheel, name)
+            self.assertRaises(DistlibException, Wheel, name)
 
     def test_valid_name(self):
         attrs = ('name', 'version', 'buildver', 'pyver', 'abi', 'arch')

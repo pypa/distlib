@@ -875,8 +875,8 @@ class EggInfoDistribution(BaseInstalledDistribution):
                 requires = parse_requires(req_path)
             metadata = Metadata(path=path, scheme='legacy')
         else:
-            raise ValueError('path must end with .egg-info or .egg, got %r' %
-                             path)
+            raise DistlibException('path must end with .egg-info or .egg, '
+                                   'got %r' % path)
 
         if requires:
             if metadata['Metadata-Version'] == '1.1':
@@ -1210,8 +1210,8 @@ def get_dependent_dists(dists, dist):
     :param dist: a distribution, member of *dists* for which we are interested
     """
     if dist not in dists:
-        raise ValueError('given distribution %r is not a member of the list' %
-                         dist.name)
+        raise DistlibException('given distribution %r is not a member '
+                               'of the list' % dist.name)
     graph = make_graph(dists)
 
     dep = [dist]  # dependent distributions
@@ -1235,8 +1235,8 @@ def get_required_dists(dists, dist):
     :param dist: a distribution, member of *dists* for which we are interested
     """
     if dist not in dists:
-        raise ValueError('given distribution %r is not a member of the list' %
-                         dist.name)
+        raise DistlibException('given distribution %r is not a member '
+                               'of the list' % dist.name)
     graph = make_graph(dists)
 
     req = []  # required distributions
