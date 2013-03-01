@@ -150,7 +150,7 @@ class LocatorTestCase(unittest.TestCase):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
         loc2 = SimpleScrapingLocator('https://pypi.python.org/simple/',
-                                     timeout=3.0)
+                                     timeout=5.0)
         locator = AggregatingLocator(loc1, loc2)
         exp1 = os.path.join(HERE, 'fake_archives', 'subdir',
                             'subsubdir', 'Flask-0.9.tar.gz')
