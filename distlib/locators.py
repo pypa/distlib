@@ -32,14 +32,23 @@ logger = logging.getLogger(__name__)
 MD5_HASH = re.compile('^md5=([a-f0-9]+)$')
 CHARSET = re.compile(r';\s*charset\s*=\s*(.*)\s*$', re.I)
 HTML_CONTENT_TYPE = re.compile('text/html|application/x(ht)?ml')
+DEFAULT_INDEX = 'http://pypi.python.org/pypi'
 
 def get_all_distribution_names(url=None):
+    """
+    Return all distribution names known by an index.
+    :param url: The URL of the index.
+    :return: A list of all known distribution names.
+    """
     if url is None:
-        url = 'http://python.org/pypi'
+        url = DEFAULT_INDEX
     client = ServerProxy(url, timeout=3.0)
     return client.list_packages()
 
 class RedirectHandler(BaseRedirectHandler):
+    """
+    A class to work around a bug in some Python 3.2.x releases.
+    """
     # There's a bug in the base version for some 3.2.x
     # (e.g. 3.2.2 on Ubuntu Oneiric). If a Location header
     # returns e.g. /abc, it bails because it says the scheme ''
@@ -68,6 +77,9 @@ class RedirectHandler(BaseRedirectHandler):
     http_error_301 = http_error_303 = http_error_307 = http_error_302
 
 class Locator(object):
+    """
+    A base class for locators - things that locate distributions.
+    """
     source_extensions = ('.tar.gz', '.tar.bz2', '.tar', '.zip', '.tgz', '.tbz')
     binary_extensions = ('.egg', '.exe', '.whl')
     excluded_extensions = ('.pdf',)
@@ -81,6 +93,13 @@ class Locator(object):
     downloadable_extensions = source_extensions + ('.whl',)
 
     def __init__(self, scheme='default'):
+        """
+        Initialise an instance.
+        :param scheme: Because locators look for most recent versions, they
+                       need to know the version scheme to use. This specifies
+                       the current PEP-recommended scheme - use ``'legacy'``
+                       if you need to support existing distributions on PyPI.
+        """
         self._cache = {}
         self.scheme = scheme
         # Because of bugs in some of the handlers on some of the platforms,
@@ -267,6 +286,11 @@ class Locator(object):
         """
         Find the most recent distribution which matches the given
         requirement.
+
+        :param requirement: A requirement of the form 'foo (1.0)' or perhaps
+                            'foo (>= 1.0, < 2.0, != 1.3)'
+        :return: A :class:`Distribution` instance, or ``None`` if no such
+                 distribution could be located.
         """
         result = None
         scheme = get_scheme(self.scheme)
@@ -304,7 +328,17 @@ class Locator(object):
 
 
 class PyPIRPCLocator(Locator):
+    """
+    This locator uses XML-RPC to locate distributions. It therefore cannot be
+    used with simple mirrors (that only mirror file content).
+    """
     def __init__(self, url, **kwargs):
+        """
+        Initialise an instance.
+
+        :param url: The URL to use for XML-RPC.
+        :param kwargs: Passed to the superclass constructor.
+        """
         super(PyPIRPCLocator, self).__init__(**kwargs)
         self.base_url = url
         self.client = ServerProxy(url, timeout=3.0)
@@ -333,6 +367,10 @@ class PyPIRPCLocator(Locator):
         return result
 
 class PyPIJSONLocator(Locator):
+    """
+    This locator uses PyPI's JSON interface. It's very limited in functionality
+    nad probably not worth using.
+    """
     def __init__(self, url, **kwargs):
         super(PyPIJSONLocator, self).__init__(**kwargs)
         self.base_url = ensure_slash(url)
@@ -366,7 +404,9 @@ class PyPIJSONLocator(Locator):
 
 
 class Page(object):
-    "This class represents a scraped HTML page."
+    """
+    This class represents a scraped HTML page.
+    """
     # The following slightly hairy-looking regex just looks for the contents of
     # an anchor link, which has an attribute "href" either immediately preceded
     # or immediately followed by a "rel" attribute. The attribute values can be
@@ -436,6 +476,15 @@ class SimpleScrapingLocator(Locator):
     }
 
     def __init__(self, url, timeout=None, num_workers=10, **kwargs):
+        """
+        Initialise an instance.
+        :param url: The root URL to use for scraping.
+        :param timeout: The timeout, in seconds, to be applied to requests.
+                        This defaults to ``None`` (no timeout specified).
+        :param num_workers: The number of worker threads you want to do I/O,
+                            This defaults to 10.
+        :param kwargs: Passed to the superclass.
+        """
         super(SimpleScrapingLocator, self).__init__(**kwargs)
         self.base_url = ensure_slash(url)
         self.timeout = timeout
@@ -649,7 +698,20 @@ class SimpleScrapingLocator(Locator):
         return result
 
 class DirectoryLocator(Locator):
+    """
+    This class locates distributions in a directory tree.
+    """
+
     def __init__(self, path, **kwargs):
+        """
+        Initialise an instance.
+        :param path: The root of the directory tree to search.
+        :param kwargs: Passed to the superclass constructor,
+                       except for:
+                       * recursive - if True (the default), subdirectories are
+                         recursed into. If False, only the top-level directory
+                         is searched,
+        """
         self.recursive = kwargs.pop('recursive', True)
         super(DirectoryLocator, self).__init__(**kwargs)
         path = os.path.abspath(path)
@@ -701,6 +763,12 @@ class DirectoryLocator(Locator):
         return result
 
 class JSONLocator(Locator):
+    """
+    This locator uses special extended metadata (not available on PyPI) and is
+    the basis of performant dependency resolution in distlib. Other locators
+    require archive downloads before dependencies can be determined! As you
+    might imagine, that can be slow.
+    """
     def get_distribution_names(self):
         """
         Return all the distribution names known to this locator.
@@ -725,7 +793,16 @@ class JSONLocator(Locator):
         return result
 
 class DistPathLocator(Locator):
+    """
+    This locator finds installed distributions in a path. It can be useful for
+    adding to an :class:`AggregatingLocator`.
+    """
     def __init__(self, distpath, **kwargs):
+        """
+        Initialise an instance.
+
+        :param distpath: A :class:`DistributionPath` instance to search.
+        """
         super(DistPathLocator, self).__init__(**kwargs)
         assert isinstance(distpath, DistributionPath)
         self.distpath = distpath
@@ -741,9 +818,20 @@ class DistPathLocator(Locator):
 
 class AggregatingLocator(Locator):
     """
-    Chain and/or merge a list of locators.
+    This class allows you to chain and/or merge a list of locators.
     """
     def __init__(self, *locators, **kwargs):
+        """
+        Initialise an instance.
+
+        :param locators: The list of locators to search.
+        :param kwargs: Passed to the superclass constructor,
+                       except for:
+                       * merge - if False (the default), the first successful
+                         search from any of the locators is returned. If True,
+                         the results from all locators are merged (this can be
+                         slow).
+        """
         self.merge = kwargs.pop('merge', False)
         self.locators = locators
         super(AggregatingLocator, self).__init__(**kwargs)
@@ -800,7 +888,14 @@ class DependencyFinder(object):
         self.locator = locator or default_locator
         self.scheme = get_scheme(self.locator.scheme)
 
-    def get_name_and_version(self, p):
+    def _get_name_and_version(self, p):
+        """
+        A utility method used to get name and version from e.g. a Provides-Dist
+        value.
+
+        :param p: A value in a form foo (1.0)
+        :return: The name and version as a tuple.
+        """
         comps = p.strip().rsplit(' ', 1)
         name = comps[0]
         version = None
@@ -813,22 +908,32 @@ class DependencyFinder(object):
         return name.lower(), version
 
     def add_distribution(self, dist):
+        """
+        Add a distribution to the finder. This will update internal information
+        about who provides what.
+        :param dist: The distribution to add.
+        """
         logger.debug('adding distribution %s', dist)
         name = dist.key
         self.dists_by_name[name] = dist
         self.dists[(name, dist.version)] = dist
         for p in dist.provides:
-            name, version = self.get_name_and_version(p)
+            name, version = self._get_name_and_version(p)
             logger.debug('Add to provided: %s, %s, %s', name, version, dist)
             self.provided.setdefault(name, set()).add((version, dist))
 
     def remove_distribution(self, dist):
+        """
+        Remove a distribution from the finder. This will update internal
+        information about who provides what.
+        :param dist: The distribution to remove.
+        """
         logger.debug('removing distribution %s', dist)
         name = dist.key
         del self.dists_by_name[name]
         del self.dists[(name, dist.version)]
         for p in dist.provides:
-            name, version = self.get_name_and_version(p)
+            name, version = self._get_name_and_version(p)
             logger.debug('Remove from provided: %s, %s, %s', name, version, dist)
             s = self.provided[name]
             s.remove((version, dist))
@@ -836,6 +941,13 @@ class DependencyFinder(object):
                 del self.provided[name]
 
     def get_matcher(self, reqt):
+        """
+        Get a version matcher for a requirement.
+        :param reqt: The requirement
+        :type reqt: str
+        :return: A version matcher (an instance of
+                 :class:`distlib.version.Matcher`).
+        """
         try:
             matcher = self.scheme.matcher(reqt)
         except UnsupportedVersionError:
@@ -845,6 +957,13 @@ class DependencyFinder(object):
         return matcher
 
     def find_providers(self, reqt):
+        """
+        Find the distributions which can fulfill a requirement.
+
+        :param reqt: The requirement.
+         :type reqt: str
+        :return: A set of distribution which can fulfill the requirement.
+        """
         matcher = self.get_matcher(reqt)
         name = matcher.key   # case-insensitive
         result = set()
@@ -862,6 +981,24 @@ class DependencyFinder(object):
         return result
 
     def try_to_replace(self, provider, other, problems):
+        """
+        Attempt to replace one provider with another. This is typically used
+        when resolving dependencies from multiple sources, e.g. A requires
+        (B >= 1.0) while C requires (B >= 1.1).
+
+        For successful replacement, ``provider`` must meet all the requirements
+        which ``other`` fulfills.
+
+        :param provider: The provider we are trying to replace with.
+        :param other: The provider we're trying to replace.
+        :param problems: If False is returned, this will contain what
+                         problems prevented replacement. This is currently
+                         a tuple of the literal string 'cantreplace',
+                         ``provider``, ``other``  and the set of requirements
+                         that ``provider`` couldn't fulfill.
+        :return: True if we can replace ``other`` with ``provider``, else
+                 False.
+        """
         rlist = self.reqts[other]
         unmatched = set()
         for s in rlist:
@@ -870,7 +1007,7 @@ class DependencyFinder(object):
                 unmatched.add(s)
         if unmatched:
             # can't replace other with provider
-            problems.add(('cantreplace', other, provider, unmatched))
+            problems.add(('cantreplace', provider, other, unmatched))
             result = False
         else:
             # can replace other with provider

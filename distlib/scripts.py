@@ -45,7 +45,10 @@ if __name__ == '__main__':
 
 
 class ScriptMaker(object):
-
+    """
+    A class to copy or create scripts from source scripts or callable
+    specifications.
+    """
     script_template = SCRIPT_TEMPLATE
 
     executable = None  # for shebangs
@@ -221,6 +224,15 @@ class ScriptMaker(object):
     # Public API follows
 
     def make(self, specification):
+        """
+        Make a script.
+
+        :param specification: The specification, which is either a valid export
+                              entry specification (to make a script from a
+                              callable) or a filename (to make a script by
+                              copying from a source location).
+        :return: A list of all absolute pathnames written to,
+        """
         filenames = []
         entry = get_export_entry(specification)
         if entry is None:
@@ -230,6 +242,11 @@ class ScriptMaker(object):
         return filenames
 
     def make_multiple(self, specifications):
+        """
+        Take a list of specifications and make scripts from them,
+        :param specifications: A list of specifications.
+        :return: A list of all absolute pathnames written to,
+        """
         filenames = []
         for specification in specifications:
             filenames.extend(self.make(specification))

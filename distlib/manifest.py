@@ -33,6 +33,11 @@ class Manifest(object):
     """
 
     def __init__(self, base=None):
+        """
+        Initialise an instance.
+
+        :param base: The base directory to explore under.
+        """
         self.base = os.path.abspath(os.path.normpath(base or os.getcwd()))
         self.prefix = self.base + os.sep
         self.allfiles = None
@@ -43,8 +48,8 @@ class Manifest(object):
     #
 
     def findall(self):
-        """Find all files under 'root' and return the list of full file names
-        (relative to 'root').
+        """Find all files under the base and set ``allfiles`` to the absolute
+        pathnames of files found.
         """
         from stat import S_ISREG, S_ISDIR, S_ISLNK
 
@@ -70,11 +75,21 @@ class Manifest(object):
                     push(fullname)
 
     def add(self, item):
+        """
+        Add a file to the manifest.
+
+        :param item: The pathname to add. This can be relative to the base.
+        """
         if not item.startswith(self.prefix):
             item = os.path.join(self.base, item)
         self.files.add(os.path.normpath(item))
 
     def add_many(self, items):
+        """
+        Add a list of files to the manifest.
+
+        :param items: The pathnames to add. These can be relative to the base.
+        """
         for item in items:
             self.add(item)
 
@@ -104,56 +119,22 @@ class Manifest(object):
         self.files = set()
         self.allfiles = []
 
-    #
-    # Private API
-    #
+    def process_directive(self, directive):
+        """
+        Process a directive which either adds some files from ``allfiles`` to
+        ``files``, or removes some files from ``files``.
 
-    def _parse_template_line(self, line):
-        words = line.split()
-        if len(words) == 1 and words[0] not in (
-            'include', 'exclude', 'global-include', 'global-exclude',
-            'recursive-include', 'recursive-exclude', 'graft', 'prune'):
-            # no action given, let's use the default 'include'
-            words.insert(0, 'include')
+        :param directive: The directive to process. This should be in a format
+                     compatible with distutils ``MANIFEST.in`` files:
 
-        action = words[0]
-        patterns = thedir = dir_pattern = None
-
-        if action in ('include', 'exclude',
-                      'global-include', 'global-exclude'):
-            if len(words) < 2:
-                raise DistlibException(
-                    '%r expects <pattern1> <pattern2> ...' % action)
-
-            patterns = [convert_path(word) for word in words[1:]]
-
-        elif action in ('recursive-include', 'recursive-exclude'):
-            if len(words) < 3:
-                raise DistlibException(
-                    '%r expects <dir> <pattern1> <pattern2> ...' % action)
-
-            thedir = convert_path(words[1])
-            patterns = [convert_path(word) for word in words[2:]]
-
-        elif action in ('graft', 'prune'):
-            if len(words) != 2:
-                raise DistlibException(
-                    '%r expects a single <dir_pattern>' % action)
-
-            dir_pattern = convert_path(words[1])
-
-        else:
-            raise DistlibException('unknown action %r' % action)
-
-        return action, patterns, thedir, dir_pattern
-
-    def process_directive(self, line):
+                     http://docs.python.org/distutils/sourcedist.html#commands
+        """
         # Parse the line: split it up, make sure the right number of words
         # is there, and return the relevant words.  'action' is always
         # defined: it's the first word of the line.  Which of the other
         # three are defined depends on the action; it'll be either
-        # patterns, (dir and patterns), or (dir_pattern).
-        action, patterns, thedir, dir_pattern = self._parse_template_line(line)
+        # patterns, (dir and patterns), or (dirpattern).
+        action, patterns, thedir, dirpattern = self._parse_directive(directive)
 
         # OK, now we know that the action is valid and we have the
         # right number of words on the line for that action -- so we
@@ -196,19 +177,67 @@ class Manifest(object):
                                    pattern, thedir)
 
         elif action == 'graft':
-            if not self._include_pattern(None, prefix=dir_pattern):
+            if not self._include_pattern(None, prefix=dirpattern):
                 logger.warning('no directories found matching %r',
-                               dir_pattern)
+                               dirpattern)
 
         elif action == 'prune':
-            if not self._exclude_pattern(None, prefix=dir_pattern):
+            if not self._exclude_pattern(None, prefix=dirpattern):
                 logger.warning('no previously-included directories found '
-                               'matching %r', dir_pattern)
+                               'matching %r', dirpattern)
         else:   #pragma: no cover
             # This should never happen, as it should be caught in
             # _parse_template_line
             raise DistlibException(
                 'invalid action %r' % action)
+
+    #
+    # Private API
+    #
+
+    def _parse_directive(self, directive):
+        """
+        Validate a directive.
+        :param directive: The directive to validate.
+        :return: A tuple of action, patterns, thedir, dir_patterns
+        """
+        words = directive.split()
+        if len(words) == 1 and words[0] not in (
+            'include', 'exclude', 'global-include', 'global-exclude',
+            'recursive-include', 'recursive-exclude', 'graft', 'prune'):
+            # no action given, let's use the default 'include'
+            words.insert(0, 'include')
+
+        action = words[0]
+        patterns = thedir = dir_pattern = None
+
+        if action in ('include', 'exclude',
+                      'global-include', 'global-exclude'):
+            if len(words) < 2:
+                raise DistlibException(
+                    '%r expects <pattern1> <pattern2> ...' % action)
+
+            patterns = [convert_path(word) for word in words[1:]]
+
+        elif action in ('recursive-include', 'recursive-exclude'):
+            if len(words) < 3:
+                raise DistlibException(
+                    '%r expects <dir> <pattern1> <pattern2> ...' % action)
+
+            thedir = convert_path(words[1])
+            patterns = [convert_path(word) for word in words[2:]]
+
+        elif action in ('graft', 'prune'):
+            if len(words) != 2:
+                raise DistlibException(
+                    '%r expects a single <dir_pattern>' % action)
+
+            dir_pattern = convert_path(words[1])
+
+        else:
+            raise DistlibException('unknown action %r' % action)
+
+        return action, patterns, thedir, dir_pattern
 
     def _include_pattern(self, pattern, anchor=True, prefix=None,
                          is_regex=False):

@@ -64,12 +64,6 @@ Classes representing installed distributions
       A local absolute path is an absolute path in which occurrences of ``'/'``
       have been replaced by :data:`os.sep`.
 
-   .. method:: uses(path)
-
-      Check whether *path* was installed by this distribution (i.e. if the path
-      is present in the :file:`RECORD` file). *path* can be a local absolute
-      path or a relative ``'/'``-separated path. Returns a boolean.
-
    Available attributes:
 
    .. attribute:: metadata
@@ -101,8 +95,6 @@ Classes representing installed distributions
    compared and sorted. Other available methods are:
 
    .. method:: list_installed_files(local=False)
-
-   .. method:: uses(path)
 
    Available attributes:
 

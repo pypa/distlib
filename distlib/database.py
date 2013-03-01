@@ -617,6 +617,16 @@ class InstalledDistribution(BaseInstalledDistribution):
             cp.write(f)
 
     def get_resource_path(self, relative_path):
+        """
+        NOTE: This API may change in the future.
+
+        Return the absolute path to a resource file with the given relative
+        path.
+
+        :param relative_path: The path, relative to .dist-info, of the resource
+                              of interest.
+        :return: The absolute path where the resource is to be found.
+        """
         path = self.get_distinfo_file('RESOURCES')
         with CSVReader(path) as resources_reader:
             for relative, destination in resources_reader:
@@ -706,6 +716,18 @@ class InstalledDistribution(BaseInstalledDistribution):
 
     @cached_property
     def shared_locations(self):
+        """
+        A dictionary of shared locations whose keys are in the set 'prefix',
+        'purelib', 'platlib', 'scripts', 'headers', 'data' and 'namespace'.
+        The corresponding value is the absolute path of that category for
+        this distribution, and takes into account any paths selected by the
+        user at installation time (e.g. via command-line arguments). In the
+        case of the 'namespace' key, this would be a list of absolute paths
+        for the roots of namespace packages in this distribution.
+
+        The first time this property is accessed, the relevant information is
+        read from the SHARED file in the .dist-info directory.
+        """
         result = {}
         shared_path = os.path.join(self.path, 'SHARED')
         if os.path.isfile(shared_path):
@@ -720,6 +742,14 @@ class InstalledDistribution(BaseInstalledDistribution):
         return result
 
     def write_shared_locations(self, paths, dry_run=False):
+        """
+        Write shared location information to the SHARED file in .dist-info.
+        :param paths: A dictionary as described in the documentation for
+        :meth:`shared_locations`.
+        :param dry_run: If True, the action is logged but no file is actually
+                        written.
+        :return: The path of the file written to.
+        """
         shared_path = os.path.join(self.path, 'SHARED')
         logger.info('creating %s', shared_path)
         if dry_run:
@@ -884,6 +914,12 @@ class EggInfoDistribution(BaseInstalledDistribution):
         return mismatches
 
     def list_installed_files(self, local=False):
+        """
+        Iterates over the ``installed-files.txt`` entries and returns a tuple
+        ``(path, hash, size)`` for each line.
+
+        :returns: a list of (path, hash, size)
+        """
 
         def _md5(path):
             f = open(path, 'rb')
@@ -942,9 +978,6 @@ class EggInfoDistribution(BaseInstalledDistribution):
                             yield p
                         else:
                             yield line
-
-    def uses(self, path):
-        return False
 
     def __eq__(self, other):
         return (isinstance(other, EggInfoDistribution) and
@@ -1059,6 +1092,13 @@ class DependencyGraph(object):
         f.write('}\n')
 
     def topological_sort(self):
+        """
+        Perform a topological sort of the graph.
+        :return: A tuple, the first element of which is a topologically sorted
+                 list of distributions, and the second element of which is a
+                 list of distributions that cannot be sorted because they have
+                 circular dependencies and so form a cycle.
+        """
         result = []
         # Make a shallow copy of the adjacency list
         alist = {}

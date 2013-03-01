@@ -17,6 +17,9 @@ from .util import in_venv
 __all__ = ['interpret']
 
 class Evaluator(object):
+    """
+    A limited evaluator for Python expressions.
+    """
 
     operators = {
         'eq': lambda x, y: x == y,
@@ -44,10 +47,18 @@ class Evaluator(object):
     }
 
     def __init__(self, context=None):
+        """
+        Initialise an instance.
+
+        :param context: If specified, names are looked up in this mapping.
+        """
         self.context = context or {}
         self.source = None
 
     def get_fragment(self, offset):
+        """
+        Get the part of the source which is causing a problem.
+        """
         fragment_len = 10
         s = '%r' % (self.source[offset:offset + fragment_len])
         if offset + fragment_len < len(self.source):
@@ -55,9 +66,16 @@ class Evaluator(object):
         return s
 
     def get_handler(self, node_type):
+        """
+        Get a handler for the specified AST node type.
+        """
         return getattr(self, 'do_%s' % node_type, None)
 
     def evaluate(self, node, filename=None):
+        """
+        Evaluate a source string or node, using ``filename`` when
+        displaying errors.
+        """
         if isinstance(node, string_types):
             self.source = node
             kwargs = {'mode': 'eval'}
@@ -162,5 +180,10 @@ class Evaluator(object):
 def interpret(marker, execution_context=None):
     """
     Interpret a marker and return a result depending on environment.
+
+    :param marker: The marker to interpret.
+    :type marker: str
+    :param execution_context: The context used for name lookup.
+    :type execution_context: mapping
     """
     return Evaluator(execution_context).evaluate(marker.strip())

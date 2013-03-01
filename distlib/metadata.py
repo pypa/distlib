@@ -219,6 +219,7 @@ class Metadata(object):
     - *path*, the path to a METADATA file
     - *fileobj* give a file-like object with METADATA as content
     - *mapping* is a dict-like object
+    - *scheme* is a version scheme name
     """
     # TODO document that execution_context and platform_dependent are used
     # to filter on query, not when setting a key

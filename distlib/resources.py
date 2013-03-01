@@ -20,7 +20,19 @@ from .util import cached_property, get_cache_base, path_to_cache_dir
 logger = logging.getLogger(__name__)
 
 class Cache(object):
+    """
+    A class implementing a cache for resources that need to live in the file system
+    e.g. shared libraries.
+    """
+
     def __init__(self, base=None):
+        """
+        Initialise an instance.
+
+        :param base: The base directory where the cache should be located. If
+                     not specified, this will be the ``resource-cache``
+                     directory under whatever :func:`get_cache_base` returns.
+        """
         if base is None:
             base = os.path.join(get_cache_base(), 'resource-cache')
             # we use 'isdir' instead of 'exists', because we want to
@@ -30,13 +42,29 @@ class Cache(object):
         self.base = os.path.abspath(os.path.normpath(base))
 
     def prefix_to_dir(self, prefix):
+        """
+        Converts a resource prefix to a directory name in the cache.
+        """
         return path_to_cache_dir(prefix)
 
     def is_stale(self, resource, path):
+        """
+        Is the cache stale for the given resource?
+
+        :param resource: The :class:`Resource` being cached.
+        :param path: The path of the resource in the cache.
+        :return: True if the cache is stale.
+        """
         # Cache invalidation is a hard problem :-)
         return True
 
     def get(self, resource):
+        """
+        Get a resource into the cache,
+
+        :param resource: A :class:`Resource` instance.
+        :return: The pathname of the resource in the cache.
+        """
         prefix, path = resource.finder.get_cache_info(resource)
         if prefix is None:
             result = path
@@ -56,6 +84,9 @@ class Cache(object):
         return result
 
     def clear(self):
+        """
+        Clear the cache.
+        """
         not_removed = []
         for fn in os.listdir(self.base):
             fn = os.path.join(self.base, fn)
@@ -71,11 +102,17 @@ class Cache(object):
 cache = Cache()
 
 class Resource(object):
+    """
+    A class representing an in-package resource, such as a data file. This is
+    not normally instantiated by user code, but rather by a
+    :class:`ResourceFinder` which manages the resource.
+    """
     def __init__(self, finder, name):
         self.finder = finder
         self.name = name
 
     def as_stream(self):
+        "Get the resource as a stream. Not a property, as not idempotent."
         if self.is_container:
             raise DistlibException("A container resource can't be returned as "
                                     "a stream")
@@ -242,7 +279,7 @@ _finder_registry = {
 try:
     import _frozen_importlib
     _finder_registry[_frozen_importlib.SourceFileLoader] = ResourceFinder
-except ImportError:
+except (ImportError, AttributeError):
     pass
 
 def register_finder(loader, finder_maker):
@@ -251,6 +288,11 @@ def register_finder(loader, finder_maker):
 _finder_cache = {}
 
 def finder(package):
+    """
+    Return a resource finder for a package.
+    :param package: The name of the package.
+    :return: A :class:`ResourceFinder` instance for the package.
+    """
     if package in _finder_cache:
         result = _finder_cache[package]
     else:

@@ -392,22 +392,26 @@ class Wheel(object):
             # for script copying/shebang processing
             workdir = tempfile.mkdtemp()
             # set target dir later
+            # we default add_launchers to False, as the
+            # Python Launcher should be used instead
             maker = ScriptMaker(workdir, None, fileop=fileop,
-                                add_launchers=False)    # may need to revisit this
+                                add_launchers=False)
             maker.executable = executable
             try:
                 for zinfo in zf.infolist():
                     arcname = zinfo.filename
                     row = records[arcname]
                     if row[2] and str(zinfo.file_size) != row[2]:
-                        raise DistlibException('size mismatch for %s' % arcname)
+                        raise DistlibException('size mismatch for '
+                                               '%s' % arcname)
                     if row[1]:
                         kind, value = row[1].split('=', 1)
                         with zf.open(arcname) as bf:
                             data = bf.read()
                         _, digest = self.get_hash(data, kind)
                         if digest != value:
-                            raise DistlibException('digest mismatch for %s' % arcname)
+                            raise DistlibException('digest mismatch for '
+                                                   '%s' % arcname)
 
                     is_script = (arcname.startswith(script_pfx)
                                  and not arcname.endswith('.exe'))
@@ -430,8 +434,9 @@ class Wheel(object):
                                 data = bf.read()
                                 _, newdigest = self.get_hash(data, kind)
                                 if newdigest != digest:
-                                    raise DistlibException('digest mismatch on '
-                                                           'write for %s' % outfile)
+                                    raise DistlibException('digest mismatch '
+                                                           'on write for '
+                                                           '%s' % outfile)
                         if bc and outfile.endswith('.py'):
                             try:
                                 pyc = fileop.byte_compile(outfile)
