@@ -205,8 +205,11 @@ class LocatorTestCase(unittest.TestCase):
         slist, cycle = g.topological_sort()
         self.assertFalse(cycle)
         names = [d.name for d in slist]
-        self.assertEqual(names, ['hgtools', 'py', 'pytest',
-                                 'pytest-runner', 'irc'])
+        expected = set([
+            ('hgtools', 'py', 'pytest', 'pytest-runner', 'irc'),
+            ('py', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
+        ])
+        self.assertIn(tuple(names), expected)
 
         # Test with extras
         dists, problems = finder.find('Jinja2 (2.6)')
