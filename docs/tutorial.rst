@@ -918,8 +918,8 @@ The other script, ``bar``, is different only in the essentials::
     >         func = _resolve('foo', 'other_main')
 
 
-Speifying a custom executable for shebangs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Specifying a custom executable for shebangs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 You may need to specify a custom executable for shebang lines. To do this, set
