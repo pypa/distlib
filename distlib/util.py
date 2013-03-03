@@ -544,10 +544,11 @@ def get_export_entry(specification):
     return result
 
 
-def get_cache_base():
+def get_cache_base(suffix=None):
     """
     Return the default base location for distlib caches. If the directory does
-    not exist, it is created.
+    not exist, it is created. Use the suffix provided for the base directory,
+    and default to '.distlib' if it isn't provided.
 
     On Windows, if LOCALAPPDATA is defined in the environment, then it is
     assumed to be a directory, and will be the parent directory of the result.
@@ -556,14 +557,16 @@ def get_cache_base():
     the result.
 
     The result is just the directory '.distlib' in the parent directory as
-    determined above.
+    determined above, or with the name specified with ``suffix``.
     """
+    if suffix is None:
+        suffix = '.distlib'
     if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
         result = os.path.expandvars('$localappdata')
     else:
         # Assume posix, or old Windows
         result = os.path.expanduser('~')
-    result = os.path.join(result, '.distlib')
+    result = os.path.join(result, suffix)
     # we use 'isdir' instead of 'exists', because we want to
     # fail if there's a file with that name
     if not os.path.isdir(result):
