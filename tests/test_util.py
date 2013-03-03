@@ -406,7 +406,7 @@ class ProgressTestCase(unittest.TestCase):
         # machines
         if os.name == 'nt':
             speed1 = _speed_range(19, 20)
-            speed2 = _speed_range(22, 22)
+            speed2 = _speed_range(21, 22)
         else:
             speed1 = _speed_range(17, 19)
             speed2 = _speed_range(21, 22)
