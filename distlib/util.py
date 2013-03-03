@@ -707,6 +707,8 @@ def update_metadata(metadata, pkginfo):
         if k is not None:
             metadata[k] = v
     metadata.set_metadata_version()
+    if 'requirements' in pkginfo:
+        metadata.dependencies = pkginfo['requirements']
 
 
 #
