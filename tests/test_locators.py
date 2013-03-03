@@ -165,7 +165,8 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.version, '0.9')
         scheme, _, path, _, _, _ = urlparse(dist.download_url)
         self.assertEqual(scheme, 'file')
-        self.assertEqual(url2pathname(path), exp1)
+        self.assertEqual(os.path.normcase(url2pathname(path)),
+                         os.path.normcase(exp1))
         locator.merge = True
         locator._cache.clear()
         result = locator.get_project('flask')

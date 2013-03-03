@@ -8,19 +8,6 @@ This is the place to start your practical exploration of ``distlib``.
 Installation
 ------------
 
-.. note:: Since ``distlib`` has not received its first release yet, you can't
-   currently install it from PyPI - the documentation below is a little
-   premature. Instead, you need to clone the Mercurial repository at
-
-   https://bitbucket.org/vinay.sajip/distlib/
-
-   or
-
-   http://hg.python.org/distlib/
-
-   followed by doing a ``python setup.py install`` invocation, ideally in a
-   virtual environment (venv).
-
 Distlib is a pure-Python library. You should be able to install it using::
 
    pip install distlib
@@ -33,16 +20,15 @@ Python's ``site-packages`` directory.
 Testing
 -------
 
-A full test suite is included with ``distlib``. To run it, you'll need to clone
-the repository or download a tarball and run ``python setup.py test``
+A full test suite is included with ``distlib``. To run it, you'll need to
+download the source distribution, unpack it and run ``python setup.py test``
 in the top-level directory of the package. You can of course also run
-``python setup.py install``
-to install the package (perhaps invoking with ``sudo`` if you need
-to install to a protected location).
+``python setup.py install`` to install the package (perhaps invoking with
+``sudo`` if you need to install to a protected location).
 
 Continuous integration test results are available at:
 
-https://travis-ci.org/vsajip/distlib
+https://travis-ci.org/vsajip/distlib/
 
 Coverage results are available at:
 
