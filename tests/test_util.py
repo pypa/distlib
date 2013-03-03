@@ -405,7 +405,7 @@ class ProgressTestCase(unittest.TestCase):
         # These ranges may need tweaking to cater for especially slow
         # machines
         if os.name == 'nt':
-            speed1 = _speed_range(19, 20)
+            speed1 = _speed_range(18, 20)
             speed2 = _speed_range(21, 22)
         else:
             speed1 = _speed_range(17, 19)
@@ -438,7 +438,7 @@ class ProgressTestCase(unittest.TestCase):
 
     def test_unknown(self):
         if os.name == 'nt':
-            speed = _speed_range(19, 20)
+            speed = _speed_range(18, 20)
         else:
             speed = _speed_range(17, 19)
         expected = (
