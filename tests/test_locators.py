@@ -102,7 +102,8 @@ class LocatorTestCase(unittest.TestCase):
             dist = result['0.9']
             self.assertEqual(dist.name, 'Flask')
             self.assertEqual(dist.version, '0.9')
-            self.assertEqual(get_path(dist.download_url), expected)
+            self.assertEqual(os.path.normcase(get_path(dist.download_url)),
+                             os.path.normcase(expected))
         names = locator.get_distribution_names()
         expected = set(['Flask', 'python-gnupg', 'coverage', 'Django'])
         if sys.version_info[:2] == (2, 7):
