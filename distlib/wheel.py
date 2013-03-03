@@ -473,7 +473,7 @@ class Wheel(object):
                 # Write RECORD
                 dist.write_installed_files(outfiles, paths['prefix'],
                                            dry_run)
-
+                return dist
             except Exception as e:  # pragma: no cover
                 logger.exception('installation failed.')
                 fileop.rollback()
