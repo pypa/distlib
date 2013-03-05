@@ -385,6 +385,8 @@ class Metadata(object):
 
         for field in _version2fieldlist(self['Metadata-Version']):
             values = self.get(field)
+            if values in ('UNKNOWN', ['UNKNOWN']):
+                continue
             if field in _ELEMENTSFIELD:
                 self._write_field(fileobject, field, ','.join(values))
                 continue
