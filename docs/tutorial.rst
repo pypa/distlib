@@ -683,17 +683,6 @@ At the time of writing, you can find a file in the appropriate format on the
 ``cacert.pem`` file and pass the path to it when instantiating your verifier.
 
 
-.. note::
-   The main PyPI server, http://pypi.python.org/, currently does not have an
-   SSL certificate which is recognised by (for example) mainstream browsers.
-   That's because the server is currently certified by CACert.org, whose root
-   certificate is not included in the trusted roots pre-installed into these
-   browsers. If you want to verify using CACert.org root certificates, you
-   will need to get the relevant root certificates and ensure that they are
-   included in the file you supply to ``HTTPSHandler``. See `this page
-   <http://www.cacert.org/index.php?id=3>`_ for CACert.org root certificates.
-
-
 Saving a default configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
