@@ -371,21 +371,21 @@ class Metadata(object):
                     self.set(field, value)
         self.set_metadata_version()
 
-    def write(self, filepath):
+    def write(self, filepath, skip_unknown=False):
         """Write the metadata fields to filepath."""
         fp = codecs.open(filepath, 'w', encoding='utf-8')
         try:
-            self.write_file(fp)
+            self.write_file(fp, skip_unknown)
         finally:
             fp.close()
 
-    def write_file(self, fileobject):
+    def write_file(self, fileobject, skip_unknown=False):
         """Write the PKG-INFO format data to a file object."""
         self.set_metadata_version()
 
         for field in _version2fieldlist(self['Metadata-Version']):
             values = self.get(field)
-            if values in ('UNKNOWN', ['UNKNOWN']):
+            if skip_unknown and values in ('UNKNOWN', ['UNKNOWN']):
                 continue
             if field in _ELEMENTSFIELD:
                 self._write_field(fileobject, field, ','.join(values))
