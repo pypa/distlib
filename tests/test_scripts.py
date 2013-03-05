@@ -19,6 +19,13 @@ from distlib.util import get_executable
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+COPIED_SCRIPT = '''#!python
+# This is a copied script
+'''
+
+MADE_SCRIPT = 'made = dummy.module:main'
+
+
 class ScriptTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -44,6 +51,29 @@ class ScriptTestCase(unittest.TestCase):
                 with open(files[0], 'rb') as f:
                     first_line = f.readline()
                 self.assertIn(executable, first_line)
+
+    def test_shebangs_custom_executable(self):
+        srcdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, srcdir)
+        dstdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, dstdir)
+        maker = ScriptMaker(srcdir, dstdir, add_launchers=False)
+        maker.executable = 'this_should_appear_in_the_shebang_line'
+        #let's create the script to be copied. It has a vanilla shebang line.
+        fn = os.path.join(srcdir, 'copied')
+        with open(fn, 'w') as f:
+            f.write(COPIED_SCRIPT)
+        # Let's ask the maker to copy the script, and see what the shebang is
+        # in the copy.
+        filenames = maker.make('copied')
+        with open(filenames[0], 'r') as f:
+            actual = f.readline()
+        self.assertIn(maker.executable, actual)
+        # Now let's make a script from a callable
+        filenames = maker.make(MADE_SCRIPT)
+        with open(filenames[0], 'r') as f:
+            actual = f.readline()
+        self.assertIn(maker.executable, actual)
 
     def test_multiple(self):
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
@@ -164,3 +194,6 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(len(files), 1)
         f = files[0]
         self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
+
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()
