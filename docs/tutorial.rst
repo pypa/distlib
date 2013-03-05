@@ -270,7 +270,7 @@ Overview
 
 To locate a distribution in an index, we can use the :func:`locate` function.
 This returns a potentially downloadable distribution (in the sense that it
-has a download URL - of course, there are no guarantees that there will
+has a download URL -- of course, there are no guarantees that there will
 actually be a downloadable resource at that URL). The return value is an
 instance of :class:`distlib.database.Distribution` which can be queried for
 any distributions it requires, so that they can also be located if desired.
@@ -509,7 +509,7 @@ Benefits to using this method over plain :func:`urlretrieve` are:
 Note that the url you download from doesn't actually need to be on the index --
 in theory, it could be from some other site. Note that if you have an
 ``ssl_verifier`` set on the index, it will perform its checks according to
-whichever ``url`` you supply - whether it's a resource on the index or not.
+whichever ``url`` you supply -- whether it's a resource on the index or not.
 
 
 Verifying signatures
@@ -547,7 +547,7 @@ keys shouldn't give you a false sense of security; unless you can be sure that
 those keys actually belong to the people or organisations they purport to
 represent, the signature has no real value, even if it is verified without
 error. For you to be able to trust a key, it would need to be signed by
-someone you trust, who vouches for it - and this requires there to be either
+someone you trust, who vouches for it -- and this requires there to be either
 a signature from a valid certifying authority (e.g. Verisign, Thawte etc.) or
 a `Web of Trust <http://wikipedia.org/wiki/Web_of_trust>`_ around the keys that
 you want to rely on.
@@ -656,7 +656,7 @@ Ensuring that *only* HTTPS connections are made
 +++++++++++++++++++++++++++++++++++++++++++++++
 
 You may want to ensure that traffic is *only* HTTPS for a particular
-interaction with a server - for example:
+interaction with a server -- for example:
 
 * Deal with a Man-In-The-Middle proxy server which listens on port 443
   but talks HTTP rather than HTTPS
@@ -707,7 +707,7 @@ method::
     >>> index.save_configuration()
 
 This will use ``distutils`` code to save a default ``.pypirc`` file which
-specifies a single index - PyPI - with the specified username and password.
+specifies a single index -- PyPI -- with the specified username and password.
 
 
 .. _use-metadata:
@@ -1147,6 +1147,7 @@ to build wheels for existing PyPI distributions if you use ``distlib``. The
 following script shows how you can use an unpatched, vanilla ``pip`` to
 build wheels::
 
+    #!/usr/bin/env python
     # -*- coding: utf-8 -*-
     #
     # Copyright (C) 2013 Vinay Sajip. License: MIT
@@ -1163,11 +1164,12 @@ build wheels::
 
     logger = logging.getLogger('wheeler')
 
-    from distlib.compat import string_types
+    from distlib.compat import configparser
     from distlib.database import DistributionPath, make_graph
     from distlib.locators import (JSONLocator, SimpleScrapingLocator,
                                   AggregatingLocator, DependencyFinder)
     from distlib.manifest import Manifest
+    from distlib.metadata import Metadata
     from distlib.util import parse_requirement
     from distlib.wheel import Wheel
 
@@ -1175,23 +1177,70 @@ build wheels::
 
     INSTALLED_DISTS = DistributionPath(include_egg=True)
 
-    def convert_egg_info(libdir, prefix):
+
+    def get_requirements(data):
+        lines = []
+        for line in data.splitlines():
+            line = line.strip()
+            if not line or line[0] == '#':
+                continue
+            lines.append(line)
+        reqts = []
+        extras = {}
+        result = {'install': reqts, 'extras': extras}
+        for line in lines:
+            if line[0] != '[':
+                reqts.append(line)
+            else:
+                i = line.find(']', 1)
+                if i < 0:
+                    raise ValueError('unrecognised line: %r' % line)
+                extra = line[1:i]
+                extras[extra] = reqts = []
+        return result
+
+    def convert_egg_info(libdir, prefix, options):
         files = os.listdir(libdir)
         ei = list(filter(lambda d: d.endswith('.egg-info'), files))[0]
         olddn = os.path.join(libdir, ei)
         di = EGG_INFO_RE.sub('.dist-info', ei)
         newdn = os.path.join(libdir, di)
         os.rename(olddn, newdn)
-        renames = {
-            'PKG-INFO': 'METADATA',
-        }
+        if options.compatible:
+            renames = {}
+        else:
+            renames = {
+                'entry_points.txt': 'EXPORTS',
+            }
+        excludes = set([
+            'SOURCES.txt',          # of no interest in/post WHEEL
+            'installed-files.txt',  # replaced by RECORD, so not needed
+            'requires.txt',         # added to METADATA, so not needed
+            'PKG-INFO',             # replaced by METADATA
+            'not-zip-safe',         # not applicable
+        ])
         files = os.listdir(newdn)
+        metadata = mdname = reqts = None
         for oldfn in files:
             pn = os.path.join(newdn, oldfn)
             if oldfn in renames:
                 os.rename(pn, os.path.join(newdn, renames[oldfn]))
             else:
-                os.remove(pn)
+                if oldfn == 'requires.txt':
+                    with open(pn, 'r') as f:
+                        reqts = get_requirements(f.read())
+                elif oldfn == 'PKG-INFO':
+                    metadata = Metadata(path=pn)
+                    mdname = os.path.join(newdn, 'METADATA')
+                if oldfn in excludes or not options.compatible:
+                    os.remove(pn)
+        if metadata:
+            # Use Metadata 1.2
+            metadata['Provides-Dist'] += ['%s (%s)' % (metadata.name,
+                                                       metadata.version)]
+            if reqts and reqts['install']:
+                metadata['Requires-Dist'] = reqts['install']
+            metadata.write(mdname, True)
         manifest = Manifest(os.path.dirname(libdir))
         manifest.findall()
         paths = manifest.allfiles
@@ -1199,14 +1248,22 @@ build wheels::
         dist = next(dp.get_distributions())
         dist.write_installed_files(paths, prefix)
 
-    def install_dist(distname, workdir):
+
+    def install_dist(distname, workdir, options):
         pfx = '--install-option='
         purelib = pfx + '--install-purelib=%s/purelib' % workdir
         platlib = pfx + '--install-platlib=%s/platlib' % workdir
         headers = pfx + '--install-headers=%s/headers' % workdir
         scripts = pfx + '--install-scripts=%s/scripts' % workdir
         data = pfx + '--install-data=%s/data' % workdir
-        cmd = ['pip', 'install',
+        # Use the pip adjacent to sys.executable, if any (for virtualenvs)
+        d = os.path.dirname(sys.executable)
+        files = filter(lambda o: o in ('pip', 'pip.exe'), os.listdir(d))
+        if not files:
+            prog = 'pip'
+        else:
+            prog = os.path.join(d, files[0])
+        cmd = [prog, 'install',
                '--no-deps', '--quiet',
                '--index-url', 'http://pypi.python.org/simple/',
                '--timeout', '3', '--default-timeout', '3',
@@ -1227,13 +1284,14 @@ build wheels::
             if os.path.isdir(libdir):
                 result[dn] = libdir
                 break
-        convert_egg_info(libdir, workdir)
+        convert_egg_info(libdir, workdir, options)
         dp = DistributionPath([libdir])
         dist = next(dp.get_distributions())
         md = dist.metadata
         result['name'] = md['Name']
         result['version'] = md['Version']
         return result
+
 
     def build_wheel(distname, options):
         result = None
@@ -1246,9 +1304,9 @@ build wheels::
                 print('Can\'t build a wheel from already-installed '
                       'distribution %s' % dist.name_and_version)
             else:
-                workdir = tempfile.mkdtemp() # where the Wheel input files will live
+                workdir = tempfile.mkdtemp()    # where the Wheel input files will live
                 try:
-                    paths = install_dist(distname, workdir)
+                    paths = install_dist(distname, workdir, options)
                     paths['prefix'] = workdir
                     wheel = Wheel()
                     wheel.name = paths.pop('name')
@@ -1260,17 +1318,30 @@ build wheels::
                     shutil.rmtree(workdir)
         return result
 
+
     def main(args=None):
         parser = optparse.OptionParser(usage='%prog [options] requirement [requirement ...]')
         parser.add_option('-d', '--dest', dest='destdir', metavar='DESTDIR',
                           default=os.getcwd(), help='Where you want the wheels '
-                          'to be put')
+                          'to be put.')
         parser.add_option('-n', '--no-deps', dest='deps', default=True,
-                          action='store_false')
+                          action='store_false',
+                          help='Don\'t build dependent wheels.')
         options, args = parser.parse_args(args)
+        options.compatible = True   # may add flag to turn off later
         if not args:
             parser.print_usage()
         else:
+            # Check if pip is available; no point in continuing, otherwise
+            try:
+                with open(os.devnull, 'w') as f:
+                    p = subprocess.call(['pip', '--version'], stdout=f, stderr=subprocess.STDOUT)
+            except Exception:
+                p = 1
+            if p:
+                print('pip appears not to be available. Wheeler needs pip to '
+                      'build  wheels.')
+                return 1
             if options.deps:
                 # collect all the requirements, including dependencies
                 u = 'http://pypi.python.org/simple/'
@@ -1293,7 +1364,7 @@ build wheels::
                         for _, info in problems:
                             print('  Unsatisfied requirement %r' % info)
                     wanted |= dists
-                want_ordered = True # set to False to skip ordering
+                want_ordered = True     # set to False to skip ordering
                 if not want_ordered:
                     wanted = list(wanted)
                 else:
@@ -1310,9 +1381,11 @@ build wheels::
                         dist = INSTALLED_DISTS.get_distribution(w.name)
                         if dist or w.name in ('setuptools', 'distribute'):
                             wanted.remove(w)
+                            s = w.name_and_version
+                            print('Skipped already-installed distribution %s' % s)
 
-                    # converted wanted list to pip-style requirements
-                    args = ['%s==%s' % (dist.name, dist.version) for dist in wanted]
+                # converted wanted list to pip-style requirements
+                args = ['%s==%s' % (dist.name, dist.version) for dist in wanted]
 
             # Now go build
             built = []
@@ -1335,7 +1408,8 @@ build wheels::
         try:
             rc = main()
         except Exception as e:
-            logger.exception('Failed. Check the log.')
+            print('Failed - sorry! Reason: %s\nPlease check the log.' % e)
+            logger.exception('Failed.')
             rc = 1
         sys.exit(rc)
 
@@ -1345,20 +1419,26 @@ dependencies of any distribution you specify and builds separate wheels for
 each distribution. It's smart about not repeating work if dependencies are
 common across multiple distributions you specify::
 
-    $ python wheeler.py pygments flask
-    Finding the dependencies of pygments ...
+    $ python wheeler.py sphinx flask
+    Finding the dependencies of sphinx ...
     Finding the dependencies of flask ...
-    Pipping Werkzeug==0.8.3 ...
     Pipping Jinja2==2.6 ...
+    Pipping docutils==0.10 ...
     Pipping Pygments==1.6 ...
+    Pipping Werkzeug==0.8.3 ...
+    Pipping Sphinx==1.1.3 ...
     Pipping Flask==0.9 ...
     The following wheels were built:
-      Werkzeug-0.8.3-py27-none-any.whl
       Jinja2-2.6-py27-none-any.whl
+      docutils-0.10-py27-none-any.whl
       Pygments-1.6-py27-none-any.whl
+      Werkzeug-0.8.3-py27-none-any.whl
+      Sphinx-1.1.3-py27-none-any.whl
       Flask-0.9-py27-none-any.whl
 
-You can opt to not build dependent wheels by specifying --no-deps on the
+Note that the common dependency -- ``Jinja2`` -- was only built once.
+
+You can opt to not build dependent wheels by specifying ``--no-deps`` on the
 command line.
 
 Note that the script also currently uses an http: URL for PyPI -- this may need
@@ -1369,7 +1449,11 @@ to change to an https: URL in the future.
    either refuse to install to custom locations (because it views a distribution
    as already installed), or will try to upgrade and thus uninstall the existing
    distribution, even though installation is requested to a custom location (and
-   uninstallation is not desirable).
+   uninstallation is not desirable). For best results, run it in a fresh venv:
+
+   $ my_env/bin/python wheeler.py some_dist
+
+   It should use the venv's ``pip``, if one is found.
 
 
 .. _use-manifest:
@@ -1411,7 +1495,7 @@ the manifest is still empty::
     >>> manifest.files
     >>> set()
 
-You can populate the manifest - the :attr:`files` attribute - by running
+You can populate the manifest -- the :attr:`files` attribute -- by running
 a number of *directives*, using the :meth:`process_directive` method. Each
 directive will either add files from :attr:`allfiles` to :attr:`files`, or
 remove files from :attr:`allfiles` if they were added by a previous directive.
