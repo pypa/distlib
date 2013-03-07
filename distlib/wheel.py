@@ -374,8 +374,7 @@ class Wheel(object):
                 libdir = paths['platlib']
             records = {}
             with zf.open(record_name) as bf:
-                wf = wrapper(bf)
-                with CSVReader(record_name, stream=wf) as reader:
+                with CSVReader(record_name, stream=bf) as reader:
                     for row in reader:
                         p = row[0]
                         records[p] = row
@@ -401,10 +400,14 @@ class Wheel(object):
             try:
                 for zinfo in zf.infolist():
                     arcname = zinfo.filename
-                    row = records[arcname]
+                    if isinstance(arcname, text_type):
+                        u_arcname = arcname
+                    else:
+                        u_arcname = arcname.decode('utf-8')
+                    row = records[u_arcname]
                     if row[2] and str(zinfo.file_size) != row[2]:
                         raise DistlibException('size mismatch for '
-                                               '%s' % arcname)
+                                               '%s' % u_arcname)
                     if row[1]:
                         kind, value = row[1].split('=', 1)
                         with zf.open(arcname) as bf:
@@ -414,17 +417,17 @@ class Wheel(object):
                             raise DistlibException('digest mismatch for '
                                                    '%s' % arcname)
 
-                    is_script = (arcname.startswith(script_pfx)
-                                 and not arcname.endswith('.exe'))
+                    is_script = (u_arcname.startswith(script_pfx)
+                                 and not u_arcname.endswith('.exe'))
 
-                    if arcname.startswith(data_pfx):
-                        _, where, rp = arcname.split('/', 2)
+                    if u_arcname.startswith(data_pfx):
+                        _, where, rp = u_arcname.split('/', 2)
                         outfile = os.path.join(paths[where], convert_path(rp))
                     else:
                         # meant for site-packages.
-                        if arcname in (wheel_metadata_name, record_name):
+                        if u_arcname in (wheel_metadata_name, record_name):
                             continue
-                        outfile = os.path.join(libdir, convert_path(arcname))
+                        outfile = os.path.join(libdir, convert_path(u_arcname))
                     if not is_script:
                         with zf.open(arcname) as bf:
                             fileop.copy_stream(bf, outfile)
