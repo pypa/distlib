@@ -359,6 +359,8 @@ class Distribution(object):
         ('setup', 'install', 'test', 'extra:key').
         """
         result = []
+        if key == 'test':
+            key == 'extra:test'
         parts = key.split(':', 1)
         if len(parts) == 2:
             key, extra = parts
