@@ -254,4 +254,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.extras, ['doc', 'test'])
 
 if __name__ == '__main__':  # pragma: no cover
+    import logging
+    logging.basicConfig(level=logging.DEBUG, filename='test_locators.log',
+                        filemode='w', format='%(message)s')
     unittest.main()

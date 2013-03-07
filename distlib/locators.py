@@ -1086,6 +1086,8 @@ class DependencyFinder(object):
                 treqts = set()
             else:
                 treqts = set(dist.get_requirements('test'))
+                logger.debug('Test reqts for %s -> %s', dist.name_and_version,
+                             treqts)
                 if extras and 'test' in d:
                     treqts |= set(d['test'])
             all_reqts = ireqts | sreqts | treqts | ereqts

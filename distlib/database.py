@@ -356,11 +356,11 @@ class Distribution(object):
     def get_requirements(self, key):
         """
         Get the requirements of a particular type
-        ('setup', 'install', 'test', 'extra:key').
+        ('setup', 'install', 'test', 'extras:key').
         """
         result = []
         if key == 'test':
-            key == 'extra:test'
+            key = 'extras:test'
         parts = key.split(':', 1)
         if len(parts) == 2:
             key, extra = parts

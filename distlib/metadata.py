@@ -376,7 +376,7 @@ class Metadata(object):
     def _set_dependencies(self, value):
         if 'test' in value:
             value = dict(value) # don't change value passed in
-            value.setdefault('extras', {})['test'] = value.get('test')
+            value.setdefault('extras', {})['test'] = value.pop('test')
         self._dependencies = value
         setup_reqs = value.get('setup', [])
         install_reqs = value.get('install', [])
