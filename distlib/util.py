@@ -1322,7 +1322,11 @@ class CSVBase(object):
 class CSVReader(CSVBase):
     def __init__(self, fn, **kwargs):
         if 'stream' in kwargs:
-            self.stream = kwargs['stream']
+            stream = kwargs['stream']
+            if sys.version_info[0] >= 3:
+                # needs to be a text stream
+                stream = codecs.getreader('utf-8')(stream)
+            self.stream = stream
         else:
             self.stream = _csv_open(fn, 'r')
         self.reader = csv.reader(self.stream, **self.defaults)
