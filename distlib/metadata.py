@@ -116,6 +116,7 @@ _ALL_FIELDS.update(_314_FIELDS)
 _ALL_FIELDS.update(_345_FIELDS)
 _ALL_FIELDS.update(_426_FIELDS)
 
+EXTRA_RE = re.compile(r'''extra\s*==\s*("([^"]+)"|'([^']+)')''')
 
 def _version2fieldlist(version):
     if version == '1.0':
@@ -259,8 +260,8 @@ class Metadata(object):
         self.docutils_support = _HAS_DOCUTILS
         self.platform_dependent = platform_dependent
         self.execution_context = execution_context
+        self._dependencies = None
         self.scheme = scheme
-        self.dependencies = {}
         if [path, fileobj, mapping].count(None) < 2:
             raise TypeError('path, fileobj and mapping are exclusive')
         if path is not None:
@@ -345,9 +346,57 @@ class Metadata(object):
             return self[name]
         raise AttributeError(name)
 
+    def _get_dependencies(self):
+        def handle_req(req, rlist, extras):
+            if ';' not in req:
+                rlist.append(req)
+            else:
+                r, marker = req.split(';')
+                m = EXTRA_RE.search(marker)
+                if m:
+                    extra = m.groups()[0][1:-1]
+                    extras.setdefault(extra, []).append(r)
+
+        result = self._dependencies
+        if result is None:
+            self._dependencies = result = {}
+            extras = {}
+            setup_reqs = self['Setup-Requires-Dist']
+            if setup_reqs:
+                result['setup'] = setup_reqs
+            install_reqs = []
+            for req in self['Requires-Dist']:
+                handle_req(req, install_reqs, extras)
+            if install_reqs:
+                result['install'] = install_reqs
+            if extras:
+                result['extras'] = extras
+        return result
+
+    def _set_dependencies(self, value):
+        if 'test' in value:
+            value = dict(value) # don't change value passed in
+            value.setdefault('extras', {})['test'] = value.pop('test')
+        self._dependencies = value
+        setup_reqs = value.get('setup', [])
+        install_reqs = value.get('install', [])
+        klist = []
+        for k, rlist in value.get('extras', {}).items():
+            klist.append(k)
+            for r in rlist:
+                install_reqs.append('%s; extra == "%s"' % (r, k))
+        if setup_reqs:
+            self['Setup-Requires-Dist'] = setup_reqs
+        if install_reqs:
+            self['Requires-Dist'] = install_reqs
+        if klist:
+            self['Provides-Extra'] = klist
     #
     # Public API
     #
+
+    dependencies = property(_get_dependencies, _set_dependencies)
+
     def get_fullname(self, filesafe=False):
         """Return the distribution name with version.
 
@@ -411,7 +460,7 @@ class Metadata(object):
 
         for field in _version2fieldlist(self['Metadata-Version']):
             values = self.get(field)
-            if skip_unknown and values in ('UNKNOWN', ['UNKNOWN']):
+            if skip_unknown and values in ('UNKNOWN', [], ['UNKNOWN']):
                 continue
             if field in _ELEMENTSFIELD:
                 self._write_field(fileobject, field, ','.join(values))
