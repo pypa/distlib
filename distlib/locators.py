@@ -300,9 +300,7 @@ class Locator(object):
             raise DistlibException('Not a valid requirement: %r' % requirement)
         if r.extras:
             # lose the extras part of the requirement
-            i = requirement.find('[')
-            assert i > 0, 'expected to find a [ in a requirement with extras'
-            requirement = requirement[:i]
+            requirement = r.requirement
         matcher = scheme.matcher(requirement)
         logger.debug('matcher: %s (%s)', matcher, type(matcher).__name__)
         versions = self.get_project(matcher.name)

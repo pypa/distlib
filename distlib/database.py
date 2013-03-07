@@ -299,11 +299,6 @@ class Distribution(object):
     present (in other words, whether the package was installed by user
     request or it was installed as a dependency)."""
 
-    extras = None
-    """
-    Set to a list of requested extras if specified in a requirement.
-    """
-
     def __init__(self, metadata):
         """
         Initialise an instance.
@@ -316,6 +311,7 @@ class Distribution(object):
         self.version = metadata.version
         self.locator = None
         self.md5_digest = None
+        self.extras = None  # additional features requested during installation
 
     @property
     def download_url(self):
