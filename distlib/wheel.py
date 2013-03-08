@@ -25,8 +25,10 @@ import distlib
 from . import DistlibException
 from .compat import sysconfig, ZipFile, fsdecode, text_type
 from .database import DistributionPath, InstalledDistribution
+from .metadata import Metadata
 from .scripts import ScriptMaker
-from .util import FileOperator, convert_path, CSVReader, CSVWriter
+from .util import (FileOperator, convert_path, CSVReader, CSVWriter,
+                   cached_property)
 
 
 logger = logging.getLogger(__name__)
@@ -184,6 +186,21 @@ class Wheel(object):
             for abi in self.abi:
                 for arch in self.arch:
                     yield pyver, abi, arch
+
+    @cached_property
+    def metadata(self):
+        pathname = os.path.join(self.dirname, self.filename)
+        name_ver = '%s-%s' % (self.name, self.version)
+        info_dir = '%s.dist-info' % name_ver
+        metadata_filename = posixpath.join(info_dir, 'METADATA')
+        wrapper = codecs.getreader('utf-8')
+        with ZipFile(pathname, 'r') as zf:
+            with zf.open(metadata_filename) as bf:
+                wf = wrapper(bf)
+                result = Metadata()
+                result.read_file(wf)
+        return result
+
 
     def process_shebang(self, data):
         m = SHEBANG_RE.match(data)
