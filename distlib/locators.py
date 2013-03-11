@@ -107,6 +107,9 @@ class Locator(object):
         # we use our own opener rather than just using urlopen.
         self.opener = build_opener(RedirectHandler())
 
+    def clear_cache(self):
+        self._cache.clear()
+
     def _get_scheme(self):
         return self._scheme
 
@@ -835,6 +838,11 @@ class AggregatingLocator(Locator):
         self.locators = locators
         super(AggregatingLocator, self).__init__(**kwargs)
 
+    def clear_cache(self):
+        super(AggregatingLocator, self).clear_cache()
+        for locator in self.locators:
+            locator.clear_cache()
+
     def _set_scheme(self, value):
         self._scheme = value
         for locator in self.locators:
@@ -1068,28 +1076,13 @@ class DependencyFinder(object):
                 if other != dist:
                     self.try_to_replace(dist, other, problems)
 
-            ireqts = set(dist.get_requirements('install'))
-            sreqts = set(dist.get_requirements('setup'))
+            ireqts = dist.requires
+            sreqts = dist.setup_requires
             ereqts = set()
-            extras = dist.extras
-            if extras:
-                d = dist.get_requirements('extras')
-                for extra in extras:
-                    if extra not in d:
-                        logger.warning('Requested extra not known: %r', extra)
-                    else:
-                        s = set(d[extra])
-                        ereqts |= s
-                        if extra not in ('doc', 'test'):
-                            ireqts |= s
             if not tests or dist not in install_dists:
                 treqts = set()
             else:
-                treqts = set(dist.get_requirements('test'))
-                logger.debug('Test reqts for %s -> %s', dist.name_and_version,
-                             treqts)
-                if extras and 'test' in d:
-                    treqts |= set(d['test'])
+                treqts = dist.test_requires
             all_reqts = ireqts | sreqts | treqts | ereqts
             for r in all_reqts:
                 providers = self.find_providers(r)

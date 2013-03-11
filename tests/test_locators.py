@@ -11,7 +11,7 @@ import sys
 from compat import unittest
 
 from distlib.compat import url2pathname, urlparse, urljoin
-from distlib.database import DistributionPath, make_graph
+from distlib.database import DistributionPath, make_graph, make_dist
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
                               DistPathLocator, AggregatingLocator,
@@ -194,12 +194,12 @@ class LocatorTestCase(unittest.TestCase):
         dists, problems = finder.find('irc (5.0.1)')
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
-        self.assertEqual(actual, ['hgtools (2.0.2)', 'irc (5.0.1)',
+        self.assertEqual(actual, ['hgtools (2.0.3)', 'irc (5.0.1)',
                                   'pytest-runner (1.2)'])
         dists, problems = finder.find('irc (5.0.1)', True)  # include tests
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
-        self.assertEqual(actual, ['hgtools (2.0.2)', 'irc (5.0.1)',
+        self.assertEqual(actual, ['hgtools (2.0.3)', 'irc (5.0.1)',
                                   'py (1.4.13)', 'pytest (2.3.4)',
                                   'pytest-runner (1.2)'])
 
@@ -210,6 +210,7 @@ class LocatorTestCase(unittest.TestCase):
         expected = set([
             ('hgtools', 'py', 'pytest', 'pytest-runner', 'irc'),
             ('py', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
+            ('hgtools', 'py', 'pytest-runner', 'pytest', 'irc'),
         ])
         self.assertIn(tuple(names), expected)
 
@@ -225,6 +226,21 @@ class LocatorTestCase(unittest.TestCase):
         self.assertTrue(actual[0].startswith('Babel ('))
         actual = [d.build_time_dependency for d in dists]
         self.assertEqual(actual, [False, False])
+
+        # Now test with extra in dependency
+        locator.clear_cache()
+        dummy = make_dist('dummy', '0.1')
+        dummy.metadata['Requires-Dist'] = ['Jinja2 [i18n]']
+        dists, problems = finder.find(dummy)
+        self.assertFalse(problems)
+        actual = sorted([d.name_and_version for d in dists])
+        self.assertTrue(actual[0].startswith('Babel ('))
+        locator.clear_cache()
+        dummy.metadata['Requires-Dist'] = ['Jinja2']
+        dists, problems = finder.find(dummy)
+        self.assertFalse(problems)
+        actual = sorted([d.name_and_version for d in dists])
+        self.assertTrue(actual[0].startswith('Jinja2 ('))
 
     def test_get_all_dist_names(self):
         for url in (None, PYPI_RPC_HOST):

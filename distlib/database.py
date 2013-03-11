@@ -18,6 +18,7 @@ import zipimport
 from . import DistlibException
 from .compat import StringIO, configparser
 from .version import get_scheme, UnsupportedVersionError
+from .markers import interpret
 from .metadata import Metadata
 from .util import (parse_requires, cached_property, get_export_entry,
                    CSVReader, CSVWriter)
@@ -333,25 +334,56 @@ class Distribution(object):
         A set of distribution names and versions provided by this distribution.
         :return: A set of "name (version)" strings.
         """
-        return set(self.metadata['Provides-Dist']
-                   + self.metadata['Provides']
-                   + ['%s (%s)' % (self.name, self.version)]
-                  )
+        plist = self.metadata['Provides-Dist']
+        s = '%s (%s)' % (self.name, self.version)
+        if s not in plist:
+            plist.append(s)
+        return self.filter_requirements(plist)
 
-    @cached_property
+    @property
     def requires(self):
-        """
-        A set of requirements (dependencies of this distribution).
-        :return: A set of strings like "foo (>= 1.0, < 2.0, != 1.3)" where
-                 ``foo`` is the name of the distribution depended on, and
-                 the constraints indicate which versions of ``foo`` are
-                 acceptable to fulfill the requirement.
-        """
-        return set(self.metadata['Requires-Dist']
-                   + self.get_requirements('install')
-                   + self.get_requirements('setup')
-                   + self.get_requirements('test')
-                   )
+        rlist = self.metadata['Requires-Dist']
+        return self.filter_requirements(rlist)
+
+    @property
+    def setup_requires(self):
+        rlist = self.metadata['Setup-Requires-Dist']
+        return self.filter_requirements(rlist)
+
+    @property
+    def test_requires(self):
+        rlist = self.metadata['Requires-Dist']
+        return self.filter_requirements(rlist, extras=['test'])
+
+    @property
+    def doc_requires(self):
+        rlist = self.metadata['Requires-Dist']
+        return self.filter_requirements(rlist, extras=['doc'])
+
+    def filter_requirements(self, rlist, context=None, extras=None):
+        result = set()
+        marked = []
+        for req in rlist:
+            if ';' not in req:
+                result.add(req)
+            else:
+                marked.append(req.split(';', 1))
+        if marked:
+            if context is None:
+                context = {}
+            if extras is None:
+                extras = self.extras
+            if not extras:
+                extras = [None]
+            else:
+                extras = list(extras)   # leave original alone
+                extras.append(None)
+            for extra in extras:
+                context['extra'] = extra
+                for r, marker in marked:
+                    if interpret(marker, context):
+                        result.add(r.strip())
+        return result
 
     def get_requirements(self, key):
         """
@@ -374,7 +406,8 @@ class Distribution(object):
                 ed = d[key]
                 assert isinstance(ed, dict)
                 result = ed.get(extra, [])
-        return result
+        # Now filter the requirements based on extras
+        return self.filter_requirements(result)
 
     def matches_requirement(self, req):
         """
@@ -1166,11 +1199,7 @@ def make_graph(dists, scheme='default'):
 
     # now make the edges
     for dist in dists:
-        # need to leave this in because tests currently rely on it ...
-        requires = dist.metadata['Requires-Dist']
-        if not requires:
-            requires = (dist.get_requirements('install') +
-                        dist.get_requirements('setup'))
+        requires = (dist.requires | dist.setup_requires)
         for req in requires:
             try:
                 matcher = scheme.matcher(req)
