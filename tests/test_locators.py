@@ -16,7 +16,7 @@ from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
                               DistPathLocator, AggregatingLocator,
                               JSONLocator, DistPathLocator,
-                              DependencyFinder,
+                              DependencyFinder, locate,
                               get_all_distribution_names, default_locator)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -136,7 +136,7 @@ class LocatorTestCase(unittest.TestCase):
                      'coconuts-aster', 'bacon', 'grammar', 'truffles',
                      'banana', 'cheese')
             for name in cases:
-                d = locator.locate(name)
+                d = locator.locate(name, True)
                 r = locator.get_project(name)
                 self.assertIsNotNone(d)
                 self.assertEqual(r, { d.version: d })
@@ -253,6 +253,31 @@ class LocatorTestCase(unittest.TestCase):
                  ('http://netloc/B', 'http://netloc/A'))
         for url1, url2 in cases:
             self.assertEqual(default_locator.prefer_url(url1, url2), url1)
+
+    def test_prereleases(self):
+        locator = AggregatingLocator(
+            JSONLocator(),
+            SimpleScrapingLocator('https://pypi.python.org/simple/',
+                                  timeout=3.0),
+            scheme='legacy')
+        REQT = 'SQLAlchemy (>0.5.8, < 0.6)'
+        finder = DependencyFinder(locator)
+        d = locate(REQT)
+        self.assertIsNone(d)
+        d = locate(REQT, True)
+        self.assertIsNotNone(d)
+        self.assertEqual(d.name_and_version, 'SQLAlchemy (0.6beta3)')
+        dist = make_dist('dummy', '0.1')
+        dist.metadata['Requires-Dist'] = [REQT]
+        dists, problems = finder.find(dist, prereleases=True)
+        self.assertFalse(problems)
+        actual = sorted([d.name_and_version for d in dists])
+        self.assertEqual(actual[0], 'SQLAlchemy (0.6beta3)')
+        dists, problems = finder.find(dist)
+        self.assertEqual(dists, set([dist]))
+        self.assertEqual(len(problems), 1)
+        problem = problems.pop()
+        self.assertEqual(problem, ('unsatisfied', REQT))
 
     def test_dist_reqts(self):
         r = 'config (<=0.3.5)'
