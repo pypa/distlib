@@ -406,10 +406,10 @@ class ProgressTestCase(unittest.TestCase):
         # machines
         if os.name == 'nt':
             speed1 = _speed_range(18, 20)
-            speed2 = _speed_range(21, 22)
+            speed2 = _speed_range(20, 22)
         else:
-            speed1 = _speed_range(17, 19)
-            speed2 = _speed_range(21, 22)
+            speed1 = _speed_range(16, 19)
+            speed2 = _speed_range(20, 22)
         expected = (
             (' 10 %', 'ETA : 00:00:04', speed1),
             (' 20 %', 'ETA : 00:00:04', speed1),
