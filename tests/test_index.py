@@ -119,7 +119,7 @@ class PackageIndexTestCase(unittest.TestCase):
         self.dist_version = '0.1'
         self.testdir = '%s-%s' % (self.dist_project, self.dist_version)
         destdir = os.path.join(HERE, self.testdir)
-        if not os.path.isdir(destdir):  # pragma : no cover
+        if not os.path.isdir(destdir):  # pragma: no cover
             srcdir = os.path.join(HERE, 'testdist-0.1')
             shutil.copytree(srcdir, destdir)
             for fn in os.listdir(destdir):

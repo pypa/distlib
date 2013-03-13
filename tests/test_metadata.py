@@ -111,6 +111,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(metadata['Version'], '0.6')
         metadata.update([('version', '0.7')])
         self.assertEqual(metadata['Version'], '0.7')
+        # use a kwarg to update
         metadata.update(version='0.6')
         self.assertEqual(metadata['Version'], '0.6')
 

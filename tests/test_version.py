@@ -18,7 +18,8 @@ from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
                              SemanticVersion as SV, SemanticMatcher as SM,
                              AdaptiveVersion as AV, AdaptiveMatcher as AM,
                              is_semver, get_scheme, adaptive_key,
-                             normalized_key, legacy_key, semantic_key)
+                             normalized_key, legacy_key, semantic_key,
+                             pep386_key)
 
 
 class VersionTestCase(unittest.TestCase):
@@ -343,6 +344,33 @@ class VersionTestCase(unittest.TestCase):
             v1 = versions[i]
             v2 = versions[i + 1]
             self.assertLess(NV(v1), NV(v2))
+
+    def test_comparison_pep386(self):
+        versions = (
+            #'1.0.dev456', OK in 426 but not in 386
+            '1.0a1',
+            '1.0a2.dev456',
+            '1.0a12.dev456',
+            '1.0a12',
+            '1.0b1.dev456',
+            '1.0b2',
+            '1.0b2.post345.dev456',
+            '1.0b2.post345',
+            '1.0c1.dev456',
+            '1.0c1',
+            '1.0rc1',
+            '1.0',
+            '1.0.post345.dev456',
+            '1.0.post345',
+            '1.1.dev1',
+        )
+
+        n = len(versions)
+        F = pep386_key
+        for i in range(n - 1):
+            v1 = versions[i]
+            v2 = versions[i + 1]
+            self.assertLess(F(v1), F(v2), v1)
 
 class LegacyVersionTestCase(unittest.TestCase):
     # These tests are the same as distribute's
