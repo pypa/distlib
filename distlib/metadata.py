@@ -410,7 +410,7 @@ class Metadata(object):
             version = _FILESAFE.sub('-', version.replace(' ', '.'))
         return '%s-%s' % (name, version)
 
-    def is_metadata_field(self, name):
+    def is_field(self, name):
         """return True if name is a valid metadata key"""
         name = self._convert_name(name)
         return name in _ALL_FIELDS

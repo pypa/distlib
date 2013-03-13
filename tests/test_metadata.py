@@ -111,6 +111,8 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(metadata['Version'], '0.6')
         metadata.update([('version', '0.7')])
         self.assertEqual(metadata['Version'], '0.7')
+        metadata.update(version='0.6')
+        self.assertEqual(metadata['Version'], '0.6')
 
         # make sure update method checks values like the set method does
         metadata.update({'version': '1--2'})
@@ -496,6 +498,21 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                                    'version': '1.0',
                                    'obsoletes': ['my.pkg (splat)']})
 
+    def test_fullname(self):
+        md = Metadata()
+        md['Name'] = 'a b c'
+        md['Version'] = '1 0 0'
+        s = md.get_fullname()
+        self.assertEqual(s, 'a b c-1 0 0')
+        s = md.get_fullname(True)
+        self.assertEqual(s, 'a-b-c-1.0.0')
+
+    def test_fields(self):
+        md = Metadata()
+        self.assertTrue(md.is_multi_field('Requires-Dist'))
+        self.assertFalse(md.is_multi_field('Name'))
+        self.assertTrue(md.is_field('Obsoleted-By'))
+        self.assertFalse(md.is_field('Frobozz'))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
