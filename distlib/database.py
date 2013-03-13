@@ -385,30 +385,6 @@ class Distribution(object):
                         result.add(r.strip())
         return result
 
-    def get_requirements(self, key):
-        """
-        Get the requirements of a particular type
-        ('setup', 'install', 'test', 'extras:key').
-        """
-        result = []
-        if key == 'test':
-            key = 'extras:test'
-        parts = key.split(':', 1)
-        if len(parts) == 2:
-            key, extra = parts
-        else:
-            extra = None
-        d = self.metadata.dependencies
-        if key in d:
-            if extra is None:
-                result = d[key]
-            else:
-                ed = d[key]
-                assert isinstance(ed, dict)
-                result = ed.get(extra, [])
-        # Now filter the requirements based on extras
-        return self.filter_requirements(result)
-
     def matches_requirement(self, req):
         """
         Say if this instance matches (fulfills) a requirement.
