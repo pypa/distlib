@@ -155,7 +155,7 @@ class Wheel(object):
                     raise DistlibException('Invalid name or '
                                            'filename: %r' % filename)
                 if dirname:
-                    self.dirname = dirname
+                    self.dirname = os.path.abspath(dirname)
                 self._filename = filename
                 info = m.groupdict('')
                 self.name = info['nm']
@@ -201,6 +201,19 @@ class Wheel(object):
                 result.read_file(wf)
         return result
 
+    @cached_property
+    def info(self):
+        pathname = os.path.join(self.dirname, self.filename)
+        name_ver = '%s-%s' % (self.name, self.version)
+        info_dir = '%s.dist-info' % name_ver
+        metadata_filename = posixpath.join(info_dir, 'WHEEL')
+        wrapper = codecs.getreader('utf-8')
+        with ZipFile(pathname, 'r') as zf:
+            with zf.open(metadata_filename) as bf:
+                wf = wrapper(bf)
+                message = message_from_file(wf)
+                result = dict(message)
+        return result
 
     def process_shebang(self, data):
         m = SHEBANG_RE.match(data)

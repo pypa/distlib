@@ -293,6 +293,17 @@ class WheelTestCase(unittest.TestCase):
         self.assertFalse(hasattr(warner, 'wheel_version'))
         self.assertFalse(hasattr(warner, 'file_version'))
 
+    def test_info(self):
+        fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
+        w = Wheel(fn)
+        expected = {
+            'Generator': 'distlib 0.1',
+            'Root-Is-Purelib': 'true',
+            'Tag': 'py27-none-any',
+            'Wheel-Version': '2.0'
+        }
+        self.assertEqual(w.info, expected)
+
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_pure(self):
         self.do_build_and_install('sarge == 0.1')
