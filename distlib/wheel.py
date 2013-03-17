@@ -12,6 +12,7 @@ import distutils.util
 from email import message_from_file
 import hashlib
 import imp
+import json
 import logging
 import os
 import posixpath
@@ -23,12 +24,12 @@ import zipfile
 
 import distlib
 from . import DistlibException
-from .compat import sysconfig, ZipFile, fsdecode, text_type
+from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import DistributionPath, InstalledDistribution
 from .metadata import Metadata
 from .scripts import ScriptMaker
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter,
-                   cached_property)
+                   cached_property, get_cache_base)
 
 
 logger = logging.getLogger(__name__)
@@ -513,6 +514,56 @@ class Wheel(object):
                 raise
             finally:
                 shutil.rmtree(workdir)
+
+    def _get_dylib_cache(self):
+        result = os.path.join(get_cache_base(), 'dylib-cache')
+        if not os.path.isdir(result):
+            os.makedirs(result)
+        return result
+
+    def _get_extensions(self):
+        pathname = os.path.join(self.dirname, self.filename)
+        name_ver = '%s-%s' % (self.name, self.version)
+        info_dir = '%s.dist-info' % name_ver
+        arcname = posixpath.join(info_dir, 'extensions.json')
+        wrapper = codecs.getreader('utf-8')
+        result = []
+        with ZipFile(pathname, 'r') as zf:
+            try:
+                with zf.open(arcname) as bf:
+                    wf = wrapper(bf)
+                    extensions = json.load(wf)
+                    cache_base = self._get_dylib_cache()
+                    for name, relpath in extensions.items():
+                        dest = os.path.join(cache_base, convert_path(relpath))
+                        zf.extract(relpath, cache_base)
+                        imp.load_dynamic(name, dest)
+                        result.append((name, dest))
+            except KeyError:
+                pass
+        return result
+
+    def mount(self, append=False, path=None):
+        pathname = os.path.abspath(os.path.join(self.dirname, self.filename))
+        if path is None:
+            path = sys.path
+        if pathname in path:
+            logger.debug('%s already in path', pathname)
+        else:
+            if append:
+                sys.path.append(pathname)
+            else:
+                sys.path.insert(0, pathname)
+            self._get_extensions()
+
+    def unmount(self, path=None):
+        pathname = os.path.abspath(os.path.join(self.dirname, self.filename))
+        if path is None:
+            path = sys.path
+        if pathname not in path:
+            logger.debug('%s not in path', pathname)
+        else:
+            path.remove(pathname)
 
 COMPATIBLE_TAGS = compatible_tags()
 

@@ -31,7 +31,7 @@ try:
 except Exception:
     PIP_AVAILABLE = False
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 EGG_INFO_RE = re.compile(r'(-py\d\.\d)?\.egg-info', re.I)
 
@@ -303,6 +303,15 @@ class WheelTestCase(unittest.TestCase):
             'Wheel-Version': '2.0'
         }
         self.assertEqual(w.info, expected)
+
+    def test_mount(self):
+        fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
+        w = Wheel(fn)
+        self.assertNotIn(fn, sys.path)
+        w.mount()
+        self.assertIn(fn, sys.path)
+        w.unmount()
+        self.assertNotIn(fn, sys.path)
 
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_pure(self):
