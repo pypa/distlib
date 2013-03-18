@@ -6,29 +6,55 @@ Change log for ``distlib``
 
 Released: not yet.
 
-- database: Updated requirements logic to use extras and environment markers.
+- database
 
-- locators: Added method to clear cache, and the ability to skip pre-releases.
+    - Updated requirements logic to use extras and environment markers.
 
-- metadata: Updated to handle most 2.0 fields, though PEP 426 is still a draft,
-  and added the option to skip unset fields when writing.
+- locators
 
-- scripts:  Fixed bug which prevented writing shebang lines correctly on
-  Windows.
+    - Added method to clear locator caches.
 
-- util:     Made get_cache_base more useful by parametrising the suffix to use,
-  and fixed a bug when reading CSV streams from .zip files under 3.x.
+    - Added the ability to skip pre-releases.
 
-- version:  Added is_prerelease property to versions and moved to PEP 426
-  version formats and sorting.
+- metadata
 
-- wheel:    Fixed CSV stream reading under 3.x and handled UTF-8 in zip entries
-  correctly, added metadata and info properties, and updated the
-  install method to return the installed distribution.
+    - Updated to handle most 2.0 fields, though PEP 426 is still a draft.
 
-- docs:     Numerous documentation updates, not detailed further here.
+    - Added the option to skip unset fields when writing.
 
-- tests:    Numerous test refinements, not detailed further here.
+- scripts
+
+    - Fixed bug which prevented writing shebang lines correctly on Windows.
+
+- util
+
+    - Made get_cache_base more useful by parametrising the suffix to use.
+
+    - Fixed a bug when reading CSV streams from .zip files under 3.x.
+
+- version
+
+    - Added is_prerelease property to versions.
+
+    - Moved to PEP 426 version formats and sorting.
+
+- wheel
+
+    - Fixed CSV stream reading under 3.x and handled UTF-8 in zip entries
+      correctly.
+
+    - Added metadata and info properties, and updated the install method to
+      return the installed distribution.
+
+    - Added mount/unmount functionality.
+
+- docs
+
+    - Numerous documentation updates, not detailed further here.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
 
 
 0.1.0
