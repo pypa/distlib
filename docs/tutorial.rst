@@ -1128,6 +1128,37 @@ depends on whether the wheel metadata declares that the wheel contains pure
 Python code.
 
 
+Mounting wheels
+~~~~~~~~~~~~~~~
+
+One of Python's perhaps under-used features is ``zipimport``, which gives the
+ability to import Python source from ``.zip`` files. Since wheels are ``.zip``
+files, they can sometimes be used to provide functionality without needing to
+be installed. Whereas ``.zip`` files contain no convention for indicating
+compatibility with a particular Python, wheels *do* contain this compatibility
+information. Thus, it is possible to check if a wheel can be directly imported
+from, and the wheel support in ``distlib`` allows you to take advantage of this
+using the :meth:`mount` and :meth:`unmount` methods. When you mount a wheel,
+its absolute path name is added to ``sys.path``, allowing the Python code in it
+to be imported. (A :class:`DistlibException` is raised if the wheel isn't
+compatible with the Python which calls the :meth:`mount` method.)
+
+The :meth:`mount` method takes an optional keyword parameter ``append`` which
+defaults to ``False``, meaning the a mounted wheel's pathname is added to the
+beginning of ``sys.path``. If you pass ``True``, the pathname is appended to
+``sys.path``.
+
+The :meth:`mount` method goes further than just enabling Python imports -- any
+C extensions in the wheel are also made available for import. For this to be
+possible, the wheel has to be built with additional metadata about extensions
+-- a JSON file called ``EXTENSIONS`` which serialises an extension mapping
+dictionary. This maps extension module names to the names in the wheel of the
+shared libraries which implement those modules.
+
+Running :meth:`unmount` on the wheel removes its absolute pathname from
+``sys.path`` and makes its C extensions, if any, also unavailable for import.
+
+
 Using vanilla pip to build wheels for existing distributions on PyPI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

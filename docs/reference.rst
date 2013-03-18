@@ -1098,7 +1098,25 @@ Classes
                      in the form of tuples (``major_version``,
                      ``minor_version``).
 
+   .. method:: mount(append=False)
 
+      Mount the wheel so that its contents can be imported directly, without
+      the need to install the wheel. If the wheel contains C extensions and
+      has metadata about these extensions, the extensions are also available
+      for import.
+
+      If the wheels tags indicate it is not compatible with the running Python,
+      a :class:`DistlibException` is raised.
+
+      :param append: If ``True``, the wheel's pathname is added to the end of
+                     ``sys.path``. By default, it is added to the beginning.
+
+
+    .. method:: unmount()
+
+      Unmount the wheel so that its contents can no longer be imported
+      directly. If the wheel contains C extensions and has metadata about these
+      extensions, the extensions are also made unavailable for import.
 
    .. attribute:: name
 
@@ -1135,19 +1153,19 @@ Classes
 
       The filename of the wheel (computed from the other attributes)
 
+   .. attribute:: metadata
+
+      The metadata for the distribution in the wheel, as a :class:`Metadata`
+      instance.
+
+   .. attribute:: info
+
+      The wheel metadata (contents of the ``WHEEL`` metadata file) as a
+      dictionary.
+
 
 Functions
 ^^^^^^^^^
-
-.. function:: compatible_tags()
-
-   Return a list of tags which are compatible with this Python implementation.
-
-   .. note:: Try to use :func:`is_compatible` in preference to this function,
-             which may be removed from the public API.
-
-   :return: A list of (``pyver``, ``abi``, ``arch``) tags which are compatible
-            with this Python implementation.
 
 .. function:: is_compatible(wheel, tags=None)
 
@@ -1160,6 +1178,15 @@ Functions
                 it defaults to the set of tags which are compatible with this
                 Python implementation.
    :return: ``True`` if compatible, else ``False``.
+
+
+Attributes
+^^^^^^^^^^
+
+.. attribute:: COMPATIBLE_TAGS
+
+   A list of (``pyver``, ``abi``, ``arch``) tags which are compatible with this
+   Python implementation.
 
 
 Next steps

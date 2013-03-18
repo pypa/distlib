@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import base64
 import codecs
+import datetime
 import distutils.util
 from email import message_from_file
 import hashlib
@@ -82,41 +83,41 @@ else:
     to_posix = lambda o: o.replace(os.sep, '/')
 
 
-def compatible_tags():
-    """
-    Return (pyver, abi, arch) tuples compatible with this Python.
-    """
-    versions = [VER_SUFFIX]
-    major = VER_SUFFIX[0]
-    for minor in range(sys.version_info[1] - 1, - 1, -1):
-        versions.append(''.join([major, str(minor)]))
+class Mounter(object):
+    def __init__(self):
+        self.impure_wheels = {}
+        self.libs = {}
 
-    abis = []
-    for suffix, _, _ in imp.get_suffixes():
-        if suffix.startswith('.abi'):
-            abis.append(suffix.split('.', 2)[1])
-    abis.sort()
-    if ABI != 'none':
-        abis.insert(0, ABI)
-    abis.append('none')
-    result = []
+    def add(self, pathname, extensions):
+        self.impure_wheels[pathname] = extensions
+        self.libs.update(extensions)
 
-    # Most specific - our Python version, ABI and arch
-    for abi in abis:
-        result.append((''.join((IMP_PREFIX, versions[0])), abi, ARCH))
+    def remove(self, pathname):
+        extensions = self.impure_wheels.pop(pathname)
+        for k, v in extensions:
+            if k in self.libs:
+                del self.libs[k]
 
-    # where no ABI / arch dependency, but IMP_PREFIX dependency
-    for i, version in enumerate(versions):
-        result.append((''.join((IMP_PREFIX, version)), 'none', 'any'))
-        if i == 0:
-            result.append((''.join((IMP_PREFIX, version[0])), 'none', 'any'))
+    def find_module(self, fullname, path=None):
+        if fullname in self.libs:
+            result = self
+        else:
+            result = None
+        return result
 
-    # no IMP_PREFIX, ABI or arch dependency
-    for i, version in enumerate(versions):
-        result.append((''.join(('py', version)), 'none', 'any'))
-        if i == 0:
-            result.append((''.join(('py', version[0])), 'none', 'any'))
-    return result
+    def load_module(self, fullname):
+        if fullname in sys.modules:
+            result = sys.modules[fullname]
+        else:
+            if fullname not in self.libs:
+                raise ImportError('unable to find extension for %s' % fullname)
+            result = imp.load_dynamic(fullname, self.libs[fullname])
+            result.__loader__ = self
+            result.__package__, _ = fullname.rsplit('.', 1)
+        return result
+
+_hook = Mounter()
+
 
 class Wheel(object):
     """
@@ -525,7 +526,7 @@ class Wheel(object):
         pathname = os.path.join(self.dirname, self.filename)
         name_ver = '%s-%s' % (self.name, self.version)
         info_dir = '%s.dist-info' % name_ver
-        arcname = posixpath.join(info_dir, 'extensions.json')
+        arcname = posixpath.join(info_dir, 'EXTENSIONS')
         wrapper = codecs.getreader('utf-8')
         result = []
         with ZipFile(pathname, 'r') as zf:
@@ -535,37 +536,94 @@ class Wheel(object):
                     extensions = json.load(wf)
                     cache_base = self._get_dylib_cache()
                     for name, relpath in extensions.items():
+                        import pdb; pdb.set_trace()
                         dest = os.path.join(cache_base, convert_path(relpath))
-                        zf.extract(relpath, cache_base)
-                        imp.load_dynamic(name, dest)
+                        if not os.path.exists(dest):
+                            extract = True
+                        else:
+                            file_time = os.stat(dest).st_mtime
+                            file_time = datetime.datetime.fromtimestamp(file_time)
+                            info = zf.getinfo(relpath)
+                            wheel_time = datetime.datetime(*info.date_time)
+                            extract = wheel_time > file_time
+                        if extract:
+                            zf.extract(relpath, cache_base)
                         result.append((name, dest))
             except KeyError:
                 pass
         return result
 
-    def mount(self, append=False, path=None):
+    def mount(self, append=False):
         pathname = os.path.abspath(os.path.join(self.dirname, self.filename))
-        if path is None:
-            path = sys.path
-        if pathname in path:
+        if not is_compatible(self):
+            msg = 'Wheel %s not mountable in this Python.' % pathname
+            raise DistlibException(msg)
+        if pathname in sys.path:
             logger.debug('%s already in path', pathname)
         else:
             if append:
                 sys.path.append(pathname)
             else:
                 sys.path.insert(0, pathname)
-            self._get_extensions()
+            extensions = self._get_extensions()
+            if extensions:
+                if _hook not in sys.meta_path:
+                    sys.meta_path.append(_hook)
+                _hook.add(pathname, extensions)
 
-    def unmount(self, path=None):
+    def unmount(self):
         pathname = os.path.abspath(os.path.join(self.dirname, self.filename))
-        if path is None:
-            path = sys.path
-        if pathname not in path:
+        if pathname not in sys.path:
             logger.debug('%s not in path', pathname)
         else:
-            path.remove(pathname)
+            sys.path.remove(pathname)
+            if pathname in _hook.impure_wheels:
+                _hook.remove(pathname)
+            if not _hook.impure_wheels:
+                if _hook in sys.meta_path:
+                    sys.meta_path.remove(_hook)
+
+
+def compatible_tags():
+    """
+    Return (pyver, abi, arch) tuples compatible with this Python.
+    """
+    versions = [VER_SUFFIX]
+    major = VER_SUFFIX[0]
+    for minor in range(sys.version_info[1] - 1, - 1, -1):
+        versions.append(''.join([major, str(minor)]))
+
+    abis = []
+    for suffix, _, _ in imp.get_suffixes():
+        if suffix.startswith('.abi'):
+            abis.append(suffix.split('.', 2)[1])
+    abis.sort()
+    if ABI != 'none':
+        abis.insert(0, ABI)
+    abis.append('none')
+    result = []
+
+    # Most specific - our Python version, ABI and arch
+    for abi in abis:
+        result.append((''.join((IMP_PREFIX, versions[0])), abi, ARCH))
+
+    # where no ABI / arch dependency, but IMP_PREFIX dependency
+    for i, version in enumerate(versions):
+        result.append((''.join((IMP_PREFIX, version)), 'none', 'any'))
+        if i == 0:
+            result.append((''.join((IMP_PREFIX, version[0])), 'none', 'any'))
+
+    # no IMP_PREFIX, ABI or arch dependency
+    for i, version in enumerate(versions):
+        result.append((''.join(('py', version)), 'none', 'any'))
+        if i == 0:
+            result.append((''.join(('py', version[0])), 'none', 'any'))
+    return result
+
 
 COMPATIBLE_TAGS = compatible_tags()
+
+del compatible_tags
 
 def is_compatible(wheel, tags=None):
     if not isinstance(wheel, Wheel):

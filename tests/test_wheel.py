@@ -21,7 +21,7 @@ from distlib import DistlibException
 from distlib.compat import ZipFile
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
-from distlib.wheel import Wheel, PYVER, IMPVER, ARCH, ABI, compatible_tags
+from distlib.wheel import Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS
 
 try:
     with open(os.devnull, 'wb') as junk:
@@ -152,7 +152,7 @@ class WheelTestCase(unittest.TestCase):
 
         self.assertEqual(PYVER, 'py%d%d' % sys.version_info[:2])
 
-        tags = compatible_tags()
+        tags = COMPATIBLE_TAGS
         self.assertIn((PYVER, 'none', 'any'), tags)
         self.assertIn((PYVER[:-1], 'none', 'any'), tags)
         this_arch = filter(lambda o: o[-1] == ARCH, tags)
@@ -304,6 +304,8 @@ class WheelTestCase(unittest.TestCase):
         }
         self.assertEqual(w.info, expected)
 
+    @unittest.skipIf(sys.version_info[0] == 3, 'The test wheel is not '
+                                               '3.x mountable')
     def test_mount(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)
@@ -313,10 +315,12 @@ class WheelTestCase(unittest.TestCase):
         w.unmount()
         self.assertNotIn(fn, sys.path)
 
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_pure(self):
         self.do_build_and_install('sarge == 0.1')
 
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     @unittest.skipIf(hasattr(sys, 'pypy_version_info'), 'The test distribution'
                                                ' does not build on PyPy')
     @unittest.skipIf(sys.platform != 'linux2', 'The test distribution only '
@@ -325,12 +329,14 @@ class WheelTestCase(unittest.TestCase):
     def test_build_and_install_plat(self):
         self.do_build_and_install('hiredis == 0.1.1')
 
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
                                                '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_data(self):
         self.do_build_and_install('Werkzeug == 0.4')
 
+    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
                                                '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
