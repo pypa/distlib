@@ -536,7 +536,6 @@ class Wheel(object):
                     extensions = json.load(wf)
                     cache_base = self._get_dylib_cache()
                     for name, relpath in extensions.items():
-                        import pdb; pdb.set_trace()
                         dest = os.path.join(cache_base, convert_path(relpath))
                         if not os.path.exists(dest):
                             extract = True
