@@ -304,8 +304,8 @@ class WheelTestCase(unittest.TestCase):
         }
         self.assertEqual(w.info, expected)
 
-    @unittest.skipIf(sys.version_info[0] == 3, 'The test wheel is not '
-                                               '3.x mountable')
+    @unittest.skipIf(sys.version_info[:2] != (2, 7), 'The test wheel is only '
+                                               '2.7 mountable')
     def test_mount(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)
