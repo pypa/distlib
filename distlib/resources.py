@@ -185,7 +185,7 @@ class ResourceFinder(object):
         return set([f for f in os.listdir(resource.path) if allowed(f)])
 
     def is_container(self, resource):
-        return os.path.isdir(resource.path)
+        return self._is_directory(resource.path)
     
     _is_directory = staticmethod(os.path.isdir)
 
