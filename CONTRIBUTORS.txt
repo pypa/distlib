@@ -45,6 +45,7 @@ Thanks to:
 - Christian Hudon
 - Julien Jehannet
 - Jeremy Kloth
+- Thomas Kluyver
 - Amos Latteier
 - Mathieu Leduc-Hamel
 - Pierre Paul Lefebvre
