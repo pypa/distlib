@@ -107,75 +107,28 @@ def parse_requirement(s):
     return result
 
 
-def parse_requires(req_path):
-    """Create a list of dependencies from a requires.txt file.
-
-    *req_path* must be the path to a setuptools-produced requires.txt file.
-    """
-
-    # reused from Distribute's pkg_resources
-    def yield_lines(strs):
-        """Yield non-empty/non-comment lines of a string or sequence"""
-        if isinstance(strs, string_types):
-            for s in strs.splitlines():
-                s = s.strip()
-                # skip blank lines/comments
-                if s and not s.startswith('#'):
-                    yield s
-        else:
-            for ss in strs:
-                for s in yield_lines(ss):
-                    yield s
-
-    reqs = []
-    try:
-        with open(req_path, 'r') as fp:
-            requires = fp.read()
-    except IOError:
-        return reqs
-
-    for line in yield_lines(requires):
-        line = line.strip()
-        if line.startswith('['):
-            logger.warning('Unexpected line: quitting requirement scan: %r',
-                           line)
-            break
-        r = parse_requirement(line)
-        if not r:
-            logger.warning('Not recognised as a requirement: %r', line)
-            continue
-        if r.extras:
-            logger.warning('extra requirements in requires.txt are '
-                           'not supported')
-        if not r.constraints:
-            reqs.append(r.name)
-        else:
-            cons = ', '.join('%s%s' % c for c in r.constraints)
-            reqs.append('%s (%s)' % (r.name, cons))
-    return reqs
-
-
-def _rel_path(base, path):
-    # normalizes and returns a lstripped-/-separated path
-    base = base.replace(os.path.sep, '/')
-    path = path.replace(os.path.sep, '/')
-    assert path.startswith(base)
-    return path[len(base):].lstrip('/')
-
-
 def get_resources_dests(resources_root, rules):
     """Find destinations for resources files"""
+
+    def get_rel_path(base, path):
+        # normalizes and returns a lstripped-/-separated path
+        base = base.replace(os.path.sep, '/')
+        path = path.replace(os.path.sep, '/')
+        assert path.startswith(base)
+        return path[len(base):].lstrip('/')
+
+
     destinations = {}
     for base, suffix, dest in rules:
         prefix = os.path.join(resources_root, base)
         for abs_base in iglob(prefix):
             abs_glob = os.path.join(abs_base, suffix)
             for abs_path in iglob(abs_glob):
-                resource_file = _rel_path(resources_root, abs_path)
+                resource_file = get_rel_path(resources_root, abs_path)
                 if dest is None:  # remove the entry if it was here
                     destinations.pop(resource_file, None)
                 else:
-                    rel_path = _rel_path(abs_base, abs_path)
+                    rel_path = get_rel_path(abs_base, abs_path)
                     rel_dest = dest.replace(os.path.sep, '/').rstrip('/')
                     destinations[resource_file] = rel_dest + '/' + rel_path
     return destinations

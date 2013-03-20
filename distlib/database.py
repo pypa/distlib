@@ -16,11 +16,11 @@ import sys
 import zipimport
 
 from . import DistlibException
-from .compat import StringIO, configparser
+from .compat import StringIO, configparser, string_types
 from .version import get_scheme, UnsupportedVersionError
 from .markers import interpret
 from .metadata import Metadata
-from .util import (parse_requires, cached_property, get_export_entry,
+from .util import (parse_requirement, cached_property, get_export_entry,
                    CSVReader, CSVWriter)
 
 
@@ -858,6 +858,39 @@ class EggInfoDistribution(BaseInstalledDistribution):
 
     def _get_metadata(self, path):
         requires = None
+
+        def parse_requires(req_path):
+            """Create a list of dependencies from a requires.txt file.
+
+            *req_path* must be the path to a setuptools-produced requires.txt file.
+            """
+
+            reqs = []
+            try:
+                with open(req_path, 'r') as fp:
+                    lines = fp.read().splitlines()
+            except IOError:
+                return reqs
+
+            for line in lines:
+                line = line.strip()
+                if line.startswith('['):
+                    logger.warning('Unexpected line: quitting requirement scan: %r',
+                                   line)
+                    break
+                r = parse_requirement(line)
+                if not r:
+                    logger.warning('Not recognised as a requirement: %r', line)
+                    continue
+                if r.extras:
+                    logger.warning('extra requirements in requires.txt are '
+                                   'not supported')
+                if not r.constraints:
+                    reqs.append(r.name)
+                else:
+                    cons = ', '.join('%s%s' % c for c in r.constraints)
+                    reqs.append('%s (%s)' % (r.name, cons))
+            return reqs
 
         if path.endswith('.egg'):
             if os.path.isdir(path):
