@@ -973,7 +973,7 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
 def zip_dir(directory):
     """zip a directory tree into a BytesIO object"""
     result = io.BytesIO()
-    dlen = len(directory) + 1
+    dlen = len(directory)
     with zipfile.ZipFile(result, "w") as zf:
         for root, dirs, files in os.walk(directory):
             for name in files:
