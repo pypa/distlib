@@ -117,10 +117,10 @@ class DistributionPath(object):
             for dir in os.listdir(realpath):
                 dist_path = os.path.join(realpath, dir)
                 if self._include_dist and dir.endswith(DISTINFO_EXT):
-                    yield InstalledDistribution(dist_path, env=self)
+                    yield new_dist_class(dist_path, env=self)
                 elif self._include_egg and dir.endswith(('.egg-info',
                                                          '.egg')):
-                    yield EggInfoDistribution(dist_path, self)
+                    yield old_dist_class(dist_path, self)
 
     def _generate_cache(self):
         """
@@ -1025,6 +1025,10 @@ class EggInfoDistribution(BaseInstalledDistribution):
 
     # See http://docs.python.org/reference/datamodel#object.__hash__
     __hash__ = object.__hash__
+
+new_dist_class = InstalledDistribution
+old_dist_class = EggInfoDistribution
+
 
 class DependencyGraph(object):
     """
