@@ -23,7 +23,6 @@ import sys
 import tempfile
 import zipfile
 
-import distlib
 from . import DistlibException
 from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import DistributionPath, InstalledDistribution
@@ -334,6 +333,8 @@ class Wheel(object):
                 p = fsdecode(os.path.join(distinfo, fn))
                 ap = to_posix(os.path.join(info_dir, fn))
                 archive_paths.append((ap, p))
+
+        import distlib
 
         wheel_metadata = [
             'Wheel-Version: %d.%d' % self.wheel_version,
