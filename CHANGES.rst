@@ -10,17 +10,28 @@ Released: not yet.
 
     - Updated requirements logic to use extras and environment markers.
 
+    - Made it easier to subclass Distribution and EggInfoDistribution.
+
 - locators
 
     - Added method to clear locator caches.
 
     - Added the ability to skip pre-releases.
 
+- manifest
+
+    - Fixed bug which caused side-effect when sorting a manifest.
+
 - metadata
 
     - Updated to handle most 2.0 fields, though PEP 426 is still a draft.
 
     - Added the option to skip unset fields when writing.
+
+- resources
+
+    - Made separate subclasses ResourceBase, Resource and ResourceContainer
+      from Resource. Thanks to Thomas Kluyver for the suggestion and patch.
 
 - scripts
 
@@ -47,6 +58,9 @@ Released: not yet.
       return the installed distribution.
 
     - Added mount/unmount functionality.
+
+    - Removed compatible_tags() function in favour of COMPATIBLE_TAGS
+      attribute.
 
 - docs
 
