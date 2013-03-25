@@ -18,7 +18,7 @@
 
    The :PEP:`345` implementation supports the micro-language for the environment
    markers and displays warnings when versions that are supposed to be
-   :PEP:`386`-compliant are violating the specification.
+   :pep:`386`/ :pep:`426`-compliant are violating the specification.
 
 Reading metadata
 ----------------
@@ -86,8 +86,9 @@ widespread version.
 Conflict checking and best version
 ----------------------------------
 
-Some fields in :PEP:`345` have to comply with the version number specification
-defined in :PEP:`386`.  When they don't comply, a warning is emitted::
+Some fields in :pep:`345` have to comply with the version number specification
+defined in :pep:`386` / :pep:`426`.  When they don't comply, a warning is
+emitted::
 
    >>> from distlib.metadata import Metadata
    >>> metadata = Metadata()
@@ -118,4 +119,3 @@ for some metadata fields.
       >>> interpret("python_version > '1.0'")
       True
       >>>
-

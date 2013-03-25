@@ -107,8 +107,8 @@ Distlib currently offers the following features:
   adjustment of shebang lines and support for native Windows executable
   launchers.
 * The package ``distlib.version``, which implements version specifiers as
-  defined by :pep:`386`, but also support for working with "legacy" versions
-  (``setuptools``/``distribute``) and semantic versions.
+  defined by :pep:`386` / :pep:`426`, but also support for working with
+  "legacy" versions (``setuptools``/``distribute``) and semantic versions.
 * The package ``distlib.wheel``, which provides support for building and
   installing from the Wheel format for binary distributions (see :pep:`427`).
 * The package ``distlib.util``, which contains miscellaneous functions and
@@ -130,9 +130,10 @@ Project status
 --------------
 
 The project has reached alpha status in its development: there is a test
-suite and it has been exercised on Windows, Ubuntu and Mac OS X. No release
-has yet been made: to work with the project, you need to clone the source
-repository or download a tarball from it.
+suite and it has been exercised on Windows, Ubuntu and Mac OS X. To work with
+the project, you can `download a release from PyPI
+<https://pypi.python.org/pypi/distlib/>`_, or clone the source repository or
+download a tarball from it.
 
 Coverage results are available at:
 
@@ -140,7 +141,7 @@ http://www.red-dove.com/distlib/coverage/
 
 Continuous integration test results are available at:
 
-https://travis-ci.org/vsajip/distlib
+https://travis-ci.org/vsajip/distlib/
 
 The source repository for the project is on BitBucket:
 
@@ -149,6 +150,9 @@ https://bitbucket.org/vinay.sajip/distlib/
 You can leave feedback by raising a new issue on the `issue
 tracker <https://bitbucket.org/vinay.sajip/distlib/issues/new>`_
 (BitBucket registration not necessary, but recommended).
+
+.. include:: ../CHANGES.rst
+
 
 Next steps
 ----------

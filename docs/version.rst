@@ -46,8 +46,8 @@ Version numbers
 
 .. function:: suggest_normalized_version(s)
 
-   Before standardization in PEP 386, various schemes were in use. Packaging
-   provides a function to try to convert any string to a valid, normalized
+   Before standardization in :pep:`386` / :pep:`426`, various schemes were in
+   use. This is a function to try to convert any string to a valid, normalized
    version::
 
       >>> suggest_normalized_version('2.1-rc1')

@@ -84,8 +84,8 @@ following classes:
   on a path.
 
 * :class:`Distribution`, which represents an individual distribution,
-  conforming to recent packaging PEPs (:pep:`386`, :pep:`376`, :pep:`345`,
-  :pep:`314` and :pep:`241`).
+  conforming to recent packaging PEPs (:pep:`426`, :pep:`386`, :pep:`376`,
+  :pep:`345`, :pep:`314` and :pep:`241`).
 * :class:`EggInfoDistribution`, which represents a legacy distribution in
   egg format.
 
