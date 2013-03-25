@@ -754,7 +754,7 @@ except ImportError: # pragma: no cover
             return ItemsView(self)
 
 try:
-    from logging.config import BaseConfigurator
+    from logging.config import BaseConfigurator, valid_ident
 except ImportError: # pragma: no cover
     IDENTIFIER = re.compile('^[a-z_][a-z0-9_]*$', re.I)
 
