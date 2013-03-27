@@ -194,12 +194,12 @@ class LocatorTestCase(unittest.TestCase):
         dists, problems = finder.find('irc (5.0.1)')
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
-        self.assertEqual(actual, ['hgtools (2.0.3)', 'irc (5.0.1)',
+        self.assertEqual(actual, ['hgtools (2.1)', 'irc (5.0.1)',
                                   'pytest-runner (1.2)'])
         dists, problems = finder.find('irc (5.0.1)', True)  # include tests
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
-        self.assertEqual(actual, ['hgtools (2.0.3)', 'irc (5.0.1)',
+        self.assertEqual(actual, ['hgtools (2.1)', 'irc (5.0.1)',
                                   'py (1.4.13)', 'pytest (2.3.4)',
                                   'pytest-runner (1.2)'])
 
