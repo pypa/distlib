@@ -280,8 +280,7 @@ class FileOperator(object):
         logger.info('Copying %s to %s', infile, outfile)
         if not self.dry_run:
             shutil.copyfile(infile, outfile)
-        if self.record:
-            self.files_written.add(outfile)
+        self.record_as_written(outfile)
 
     def copy_stream(self, instream, outfile, encoding=None):
         assert not os.path.isdir(outfile)
@@ -296,24 +295,21 @@ class FileOperator(object):
                 shutil.copyfileobj(instream, outstream)
             finally:
                 outstream.close()
-        if self.record:
-            self.files_written.add(outfile)
+        self.record_as_written(outfile)
 
     def write_binary_file(self, path, data):
         self.ensure_dir(os.path.dirname(path))
         if not self.dry_run:
             with open(path, 'wb') as f:
                 f.write(data)
-        if self.record:
-            self.files_written.add(path)
+        self.record_as_written(path)
 
     def write_text_file(self, path, data, encoding):
         self.ensure_dir(os.path.dirname(path))
         if not self.dry_run:
             with open(path, 'wb') as f:
                 f.write(data.encode(encoding))
-        if self.record:
-            self.files_written.add(path)
+        self.record_as_written(path)
 
     def set_mode(self, bits, mask, files):
         if os.name == 'posix':
@@ -352,8 +348,7 @@ class FileOperator(object):
                     assert path.startswith(prefix)
                     diagpath = path[len(prefix):]
             py_compile.compile(path, dpath, diagpath, True) # raise on error
-        if self.record:
-            self.files_written.add(dpath)
+        self.record_as_written(dpath)
         return dpath
 
     def ensure_removed(self, path):
