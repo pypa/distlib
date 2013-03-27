@@ -88,13 +88,17 @@ class ScriptTestCase(unittest.TestCase):
         for name in ('main', 'other_main'):
             spec = 'foo = foo:' + name
             files = self.maker.make(spec)
-            self.assertEqual(len(files), 1)
-            d, f = os.path.split(files[0])
-            self.assertEqual(f, 'foo')
+            self.assertEqual(len(files), 2)
+            actual = set()
+            for f in files:
+                d, f = os.path.split(f)
+                actual.add(f)
+            self.assertEqual(actual, set(['foo', 'foo-%s' % sys.version[:3]]))
             self.assertEqual(d, self.maker.target_dir)
-            with open(files[0], 'r') as f:
-                text = f.read()
-            self.assertIn("_resolve('foo', '%s')" % name, text)
+            for fn in files:
+                with open(fn, 'r') as f:
+                    text = f.read()
+                self.assertIn("_resolve('foo', '%s')" % name, text)
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_launchers(self):
@@ -166,6 +170,7 @@ class ScriptTestCase(unittest.TestCase):
 
     def test_dry_run(self):
         self.maker.dry_run = True
+        self.maker.variants = set([''])
         specs = ('foo.py', 'foo = foo:main')
         files = self.maker.make_multiple(specs)
         self.assertEqual(len(specs), len(files))
@@ -176,7 +181,7 @@ class ScriptTestCase(unittest.TestCase):
 
     def test_script_run(self):
         files = self.maker.make('test = cgi:print_directory')
-        self.assertEqual(len(files), 1)
+        self.assertEqual(len(files), 2)
         p = subprocess.Popen([sys.executable, files[0]],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
@@ -186,14 +191,14 @@ class ScriptTestCase(unittest.TestCase):
     @unittest.skipUnless(os.name == 'posix', 'Test only valid for POSIX')
     def test_mode(self):
         files = self.maker.make('foo = foo:main')
-        self.assertEqual(len(files), 1)
-        f = files[0]
-        self.assertIn(os.stat(f).st_mode & 0o7777, (0o644, 0o664))
+        self.assertEqual(len(files), 2)
+        for f in files:
+            self.assertIn(os.stat(f).st_mode & 0o7777, (0o644, 0o664))
         self.maker.set_mode = True
         files = self.maker.make('bar = bar:main')
-        self.assertEqual(len(files), 1)
-        f = files[0]
-        self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
+        self.assertEqual(len(files), 2)
+        for f in files:
+            self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
