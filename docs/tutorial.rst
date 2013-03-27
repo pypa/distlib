@@ -910,12 +910,24 @@ The other script, ``bar``, is different only in the essentials::
 Specifying a custom executable for shebangs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 You may need to specify a custom executable for shebang lines. To do this, set
 the :attr:`executable` attribute of a :class:`ScriptMaker` instance to the
 absolute Unicode path of the executable which you want to be written to the
 shebang lines of scripts. If not specified, the executable running the
 :class:`ScriptMaker` code is used.
+
+Generating variants of a script
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When installing a script ``foo``, it is not uncommon to want to install
+version-specific variants such as ``foo3`` or ``foo-3.2``. You can control
+exactly which variants of the script get written through the
+:class:`ScriptMaker` instance's ``variants`` attribute. This defaults to
+``set(('', 'X.Y'))``, which means that by default a script ``foo`` would be
+installed as ``foo`` and ``foo-3.2`` under Python 3.2. If the value of the
+``variants`` attribute were ``set(('', 'X', 'X.Y'))`` then the ``foo`` script
+would be installed as ``foo``, ``foo3`` and ``foo-3.2`` when run under Python
+3.2.
 
 
 Using the version API
@@ -926,7 +938,7 @@ Using the version API
 Overview
 ~~~~~~~~
 
-The :class:`NormalizedVersion` class implements a :pep:`386` compatible
+The :class:`NormalizedVersion` class implements a :pep:`426` compatible
 version::
 
       >>> from distlib.version import NormalizedVersion
