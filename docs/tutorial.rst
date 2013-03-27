@@ -3,10 +3,16 @@
 Tutorial
 ========
 
+.. index::
+   single: Tutorial
+
 This is the place to start your practical exploration of ``distlib``.
 
 Installation
 ------------
+
+.. index::
+   single: Installation; distlib
 
 Distlib is a pure-Python library. You should be able to install it using::
 
@@ -20,17 +26,26 @@ Python's ``site-packages`` directory.
 Testing
 -------
 
+.. index::
+   single: Testing; distlib
+
 A full test suite is included with ``distlib``. To run it, you'll need to
 download the source distribution, unpack it and run ``python setup.py test``
 in the top-level directory of the package. You can of course also run
 ``python setup.py install`` to install the package (perhaps invoking with
 ``sudo`` if you need to install to a protected location).
 
+.. index::
+   single: Continuous integration status; distlib
+
 Continuous integration test results are available at:
 
 https://travis-ci.org/vsajip/distlib/
 
 Coverage results are available at:
+
+.. index::
+   single: Coverage status; distlib
 
 http://www.red-dove.com/distlib/coverage/
 
@@ -50,6 +65,9 @@ If the server script is not available, the tests which use it will be skipped.
 
 PYPI availability
 ^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: Tests; speeding up
 
 If PyPI is unavailable or slow, then some of the tests can fail or become
 painfully slow. To skip tests that might be sometimes slow, set the
@@ -73,6 +91,9 @@ shape.
 
 Using the database API
 ^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: APIs; database
 
 .. currentmodule:: distlib.database
 
@@ -263,6 +284,9 @@ The graph returned by :func:`make_graph` is an instance of
 Using the locators API
 ^^^^^^^^^^^^^^^^^^^^^^
 
+.. index::
+   single: APIs; locators
+
 .. currentmodule:: distlib.locators
 
 Overview
@@ -396,6 +420,10 @@ added in due course -- once the basic functionality is working satisfactorily.
 
 Using the index API
 ^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: APIs; PyPI
+
 
 You can use the ``distlib.index`` package to perform operations relating to a
 package index compatible with PyPI. This includes things like registering a
@@ -701,13 +729,137 @@ specifies a single index -- PyPI -- with the specified username and password.
 
 .. _use-metadata:
 
-Using the metadata API
-^^^^^^^^^^^^^^^^^^^^^^
+Using the metadata and markers APIs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TBD
+.. index::
+   single: APIs; metadata
+
+.. currentmodule:: distlib.metadata
+
+The metadata API is exposed through a :class:`Metadata` class, which largely
+acts as a specialised dictionary. This class can read and write metadata files
+complying with any of the defined versions: 1.0 (:pep:`241`), 1.1 (:pep:`314`),
+1.2 (:pep:`345`) and 2.0 (:pep:`426`). It implements methods to parse and write
+Metadata files and provides a mapping interface to the individual metadata
+fields.
+
+The :pep:`345` / :pep:`426` implementation supports the micro-language for the
+environment markers and displays warnings when versions that are supposed to be
+:pep:`386`/ :pep:`426`-compliant are violating the specification.
+
+Reading metadata
+~~~~~~~~~~~~~~~~
+
+The :class:`Metadata` class can be instantiated with the path of the
+metadata file and provides a dict-like interface to the values::
+
+   >>> from distlib.metadata import Metadata
+   >>> metadata = Metadata('PKG-INFO')
+   >>> metadata.keys()[:5]
+   ('Metadata-Version', 'Name', 'Version', 'Platform', 'Supported-Platform')
+   >>> metadata['Name']
+   'CLVault'
+   >>> metadata['Version']
+   '0.5'
+   >>> metadata['Requires-Dist']
+   ["pywin32; sys.platform == 'win32'", "Sphinx"]
+   >>>
+
+The fields that support environment markers can be automatically ignored if
+the object is instantiated using the ``platform_dependent`` option.
+:class:`Metadata` will interpret in this case the markers and will automatically
+remove the fields that are not compliant with the running environment. Here's an
+example under Mac OS X. The win32 dependency we saw earlier is ignored::
+
+   >>> from distlib.metadata import Metadata
+   >>> metadata = Metadata('PKG-INFO', platform_dependent=True)
+   >>> metadata['Requires-Dist']
+   ['Sphinx']
+   >>>
+
+If you want to provide your own execution context, let's say to test the
+metadata under a particular environment that is not the current environment,
+you can provide your own values in the ``execution_context`` option, which
+is the dict that may contain one or more keys of the context the micro-language
+expects.
+
+Here's an example, simulating a win32 environment::
+
+   >>> from distlib.metadata import Metadata
+   >>> context = {'sys.platform': 'win32'}
+   >>> metadata = Metadata('PKG-INFO', platform_dependent=True,
+   ...                     execution_context=context)
+   ...
+   >>> metadata['Requires-Dist'] = ["pywin32; sys.platform == 'win32'",
+   ...                              "Sphinx"]
+   ...
+   >>> metadata['Requires-Dist']
+   ['pywin32', 'Sphinx']
+   >>>
+
+Writing metadata
+~~~~~~~~~~~~~~~~
+
+Writing metadata can be done using the ``write`` method::
+
+   >>> metadata.write('/to/my/PKG-INFO')
+   >>>
+
+The class will pick the best version for the metadata, depending on the values
+provided. If all the values provided exist in all versions, the class will
+use :attr:`PKG_INFO_PREFERRED_VERSION`. It is set by default to 1.0, the most
+widespread version.
+
+Conflict checking and best version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some fields in :pep:`345` have to comply with the version number specification
+defined in :pep:`386` / :pep:`426`.  When they don't comply, a warning is
+emitted::
+
+   >>> from distlib.metadata import Metadata
+   >>> metadata = Metadata()
+   >>> metadata['Requires-Dist'] = ['Funky (Groovie)']
+   "Funky (Groovie)" is not a valid predicate
+   >>> metadata['Requires-Dist'] = ['Funky (1.2)']
+   >>>
+
+Using markers
+~~~~~~~~~~~~~
+
+.. index::
+   single: Markers; evaluating
+   single: Environment markers; evaluating
+
+Environment markers are implemented in the :mod:`distlib.markers` package
+and accessed via a single function, :func:`interpret`.
+
+See PEP 345 <http://www.python.org/dev/peps/pep-0345/#environment-markers>`_
+for more information about environment markers. They are used for some metadata
+fields. The :func:`interpret` function takes a single string argument which
+represents a Boolean expression, and returns either ``True`` or ``False``::
+
+    >>> from distlib.markers import interpret
+    >>> interpret('python_version >= "1.0"')
+    True
+
+.. index::
+   single: Markers; overriding
+   single: Environment markers; overriding
+
+You can pass in a context dictionary which is checked for values before the
+environment::
+
+    >>> interpret('python_version >= "1.0"', {'python_version': '0.5'})
+    False
+
 
 Using the resource API
 ^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: APIs; package resources
 
 You can use the ``distlib.resources`` package to access data stored in Python
 packages, whether in the file system or .zip files. Consider a package
@@ -725,6 +877,10 @@ which contains data alongside Python code::
 
 Access to resources in the file system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Resources; in the file system
+   single: Package resources; in the file system
 
 You can access these resources like so::
 
@@ -762,6 +918,11 @@ You can access these resources like so::
 Access to resources in the ``.zip`` files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index::
+   single: Resources; in .zip files
+   single: Package resources; in .zip files
+
+
 It works the same way if the package is in a .zip file. Given the zip file
 ``foo.zip``::
 
@@ -797,7 +958,13 @@ and so on.
 Using the scripts API
 ^^^^^^^^^^^^^^^^^^^^^
 
+.. index::
+   single: APIs; script installation
+
 .. currentmodule:: distlib.scripts
+
+.. index::
+   single: Scripts; installing
 
 You can use the ``distlib.scripts`` API to install scripts. Installing scripts
 is slightly more involved than just copying files:
@@ -814,6 +981,9 @@ is slightly more involved than just copying files:
 
 Specifying scripts to install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Scripts; specifying what to install
 
 To install scripts, create a :class:`ScriptMaker` instance,
 giving it
@@ -851,6 +1021,9 @@ The string passed to make can take one of the following forms:
 
 Wrapping callables with scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Scripts; wrapping callables
 
 Let's see how wrapping a callable works. Consider the following file::
 
@@ -910,14 +1083,21 @@ The other script, ``bar``, is different only in the essentials::
 Specifying a custom executable for shebangs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index::
+   single: Scripts; specifying custom executables
+
 You may need to specify a custom executable for shebang lines. To do this, set
 the :attr:`executable` attribute of a :class:`ScriptMaker` instance to the
 absolute Unicode path of the executable which you want to be written to the
 shebang lines of scripts. If not specified, the executable running the
 :class:`ScriptMaker` code is used.
 
+
 Generating variants of a script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Scripts; generating variants
 
 When installing a script ``foo``, it is not uncommon to want to install
 version-specific variants such as ``foo3`` or ``foo-3.2``. You can control
@@ -933,10 +1113,17 @@ would be installed as ``foo``, ``foo3`` and ``foo-3.2`` when run under Python
 Using the version API
 ^^^^^^^^^^^^^^^^^^^^^
 
+.. index::
+   single: APIs; version
+
+
 .. currentmodule:: distlib.version
 
 Overview
 ~~~~~~~~
+
+.. index::
+   single: Versions; overview
 
 The :class:`NormalizedVersion` class implements a :pep:`426` compatible
 version::
@@ -971,6 +1158,9 @@ You can't pass any old thing as a version number::
 
 Matching versions against constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Versions; matching
 
 The :class:`NormalizedMatcher` is used to match version constraints against
 versions::
@@ -1032,6 +1222,10 @@ However, you can't mix and match versions of different types::
 Using the wheel API
 ^^^^^^^^^^^^^^^^^^^^^^
 
+.. index::
+   single: APIs; wheel
+
+
 .. currentmodule:: distlib.wheel
 
 You can use the ``distlib.wheel`` package to build and install from files in
@@ -1039,6 +1233,10 @@ the Wheel format, defined in :pep:`427`.
 
 Building wheels
 ~~~~~~~~~~~~~~~
+
+.. index::
+   pair: building; wheels
+
 
 Building wheels is straightforward::
 
@@ -1073,6 +1271,9 @@ categories. The ``'prefix'`` key and one of ``'purelib'`` or ``'platlib'``
 Customising tags during build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index::
+   single: wheels; custom tags when building
+
 By default, the :meth:`build` method will use default tags depending on whether
 or not the build is a pure-Python build:
 
@@ -1102,6 +1303,9 @@ and ``arch`` keys in the ``tags`` dictionary.
 
 Installing from wheels
 ~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   pair: installing; wheels
 
 Installing from wheels is similarly straightforward. You just need to indicate
 where you want the files in the wheel to be installed::
@@ -1142,6 +1346,9 @@ Python code.
 
 Mounting wheels
 ~~~~~~~~~~~~~~~
+
+.. index::
+   single: wheels; mounting
 
 One of Python's perhaps under-used features is ``zipimport``, which gives the
 ability to import Python source from ``.zip`` files. Since wheels are ``.zip``
@@ -1493,6 +1700,9 @@ to change to an https: URL in the future.
 Using the manifest API
 ^^^^^^^^^^^^^^^^^^^^^^
 
+.. index::
+   single: APIs; manifest
+
 .. currentmodule:: distlib.manifest
 
 You can use the ``distlib.manifest`` API to construct lists of files when
@@ -1557,6 +1767,9 @@ sections.
 The ``include`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index::
+   single: Manifest; including files
+
 This takes the form of the word ``include`` (case-sensitive) followed by a
 number of file-name patterns (as used in ``MANIFEST.in`` in ``distutils``). All
 files in :attr:`allfiles`` matching the patterns (considered relative to the
@@ -1570,6 +1783,9 @@ manifest.
 
 The ``exclude`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Manifest; excluding files
 
 This takes the form of the word ``exclude`` (case-sensitive) followed by a
 number of file-name patterns (as used in ``MANIFEST.in`` in ``distutils``). All
@@ -1585,6 +1801,9 @@ above.
 The ``global-include`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index::
+   single: Manifest; including files globally
+
 This works just like ``include``, but will add matching files at all levels of
 the directory tree::
 
@@ -1597,6 +1816,9 @@ manifest.
 The ``global-exclude`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index::
+   single: Manifest; excluding files globally
+
 This works just like ``exclude``, but will remove matching files at all levels
 of the directory tree::
 
@@ -1607,6 +1829,9 @@ This will remove ``subdir/lose/lose.txt`` from the manifest.
 
 The ``recursive-include`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Manifest; including files recursively
 
 This directive takes a directory name (relative to the base) and a set of
 patterns. The patterns are used as in ``global-include``, but only for files
@@ -1619,6 +1844,9 @@ This will add ``subdir/lose/lose.txt`` back to the manifest.
 The ``recursive-exclude`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index::
+   single: Manifest; excluding files recursively
+
 This works like ``recursive-include``, but excludes matching files under the
 specified directory if they were already added by a previous directive::
 
@@ -1630,12 +1858,18 @@ This will remove ``subdir/lose/lose.txt`` from the manifest again.
 The ``graft`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index::
+   single: Manifest; grafting directories
+
 This directive takes the name of a directory (relative to the base) and copies
 all the names under it from :attr:`allfiles` to :attr:`files`.
 
 
 The ``prune`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Manifest; pruning directories
 
 This directive takes the name of a directory (relative to the base) and removes
 all the names under it from :attr:`files`.
