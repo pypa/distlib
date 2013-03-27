@@ -666,7 +666,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         record_path = os.path.join(self.path, 'RECORD')
         logger.info('creating %s', record_path)
         if dry_run:
-            return
+            return None
         with CSVWriter(record_path) as writer:
             for path in paths:
                 if os.path.isdir(path) or path.endswith(('.pyc', '.pyo')):
@@ -685,6 +685,7 @@ class InstalledDistribution(BaseInstalledDistribution):
             if record_path.startswith(base):
                 record_path = os.path.relpath(record_path, base)
             writer.writerow((record_path, '', ''))
+        return record_path
 
     def check_installed_files(self):
         """
