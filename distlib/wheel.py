@@ -23,7 +23,7 @@ import sys
 import tempfile
 import zipfile
 
-from . import DistlibException
+from . import __version__, DistlibException
 from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import DistributionPath, InstalledDistribution
 from .metadata import Metadata
@@ -334,11 +334,9 @@ class Wheel(object):
                 ap = to_posix(os.path.join(info_dir, fn))
                 archive_paths.append((ap, p))
 
-        import distlib
-
         wheel_metadata = [
             'Wheel-Version: %d.%d' % self.wheel_version,
-            'Generator: distlib %s' % distlib.__version__,
+            'Generator: distlib %s' % __version__,
             'Root-Is-Purelib: %s' % is_pure,
         ]
         for pyver, abi, arch in self.tags:
