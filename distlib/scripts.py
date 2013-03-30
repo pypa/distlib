@@ -77,6 +77,7 @@ class ScriptMaker(object):
         self.target_dir = target_dir
         self.add_launchers = add_launchers
         self.force = False
+        self.clobber = False
         self.set_mode = False
         self.variants = set(('', 'X.Y'))
         self._fileop = fileop or FileOperator(dry_run)
@@ -163,6 +164,9 @@ class ScriptMaker(object):
                     ext = 'py'
                     launcher = self._get_launcher('t')
                 outname = '%s-script.%s' % (outname, ext)
+            if os.path.exists(outname) and not self.clobber:
+                logger.warning('Skipping existing file %s', outname)
+                continue
             self._fileop.write_text_file(outname, script, 'utf-8')
             if self.set_mode:
                 self._fileop.set_executable_mode([outname])

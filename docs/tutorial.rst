@@ -1109,6 +1109,27 @@ installed as ``foo`` and ``foo-3.2`` under Python 3.2. If the value of the
 would be installed as ``foo``, ``foo3`` and ``foo-3.2`` when run under Python
 3.2.
 
+Avoiding overwriting existing scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Scripts; avoid overwriting
+
+In some scenarios, you might overwrite existing scripts when you shouldn't. For
+example, if you use Python 2.7 to install a distribution with script ``foo`` in
+the user site (see :pep:`370`), you will write (on POSIX) scripts
+``~/.local/bin/foo`` and ``~/.local/bin/foo-2.7``. If you then install the same
+distribution with Python 3.2, you would write (on POSIX) scripts
+``~/.local/bin/foo`` and ``~/.local/bin/foo-3.2``. However, by overwriting the
+``~/.local/bin/foo`` script, you may prevent verification or removal of the 2.7
+installation to fail, because the overwritten file may be different (and so
+have a different hash from what was computed during the 2.7 installation).
+
+To control overwriting of generated scripts this way, you can use the
+:attr:`clobber` attribute of a :class:`ScriptMaker` instance. This is set to
+``False`` by default, which prevents overwriting; to force overwriting, set it
+to ``True``.
+
 
 Using the version API
 ^^^^^^^^^^^^^^^^^^^^^

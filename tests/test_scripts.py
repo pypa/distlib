@@ -85,6 +85,7 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(set(specs), set(ofiles))
 
     def test_callable(self):
+        self.maker.clobber = True
         for name in ('main', 'other_main'):
             spec = 'foo = foo:' + name
             files = self.maker.make(spec)
@@ -99,6 +100,16 @@ class ScriptTestCase(unittest.TestCase):
                 with open(fn, 'r') as f:
                     text = f.read()
                 self.assertIn("_resolve('foo', '%s')" % name, text)
+
+    def test_clobber(self):
+        files = self.maker.make('foo = foo:main')
+        saved_files = files
+        self.assertGreaterEqual(len(files), 2)  # foo, foo-X.Y
+        files = self.maker.make('foo = foo:main')
+        self.assertFalse(files)
+        self.maker.clobber = True
+        files = self.maker.make('foo = foo:main')
+        self.assertEqual(files, saved_files)
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_launchers(self):
