@@ -140,9 +140,14 @@ class ScriptTestCase(unittest.TestCase):
                     self.assertIn(executable, data)
         # Now test making scripts gui and console
         files = self.maker.make('foo = foo:main [gui]')
-        self.assertEqual(len(files), 2)
+        self.assertEqual(len(files), 6)
         filenames = set([os.path.basename(f) for f in files])
-        self.assertEqual(filenames, set(('foo-script.pyw', 'foo.exe')))
+        specific = sys.version[:3]
+        self.assertEqual(filenames, set(('foo-script.pyw', 'foo.exe',
+                                         'foo.exe.manifest',
+                                         'foo-%s-script.pyw' % specific,
+                                         'foo-%s.exe' % specific,
+                                         'foo-%s.exe.manifest' % specific)))
         for fn in files:
             if fn.endswith('.exe'):
                 with open(fn, 'rb') as f:
@@ -155,9 +160,13 @@ class ScriptTestCase(unittest.TestCase):
                     self.assertIn(b'pythonw', data)
 
         files = self.maker.make('foo = foo:main')
-        self.assertEqual(len(files), 2)
+        self.assertEqual(len(files), 6)
         filenames = set([os.path.basename(f) for f in files])
-        self.assertEqual(filenames, set(('foo-script.py', 'foo.exe')))
+        self.assertEqual(filenames, set(('foo-script.py', 'foo.exe',
+                                         'foo.exe.manifest',
+                                         'foo-%s-script.py' % specific,
+                                         'foo-%s.exe' % specific,
+                                         'foo-%s.exe.manifest' % specific)))
         for fn in files:
             if fn.endswith('foo.exe'):
                 with open(fn, 'rb') as f:
