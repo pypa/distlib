@@ -6,6 +6,36 @@ Change log for ``distlib``
 
 Released: not yet.
 
+- compat
+
+    - Added BaseConfigurator backport.
+
+- database
+
+    - Return RECORD path from write_installed_files (or None if dry_run).
+
+- scripts
+
+    - Add variants and clobber flag for generation of foo/fooX/foo-X.Y.
+
+    - Added .exe manifests for Windows.
+
+- util
+
+    - Regularised recording of written files.
+
+- wheel
+
+    - Replaced absolute import with relative.
+
+- docs
+
+    - Numerous documentation updates, not detailed further here.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
+
 
 0.1.1
 ~~~~~
