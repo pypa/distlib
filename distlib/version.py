@@ -16,36 +16,14 @@ __all__ = ['NormalizedVersion', 'NormalizedMatcher',
            'LegacyVersion', 'LegacyMatcher',
            'SemanticVersion', 'SemanticMatcher',
            'AdaptiveVersion', 'AdaptiveMatcher',
-           'UnsupportedVersionError', 'HugeMajorVersionError',
-           'suggest_normalized_version', 'suggest_semantic_version',
-           'suggest_adaptive_version',
-           'normalized_key', 'legacy_key', 'semantic_key', 'adaptive_key',
-           'get_scheme']
+           'UnsupportedVersionError', 'get_scheme']
 
-class UnsupportedVersionError(Exception):
+class UnsupportedVersionError(ValueError):
     """This is an unsupported version."""
     pass
 
 
-class HugeMajorVersionError(UnsupportedVersionError):
-    """An irrational version because the major version number is huge
-    (often because a year or date was used).
-
-    See `error_on_huge_major_num` option in `NormalizedVersion` for details.
-    This guard can be disabled by setting that option False.
-    """
-    pass
-
-
-class _Common(object):
-    def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self._string)
-
-    def __str__(self):
-        return self._string
-
-
-class Version(_Common):
+class Version(object):
     def __init__(self, s):
         self._string = s = s.strip()
         self._parts = parts = self.parse(s)
@@ -83,11 +61,17 @@ class Version(_Common):
     def __hash__(self):
         return hash(self._parts)
 
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self._string)
+
+    def __str__(self):
+        return self._string
+
     @property
     def is_prerelease(self):
         raise NotImplementedError('Please implement in subclasses.')
 
-class Matcher(_Common):
+class Matcher(object):
     version_class = None
 
     predicate_re = re.compile(r"^(\w[\s\w'.-]*)(\((.*)\))?")
@@ -154,6 +138,12 @@ class Matcher(_Common):
     def __hash__(self):
         return hash(self.key) + hash(self._parts)
 
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self._string)
+
+    def __str__(self):
+        return self._string
+
 # A marker used in the second and third parts of the `parts` tuple, for
 # versions that don't have those segments, to sort properly. An example
 # of versions in sort order ('highest' last):
@@ -205,7 +195,7 @@ def _parse_numdots(s, full_ver, drop_zeroes=False, min_length=0):
             result.pop()
     return result
 
-def pep386_key(s, fail_on_huge_major_ver=True):
+def _pep386_key(s):
     """Parses a string version into parts using PEP-386 logic."""
 
     match = _VERSION_RE.search(s)
@@ -242,16 +232,13 @@ def pep386_key(s, fail_on_huge_major_ver=True):
         parts.append(tuple(postdev))
     else:
         parts.append(_FINAL_MARKER)
-    if fail_on_huge_major_ver and parts[0][0] > 1980:
-        raise HugeMajorVersionError("huge major version number, %r, "
-           "which might cause future problems: %r" % (parts[0][0], s))
     return tuple(parts)
 
 
 PEP426_VERSION_RE = re.compile('^(\d+\.\d+(\.\d+)*)((a|b|c|rc)(\d+))?'
                                '(\.(post)(\d+))?(\.(dev)(\d+))?$')
 
-def pep426_key(s, _=None):
+def _pep426_key(s):
     s = s.strip()
     m = PEP426_VERSION_RE.match(s)
     if not m:
@@ -293,7 +280,7 @@ def pep426_key(s, _=None):
     return nums, pre, post, dev
 
 
-normalized_key = pep426_key
+_normalized_key = _pep426_key
 
 class NormalizedVersion(Version):
     """A rational version.
@@ -313,16 +300,13 @@ class NormalizedVersion(Version):
         1.2a        # release level must have a release serial
         1.2.3b
     """
-    def parse(self, s): return normalized_key(s)
+    def parse(self, s): return _normalized_key(s)
 
     PREREL_TAGS = set(['a', 'b', 'c', 'rc', 'dev'])
 
     @property
     def is_prerelease(self):
         return any(t[0] in self.PREREL_TAGS for t in self._parts)
-
-class UnlimitedMajorVersion(Version):
-    def parse(self, s): return normalized_key(s, False)
 
 # We want '2.5' to match '2.5.4' but not '2.50'.
 
@@ -371,10 +355,10 @@ _SUFFIX_REPLACEMENTS = (
 
 _NUMERIC_PREFIX = re.compile(r'(\d+(\.\d+)*)')
 
-def suggest_semantic_version(s):
+def _suggest_semantic_version(s):
     """
     Try to suggest a semantic form for a version for which
-    suggest_normalized_version couldn't come up with anything.
+    _suggest_normalized_version couldn't come up with anything.
     """
     result = s.strip().lower()
     for pat, repl in _REPLACEMENTS:
@@ -417,7 +401,7 @@ def suggest_semantic_version(s):
     return result
 
 
-def suggest_normalized_version(s):
+def _suggest_normalized_version(s):
     """Suggest a normalized version close to the given version string.
 
     If you have a version string that isn't rational (i.e. NormalizedVersion
@@ -435,7 +419,7 @@ def suggest_normalized_version(s):
     @returns A rational version string, or None, if couldn't determine one.
     """
     try:
-        normalized_key(s)
+        _normalized_key(s)
         return s   # already rational
     except UnsupportedVersionError:
         pass
@@ -522,13 +506,13 @@ def suggest_normalized_version(s):
     rs = re.sub(r"p(\d+)$", r".post\1", rs)
 
     try:
-        normalized_key(rs)
+        _normalized_key(rs)
     except UnsupportedVersionError:
         rs = None
     return rs
 
-def suggest_adaptive_version(s):
-    return suggest_normalized_version(s) or suggest_semantic_version(s)
+def _suggest_adaptive_version(s):
+    return _suggest_normalized_version(s) or _suggest_semantic_version(s)
 
 #
 #   Legacy version processing (distribute-compatible)
@@ -546,7 +530,7 @@ _VERSION_REPLACE = {
 }
 
 
-def legacy_key(s):
+def _legacy_key(s):
     def get_parts(s):
         result = []
         for p in _VERSION_PART.split(s.lower()):
@@ -572,7 +556,7 @@ def legacy_key(s):
     return tuple(result)
 
 class LegacyVersion(Version):
-    def parse(self, s): return legacy_key(s)
+    def parse(self, s): return _legacy_key(s)
 
     PREREL_TAGS = set(
         ['*a', '*alpha', '*b', '*beta', '*c', '*rc', '*r', '*@', '*pre']
@@ -596,7 +580,7 @@ _SEMVER_RE = re.compile(r'^(\d+)\.(\d+)\.(\d+)'
 def is_semver(s):
     return _SEMVER_RE.match(s)
 
-def semantic_key(s):
+def _semantic_key(s):
     def make_tuple(s, absent):
         if s is None:
             result = (absent,)
@@ -619,7 +603,7 @@ def semantic_key(s):
 
 
 class SemanticVersion(Version):
-    def parse(self, s): return semantic_key(s)
+    def parse(self, s): return _semantic_key(s)
 
     @property
     def is_prerelease(self):
@@ -634,29 +618,29 @@ class SemanticMatcher(Matcher):
 # determine a suggested normalized version, and work with that.
 #
 
-def adaptive_key(s):
+def _adaptive_key(s):
     try:
-        result = normalized_key(s, False)
+        result = _normalized_key(s)
     except UnsupportedVersionError:
-        ss = suggest_normalized_version(s)
+        ss = _suggest_normalized_version(s)
         if ss is not None:
-            result = normalized_key(ss)     # "guaranteed" to work
+            result = _normalized_key(ss)     # "guaranteed" to work
         else:
-            ss = s # suggest_semantic_version(s) or s
-            result = semantic_key(ss)       # let's hope ...
+            ss = s # _suggest_semantic_version(s) or s
+            result = _semantic_key(ss)       # let's hope ...
     return result
 
 
 class AdaptiveVersion(NormalizedVersion):
-    def parse(self, s): return adaptive_key(s)
+    def parse(self, s): return _adaptive_key(s)
 
     @property
     def is_prerelease(self):
         try:
-            normalized_key(self._string)
+            _normalized_key(self._string)
             not_sem = True
         except UnsupportedVersionError:
-            ss = suggest_normalized_version(self._string)
+            ss = _suggest_normalized_version(self._string)
             not_sem = ss is not None
         if not_sem:
             return any(t[0] in self.PREREL_TAGS for t in self._parts)
@@ -702,13 +686,13 @@ class VersionScheme(object):
         return result
 
 _SCHEMES = {
-    'normalized': VersionScheme(normalized_key, NormalizedMatcher,
-                                suggest_normalized_version),
-    'legacy': VersionScheme(legacy_key, LegacyMatcher, lambda self, s: s),
-    'semantic': VersionScheme(semantic_key, SemanticMatcher,
-                              suggest_semantic_version),
-    'adaptive': VersionScheme(adaptive_key, AdaptiveMatcher,
-                              suggest_adaptive_version),
+    'normalized': VersionScheme(_normalized_key, NormalizedMatcher,
+                                _suggest_normalized_version),
+    'legacy': VersionScheme(_legacy_key, LegacyMatcher, lambda self, s: s),
+    'semantic': VersionScheme(_semantic_key, SemanticMatcher,
+                              _suggest_semantic_version),
+    'adaptive': VersionScheme(_adaptive_key, AdaptiveMatcher,
+                              _suggest_adaptive_version),
 }
 
 _SCHEMES['default'] = _SCHEMES['adaptive']

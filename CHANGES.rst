@@ -24,6 +24,12 @@ Released: not yet.
 
     - Regularised recording of written files.
 
+- version
+
+    - Tidyups, most suggested by Donald Stufft: Made key functions private,
+      removed _Common class, removed checking for huge version numbers, made
+      UnsupportedVersionError a ValueError.
+
 - wheel
 
     - Replaced absolute import with relative.

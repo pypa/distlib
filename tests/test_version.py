@@ -9,17 +9,16 @@ import doctest
 from compat import unittest
 
 from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
-                             UnlimitedMajorVersion as UV,
-                             HugeMajorVersionError, UnsupportedVersionError,
-                             suggest_normalized_version,
-                             suggest_semantic_version,
-                             suggest_adaptive_version,
+                             UnsupportedVersionError,
+                             _suggest_normalized_version,
+                             _suggest_semantic_version,
+                             _suggest_adaptive_version,
                              LegacyVersion as LV, LegacyMatcher as LM,
                              SemanticVersion as SV, SemanticMatcher as SM,
                              AdaptiveVersion as AV, AdaptiveMatcher as AM,
-                             is_semver, get_scheme, adaptive_key,
-                             normalized_key, legacy_key, semantic_key,
-                             pep386_key)
+                             is_semver, get_scheme, _adaptive_key,
+                             _normalized_key, _legacy_key, _semantic_key,
+                             _pep386_key)
 
 
 class VersionTestCase(unittest.TestCase):
@@ -66,8 +65,6 @@ class VersionTestCase(unittest.TestCase):
     def test_huge_version(self):
         raise unittest.SkipTest('Test disabled for now')
         self.assertEqual(str(NV('1980.0')), '1980.0')
-        self.assertRaises(HugeMajorVersionError, NV, '1981.0')
-        self.assertEqual(str(UV('1981.0')), '1981.0')
 
     def test_comparison(self):
         comparison_doctest_string = r"""
@@ -159,7 +156,7 @@ class VersionTestCase(unittest.TestCase):
         self.assertGreater(NV('1.0c4'), NV('1.0c1'))
 
     def test_suggest_normalized_version(self):
-        suggest = suggest_normalized_version
+        suggest = _suggest_normalized_version
         self.assertEqual(suggest('1.0'), '1.0')
         self.assertEqual(suggest('1.0-alpha1'), '1.0a1')
         self.assertEqual(suggest('1.0c2'), '1.0c2')
@@ -191,11 +188,11 @@ class VersionTestCase(unittest.TestCase):
         self.assertEqual(suggest('1.4p1'), '1.4.post1')
 
     def test_suggestions_other(self):
-        suggest = suggest_semantic_version
+        suggest = _suggest_semantic_version
         self.assertEqual(suggest(''), '0.0.0')
         self.assertEqual(suggest('1'), '1.0.0')
         self.assertEqual(suggest('1.2'), '1.2.0')
-        suggest = suggest_adaptive_version
+        suggest = _suggest_adaptive_version
         self.assertEqual(suggest('1.0-alpha1'), '1.0a1')
 
     def test_matcher(self):
@@ -276,10 +273,10 @@ class VersionTestCase(unittest.TestCase):
 
     def test_schemes(self):
         cases = (
-            ('normalized', (normalized_key, NV, NM)),
-            ('legacy', (legacy_key, LV, LM)),
-            ('semantic', (semantic_key, SV, SM)),
-            ('adaptive', (adaptive_key, AV, AM)),
+            ('normalized', (_normalized_key, NV, NM)),
+            ('legacy', (_legacy_key, LV, LM)),
+            ('semantic', (_semantic_key, SV, SM)),
+            ('adaptive', (_adaptive_key, AV, AM)),
         )
 
         for name, values in cases:
@@ -366,7 +363,7 @@ class VersionTestCase(unittest.TestCase):
         )
 
         n = len(versions)
-        F = pep386_key
+        F = _pep386_key
         for i in range(n - 1):
             v1 = versions[i]
             v2 = versions[i + 1]
@@ -376,7 +373,7 @@ class LegacyVersionTestCase(unittest.TestCase):
     # These tests are the same as distribute's
     def test_equality(self):
         def compare(a, b):
-            ka, kb = legacy_key(a), legacy_key(b)
+            ka, kb = _legacy_key(a), _legacy_key(b)
             self.assertEqual(ka, kb)
 
         compare('0.4', '0.4.0')
@@ -391,7 +388,7 @@ class LegacyVersionTestCase(unittest.TestCase):
 
     def test_ordering(self):
         def compare(a, b):
-            ka, kb = legacy_key(a), legacy_key(b)
+            ka, kb = _legacy_key(a), _legacy_key(b)
             self.assertLess(ka, kb)
 
         compare('2.1','2.1.1')
@@ -441,7 +438,7 @@ class LegacyVersionTestCase(unittest.TestCase):
             ('1.0-beta6', ('00000001', '*beta', '00000006', '*final')),
         )
         for k, v in cases:
-            self.assertEqual(legacy_key(k), v)
+            self.assertEqual(_legacy_key(k), v)
 
     def test_prereleases(self):
         pre_releases = (
@@ -478,14 +475,14 @@ class SemanticVersionTestCase(unittest.TestCase):
         ]
         for s in bad:
             self.assertFalse(is_semver(s))
-            self.assertRaises(UnsupportedVersionError, semantic_key, s)
+            self.assertRaises(UnsupportedVersionError, _semantic_key, s)
 
         for s in good:
             self.assertTrue(is_semver(s))
 
     def test_ordering(self):
         def compare(a, b):
-            ka, kb = semantic_key(a), semantic_key(b)
+            ka, kb = _semantic_key(a), _semantic_key(b)
             self.assertLess(ka, kb)
 
         # From the semver.org home page
