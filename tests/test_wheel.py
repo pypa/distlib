@@ -21,7 +21,8 @@ from distlib import DistlibException
 from distlib.compat import ZipFile
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
-from distlib.wheel import Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS
+from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS,
+                           is_compatible)
 
 try:
     with open(os.devnull, 'wb') as junk:
@@ -149,14 +150,30 @@ class WheelTestCase(unittest.TestCase):
                 self.assertEqual(getattr(w, attr), value)
 
     def test_compatible_tags(self):
-
         self.assertEqual(PYVER, 'py%d%d' % sys.version_info[:2])
-
         tags = COMPATIBLE_TAGS
         self.assertIn((PYVER, 'none', 'any'), tags)
         self.assertIn((PYVER[:-1], 'none', 'any'), tags)
         this_arch = filter(lambda o: o[-1] == ARCH, tags)
         self.assertTrue(this_arch)
+
+    def test_is_compatible(self):
+        fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
+        if 'py27' <= PYVER < 'py32':
+            self.assertTrue(is_compatible(fn))
+            self.assertTrue(is_compatible(Wheel(fn)))
+
+    def test_metadata(self):
+        fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
+        w = Wheel(fn)
+        md = w.metadata
+        self.assertEqual(md.name, 'dummy')
+        self.assertEqual(md.version, '0.1')
+
+    def test_invalid(self):
+        fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
+        w = Wheel(fn)
+        self.assertRaises(DistlibException, w.get_hash, b'', 'badalgo')
 
     def check_built_wheel(self, wheel, expected):
         for key in expected:
@@ -314,6 +331,25 @@ class WheelTestCase(unittest.TestCase):
         self.assertIn(fn, sys.path)
         w.unmount()
         self.assertNotIn(fn, sys.path)
+
+    def test_mount_extensions(self):
+        if PYVER == 'py27':
+            fn = 'minimext-0.1-cp27-none-linux_x86_64.whl'
+        elif PYVER == 'py32':
+            fn = 'minimext-0.1-cp32-cp32mu-linux_x86_64.whl'
+        elif PYVER == 'py33':
+            fn = 'minimext-0.1-cp33-cp33m-linux_x86_64.whl'
+        else:
+            fn = None
+        if not fn:
+            raise unittest.SkipTest('Suitable wheel not found')
+        fn = os.path.join(HERE, fn)
+        w = Wheel(fn)
+        self.assertRaises(ImportError, __import__, 'minimext')
+        w.mount()
+        mod = __import__('minimext')
+        self.assertIs(mod, sys.modules['minimext'])
+        self.assertEqual(mod.fib(10), 55)
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
