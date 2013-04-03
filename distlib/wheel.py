@@ -504,7 +504,8 @@ class Wheel(object):
                 del paths['platlib']
                 paths['lib'] = libdir
                 p = dist.write_shared_locations(paths, dry_run)
-                outfiles.append(p)
+                if p:
+                    outfiles.append(p)
 
                 # Write RECORD
                 dist.write_installed_files(outfiles, paths['prefix'],
