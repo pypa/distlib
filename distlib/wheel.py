@@ -112,7 +112,9 @@ class Mounter(object):
                 raise ImportError('unable to find extension for %s' % fullname)
             result = imp.load_dynamic(fullname, self.libs[fullname])
             result.__loader__ = self
-            result.__package__, _ = fullname.rsplit('.', 1)
+            parts = fullname.rsplit('.', 1)
+            if len(parts) > 1:
+                result.__package__ = parts[0]
         return result
 
 _hook = Mounter()
