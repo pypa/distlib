@@ -14,6 +14,8 @@ Released: not yet.
 
     - Return RECORD path from write_installed_files (or None if dry_run).
 
+    - Explicitly return None from write_shared_locations if dry run.
+
 - scripts
 
     - Add variants and clobber flag for generation of foo/fooX/foo-X.Y.
@@ -33,6 +35,12 @@ Released: not yet.
 - wheel
 
     - Replaced absolute import with relative.
+
+    - Handle None return from write_shared_locations correctly.
+
+    - Fixed bug in Mounter for extension modules not in sub-packages.
+
+    - Made dylib-cache Python version-specific.
 
 - docs
 
