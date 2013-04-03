@@ -761,7 +761,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         shared_path = os.path.join(self.path, 'SHARED')
         logger.info('creating %s', shared_path)
         if dry_run:
-            return
+            return None
         lines = []
         for key in ('prefix', 'lib', 'headers', 'scripts', 'data'):
             path = paths[key]
