@@ -273,6 +273,8 @@ class WheelTestCase(unittest.TestCase):
         self.assertIsNotNone(dist)
         self.assertEqual(dist.name, w.name)
         self.assertEqual(dist.version, w.version)
+        shared = dist.shared_locations
+        self.assertTrue(shared)
         os.remove(pathname)
         sm = Manifest(srcdir)
         sm.findall()
@@ -352,6 +354,9 @@ class WheelTestCase(unittest.TestCase):
         mod = __import__('minimext')
         self.assertIs(mod, sys.modules['minimext'])
         self.assertEqual(mod.fib(10), 55)
+        w.unmount()
+        del sys.modules['minimext']
+        self.assertRaises(ImportError, __import__, 'minimext')
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
