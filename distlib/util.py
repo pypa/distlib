@@ -20,13 +20,12 @@ import sys
 import tarfile
 import tempfile
 import time
-import zipfile
 
 from . import DistlibException
 from .compat import (string_types, text_type, shutil, raw_input,
                      cache_from_source, urlopen, httplib, xmlrpclib, splittype,
                      HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
-                     URLError, match_hostname, CertificateError)
+                     URLError, match_hostname, CertificateError, ZipFile)
 
 logger = logging.getLogger(__name__)
 
@@ -892,7 +891,7 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
             raise ValueError('Unknown format for %r' % archive_filename)
     try:
         if format == 'zip':
-            archive = zipfile.ZipFile(archive_filename, 'r')
+            archive = ZipFile(archive_filename, 'r')
             if check:
                 names = archive.namelist()
                 for name in names:
@@ -922,7 +921,7 @@ def zip_dir(directory):
     """zip a directory tree into a BytesIO object"""
     result = io.BytesIO()
     dlen = len(directory)
-    with zipfile.ZipFile(result, "w") as zf:
+    with ZipFile(result, "w") as zf:
         for root, dirs, files in os.walk(directory):
             for name in files:
                 full = os.path.join(root, name)
