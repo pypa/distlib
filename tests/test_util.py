@@ -4,6 +4,7 @@
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
+from io import BytesIO
 from itertools import islice
 import os
 import shutil
@@ -18,14 +19,14 @@ from support import TempdirManager
 from distlib import DistlibException
 from distlib.compat import cache_from_source
 from distlib.util import (get_export_entry, ExportEntry, resolve,
-                          get_cache_base, path_to_cache_dir,
+                          get_cache_base, path_to_cache_dir, zip_dir,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
                           iglob, RICH_GLOB, parse_requirement, Container,
                           FileOperator, is_string_sequence, get_package_data)
 
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -740,6 +741,12 @@ class GlobTestCase(GlobTestCaseBase):
                      'a (>= 1.2, < 2.0)'))
         r = parse_requirement('a[]')
         validate(r, ('a', None, None, 'a'))
+
+    def test_zip_dir(self):
+        d = os.path.join(HERE, 'foofoo')
+        data = zip_dir(d)
+        self.assertIsInstance(data, BytesIO)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
