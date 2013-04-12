@@ -1114,6 +1114,7 @@ class HTTPSConnection(httplib.HTTPSConnection):
         if self.ca_certs and self.check_domain:
             try:
                 match_hostname(self.sock.getpeercert(), self.host)
+                logger.debug('Host verified: %s', self.host)
             except CertificateError:
                 self.sock.shutdown(socket.SHUT_RDWR)
                 self.sock.close()
