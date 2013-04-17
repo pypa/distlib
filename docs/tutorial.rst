@@ -410,8 +410,8 @@ the downside of having vital information only available via keyword arguments
 to the :func:`setup` call: hopefully, a move to fully declarative metadata will
 facilitate indexing it and allowing the provision of improved features.
 
-The locators will skip binary distributions (``.egg`` files are currently
-treated as binary distributions).
+The locators will skip binary distributions other than wheels. (``.egg`` files
+are currently treated as binary distributions).
 
 The PyPI locator classes don't yet support the use of mirrors, but that can be
 added in due course -- once the basic functionality is working satisfactorily.
