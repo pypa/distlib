@@ -22,6 +22,7 @@ from .version import get_scheme
 
 logger = logging.getLogger(__name__)
 
+
 class MetadataMissingError(DistlibException):
     """A required metadata is missing"""
 
@@ -117,6 +118,7 @@ _ALL_FIELDS.update(_345_FIELDS)
 _ALL_FIELDS.update(_426_FIELDS)
 
 EXTRA_RE = re.compile(r'''extra\s*==\s*("([^"]+)"|'([^']+)')''')
+
 
 def _version2fieldlist(version):
     if version == '1.0':
@@ -275,8 +277,8 @@ class Metadata(object):
     def set_metadata_version(self):
         self._fields['Metadata-Version'] = _best_version(self._fields)
 
-    def _write_field(self, file, name, value):
-        file.write('%s: %s\n' % (name, value))
+    def _write_field(self, fileobj, name, value):
+        fileobj.write('%s: %s\n' % (name, value))
 
     def __getitem__(self, name):
         return self.get(name)
@@ -375,7 +377,7 @@ class Metadata(object):
 
     def _set_dependencies(self, value):
         if 'test' in value:
-            value = dict(value) # don't change value passed in
+            value = dict(value)     # don't change value passed in
             value.setdefault('extras', {})['test'] = value.pop('test')
         self._dependencies = value
         setup_reqs = value.get('setup', [])
@@ -683,8 +685,9 @@ class Metadata(object):
                 ('requires', 'Requires'),
                 ('obsoletes', 'Obsoletes'),
             )
-            if not skip_missing or field_name in self._fields:
-                data[key] = self[field_name]
+            for key, field_name in mapping_1_1:
+                if not skip_missing or field_name in self._fields:
+                    data[key] = self[field_name]
 
         return data
 
