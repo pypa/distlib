@@ -16,6 +16,10 @@ Released: not yet.
 
     - Explicitly return None from write_shared_locations if dry run.
 
+- metadata
+
+    - Added missing condition in :meth:`todict`.
+
 - scripts
 
     - Add variants and clobber flag for generation of foo/fooX/foo-X.Y.
@@ -25,6 +29,8 @@ Released: not yet.
 - util
 
     - Regularised recording of written files.
+
+    - Added :class:`Configurator`.
 
 - version
 

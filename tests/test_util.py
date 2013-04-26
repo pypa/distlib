@@ -7,7 +7,9 @@
 from io import BytesIO
 from itertools import islice
 import os
+import re
 import shutil
+import sys
 import tempfile
 import textwrap
 import time
@@ -23,10 +25,18 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
                           iglob, RICH_GLOB, parse_requirement, Container,
+                          Configurator,
                           FileOperator, is_string_sequence, get_package_data)
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+class TestContainer(object):
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
 
 class UtilTestCase(unittest.TestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
@@ -396,6 +406,75 @@ class UtilTestCase(unittest.TestCase):
                                 metadata=None))
         self.assertFalse(data)
 
+    def test_zip_dir(self):
+        d = os.path.join(HERE, 'foofoo')
+        data = zip_dir(d)
+        self.assertIsInstance(data, BytesIO)
+
+    def test_configurator(self):
+        d = {
+            'a': 1,
+            'b': 2.0,
+            'c': 'xyz',
+            'stderr': 'ext://sys.stderr',
+            'list_o_stuff': [
+                'cfg://stderr',
+                'ext://sys.stdout',
+                'ext://logging.NOTSET',
+            ],
+            'dict_o_stuff': {
+                'k1': 'cfg://list_o_stuff[1]',
+                'k2': 'abc',
+                'k3': 'cfg://list_o_stuff',
+            },
+            'another_dict_o_stuff': {
+                'k1': 'cfg://dict_o_stuff[k2]',
+                'k2': 'ext://re.I',
+                'k3': 'cfg://dict_o_stuff[k3][0]',
+            },
+            'custom': {
+                '()': __name__ + '.TestContainer',
+                '[]': [1, 'a', 2.0, ('b', 'c', 'd')],
+                '.': {
+                    'p1': 'a',
+                    'p2': 'b',
+                    'p3': {
+                        '()' : __name__ + '.TestContainer',
+                        '[]': [1, 2],
+                        '.': {
+                            'p1': 'c',
+                        },
+                    },
+                },
+                'k1': 'v1',
+                'k2': 'v2',
+            }
+        }
+
+        cfg = Configurator(d)
+        self.assertEqual(cfg['a'], 1)
+        self.assertEqual(cfg['b'], 2.0)
+        self.assertEqual(cfg['c'], 'xyz')
+        self.assertIs(cfg['stderr'], sys.stderr)
+        self.assertIs(cfg['list_o_stuff'][0], sys.stderr)
+        self.assertIs(cfg['list_o_stuff'][1], sys.stdout)
+        self.assertIs(cfg['list_o_stuff'][-1], 0)   # logging.NOTSET == 0
+        self.assertIs(cfg['dict_o_stuff']['k1'], sys.stdout)
+        self.assertIs(cfg['another_dict_o_stuff']['k1'], 'abc')
+        self.assertIs(cfg['another_dict_o_stuff']['k2'], re.I)
+        self.assertIs(cfg['another_dict_o_stuff']['k3'], sys.stderr)
+        custom = cfg['custom']
+        self.assertIsInstance(custom, TestContainer)
+        self.assertEqual(custom.args, (1, 'a', 2.0, ('b', 'c', 'd')))
+        self.assertEqual(custom.kwargs, {'k1': 'v1', 'k2': 'v2'})
+        self.assertEqual(custom.p1, 'a')
+        self.assertEqual(custom.p2, 'b')
+        self.assertIsInstance(custom.p3, TestContainer)
+        self.assertEqual(custom.p3.args, (1, 2))
+        self.assertEqual(custom.p3.kwargs, {})
+        self.assertEqual(custom.p3.p1, 'c')
+
+
 def _speed_range(min_speed, max_speed):
     return tuple(['%d KB/s' % s for s in range(min_speed,
                                                max_speed + 1)])
@@ -741,11 +820,6 @@ class GlobTestCase(GlobTestCaseBase):
                      'a (>= 1.2, < 2.0)'))
         r = parse_requirement('a[]')
         validate(r, ('a', None, None, 'a'))
-
-    def test_zip_dir(self):
-        d = os.path.join(HERE, 'foofoo')
-        data = zip_dir(d)
-        self.assertIsInstance(data, BytesIO)
 
 
 if __name__ == '__main__':  # pragma: no cover
