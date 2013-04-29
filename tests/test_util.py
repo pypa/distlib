@@ -416,6 +416,8 @@ class UtilTestCase(unittest.TestCase):
             'a': 1,
             'b': 2.0,
             'c': 'xyz',
+            'd': 'inc://' + os.path.join(HERE, 'included.json'),
+            'e': 'inc://' + 'included.json',
             'stderr': 'ext://sys.stderr',
             'list_o_stuff': [
                 'cfg://stderr',
@@ -451,7 +453,7 @@ class UtilTestCase(unittest.TestCase):
             }
         }
 
-        cfg = Configurator(d)
+        cfg = Configurator(d, HERE)
         self.assertEqual(cfg['a'], 1)
         self.assertEqual(cfg['b'], 2.0)
         self.assertEqual(cfg['c'], 'xyz')
@@ -473,6 +475,8 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(custom.p3.args, (1, 2))
         self.assertEqual(custom.p3.kwargs, {})
         self.assertEqual(custom.p3.p1, 'c')
+        self.assertEqual(cfg['d'], {'foo': 'bar', 'bar': 'baz'})
+        self.assertEqual(cfg['e'], {'foo': 'bar', 'bar': 'baz'})
 
 
 def _speed_range(min_speed, max_speed):

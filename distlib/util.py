@@ -1313,6 +1313,14 @@ class CSVWriter(CSVBase):
 #
 
 class Configurator(BaseConfigurator):
+
+    value_converters = dict(BaseConfigurator.value_converters)
+    value_converters['inc'] = 'inc_convert'
+
+    def __init__(self, config, base=None):
+        super(Configurator, self).__init__(config)
+        self.base = base or os.getcwd()
+
     def configure_custom(self, config):
         def convert(o):
             if isinstance(o, (list, tuple)):
@@ -1347,5 +1355,13 @@ class Configurator(BaseConfigurator):
     def __getitem__(self, key):
         result = self.config[key]
         if isinstance(result, dict) and '()' in result:
-            result = self.configure_custom(result)
+            self.config[key] = result = self.configure_custom(result)
+        return result
+
+    def inc_convert(self, value):
+        """Default converter for the inc:// protocol."""
+        if not os.path.isabs(value):
+            value = os.path.join(self.base, value)
+        with codecs.open(value, 'r', encoding='utf-8') as f:
+            result = json.load(f)
         return result
