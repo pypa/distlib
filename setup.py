@@ -38,7 +38,7 @@ distutils.core.setup(
     author_email='vinay_sajip@red-dove.com',
     url='https://bitbucket.org/vinay.sajip/distlib',
     download_url=('https://bitbucket.org/vinay.sajip/distlib/downloads/'
-                  'distlib-0.1.0.zip'),
+                  'distlib-' + distlib.__version__ + '.zip'),
     description='Distribution utilities',
     long_description = ('Low-level components of distutils2/packaging, '
                         'augmented with higher-level APIs for making '
@@ -64,6 +64,7 @@ distutils.core.setup(
         'distlib',
         'distlib._backport',
     ],
+    package_data={'distlib._backport': ['sysconfig.cfg']},
     cmdclass={
         'test': TestCommand,
     },

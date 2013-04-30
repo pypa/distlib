@@ -56,6 +56,10 @@ Released: not yet.
 
     - Numerous test refinements, not detailed further here.
 
+- other
+
+    - Corrected setup.py to ensure that sysconfig.cfg is included.
+
 
 0.1.1
 ~~~~~
