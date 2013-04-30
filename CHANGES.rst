@@ -1,14 +1,20 @@
 Change log for ``distlib``
 --------------------------
 
+0.1.3
+~~~~~
+
+Released: Not yet.
+
+
 0.1.2
 ~~~~~
 
-Released: not yet.
+Released: 2013-04-30
 
 - compat
 
-    - Added BaseConfigurator backport.
+    - Added BaseConfigurator backport for 2.6.
 
 - database
 
@@ -30,7 +36,7 @@ Released: not yet.
 
     - Regularised recording of written files.
 
-    - Added :class:`Configurator`.
+    - Added Configurator.
 
 - version
 
