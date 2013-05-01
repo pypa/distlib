@@ -372,7 +372,8 @@ class Wheel(object):
                 zf.write(p, ap)
         return pathname
 
-    def install(self, paths, dry_run=False, executable=None, warner=None):
+    def install(self, paths, dry_run=False, executable=None, warner=None,
+                lib_only=False):
         """
         Install a wheel to the specified paths. If ``executable`` is specified,
         it should be the Unicode absolute path the to the executable written
@@ -381,6 +382,11 @@ class Wheel(object):
         tuples indicating the wheel version of this software and the wheel
         version in the file, if there is a discrepancy in the versions.
         This can be used to issue any warnings to raise any exceptions.
+        If ``lib_only`` is True, only the purelib/platlib files are installed,
+        and the headers, scripts, data and dist-info metadata are not written.
+
+        The return value is a :class:`InstalledDistribution` instance unless
+        ``lib_only`` is True, in which case the return value is ``None``.
         """
         pathname = os.path.join(self.dirname, self.filename)
         name_ver = '%s-%s' % (self.name, self.version)
@@ -413,6 +419,7 @@ class Wheel(object):
                         records[p] = row
 
             data_pfx = posixpath.join(data_dir, '')
+            info_pfx = posixpath.join(info_dir, '')
             script_pfx = posixpath.join(data_dir, 'scripts', '')
 
             fileop = FileOperator(dry_run=dry_run)
@@ -450,6 +457,9 @@ class Wheel(object):
                             raise DistlibException('digest mismatch for '
                                                    '%s' % arcname)
 
+                    if lib_only and u_arcname.startswith((info_pfx, data_pfx)):
+                        logger.debug('lib_only: skipping %s', u_arcname)
+                        continue
                     is_script = (u_arcname.startswith(script_pfx)
                                  and not u_arcname.endswith('.exe'))
 
@@ -495,21 +505,25 @@ class Wheel(object):
                         fileop.set_executable_mode(filenames)
                         outfiles.extend(filenames)
 
-                p = os.path.join(libdir, info_dir)
-                dist = InstalledDistribution(p)
+                if lib_only:
+                    logger.debug('lib_only: returning None')
+                    dist = None
+                else:
+                    p = os.path.join(libdir, info_dir)
+                    dist = InstalledDistribution(p)
 
-                # Write SHARED
-                paths = dict(paths) # don't change passed in dict
-                del paths['purelib']
-                del paths['platlib']
-                paths['lib'] = libdir
-                p = dist.write_shared_locations(paths, dry_run)
-                if p:
-                    outfiles.append(p)
+                    # Write SHARED
+                    paths = dict(paths) # don't change passed in dict
+                    del paths['purelib']
+                    del paths['platlib']
+                    paths['lib'] = libdir
+                    p = dist.write_shared_locations(paths, dry_run)
+                    if p:
+                        outfiles.append(p)
 
-                # Write RECORD
-                dist.write_installed_files(outfiles, paths['prefix'],
-                                           dry_run)
+                    # Write RECORD
+                    dist.write_installed_files(outfiles, paths['prefix'],
+                                               dry_run)
                 return dist
             except Exception as e:  # pragma: no cover
                 logger.exception('installation failed.')

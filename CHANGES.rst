@@ -6,6 +6,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- wheel
+
+    - Added lib_only flag to install() method.
+
 
 0.1.2
 ~~~~~
