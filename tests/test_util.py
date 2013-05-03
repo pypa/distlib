@@ -480,8 +480,12 @@ class UtilTestCase(unittest.TestCase):
 
 
 def _speed_range(min_speed, max_speed):
-    return tuple(['%d KB/s' % s for s in range(min_speed,
+    return tuple(['%d KB/s' % v for v in range(min_speed,
                                                max_speed + 1)])
+
+def _eta_range(min_eta, max_eta):
+    return tuple(['ETA : 00:00:%02d' % v for v in range(min_eta,
+                                                        max_eta + 1)])
 
 class ProgressTestCase(unittest.TestCase):
     def test_basic(self):
@@ -495,15 +499,15 @@ class ProgressTestCase(unittest.TestCase):
             speed1 = _speed_range(16, 19)
             speed2 = _speed_range(20, 22)
         expected = (
-            (' 10 %', 'ETA : 00:00:04', speed1),
-            (' 20 %', 'ETA : 00:00:04', speed1),
-            (' 30 %', 'ETA : 00:00:03', speed1),
-            (' 40 %', 'ETA : 00:00:03', speed1),
-            (' 50 %', 'ETA : 00:00:02', speed1),
-            (' 60 %', 'ETA : 00:00:02', speed1),
-            (' 70 %', 'ETA : 00:00:01', speed1),
-            (' 80 %', 'ETA : 00:00:01', speed1),
-            (' 90 %', 'ETA : 00:00:00', speed1),
+            (' 10 %', _eta_range(4, 4), speed1),
+            (' 20 %', _eta_range(4, 4), speed1),
+            (' 30 %', _eta_range(3, 3), speed1),
+            (' 40 %', _eta_range(3, 3), speed1),
+            (' 50 %', _eta_range(2, 2), speed1),
+            (' 60 %', _eta_range(2, 2), speed1),
+            (' 70 %', _eta_range(1, 1), speed1),
+            (' 80 %', _eta_range(1, 1), speed1),
+            (' 90 %', _eta_range(0, 0), speed1),
             ('100 %', 'Done: 00:00:04', speed2),
         )
         bar = Progress(maxval=100000).start()
@@ -512,7 +516,7 @@ class ProgressTestCase(unittest.TestCase):
             bar.update(v)
             p, e, s = expected[i]
             self.assertEqual(bar.percentage, p)
-            self.assertEqual(bar.ETA, e)
+            self.assertIn(bar.ETA, e, '%s != %s: %s' % (bar.ETA, e, p))
             self.assertIn(bar.speed, s)
         bar.stop()
         p, e, s = expected[i + 1]
@@ -522,7 +526,7 @@ class ProgressTestCase(unittest.TestCase):
 
     def test_unknown(self):
         if os.name == 'nt':
-            speed = _speed_range(18, 20)
+            speed = _speed_range(17, 20)
         else:
             speed = _speed_range(17, 19)
         expected = (
