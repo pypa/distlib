@@ -250,18 +250,13 @@ class Metadata(object):
     - *mapping* is a dict-like object
     - *scheme* is a version scheme name
     """
-    # TODO document that execution_context and platform_dependent are used
-    # to filter on query, not when setting a key
-    # also document the mapping API and UNKNOWN default key
+    # TODO document the mapping API and UNKNOWN default key
 
-    def __init__(self, path=None, platform_dependent=False,
-                 execution_context=None, fileobj=None, mapping=None,
+    def __init__(self, path=None, fileobj=None, mapping=None,
                  scheme='default'):
         self._fields = {}
         self.requires_files = []
         self.docutils_support = _HAS_DOCUTILS
-        self.platform_dependent = platform_dependent
-        self.execution_context = execution_context
         self._dependencies = None
         self.scheme = scheme
         if [path, fileobj, mapping].count(None) < 2:
@@ -333,12 +328,6 @@ class Metadata(object):
                                       '', {}))
 
         return reporter.messages
-
-    def _platform(self, value):
-        if not self.platform_dependent or ';' not in value:
-            return True, value
-        value, marker = value.split(';')
-        return interpret(marker, self.execution_context), value
 
     def _remove_line_prefix(self, value):
         return _LINE_PREFIX.sub('\n', value)
@@ -566,9 +555,6 @@ class Metadata(object):
                 return []
             res = []
             for val in value:
-                valid, val = self._platform(val)
-                if not valid:
-                    continue
                 if name not in _LISTTUPLEFIELDS:
                     res.append(val)
                 else:
@@ -577,15 +563,10 @@ class Metadata(object):
             return res
 
         elif name in _ELEMENTSFIELD:
-            valid, value = self._platform(self._fields[name])
-            if not valid:
-                return []
+            value = self._fields[name]
             if isinstance(value, string_types):
                 return value.split(',')
-        valid, value = self._platform(self._fields[name])
-        if not valid:
-            return None
-        return value
+        return self._fields[name]
 
     def check(self, strict=False, restructuredtext=False):
         """Check if the metadata is compliant. If strict is True then raise if

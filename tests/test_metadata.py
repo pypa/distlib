@@ -82,24 +82,6 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertRaises(TypeError, Metadata,
                           PKG_INFO, mapping=m, fileobj=fp)
 
-    def test_metadata_markers(self):
-        # see if we can be platform-aware
-        content = self.get_file_contents('PKG-INFO')
-        metadata = Metadata(platform_dependent=True)
-
-        metadata.read_file(StringIO(content))
-        self.assertEqual(metadata['Requires-Dist'], ['bar'])
-        metadata['Name'] = "baz; sys.platform == 'blah'"
-        # FIXME is None or 'UNKNOWN' correct here?
-        # where is that documented?
-        self.assertEqual(metadata['Name'], None)
-
-        # test with context
-        context = {'sys.platform': 'okook'}
-        metadata = Metadata(platform_dependent=True, execution_context=context)
-        metadata.read_file(StringIO(content))
-        self.assertEqual(metadata['Requires-Dist'], ['foo'])
-
     def test_mapping_api(self):
         content = self.get_file_contents('PKG-INFO')
         metadata = Metadata(fileobj=StringIO(content))
