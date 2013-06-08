@@ -91,21 +91,20 @@ class PackageIndexTestCase(unittest.TestCase):
             self.assertEqual(actual[0], '.'.join(('a', suffix)))
 
     def load_package_metadata(self, path):
-        fn = os.path.join(path, 'package.json')
-        if not os.path.exists(fn):
-            raise ValueError('not found: %s' % fn)
-        with codecs.open(fn, 'r', 'utf-8') as jf:
-            result = json.load(jf)
-        if result.get('version') != '1' or 'metadata' not in result:
+        result = None
+        for bn in ('pymeta.json', 'package.json'):
+            fn = os.path.join(path, bn)
+            if os.path.exists(fn):
+                with codecs.open(fn, 'r', 'utf-8') as jf:
+                    result = json.load(jf)
+                    break
+        if not result:
+            raise ValueError('neither pymeta.json nor package.json '
+                             'found in %s' % fn)
+        if bn == 'package.json':
+            result = result.get('index-metadata', {})
+        if result.get('metadata_version') != '2.0':
             raise ValueError('Not a valid file: %s' % fn)
-        return result
-
-    def get_index_metadata(self, data):
-        result = dict(data['metadata'])
-        for key in ('home-page', 'author-email', 'maintainer-email'):
-            if key in result:
-                new_key = key.replace('-', '_')
-            result[new_key] = result.pop(key)
         return result
 
     def check_pypi_server_available(self):
@@ -145,7 +144,7 @@ class PackageIndexTestCase(unittest.TestCase):
         self.assertRaises(MetadataMissingError, self.index.register, md)
         md['Name'] = self.dist_project
         self.assertRaises(MetadataMissingError, self.index.register, md)
-        md.update(self.get_index_metadata(data))
+        md.update(data)
         response = self.index.register(md)
         self.assertEqual(response.code, 200)
 
@@ -177,8 +176,7 @@ class PackageIndexTestCase(unittest.TestCase):
             self.remove_package(self.dist_project, self.dist_version)
         d = os.path.join(HERE, self.testdir)
         data = self.load_package_metadata(d)
-        md = Metadata()
-        md.update(self.get_index_metadata(data))
+        md = Metadata(mapping=data)
         #import pdb; pdb.set_trace()
         self.index.gpg_home = os.path.join(HERE, 'keys')
         try:
@@ -202,8 +200,7 @@ class PackageIndexTestCase(unittest.TestCase):
         self.check_testdist_available()
         d = os.path.join(HERE, self.testdir)
         data = self.load_package_metadata(d)
-        md = Metadata()
-        md.update(self.get_index_metadata(data))
+        md = Metadata(mapping=data)
         d = os.path.join(d, 'doc')
         # Non-existent directory
         self.assertRaises(DistlibException, self.index.upload_documentation,
