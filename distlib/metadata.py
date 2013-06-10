@@ -689,4 +689,5 @@ class Metadata(object):
         return [(key, self[key]) for key in self.keys()]
 
     def __repr__(self):
-        return '<Metadata %s %s>' % (self.name, self.version)
+        return '<%s %s %s>' % (self.__class__.__name__, self.name,
+                               self.version)
