@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 
 import codecs
 from email import message_from_file
+import json
 import logging
 import re
 
@@ -18,6 +19,7 @@ import re
 from . import DistlibException
 from .compat import StringIO, string_types
 from .markers import interpret
+from .util import extract_by_key
 from .version import get_scheme
 
 logger = logging.getLogger(__name__)
@@ -240,8 +242,8 @@ _MISSING = object()
 _FILESAFE = re.compile('[^A-Za-z0-9.]+')
 
 
-class Metadata(object):
-    """The metadata of a release.
+class LegacyMetadata(object):
+    """The legacy metadata of a release.
 
     Supports versions 1.0, 1.1 and 1.2 (auto-detected). You can
     instantiate the class with one of these arguments (or none):
@@ -254,13 +256,13 @@ class Metadata(object):
 
     def __init__(self, path=None, fileobj=None, mapping=None,
                  scheme='default'):
+        if [path, fileobj, mapping].count(None) < 2:
+            raise TypeError('path, fileobj and mapping are exclusive')
         self._fields = {}
         self.requires_files = []
         self.docutils_support = _HAS_DOCUTILS
         self._dependencies = None
         self.scheme = scheme
-        if [path, fileobj, mapping].count(None) < 2:
-            raise TypeError('path, fileobj and mapping are exclusive')
         if path is not None:
             self.read(path)
         elif fileobj is not None:
@@ -672,6 +674,14 @@ class Metadata(object):
 
         return data
 
+    def add_requirements(self, requirements):
+        if self['Metadata-Version'] == '1.1':
+            # we can't have 1.1 metadata *and* Setuptools requires
+            for field in ('Obsoletes', 'Requires', 'Provides'):
+                if field in self:
+                    del self[field]
+        self['Requires-Dist'] += requirements
+
     # Mapping API
     # TODO could add iter* variants
 
@@ -691,3 +701,192 @@ class Metadata(object):
     def __repr__(self):
         return '<%s %s %s>' % (self.__class__.__name__, self.name,
                                self.version)
+
+METADATA_VERSION = '2.0'
+
+MANDATORY_KEYS = ('name', 'version')
+
+INDEX_KEYS = 'name version license summary description'
+
+class Metadata(object):
+    """
+    The metadata of a release. This implementation uses 2.0 (JSON)
+    metadata where possible. If not possible, it wraps a LegacyMetadata
+    instance which handles the key-value metadata format.
+    """
+    __slots__ = ('legacy', 'data', 'scheme')
+
+    def __init__(self, path=None, fileobj=None, mapping=None,
+                 scheme='default'):
+        if [path, fileobj, mapping].count(None) < 2:
+            raise TypeError('path, fileobj and mapping are exclusive')
+        self.legacy = None
+        self.data = {'metadata_version': '2.0'}
+        #import pdb; pdb.set_trace()
+        if mapping:
+            try:
+                self.validate_mapping(mapping)
+                self.data = mapping
+            except MetadataUnrecognizedVersionError:
+                self.legacy = LegacyMetadata(mapping=mapping, scheme=scheme)
+        else:
+            self.scheme = scheme
+            data = None
+            if path:
+                with codecs.open(path, 'r', 'utf-8') as f:
+                    data = f.read()
+            elif fileobj:
+                data = fileobj.read()
+            if data is not None:
+                try:
+                    self.data = json.loads(data)
+                    self.validate_mapping(self.data)
+                except ValueError:
+                    # Note: MetadataUnrecognizedVersionError does not
+                    # inherit from ValueError (it's a DistlibException,
+                    # which should not inherit from ValueError).
+                    self.legacy = LegacyMetadata(fileobj=StringIO(data),
+                                                 scheme=scheme)
+
+    common_keys = ('name', 'version', 'license', 'keywords', 'summary')
+    mapped_keys = {'download_url': 'source_url'}
+
+    def __getattribute__(self, key):
+        common = object.__getattribute__(self, 'common_keys')
+        if key not in common:
+            result = object.__getattribute__(self, key)
+        elif self.legacy:
+            result = self.legacy[key]
+        else:
+            try:
+                result = self.data[key]
+            except TypeError:
+                import pdb; pdb.set_trace()
+        return result
+
+    def __setattr__(self, key, value):
+        common = object.__getattribute__(self, 'common_keys')
+        if key not in common:
+            object.__setattr__(self, key, value)
+        else:
+            if key == 'keywords':
+                if isinstance(value, string_types):
+                    value = value.split()
+            if self.legacy:
+                self.legacy[key] = value
+            else:
+                self.data[key] = value
+
+    @property
+    def metadata_version(self):
+        if self.legacy:
+            return self.legacy['Metadata-Version']
+        return self.data['metadata_version']
+
+    @metadata_version.setter
+    def metadata_version(self, value):
+        if self.legacy:
+            self.legacy['Metadata-Version'] = value
+        else:
+            assert value == METADATA_VERSION
+            self.data['metadata_version'] = value
+
+    @property
+    def provides(self):
+        if self.legacy:
+            return self.legacy['Provides-Dist']
+        return self.data.setdefault('provides', [])
+
+    @provides.setter
+    def provides(self, value):
+        if self.legacy:
+            self.legacy['Provides-Dist'] = value
+        else:
+            self.data['provides'] = value
+
+    @property
+    def requires(self):
+        if self.legacy:
+            return self.legacy['Requires-Dist']
+        return self.data.setdefault('requires', [])
+
+    @requires.setter
+    def requires(self, value):
+        if self.legacy:
+            self.legacy['Requires-Dist'] = value
+        else:
+            self.data['requires'] = value
+
+    @property
+    def build_requires(self):
+        if self.legacy:
+            return self.legacy['Setup-Requires-Dist']
+        return self.data.setdefault('build_requires', [])
+
+    @build_requires.setter
+    def build_requires(self, value):
+        if self.legacy:
+            self.legacy['Setup-Requires-Dist'] = value
+        else:
+            self.data['build_requires'] = value
+
+    @property
+    def source_url(self):
+        if self.legacy:
+            return self.legacy['Download-URL']
+        return self.data.get('source_url')
+
+    @source_url.setter
+    def source_url(self, value):
+        if self.legacy:
+            self.legacy['Download-URL'] = value
+        else:
+            self.data['source_url'] = value
+
+    def validate_name(self, name):
+        return name
+
+    def validate_version(self, version):
+        return version
+
+    def validate_mapping(self, mapping):
+        if mapping.get('metadata_version') != METADATA_VERSION:
+            raise MetadataUnrecognizedVersionError()
+        missing = []
+        for key in MANDATORY_KEYS:
+            if key not in mapping:
+                missing.append(key)
+        if missing:
+            msg = 'Missing metadata items: %s' % ', '.join(missing)
+            raise MetadataMissingError(msg)
+
+    def validate(self):
+        if self.legacy:
+            missing, warnings = self.legacy.check(True)
+            if missing or warnings:
+                msg = 'Bad metadata: missing: %s, warnings: %s' % (missing,
+                                                                   warnings)
+                raise MetadataMissingError(msg)
+        else:
+            self.validate_mapping(self.data)
+
+    def todict(self):
+        if self.legacy:
+            return self.legacy.todict(True)
+        else:
+            result = extract_by_key(self.data, INDEX_KEYS)
+            return result
+
+    def write(self, filepath, skip_unknown=False):
+        if self.legacy:
+            self.legacy.write(filepath, skip_unknown=skip_unknown)
+            return
+        self.validate(self.data)
+        with codecs.open(filepath, 'w', 'utf-8') as f:
+            json.dump(self.data, f, ensure_ascii=True, indent=2)
+
+    def add_requirements(self, requirements):
+        if self.legacy:
+            self.legacy.add_requirements(requirements)
+        else:
+            self.data.setdefault('requires', []).extend(requirements)

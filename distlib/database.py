@@ -315,11 +315,11 @@ class Distribution(object):
         self.extras = None  # additional features requested during installation
 
     @property
-    def download_url(self):
+    def source_url(self):
         """
-        The download URL for this distribution.
+        The source archive download URL for this distribution.
         """
-        return self.metadata.download_url
+        return self.metadata.source_url
 
     @property
     def name_and_version(self):
@@ -334,7 +334,7 @@ class Distribution(object):
         A set of distribution names and versions provided by this distribution.
         :return: A set of "name (version)" strings.
         """
-        plist = self.metadata['Provides-Dist']
+        plist = self.metadata.provides
         s = '%s (%s)' % (self.name, self.version)
         if s not in plist:
             plist.append(s)
@@ -342,12 +342,12 @@ class Distribution(object):
 
     @property
     def requires(self):
-        rlist = self.metadata['Requires-Dist']
+        rlist = self.metadata.requires
         return self.filter_requirements(rlist)
 
     @property
-    def setup_requires(self):
-        rlist = self.metadata['Setup-Requires-Dist']
+    def build_requires(self):
+        rlist = self.metadata.build_requires
         return self.filter_requirements(rlist)
 
     @property
@@ -423,8 +423,8 @@ class Distribution(object):
         """
         Return a textual representation of this instance,
         """
-        if self.download_url:
-            suffix = ' [%s]' % self.download_url
+        if self.source_url:
+            suffix = ' [%s]' % self.source_url
         else:
             suffix = ''
         return '<Distribution %s (%s)%s>' % (self.name, self.version, suffix)
@@ -434,7 +434,7 @@ class Distribution(object):
         See if this distribution is the same as another.
         :param other: The distribution to compare with. To be equal to one
                       another. distributions must have the same type, name,
-                      version and download_url.
+                      version and source_url.
         :return: True if it is the same, else False.
         """
         if type(other) is not type(self):
@@ -442,14 +442,14 @@ class Distribution(object):
         else:
             result = (self.name == other.name and
                       self.version == other.version and
-                      self.download_url == other.download_url)
+                      self.source_url == other.source_url)
         return result
 
     def __hash__(self):
         """
         Compute hash in a way which matches the equality test.
         """
-        return hash(self.name) + hash(self.version) + hash(self.download_url)
+        return hash(self.name) + hash(self.version) + hash(self.source_url)
 
 
 class BaseInstalledDistribution(Distribution):
@@ -846,12 +846,12 @@ class EggInfoDistribution(BaseInstalledDistribution):
         self.dist_path  = env
         if env and env._cache_enabled and path in env._cache_egg.path:
             metadata = env._cache_egg.path[path].metadata
-            set_name_and_version(self, metadata['Name'], metadata['Version'])
+            set_name_and_version(self, metadata.name, metadata.version)
         else:
             metadata = self._get_metadata(path)
 
             # Need to be set before caching
-            set_name_and_version(self, metadata['Name'], metadata['Version'])
+            set_name_and_version(self, metadata.name, metadata.version)
 
             if env and env._cache_enabled:
                 env._cache_egg.add(self)
@@ -929,12 +929,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
                                    'got %r' % path)
 
         if requires:
-            if metadata['Metadata-Version'] == '1.1':
-                # we can't have 1.1 metadata *and* Setuptools requires
-                for field in ('Obsoletes', 'Requires', 'Provides'):
-                    if field in metadata:
-                        del metadata[field]
-            metadata['Requires-Dist'] += requires
+            metadata.add_requirements(requires)
         return metadata
 
     def __repr__(self):
@@ -1222,7 +1217,7 @@ def make_graph(dists, scheme='default'):
 
     # now make the edges
     for dist in dists:
-        requires = (dist.requires | dist.setup_requires)
+        requires = (dist.requires | dist.build_requires)
         for req in requires:
             try:
                 matcher = scheme.matcher(req)
@@ -1306,6 +1301,6 @@ def make_dist(name, version, **kwargs):
     A convenience method for making a dist given just a name and version.
     """
     md = Metadata(**kwargs)
-    md['Name'] = name
-    md['Version'] = version
+    md.name = name
+    md.version = version
     return Distribution(md)

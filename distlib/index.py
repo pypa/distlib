@@ -130,10 +130,8 @@ class PackageIndex(object):
                 request.
         """
         self.check_credentials()
-        missing, warnings = metadata.check(True)    # strict check
-        logger.debug('result of check: missing: %s, warnings: %s',
-                     missing, warnings)
-        d = metadata.todict(True)
+        metadata.validate()
+        d = metadata.todict()
         d[':action'] = 'verify'
         request = self.encode_request(d.items(), [])
         response = self.send_request(request)
@@ -259,10 +257,8 @@ class PackageIndex(object):
         self.check_credentials()
         if not os.path.exists(filename):
             raise DistlibException('not found: %s' % filename)
-        missing, warnings = metadata.check(True)    # strict check
-        logger.debug('result of check: missing: %s, warnings: %s',
-                     missing, warnings)
-        d = metadata.todict(True)
+        metadata.validate()
+        d = metadata.todict()
         sig_file = None
         if signer:
             if not self.gpg:
@@ -309,9 +305,7 @@ class PackageIndex(object):
         fn = os.path.join(doc_dir, 'index.html')
         if not os.path.exists(fn):
             raise DistlibException('not found: %r' % fn)
-        missing, warnings = metadata.check(True)    # strict check
-        logger.debug('result of check: missing: %s, warnings: %s',
-                     missing, warnings)
+        metadata.validate()
         name, version = metadata.name, metadata.version
         zip_data = zip_dir(doc_dir).getvalue()
         fields = [(':action', 'doc_upload'),

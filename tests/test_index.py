@@ -142,9 +142,9 @@ class PackageIndexTestCase(unittest.TestCase):
         data = self.load_package_metadata(d)
         md = Metadata()
         self.assertRaises(MetadataMissingError, self.index.register, md)
-        md['Name'] = self.dist_project
+        md.name = self.dist_project
         self.assertRaises(MetadataMissingError, self.index.register, md)
-        md.update(data)
+        md.version = data['version']
         response = self.index.register(md)
         self.assertEqual(response.code, 200)
 
@@ -177,7 +177,6 @@ class PackageIndexTestCase(unittest.TestCase):
         d = os.path.join(HERE, self.testdir)
         data = self.load_package_metadata(d)
         md = Metadata(mapping=data)
-        #import pdb; pdb.set_trace()
         self.index.gpg_home = os.path.join(HERE, 'keys')
         try:
             zip_name = os.path.join(HERE, '%s.zip' % self.testdir)

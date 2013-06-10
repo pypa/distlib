@@ -200,8 +200,7 @@ class Wheel(object):
         with ZipFile(pathname, 'r') as zf:
             with zf.open(metadata_filename) as bf:
                 wf = wrapper(bf)
-                result = Metadata()
-                result.read_file(wf)
+                result = Metadata(fileobj=wf)
         return result
 
     @cached_property

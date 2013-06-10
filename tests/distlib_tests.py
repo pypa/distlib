@@ -13,7 +13,7 @@ from test_index import PackageIndexTestCase
 from test_locators import LocatorTestCase
 from test_manifest import ManifestTestCase
 from test_markers import MarkersTestCase
-from test_metadata import MetadataTestCase
+from test_metadata import MetadataTestCase, LegacyMetadataTestCase
 from test_resources import (ZipResourceTestCase, FileResourceTestCase,
                             CacheTestCase)
 from test_scripts import ScriptTestCase

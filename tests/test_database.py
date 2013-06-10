@@ -83,10 +83,10 @@ class CommonDistributionTests(FakeDistsMixin):
         dist = self.dist = self.cls(dist_path)
         self.assertEqual(dist.path, dist_path)
         self.assertEqual(dist.name, name)
-        self.assertEqual(dist.metadata['Name'], name)
+        self.assertEqual(dist.metadata.name, name)
         self.assertIsInstance(dist.metadata, Metadata)
         self.assertEqual(dist.version, version)
-        self.assertEqual(dist.metadata['Version'], version)
+        self.assertEqual(dist.metadata.version, version)
 
     @requires_zlib
     def test_repr(self):

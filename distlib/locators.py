@@ -167,10 +167,8 @@ class Locator(object):
         The current implement favours http:// URLs over https://, archives
         from PyPI over those from other locations and then the archive name.
         """
-        if url1 == 'UNKNOWN':
-            result = url2
-        else:
-            result = url2
+        result = url2
+        if url1:
             s1 = self.score_url(url1)
             s2 = self.score_url(url2)
             if s1 > s2:
@@ -278,11 +276,8 @@ class Locator(object):
             dist = make_dist(name, version, scheme=self.scheme)
             md = dist.metadata
         dist.md5_digest = info.get('md5_digest')
-        if 'python-version' in info:
-            md['Requires-Python'] = info['python-version']
-        if md['Download-URL'] != info['url']:
-            md['Download-URL'] = self.prefer_url(md['Download-URL'],
-                                                 info['url'])
+        if md.source_url != info['url']:
+            md.source_url = self.prefer_url(md.source_url, info['url'])
         dist.locator = self
         result[version] = dist
 
@@ -365,11 +360,15 @@ class PyPIRPCLocator(Locator):
             urls = self.client.release_urls(name, v)
             data = self.client.release_data(name, v)
             metadata = Metadata(scheme=self.scheme)
-            metadata.update(data)
+            metadata.name = data['name']
+            metadata.version = data['version']
+            metadata.license = data.get('license')
+            metadata.keywords = data.get('keywords', [])
+            metadata.summary = data.get('summary')
             dist = Distribution(metadata)
             if urls:
                 info = urls[0]
-                metadata['Download-URL'] = info['url']
+                metadata.source_url = info['url']
                 dist.md5_digest = info.get('md5_digest')
                 dist.locator = self
                 result[v] = dist
@@ -398,12 +397,17 @@ class PyPIJSONLocator(Locator):
             data = resp.read().decode() # for now
             d = json.loads(data)
             md = Metadata(scheme=self.scheme)
-            md.update(d['info'])
+            data = d['info']
+            md.name = data['name']
+            md.version = data['version']
+            md.license = data.get('license')
+            md.keywords = data.get('keywords', [])
+            md.summary = data.get('summary')
             dist = Distribution(md)
             urls = d['urls']
             if urls:
                 info = urls[0]
-                md['Download-URL'] = info['url']
+                md.source_url = info['url']
                 dist.md5_digest = info.get('md5_digest')
                 dist.locator = self
                 result[md.version] = dist
@@ -794,9 +798,8 @@ class JSONLocator(Locator):
                 dist = make_dist(data['name'], info['version'],
                                  scheme=self.scheme)
                 md = dist.metadata
-                md['Download-URL'] = info['url']
+                md.source_url = info['url']
                 dist.md5_digest = info.get('digest')
-                md.dependencies = info.get('requirements', {})
                 dist.exports = info.get('exports', {})
                 result[dist.version] = dist
         return result
@@ -1087,7 +1090,7 @@ class DependencyFinder(object):
                     self.try_to_replace(dist, other, problems)
 
             ireqts = dist.requires
-            sreqts = dist.setup_requires
+            sreqts = dist.build_requires
             ereqts = set()
             if not tests or dist not in install_dists:
                 treqts = set()

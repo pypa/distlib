@@ -14,9 +14,10 @@ from textwrap import dedent
 from compat import unittest
 
 from distlib.compat import StringIO
-from distlib.metadata import (Metadata, PKG_INFO_PREFERRED_VERSION,
-                             MetadataConflictError, MetadataMissingError,
-                             MetadataUnrecognizedVersionError, _ATTR2FIELD)
+from distlib.metadata import (LegacyMetadata, Metadata,
+                              PKG_INFO_PREFERRED_VERSION,
+                              MetadataConflictError, MetadataMissingError,
+                              MetadataUnrecognizedVersionError, _ATTR2FIELD)
 
 from support import (LoggingCatcher, TempdirManager, EnvironRestorer,
                       requires_docutils)
@@ -24,22 +25,22 @@ from support import (LoggingCatcher, TempdirManager, EnvironRestorer,
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-class MetadataTestCase(LoggingCatcher, TempdirManager,
-                       EnvironRestorer, unittest.TestCase):
+class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
+                             unittest.TestCase):
 
     maxDiff = None
     restore_environ = ['HOME']
 
     def setUp(self):
-        super(MetadataTestCase, self).setUp()
+        super(LegacyMetadataTestCase, self).setUp()
         self.argv = sys.argv, sys.argv[:]
 
     def tearDown(self):
         sys.argv = self.argv[0]
         sys.argv[:] = self.argv[1]
-        super(MetadataTestCase, self).tearDown()
+        super(LegacyMetadataTestCase, self).tearDown()
 
-    ####  Test various methods of the Metadata class
+    ####  Test various methods of the LegacyMetadata class
 
     def get_file_contents(self, name):
         name = os.path.join(HERE, name)
@@ -60,31 +61,31 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
         fp = StringIO(contents)
 
-        m = Metadata()
+        m = LegacyMetadata()
         self.assertRaises(MetadataUnrecognizedVersionError, m.items)
 
-        m = Metadata(PKG_INFO)
+        m = LegacyMetadata(PKG_INFO)
         self.assertEqual(len(m.items()), 22)
 
-        m = Metadata(fileobj=fp)
+        m = LegacyMetadata(fileobj=fp)
         self.assertEqual(len(m.items()), 22)
 
-        m = Metadata(mapping=dict(name='Test', version='1.0'))
+        m = LegacyMetadata(mapping=dict(name='Test', version='1.0'))
         self.assertEqual(len(m.items()), 17)
 
         d = dict(m.items())
-        self.assertRaises(TypeError, Metadata,
+        self.assertRaises(TypeError, LegacyMetadata,
                           PKG_INFO, fileobj=fp)
-        self.assertRaises(TypeError, Metadata,
+        self.assertRaises(TypeError, LegacyMetadata,
                           PKG_INFO, mapping=d)
-        self.assertRaises(TypeError, Metadata,
+        self.assertRaises(TypeError, LegacyMetadata,
                           fileobj=fp, mapping=d)
-        self.assertRaises(TypeError, Metadata,
+        self.assertRaises(TypeError, LegacyMetadata,
                           PKG_INFO, mapping=m, fileobj=fp)
 
     def test_mapping_api(self):
         content = self.get_file_contents('PKG-INFO')
-        metadata = Metadata(fileobj=StringIO(content))
+        metadata = LegacyMetadata(fileobj=StringIO(content))
         self.assertIn('Version', metadata.keys())
         self.assertIn('0.5', metadata.values())
         self.assertIn(('Version', '0.5'), metadata.items())
@@ -105,7 +106,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
     def test_attribute_access(self):
         content = self.get_file_contents('PKG-INFO')
-        metadata = Metadata(fileobj=StringIO(content))
+        metadata = LegacyMetadata(fileobj=StringIO(content))
         for attr in _ATTR2FIELD:
             self.assertEqual(getattr(metadata, attr), metadata[attr])
 
@@ -118,12 +119,12 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                   'keywords': ['one', 'two'],
                   'requires_dist': ['foo']}
 
-        metadata = Metadata(mapping=fields)
+        metadata = LegacyMetadata(mapping=fields)
         PKG_INFO = StringIO()
         metadata.write_file(PKG_INFO)
         PKG_INFO.seek(0)
 
-        metadata = Metadata(fileobj=PKG_INFO)
+        metadata = LegacyMetadata(fileobj=PKG_INFO)
 
         self.assertEqual(metadata['name'], 'project')
         self.assertEqual(metadata['version'], '1.0')
@@ -139,16 +140,17 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         tmp_dir = self.mkdtemp()
         my_file = os.path.join(tmp_dir, 'f')
 
-        metadata = Metadata(mapping={'author': 'Mister Café',
+        metadata = LegacyMetadata(mapping={'author': 'Mister Café',
                                      'name': 'my.project',
                                      'author': 'Café Junior',
                                      'summary': 'Café torréfié',
                                      'description': 'Héhéhé',
-                                     'keywords': ['café', 'coffee']})
+                                     'keywords': ['café', 'coffee']
+                                  })
         metadata.write(my_file)
 
         # the file should use UTF-8
-        metadata2 = Metadata()
+        metadata2 = LegacyMetadata()
         fp = codecs.open(my_file, encoding='utf-8')
         try:
             metadata2.read_file(fp)
@@ -157,18 +159,19 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
         # XXX when keywords are not defined, metadata will have
         # 'Keywords': [] but metadata2 will have 'Keywords': ['']
-        # because of a value.split(',') in Metadata.get
+        # because of a value.split(',') in LegacyMetadata.get
         self.assertEqual(metadata.items(), metadata2.items())
 
         # ASCII also works, it's a subset of UTF-8
-        metadata = Metadata(mapping={'author': 'Mister Cafe',
+        metadata = LegacyMetadata(mapping={'author': 'Mister Cafe',
                                      'name': 'my.project',
                                      'author': 'Cafe Junior',
                                      'summary': 'Cafe torrefie',
-                                     'description': 'Hehehe'})
+                                     'description': 'Hehehe'
+                                  })
         metadata.write(my_file)
 
-        metadata2 = Metadata()
+        metadata2 = LegacyMetadata()
         fp = codecs.open(my_file, encoding='utf-8')
         try:
             metadata2.read_file(fp)
@@ -177,19 +180,19 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
     def test_metadata_read_write(self):
         PKG_INFO = os.path.join(HERE, 'PKG-INFO')
-        metadata = Metadata(PKG_INFO)
+        metadata = LegacyMetadata(PKG_INFO)
         out = StringIO()
         metadata.write_file(out)
 
         out.seek(0)
-        res = Metadata()
+        res = LegacyMetadata()
         res.read_file(out)
         self.assertEqual(metadata.values(), res.values())
 
     ####  Test checks
 
     def test_check_version(self):
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Name'] = 'vimpdb'
         metadata['Home-page'] = 'http://pypi.python.org'
         metadata['Author'] = 'Monty Python'
@@ -198,7 +201,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(missing, ['Version'])
 
     def test_check_version_strict(self):
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Name'] = 'vimpdb'
         metadata['Home-page'] = 'http://pypi.python.org'
         metadata['Author'] = 'Monty Python'
@@ -206,7 +209,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertRaises(MetadataMissingError, metadata.check, strict=True)
 
     def test_check_name(self):
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Version'] = '1.0'
         metadata['Home-page'] = 'http://pypi.python.org'
         metadata['Author'] = 'Monty Python'
@@ -215,7 +218,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(missing, ['Name'])
 
     def test_check_name_strict(self):
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Version'] = '1.0'
         metadata['Home-page'] = 'http://pypi.python.org'
         metadata['Author'] = 'Monty Python'
@@ -223,7 +226,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertRaises(MetadataMissingError, metadata.check, strict=True)
 
     def test_check_author(self):
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Version'] = '1.0'
         metadata['Name'] = 'vimpdb'
         metadata['Home-page'] = 'http://pypi.python.org'
@@ -232,7 +235,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(missing, ['Author'])
 
     def test_check_homepage(self):
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Version'] = '1.0'
         metadata['Name'] = 'vimpdb'
         metadata['Author'] = 'Monty Python'
@@ -241,7 +244,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(missing, ['Home-page'])
 
     def test_check_matchers(self):
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Version'] = 'rr'
         metadata['Name'] = 'vimpdb'
         metadata['Home-page'] = 'http://pypi.python.org'
@@ -255,7 +258,8 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
     ####  Test fields and metadata versions
 
     def test_metadata_versions(self):
-        metadata = Metadata(mapping={'name': 'project', 'version': '1.0'})
+        metadata = LegacyMetadata(mapping={'name': 'project',
+                                           'version': '1.0'})
         self.assertEqual(metadata['Metadata-Version'],
                          PKG_INFO_PREFERRED_VERSION)
         self.assertNotIn('Provides', metadata)
@@ -266,12 +270,12 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         metadata.set_metadata_version()
         self.assertEqual(metadata['Metadata-Version'], '1.1')
 
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Download-URL'] = 'ok'
         metadata.set_metadata_version()
         self.assertEqual(metadata['Metadata-Version'], '1.1')
 
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Obsoletes'] = 'ok'
         metadata.set_metadata_version()
         self.assertEqual(metadata['Metadata-Version'], '1.1')
@@ -294,18 +298,18 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         # non-conflicting fields from 1.1 and 1.2 (i.e. we want only the
         # requires/requires-dist and co. pairs to cause a conflict, not all
         # fields in _314_MARKERS)
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Requires-Python'] = '3'
         metadata['Classifier'] = ['Programming language :: Python :: 3']
         metadata.set_metadata_version()
         self.assertEqual(metadata['Metadata-Version'], '1.2')
 
         PKG_INFO = os.path.join(HERE, 'SETUPTOOLS-PKG-INFO')
-        metadata = Metadata(PKG_INFO)
+        metadata = LegacyMetadata(PKG_INFO)
         self.assertEqual(metadata['Metadata-Version'], '1.1')
 
         PKG_INFO = os.path.join(HERE, 'SETUPTOOLS-PKG-INFO2')
-        metadata = Metadata(PKG_INFO)
+        metadata = LegacyMetadata(PKG_INFO)
         self.assertEqual(metadata['Metadata-Version'], '1.1')
 
         # make sure an empty list for Obsoletes and Requires-dist gets ignored
@@ -320,17 +324,18 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertRaises(MetadataUnrecognizedVersionError, metadata.keys)
 
     def test_version(self):
-        Metadata(mapping={'author': 'xxx',
+        LegacyMetadata(mapping={'author': 'xxx',
                           'name': 'xxx',
                           'version': 'xxx',
-                          'home_page': 'xxxx'})
+                          'home_page': 'xxxx'
+                       })
         logs = self.get_logs()
         self.assertEqual(1, len(logs))
         self.assertIn('not a valid version', logs[0])
 
     def test_description(self):
         content = self.get_file_contents('PKG-INFO')
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata.read_file(StringIO(content))
 
         # see if we can read the description now
@@ -348,7 +353,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         out.seek(0)
 
         out.seek(0)
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata.read_file(out)
         self.assertEqual(wanted, metadata['Description'])
 
@@ -362,7 +367,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
           and end here.
         """)
 
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['description'] = desc
         metadata.write_file(out)
 
@@ -372,7 +377,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
     @requires_docutils
     def test_description_invalid_rst(self):
         # make sure bad rst is well handled in the description attribute
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         description = ':funkie:`str`'  # mimic Sphinx-specific markup
         metadata['description'] = description
         missing, warnings = metadata.check(restructuredtext=True)
@@ -380,7 +385,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertIn('funkie', warning)
 
     def test_project_url(self):
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata['Project-URL'] = [('one', 'http://ok')]
         self.assertEqual(metadata['Project-URL'], [('one', 'http://ok')])
         metadata.set_metadata_version()
@@ -392,7 +397,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertIn('Project-URL: one,http://ok', fp.getvalue().split('\n'))
 
         fp.seek(0)
-        metadata = Metadata()
+        metadata = LegacyMetadata()
         metadata.read_file(fp)
         self.assertEqual(metadata['Project-Url'], [('one', 'http://ok')])
 
@@ -403,7 +408,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         fields = {'name': 'project',
                   'version': '1.0',
                   'provides_dist': ['project', 'my.project']}
-        metadata = Metadata(mapping=fields)
+        metadata = LegacyMetadata(mapping=fields)
         self.assertEqual(metadata['Provides-Dist'],
                          ['project', 'my.project'])
         self.assertEqual(metadata['Metadata-Version'], '1.2', metadata)
@@ -413,7 +418,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
     @unittest.skip('needs to be implemented')
     def test_provides_illegal(self):
         # TODO check the versions (like distutils does for old provides field)
-        self.assertRaises(ValueError, Metadata,
+        self.assertRaises(ValueError, LegacyMetadata,
                           mapping={'name': 'project',
                                    'version': '1.0',
                                    'provides_dist': ['my.pkg (splat)']})
@@ -422,7 +427,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         fields = {'name': 'project',
                   'version': '1.0',
                   'requires_dist': ['other', 'another (==1.0)']}
-        metadata = Metadata(mapping=fields)
+        metadata = LegacyMetadata(mapping=fields)
         self.assertEqual(metadata['Requires-Dist'],
                          ['other', 'another (==1.0)'])
         self.assertEqual(metadata['Metadata-Version'], '1.2')
@@ -440,14 +445,14 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
         # test warnings for invalid version constraints
         # XXX this would cause no warnings if we used update (or the mapping
-        # argument of the constructor), see comment in Metadata.update
-        metadata = Metadata()
+        # argument of the constructor), see comment in LegacyMetadata.update
+        metadata = LegacyMetadata()
         metadata['Requires-Dist'] = 'Funky (Groovie)'
         metadata['Requires-Python'] = '1-4'
         self.assertEqual(len(self.get_logs()), 2)
 
         # test multiple version matches
-        metadata = Metadata()
+        metadata = LegacyMetadata()
 
         # XXX check PEP and see if 3 == 3.0
         metadata['Requires-Python'] = '>=2.6, <3.0'
@@ -456,7 +461,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
     @unittest.skip('needs to be implemented')
     def test_requires_illegal(self):
-        self.assertRaises(ValueError, Metadata,
+        self.assertRaises(ValueError, LegacyMetadata,
                           mapping={'name': 'project',
                                    'version': '1.0',
                                    'requires': ['my.pkg (splat)']})
@@ -465,7 +470,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         fields = {'name': 'project',
                   'version': '1.0',
                   'obsoletes_dist': ['other', 'another (<1.0)']}
-        metadata = Metadata(mapping=fields)
+        metadata = LegacyMetadata(mapping=fields)
         self.assertEqual(metadata['Obsoletes-Dist'],
                          ['other', 'another (<1.0)'])
         self.assertEqual(metadata['Metadata-Version'], '1.2')
@@ -474,15 +479,8 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(metadata['Obsoletes-Dist'],
                          ['other', 'another (<1.0)'])
 
-    @unittest.skip('needs to be implemented')
-    def test_obsoletes_illegal(self):
-        self.assertRaises(ValueError, Metadata,
-                          mapping={'name': 'project',
-                                   'version': '1.0',
-                                   'obsoletes': ['my.pkg (splat)']})
-
     def test_fullname(self):
-        md = Metadata()
+        md = LegacyMetadata()
         md['Name'] = 'a b c'
         md['Version'] = '1 0 0'
         s = md.get_fullname()
@@ -491,11 +489,16 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(s, 'a-b-c-1.0.0')
 
     def test_fields(self):
-        md = Metadata()
+        md = LegacyMetadata()
         self.assertTrue(md.is_multi_field('Requires-Dist'))
         self.assertFalse(md.is_multi_field('Name'))
         self.assertTrue(md.is_field('Obsoleted-By'))
         self.assertFalse(md.is_field('Frobozz'))
+
+class MetadataTestCase(LoggingCatcher, TempdirManager,
+                       EnvironRestorer, unittest.TestCase):
+    pass
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

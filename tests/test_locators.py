@@ -22,6 +22,7 @@ from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 PYPI_RPC_HOST = 'http://python.org/pypi'
+
 PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.python.org/simple/')
 
 class LocatorTestCase(unittest.TestCase):
@@ -34,7 +35,7 @@ class LocatorTestCase(unittest.TestCase):
         dist = result['0.1']
         self.assertEqual(dist.name, 'sarge')
         self.assertEqual(dist.version, '0.1')
-        self.assertEqual(dist.download_url,
+        self.assertEqual(dist.source_url,
                          'https://pypi.python.org/packages/source/s/sarge/'
                          'sarge-0.1.tar.gz')
         self.assertEqual(dist.md5_digest,
@@ -50,7 +51,7 @@ class LocatorTestCase(unittest.TestCase):
         dist = result['0.1.1']
         self.assertEqual(dist.name, 'sarge')
         self.assertEqual(dist.version, '0.1.1')
-        self.assertEqual(dist.download_url,
+        self.assertEqual(dist.source_url,
                          'https://pypi.python.org/packages/source/s/sarge/'
                          'sarge-0.1.1.tar.gz')
         self.assertEqual(dist.md5_digest,
@@ -66,7 +67,7 @@ class LocatorTestCase(unittest.TestCase):
             dist = result['0.1']
             self.assertEqual(dist.name, 'sarge')
             self.assertEqual(dist.version, '0.1')
-            self.assertEqual(dist.download_url,
+            self.assertEqual(dist.source_url,
                              'https://pypi.python.org/packages/source/s/sarge/'
                              'sarge-0.1.tar.gz')
             self.assertEqual(dist.md5_digest,
@@ -102,7 +103,7 @@ class LocatorTestCase(unittest.TestCase):
             dist = result['0.9']
             self.assertEqual(dist.name, 'Flask')
             self.assertEqual(dist.version, '0.9')
-            self.assertEqual(os.path.normcase(get_path(dist.download_url)),
+            self.assertEqual(os.path.normcase(get_path(dist.source_url)),
                              os.path.normcase(expected))
         names = locator.get_distribution_names()
         expected = set(['Flask', 'python-gnupg', 'coverage', 'Django'])
@@ -164,7 +165,7 @@ class LocatorTestCase(unittest.TestCase):
         dist = result['0.9']
         self.assertEqual(dist.name, 'Flask')
         self.assertEqual(dist.version, '0.9')
-        scheme, _, path, _, _, _ = urlparse(dist.download_url)
+        scheme, _, path, _, _, _ = urlparse(dist.source_url)
         self.assertEqual(scheme, 'file')
         self.assertEqual(os.path.normcase(url2pathname(path)),
                          os.path.normcase(exp1))
@@ -176,7 +177,7 @@ class LocatorTestCase(unittest.TestCase):
         dist = result['0.9']
         self.assertEqual(dist.name, 'Flask')
         self.assertEqual(dist.version, '0.9')
-        self.assertEqual(dist.download_url, exp2)
+        self.assertEqual(dist.source_url, exp2)
         return
         # The following code is slow because it has
         # to get all the dist names by scraping :-(
@@ -268,7 +269,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertIsNotNone(d)
         self.assertEqual(d.name_and_version, 'SQLAlchemy (0.6beta3)')
         dist = make_dist('dummy', '0.1')
-        dist.metadata['Requires-Dist'] = [REQT]
+        dist.metadata.requires = [REQT]
         dists, problems = finder.find(dist, prereleases=True)
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])

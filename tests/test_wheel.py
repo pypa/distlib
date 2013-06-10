@@ -89,8 +89,8 @@ def install_dist(distname, workdir):
     dp = DistributionPath([libdir])
     dist = next(dp.get_distributions())
     md = dist.metadata
-    result['name'] = md['Name']
-    result['version'] = md['Version']
+    result['name'] = md.name
+    result['version'] = md.version
     return result
 
 
