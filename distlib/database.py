@@ -860,19 +860,13 @@ class EggInfoDistribution(BaseInstalledDistribution):
     def _get_metadata(self, path):
         requires = None
 
-        def parse_requires(req_path):
+        def parse_requires_data(data):
             """Create a list of dependencies from a requires.txt file.
 
-            *req_path* must be the path to a setuptools-produced requires.txt file.
+            *data*: the contents of a setuptools-produced requires.txt file.
             """
-
             reqs = []
-            try:
-                with open(req_path, 'r') as fp:
-                    lines = fp.read().splitlines()
-            except IOError:
-                return reqs
-
+            lines = data.splitlines()
             for line in lines:
                 line = line.strip()
                 if line.startswith('['):
@@ -893,12 +887,26 @@ class EggInfoDistribution(BaseInstalledDistribution):
                     reqs.append('%s (%s)' % (r.name, cons))
             return reqs
 
+        def parse_requires_path(req_path):
+            """Create a list of dependencies from a requires.txt file.
+
+            *req_path*: the path to a setuptools-produced requires.txt file.
+            """
+
+            reqs = []
+            try:
+                with codecs.open(req_path, 'r', 'utf-8') as fp:
+                    reqs = parse_requires_data(fp.read())
+            except IOError:
+                pass
+            return reqs
+
         if path.endswith('.egg'):
             if os.path.isdir(path):
                 meta_path = os.path.join(path, 'EGG-INFO', 'PKG-INFO')
                 metadata = Metadata(path=meta_path, scheme='legacy')
                 req_path = os.path.join(path, 'EGG-INFO', 'requires.txt')
-                requires = parse_requires(req_path)
+                requires = parse_requires_path(req_path)
             else:
                 # FIXME handle the case where zipfile is not available
                 zipf = zipimport.zipimporter(path)
@@ -906,14 +914,15 @@ class EggInfoDistribution(BaseInstalledDistribution):
                     zipf.get_data('EGG-INFO/PKG-INFO').decode('utf8'))
                 metadata = Metadata(fileobj=fileobj, scheme='legacy')
                 try:
-                    requires = zipf.get_data('EGG-INFO/requires.txt')
+                    data = zipf.get_data('EGG-INFO/requires.txt')
+                    requires = parse_requires_data(data.decode('utf-8'))
                 except IOError:
                     requires = None
         elif path.endswith('.egg-info'):
             if os.path.isdir(path):
                 path = os.path.join(path, 'PKG-INFO')
                 req_path = os.path.join(path, 'requires.txt')
-                requires = parse_requires(req_path)
+                requires = parse_requires_path(req_path)
             metadata = Metadata(path=path, scheme='legacy')
         else:
             raise DistlibException('path must end with .egg-info or .egg, '
