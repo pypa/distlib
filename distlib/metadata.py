@@ -708,6 +708,11 @@ MANDATORY_KEYS = ('name', 'version')
 
 INDEX_KEYS = 'name version license summary description'
 
+DEPENDENCY_KEYS = ('extras requires may_require test_requires '
+                   'test_may_require build_requires build_may_require '
+                   'dev_requires dev_may_require distributes provides '
+                   'obsoleted_by supports_environments')
+
 class Metadata(object):
     """
     The metadata of a release. This implementation uses 2.0 (JSON)
@@ -842,6 +847,17 @@ class Metadata(object):
             self.legacy['Download-URL'] = value
         else:
             self.data['source_url'] = value
+
+    @property
+    def dependencies(self):
+        if self.legacy:
+            raise NotImplementedError
+        else:
+            return extract_by_key(self.data, DEPENDENCY_KEYS)
+
+    @dependencies.setter
+    def dependencies(self, value):
+        raise NotImplementedError
 
     def validate_name(self, name):
         return name
