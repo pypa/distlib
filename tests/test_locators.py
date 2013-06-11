@@ -231,13 +231,13 @@ class LocatorTestCase(unittest.TestCase):
         # Now test with extra in dependency
         locator.clear_cache()
         dummy = make_dist('dummy', '0.1')
-        dummy.metadata['Requires-Dist'] = ['Jinja2 [i18n]']
+        dummy.metadata.requires = ['Jinja2 [i18n]']
         dists, problems = finder.find(dummy)
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
         self.assertTrue(actual[0].startswith('Babel ('))
         locator.clear_cache()
-        dummy.metadata['Requires-Dist'] = ['Jinja2']
+        dummy.metadata.requires = ['Jinja2']
         dists, problems = finder.find(dummy)
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])

@@ -800,7 +800,7 @@ class JSONLocator(Locator):
                 md = dist.metadata
                 md.source_url = info['url']
                 dist.md5_digest = info.get('digest')
-                md.dependencies = info.get('requirements', {})
+                md.dependencies = info.get('new-requirements', {})
                 dist.exports = info.get('exports', {})
                 result[dist.version] = dist
         return result

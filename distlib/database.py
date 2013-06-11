@@ -313,6 +313,7 @@ class Distribution(object):
         self.locator = None
         self.md5_digest = None
         self.extras = None  # additional features requested during installation
+        self.context = None # environment marker overrides
 
     @property
     def source_url(self):
@@ -338,52 +339,30 @@ class Distribution(object):
         s = '%s (%s)' % (self.name, self.version)
         if s not in plist:
             plist.append(s)
-        return self.filter_requirements(plist)
+        return plist
+
+    def _get_requirements(self, always_attr, sometimes_attr):
+        always = getattr(self.metadata, always_attr)
+        sometimes = getattr(self.metadata, sometimes_attr)
+        return set(self.metadata.get_requirements(always, sometimes,
+                                                  extras=self.extras,
+                                                  environment=self.context))
 
     @property
     def requires(self):
-        rlist = self.metadata.requires
-        return self.filter_requirements(rlist)
+        return self._get_requirements('requires', 'may_require')
 
     @property
     def build_requires(self):
-        rlist = self.metadata.build_requires
-        return self.filter_requirements(rlist)
+        return self._get_requirements('build_requires', 'build_may_require')
 
     @property
     def test_requires(self):
-        rlist = self.metadata['Requires-Dist']
-        return self.filter_requirements(rlist, extras=['test'])
+        return self._get_requirements('test_requires', 'test_may_require')
 
     @property
-    def doc_requires(self):
-        rlist = self.metadata['Requires-Dist']
-        return self.filter_requirements(rlist, extras=['doc'])
-
-    def filter_requirements(self, rlist, context=None, extras=None):
-        result = set()
-        marked = []
-        for req in rlist:
-            if ';' not in req:
-                result.add(req)
-            else:
-                marked.append(req.split(';', 1))
-        if marked:
-            if context is None:
-                context = {}
-            if extras is None:
-                extras = self.extras
-            if not extras:
-                extras = [None]
-            else:
-                extras = list(extras)   # leave original alone
-                extras.append(None)
-            for extra in extras:
-                context['extra'] = extra
-                for r, marker in marked:
-                    if interpret(marker, context):
-                        result.add(r.strip())
-        return result
+    def dev_requires(self):
+        return self._get_requirements('dev_requires', 'dev_may_require')
 
     def matches_requirement(self, req):
         """

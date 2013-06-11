@@ -753,12 +753,32 @@ class Metadata(object):
                     self.legacy = LegacyMetadata(fileobj=StringIO(data),
                                                  scheme=scheme)
 
-    common_keys = ('name', 'version', 'license', 'keywords', 'summary')
-    mapped_keys = {'download_url': 'source_url'}
+    common_keys = set(('name', 'version', 'license', 'keywords', 'summary'))
+
+    reqt_keys = {
+        'requires': ('Requires-Dist', list),
+        'may_require': (None, list),
+        'build_requires': ('Setup-Requires-Dist', list),
+        'build_may_require': (None, list),
+        'dev_requires': (None, list),
+        'dev_may_require': (None, list),
+        'test_requires': (None, list),
+        'test_may_require': (None, list),
+    }
 
     def __getattribute__(self, key):
         common = object.__getattribute__(self, 'common_keys')
-        if key not in common:
+        reqts = object.__getattribute__(self, 'reqt_keys')
+        if key in reqts:
+            lk, maker = reqts[key]
+            if self.legacy:
+                if lk is None:
+                    result = maker()
+                else:
+                    result = self.legacy[lk]
+            else:
+                result = self.data.setdefault(key, maker())
+        elif key not in common:
             result = object.__getattribute__(self, key)
         elif self.legacy:
             result = self.legacy[key]
@@ -771,7 +791,16 @@ class Metadata(object):
 
     def __setattr__(self, key, value):
         common = object.__getattribute__(self, 'common_keys')
-        if key not in common:
+        reqts = object.__getattribute__(self, 'reqt_keys')
+        if key in reqts:
+            lk, maker = reqts[key]
+            if self.legacy:
+                if lk is None:
+                    raise NotImplementedError
+                self.legacy[lk] = value
+            else:
+                self.data[key] = value
+        elif key not in common:
             object.__setattr__(self, key, value)
         else:
             if key == 'keywords':
@@ -809,31 +838,41 @@ class Metadata(object):
         else:
             self.data['provides'] = value
 
-    @property
-    def requires(self):
+    def get_requirements(self, always, sometimes, extras=None,
+                          environment=None):
+        """
+        Base method to get dependencies, given a set of extras
+        to satisfy and an optional environment context.
+        :param always: A list of always-wanted dependencies.
+        :param sometimes: A list of sometimes-wanted dependencies,
+                          dependent on extras and environment.
+        :param extras: A list of optional components being requested.
+        :param environment: An optional environment for marker evaluation.
+        """
         if self.legacy:
-            return self.legacy['Requires-Dist']
-        return self.data.setdefault('requires', [])
-
-    @requires.setter
-    def requires(self, value):
-        if self.legacy:
-            self.legacy['Requires-Dist'] = value
+            if sometimes:
+                raise NotImplementedError
+            result = always
         else:
-            self.data['requires'] = value
-
-    @property
-    def build_requires(self):
-        if self.legacy:
-            return self.legacy['Setup-Requires-Dist']
-        return self.data.setdefault('build_requires', [])
-
-    @build_requires.setter
-    def build_requires(self, value):
-        if self.legacy:
-            self.legacy['Setup-Requires-Dist'] = value
-        else:
-            self.data['build_requires'] = value
+            result = list(always)   # make a copy, as we may add to it
+            extras = set(extras or [])
+            for d in sometimes:
+                if d.get('extra') in extras:
+                    include = True
+                else:
+                    marker = d.get('environment')
+                    include = marker and interpret(marker, environment)
+                if include:
+                    result.extend(d['dependencies'])
+            if 'test' in extras:
+                extras.remove('test')
+                always = self.data.get('test_requires', [])
+                sometimes = self.data.get('test_may_require', [])
+                # A recursive call, but it should terminate since 'test'
+                # has been removed from the extras
+                result.extend(self._get_requirements(always, sometimes,
+                              extras=extras, environment=environment))
+        return result
 
     @property
     def source_url(self):
@@ -857,7 +896,11 @@ class Metadata(object):
 
     @dependencies.setter
     def dependencies(self, value):
-        raise NotImplementedError
+        if self.legacy:
+            import pdb; pdb.set_trace()
+            raise NotImplementedError
+        else:
+            self.data.update(value)
 
     def validate_name(self, name):
         return name
