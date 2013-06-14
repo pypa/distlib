@@ -498,13 +498,12 @@ class InstalledDistribution(BaseInstalledDistribution):
             metadata = env._cache.path[path].metadata
         elif metadata is None:
             for fn in ('pymeta.json', 'METADATA'):
-                try:
-                    metadata_path = os.path.join(path, fn)
-                    metadata = Metadata(path=metadata_path, scheme='legacy')
+                metadata_path = os.path.join(path, fn)
+                if os.path.exists(metadata_path):
                     break
-                except Exception:
-                    if fn == 'METADATA':    # must be one or t'other
-                        raise
+                if fn == 'METADATA':    # must be one or t'other
+                    raise ValueError('no pymeta.json or METADATA found')
+            metadata = Metadata(path=metadata_path, scheme='legacy')
 
         super(InstalledDistribution, self).__init__(metadata, path, env)
 

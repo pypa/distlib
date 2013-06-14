@@ -430,7 +430,10 @@ class LegacyMetadata(object):
         msg = message_from_file(fileob)
         self._fields['Metadata-Version'] = msg['metadata-version']
 
-        for field in _version2fieldlist(self['Metadata-Version']):
+        # When reading, get all the fields we can
+        for field in _ALL_FIELDS:
+            if field not in msg:
+                continue
             if field in _LISTFIELDS:
                 # we can have multiple lines
                 values = msg.get_all(field)
@@ -844,8 +847,13 @@ class Metadata(object):
     @property
     def provides(self):
         if self.legacy:
-            return self.legacy['Provides-Dist']
-        return self.data.setdefault('provides', [])
+            result = self.legacy['Provides-Dist']
+        else:
+            result = self.data.setdefault('provides', [])
+        s = '%s (%s)' % (self.name, self.version)
+        if s not in result:
+            result.append(s)
+        return result
 
     @provides.setter
     def provides(self, value):
@@ -959,8 +967,7 @@ class Metadata(object):
         'summary': 'Summary',
         'description': 'Description',
         'keywords': 'Keywords',
-        'classifiers': 'Classifiers',
-        'provides': 'Provides-Dist',
+        'classifiers': 'Classifier',
     }
 
     def _from_legacy(self):
@@ -971,6 +978,7 @@ class Metadata(object):
             result[nk] = lmd[ok]
         result['requires'] = lmd['Requires-Dist']
         result['build_requires'] = lmd['Setup-Requires-Dist']
+        result['provides'] = self.provides
         # TODO: other fields such as contacts
         return result
 
@@ -1003,11 +1011,11 @@ class Metadata(object):
                 d = self._from_legacy()
             else:
                 d = self.data
-                if fileobj:
-                    json.dump(d, fileobj, ensure_ascii=True, indent=2)
-                else:
-                    with codecs.open(path, 'w', 'utf-8') as f:
-                        json.dump(d, f, ensure_ascii=True, indent=2)
+            if fileobj:
+                json.dump(d, fileobj, ensure_ascii=True, indent=2)
+            else:
+                with codecs.open(path, 'w', 'utf-8') as f:
+                    json.dump(d, f, ensure_ascii=True, indent=2)
 
     def add_requirements(self, requirements):
         if self.legacy:
