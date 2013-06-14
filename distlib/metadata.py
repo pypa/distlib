@@ -789,17 +789,17 @@ class Metadata(object):
             lk, maker = mapped[key]
             if self.legacy:
                 if lk is None:
-                    result = maker()
+                    result = None if maker is None else maker()
                 else:
-                    result = self.legacy[lk]
+                    result = self.legacy.get(lk)
             else:
                 result = self.data.setdefault(key, maker())
         elif key not in common:
             result = object.__getattribute__(self, key)
         elif self.legacy:
-            result = self.legacy[key]
+            result = self.legacy.get(key)
         else:
-            result = self.data[key]
+            result = self.data.get(key)
         return result
 
     def __setattr__(self, key, value):
