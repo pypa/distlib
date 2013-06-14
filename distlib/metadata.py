@@ -242,13 +242,25 @@ _MISSING = object()
 _FILESAFE = re.compile('[^A-Za-z0-9.]+')
 
 
+def _get_name_and_version(name, version, for_filename=False):
+    """Return the distribution name with version.
+
+    If for_filename is true, return a filename-escaped form."""
+    if for_filename:
+        # For both name and version any runs of non-alphanumeric or '.'
+        # characters are replaced with a single '-'.  Additionally any
+        # spaces in the version string become '.'
+        name = _FILESAFE.sub('-', name)
+        version = _FILESAFE.sub('-', version.replace(' ', '.'))
+    return '%s-%s' % (name, version)
+
 class LegacyMetadata(object):
     """The legacy metadata of a release.
 
     Supports versions 1.0, 1.1 and 1.2 (auto-detected). You can
     instantiate the class with one of these arguments (or none):
-    - *path*, the path to a METADATA file
-    - *fileobj* give a file-like object with METADATA as content
+    - *path*, the path to a metadata file
+    - *fileobj* give a file-like object with metadata as content
     - *mapping* is a dict-like object
     - *scheme* is a version scheme name
     """
@@ -394,14 +406,7 @@ class LegacyMetadata(object):
         """Return the distribution name with version.
 
         If filesafe is true, return a filename-escaped form."""
-        name, version = self['Name'], self['Version']
-        if filesafe:
-            # For both name and version any runs of non-alphanumeric or '.'
-            # characters are replaced with a single '-'.  Additionally any
-            # spaces in the version string become '.'
-            name = _FILESAFE.sub('-', name)
-            version = _FILESAFE.sub('-', version.replace(' ', '.'))
-        return '%s-%s' % (name, version)
+        return _get_name_and_version(self['Name'], self['Version'], filesafe)
 
     def is_field(self, name):
         """return True if name is a valid metadata key"""
@@ -702,23 +707,24 @@ class LegacyMetadata(object):
         return '<%s %s %s>' % (self.__class__.__name__, self.name,
                                self.version)
 
-METADATA_VERSION = '2.0'
-
-MANDATORY_KEYS = ('name', 'version')
-
-INDEX_KEYS = 'name version license summary description'
-
-DEPENDENCY_KEYS = ('extras requires may_require test_requires '
-                   'test_may_require build_requires build_may_require '
-                   'dev_requires dev_may_require distributes provides '
-                   'obsoleted_by supports_environments')
-
 class Metadata(object):
     """
     The metadata of a release. This implementation uses 2.0 (JSON)
     metadata where possible. If not possible, it wraps a LegacyMetadata
     instance which handles the key-value metadata format.
     """
+
+    METADATA_VERSION = '2.0'
+
+    MANDATORY_KEYS = ('name', 'version')
+
+    INDEX_KEYS = 'name version license summary description'
+
+    DEPENDENCY_KEYS = ('extras requires may_require test_requires '
+                       'test_may_require build_requires build_may_require '
+                       'dev_requires dev_may_require distributes provides '
+                       'obsoleted_by supports_environments')
+
     __slots__ = ('legacy', 'data', 'scheme')
 
     def __init__(self, path=None, fileobj=None, mapping=None,
@@ -726,7 +732,7 @@ class Metadata(object):
         if [path, fileobj, mapping].count(None) < 2:
             raise TypeError('path, fileobj and mapping are exclusive')
         self.legacy = None
-        self.data = {'metadata_version': '2.0'}
+        self.data = {'metadata_version': self.METADATA_VERSION }
         #import pdb; pdb.set_trace()
         if mapping:
             try:
@@ -826,6 +832,10 @@ class Metadata(object):
             self.data['metadata_version'] = value
 
     @property
+    def name_and_version(self):
+        return _get_name_and_version(self.name, self.version, True)
+
+    @property
     def provides(self):
         if self.legacy:
             return self.legacy['Provides-Dist']
@@ -892,7 +902,7 @@ class Metadata(object):
         if self.legacy:
             raise NotImplementedError
         else:
-            return extract_by_key(self.data, DEPENDENCY_KEYS)
+            return extract_by_key(self.data, self.DEPENDENCY_KEYS)
 
     @dependencies.setter
     def dependencies(self, value):
@@ -909,10 +919,10 @@ class Metadata(object):
         return version
 
     def validate_mapping(self, mapping):
-        if mapping.get('metadata_version') != METADATA_VERSION:
+        if mapping.get('metadata_version') != self.METADATA_VERSION:
             raise MetadataUnrecognizedVersionError()
         missing = []
-        for key in MANDATORY_KEYS:
+        for key in self.MANDATORY_KEYS:
             if key not in mapping:
                 missing.append(key)
         if missing:
@@ -933,16 +943,65 @@ class Metadata(object):
         if self.legacy:
             return self.legacy.todict(True)
         else:
-            result = extract_by_key(self.data, INDEX_KEYS)
+            result = extract_by_key(self.data, self.INDEX_KEYS)
             return result
 
-    def write(self, filepath, skip_unknown=False):
-        if self.legacy:
-            self.legacy.write(filepath, skip_unknown=skip_unknown)
-            return
-        self.validate(self.data)
-        with codecs.open(filepath, 'w', 'utf-8') as f:
-            json.dump(self.data, f, ensure_ascii=True, indent=2)
+    LEGACY_MAPPING = {
+        'name': 'Name',
+        'version': 'Version',
+        'license': 'License',
+        'summary': 'Summary',
+        'description': 'Description',
+        'keywords': 'Keywords',
+        'classifiers': 'Classifiers',
+        'provides': 'Provides-Dist',
+    }
+
+    def _from_legacy(self):
+        assert self.legacy and not self.data
+        result = { 'metadata_version': self.METADATA_VERSION }
+        lmd = self.legacy
+        for nk, ok in self.LEGACY_MAPPING.items():
+            result[nk] = lmd[ok]
+        result['requires'] = lmd['Requires-Dist']
+        result['build_requires'] = lmd['Setup-Requires-Dist']
+        # TODO: other fields such as contacts
+        return result
+
+    def _to_legacy(self):
+        assert self.data and not self.legacy
+        result = LegacyMetadata()
+        nmd = self.data
+        for nk, ok in self.LEGACY_MAPPING.items():
+            result[ok] = nmd[nk]
+        result['Requires-Dist'] = self.requires + self.distributes
+        result['Setup-Requires-Dist'] = self.build_requires + self.dev_requires
+        # TODO: other fields such as contacts
+        return result
+
+    def write(self, path=None, fileobj=None, legacy=False, skip_unknown=False):
+        if [path, fileobj].count(None) != 1:
+            raise ValueError('Exactly one of path and fileobj is needed')
+        self.validate()
+        if legacy:
+            if self.legacy:
+                legacy_md = self.legacy
+            else:
+                legacy_md = self._to_legacy()
+            if path:
+                self.legacy.write(path, skip_unknown=skip_unknown)
+            else:
+                self.legacy.write_file(fileobj, skip_unknown=skip_unknown)
+        else:
+            if self.legacy:
+                d = self._from_legacy()
+            else:
+                d = self.data
+                if fileobj:
+                    json.dump(d, fileobj, ensure_ascii=True, indent=2)
+                else:
+                    with codecs.open(path, 'w', 'utf-8') as f:
+                        json.dump(d, f, ensure_ascii=True, indent=2)
 
     def add_requirements(self, requirements):
         if self.legacy:

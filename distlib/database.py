@@ -31,8 +31,8 @@ __all__ = ['Distribution', 'BaseInstalledDistribution',
 
 logger = logging.getLogger(__name__)
 
-DIST_FILES = ('INSTALLER', 'METADATA', 'RECORD', 'REQUESTED', 'RESOURCES',
-              'EXPORTS', 'SHARED')
+DIST_FILES = ('INSTALLER', 'METADATA', 'pymeta.json', 'RECORD', 'REQUESTED',
+              'RESOURCES', 'EXPORTS', 'SHARED')
 
 DISTINFO_EXT = '.dist-info'
 
@@ -487,7 +487,7 @@ class BaseInstalledDistribution(Distribution):
 
 class InstalledDistribution(BaseInstalledDistribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
-    constructor. It reads the metadata contained in ``METADATA`` when it is
+    constructor. It reads the metadata contained in ``pymeta.json`` when it is
     instantiated., or uses a passed in Metadata instance (useful for when
     dry-run mode is being used)."""
 
@@ -497,8 +497,14 @@ class InstalledDistribution(BaseInstalledDistribution):
         if env and env._cache_enabled and path in env._cache.path:
             metadata = env._cache.path[path].metadata
         elif metadata is None:
-            metadata_path = os.path.join(path, 'METADATA')
-            metadata = Metadata(path=metadata_path, scheme='legacy')
+            for fn in ('pymeta.json', 'METADATA'):
+                try:
+                    metadata_path = os.path.join(path, fn)
+                    metadata = Metadata(path=metadata_path, scheme='legacy')
+                    break
+                except Exception:
+                    if fn == 'METADATA':    # must be one or t'other
+                        raise
 
         super(InstalledDistribution, self).__init__(metadata, path, env)
 

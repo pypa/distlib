@@ -195,12 +195,18 @@ class Wheel(object):
         pathname = os.path.join(self.dirname, self.filename)
         name_ver = '%s-%s' % (self.name, self.version)
         info_dir = '%s.dist-info' % name_ver
-        metadata_filename = posixpath.join(info_dir, 'METADATA')
         wrapper = codecs.getreader('utf-8')
         with ZipFile(pathname, 'r') as zf:
-            with zf.open(metadata_filename) as bf:
-                wf = wrapper(bf)
-                result = Metadata(fileobj=wf)
+            for fn in ('pymeta.json', 'METADATA'):
+                metadata_filename = posixpath.join(info_dir, fn)
+                try:
+                    with zf.open(metadata_filename) as bf:
+                        wf = wrapper(bf)
+                        result = Metadata(fileobj=wf)
+                        break
+                except Exception:
+                    if fn == 'METADATA':    # must have one or the other
+                        raise
         return result
 
     @cached_property

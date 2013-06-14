@@ -658,16 +658,7 @@ RENAMES = { # Temporary
 
 def update_metadata(metadata, pkginfo):
     # update dist's metadata from received package data
-    assert metadata
-    assert 'metadata' in pkginfo
-    for k, v in pkginfo['metadata'].items():
-        k = k.replace('-', '_')
-        k = RENAMES.get(k, k)
-        if k is not None:
-            metadata[k] = v
-    metadata.set_metadata_version()
-    if 'requirements' in pkginfo:
-        metadata.dependencies = pkginfo['requirements']
+    metadata.data = pkginfo['index-metadata']
 
 
 #
