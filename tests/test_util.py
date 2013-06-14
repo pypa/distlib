@@ -395,15 +395,13 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(AssertionError, is_string_sequence, [])
 
     def test_package_data(self):
-        data = get_package_data(Container(name='config', version='0.3.6',
-                                metadata=None))
+        data = get_package_data(name='config', version='0.3.6')
         self.assertTrue(data)
-        self.assertTrue('metadata' in data)
-        metadata = data['metadata']
+        self.assertTrue('index-metadata' in data)
+        metadata = data['index-metadata']
         self.assertEqual(metadata['name'], 'config')
         self.assertEqual(metadata['version'], '0.3.6')
-        data = get_package_data(Container(name='config', version='0.3.5',
-                                metadata=None))
+        data = get_package_data(name='config', version='0.3.5')
         self.assertFalse(data)
 
     def test_zip_dir(self):

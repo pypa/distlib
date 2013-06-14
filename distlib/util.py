@@ -640,26 +640,10 @@ def get_project_data(name):
     result = _get_external_data(url)
     return result
 
-def get_package_data(dist):
-    name, version = dist.name, dist.version
+def get_package_data(name, version):
     url = ('https://www.red-dove.com/pypi/projects/'
            '%s/%s/package-%s.json' % (name[0].upper(), name, version))
-    result = _get_external_data(url)
-    if 'metadata' in result and dist.metadata:
-        update_metadata(dist.metadata, result)
-    return result
-
-RENAMES = { # Temporary
-    'classifiers': 'Classifier',
-    'use_2to3': None,
-    'use_2to3_fixers': None,
-    'test_suite': None,
-}
-
-def update_metadata(metadata, pkginfo):
-    # update dist's metadata from received package data
-    metadata.data = pkginfo['index-metadata']
-
+    return _get_external_data(url)
 
 #
 # Simple event pub/sub

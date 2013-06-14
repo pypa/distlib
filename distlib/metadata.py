@@ -732,9 +732,9 @@ class Metadata(object):
         if [path, fileobj, mapping].count(None) < 2:
             raise TypeError('path, fileobj and mapping are exclusive')
         self.legacy = None
-        self.data = {'metadata_version': self.METADATA_VERSION }
+        self.data = None
         #import pdb; pdb.set_trace()
-        if mapping:
+        if mapping is not None:
             try:
                 self.validate_mapping(mapping)
                 self.data = mapping
@@ -748,7 +748,10 @@ class Metadata(object):
                     data = f.read()
             elif fileobj:
                 data = fileobj.read()
-            if data is not None:
+            if data is None:
+                # Initialised with no args - to be added
+                self.data = {'metadata_version': self.METADATA_VERSION}
+            else:
                 try:
                     self.data = json.loads(data)
                     self.validate_mapping(self.data)
@@ -756,6 +759,9 @@ class Metadata(object):
                     # Note: MetadataUnrecognizedVersionError does not
                     # inherit from ValueError (it's a DistlibException,
                     # which should not inherit from ValueError).
+                    # The ValueError comes from the json.load - if that
+                    # succeeds and we get a validation error, we want
+                    # that to propagate
                     self.legacy = LegacyMetadata(fileobj=StringIO(data),
                                                  scheme=scheme)
 
