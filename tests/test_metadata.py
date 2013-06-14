@@ -415,14 +415,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         self.assertNotIn('Requires', metadata)
         self.assertNotIn('Obsoletes', metadata)
 
-    @unittest.skip('needs to be implemented')
-    def test_provides_illegal(self):
-        # TODO check the versions (like distutils does for old provides field)
-        self.assertRaises(ValueError, LegacyMetadata,
-                          mapping={'name': 'project',
-                                   'version': '1.0',
-                                   'provides_dist': ['my.pkg (splat)']})
-
     def test_requires_dist(self):
         fields = {'name': 'project',
                   'version': '1.0',
@@ -458,13 +450,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         metadata['Requires-Python'] = '>=2.6, <3.0'
         metadata['Requires-Dist'] = ['Foo (>=2.6, <3.0)']
         self.assertEqual(self.get_logs(), [])
-
-    @unittest.skip('needs to be implemented')
-    def test_requires_illegal(self):
-        self.assertRaises(ValueError, LegacyMetadata,
-                          mapping={'name': 'project',
-                                   'version': '1.0',
-                                   'requires': ['my.pkg (splat)']})
 
     def test_obsoletes_dist(self):
         fields = {'name': 'project',

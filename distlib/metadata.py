@@ -770,7 +770,7 @@ class Metadata(object):
 
     common_keys = set(('name', 'version', 'license', 'keywords', 'summary'))
 
-    reqt_keys = {
+    mapped_keys = {
         'requires': ('Requires-Dist', list),
         'may_require': (None, list),
         'build_requires': ('Setup-Requires-Dist', list),
@@ -779,13 +779,14 @@ class Metadata(object):
         'dev_may_require': (None, list),
         'test_requires': (None, list),
         'test_may_require': (None, list),
+        'classifiers': ('Classifier', list),
     }
 
     def __getattribute__(self, key):
         common = object.__getattribute__(self, 'common_keys')
-        reqts = object.__getattribute__(self, 'reqt_keys')
-        if key in reqts:
-            lk, maker = reqts[key]
+        mapped = object.__getattribute__(self, 'mapped_keys')
+        if key in mapped:
+            lk, maker = mapped[key]
             if self.legacy:
                 if lk is None:
                     result = maker()
@@ -798,17 +799,14 @@ class Metadata(object):
         elif self.legacy:
             result = self.legacy[key]
         else:
-            try:
-                result = self.data[key]
-            except TypeError:
-                import pdb; pdb.set_trace()
+            result = self.data[key]
         return result
 
     def __setattr__(self, key, value):
         common = object.__getattribute__(self, 'common_keys')
-        reqts = object.__getattribute__(self, 'reqt_keys')
-        if key in reqts:
-            lk, maker = reqts[key]
+        mapped = object.__getattribute__(self, 'mapped_keys')
+        if key in mapped:
+            lk, maker = mapped[key]
             if self.legacy:
                 if lk is None:
                     raise NotImplementedError
@@ -921,7 +919,6 @@ class Metadata(object):
     @dependencies.setter
     def dependencies(self, value):
         if self.legacy:
-            import pdb; pdb.set_trace()
             raise NotImplementedError
         else:
             self.data.update(value)
