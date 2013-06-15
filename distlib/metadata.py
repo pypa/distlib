@@ -879,11 +879,11 @@ class Metadata(object):
             result = list(always)   # make a copy, as we may add to it
             extras = set(extras or [])
             for d in sometimes:
-                if d.get('extra') in extras:
-                    include = True
-                else:
+                include = d.get('extra') in extras
+                if include:
                     marker = d.get('environment')
-                    include = marker and interpret(marker, environment)
+                    if marker:
+                        include = interpret(marker, environment)
                 if include:
                     result.extend(d['dependencies'])
             if 'test' in extras:
