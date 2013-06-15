@@ -24,29 +24,29 @@ class MarkersTestCase(unittest.TestCase):
         platform_machine = platform.machine()
         platform_python_implementation = python_implementation()
 
-        self.assertTrue(interpret("sys.platform == '%s'" % sys_platform))
+        self.assertTrue(interpret("sys_platform == '%s'" % sys_platform))
         self.assertTrue(interpret(
-            "sys.platform == '%s' and python_full_version == '%s'" %
+            "sys_platform == '%s' and python_full_version == '%s'" %
             (sys_platform, version)))
-        self.assertTrue(interpret("'%s' == sys.platform" % sys_platform))
-        self.assertTrue(interpret('os.name == "%s"' % os_name))
+        self.assertTrue(interpret("'%s' == sys_platform" % sys_platform))
+        self.assertTrue(interpret('os_name == "%s"' % os_name))
         self.assertTrue(interpret(
-            'platform.version == "%s" and platform.machine == "%s"' %
+            'platform_version == "%s" and platform_machine == "%s"' %
             (platform_version, platform_machine)))
-        self.assertTrue(interpret('platform.python_implementation == "%s"' %
+        self.assertTrue(interpret('platform_python_implementation == "%s"' %
             platform_python_implementation))
 
-        self.assertTrue(interpret('platform.in_venv == "%s"' % in_venv()))
+        self.assertTrue(interpret('platform_in_venv == "%s"' % in_venv()))
 
         # stuff that need to raise a syntax error
-        ops = ('os.name == os.name', 'os.name == 2', "'2' == '2'",
-               'okpjonon', '', 'os.name ==', 'python_version == 2.4')
+        ops = ('os_name == 2', "'2' == '2'",
+               'okpjonon', '', 'os_name ==', 'python_version == 2.4')
         for op in ops:
             self.assertRaises(SyntaxError, interpret, op)
 
         # combined operations
-        OP = 'os.name == "%s"' % os_name
-        FALSEOP = 'os.name == "buuuu"'
+        OP = 'os_name == "%s"' % os_name
+        FALSEOP = 'os_name == "buuuu"'
         AND = ' and '
         OR = ' or '
         self.assertTrue(interpret(OP + AND + OP))
@@ -60,15 +60,15 @@ class MarkersTestCase(unittest.TestCase):
         self.assertFalse(interpret(FALSEOP + OR + FALSEOP))
 
         # other operators
-        self.assertTrue(interpret("os.name != 'buuuu'"))
+        self.assertTrue(interpret("os_name != 'buuuu'"))
         self.assertTrue(interpret("python_version > '1.0'"))
         self.assertTrue(interpret("python_version < '5.0'"))
         self.assertTrue(interpret("python_version <= '5.0'"))
         self.assertTrue(interpret("python_version >= '1.0'"))
-        self.assertTrue(interpret("'%s' in os.name" % os_name))
-        self.assertTrue(interpret("'buuuu' not in os.name"))
+        self.assertTrue(interpret("'%s' in os_name" % os_name))
+        self.assertTrue(interpret("'buuuu' not in os_name"))
         self.assertTrue(interpret(
-            "'buuuu' not in os.name and '%s' in os.name" % os_name))
+            "'buuuu' not in os_name and '%s' in os_name" % os_name))
 
         # execution context
         self.assertTrue(interpret('python_version == "0.1"',
@@ -79,7 +79,7 @@ class MarkersTestCase(unittest.TestCase):
             relop = '!='
         else:
             relop = '=='
-        expression = ("(sys.platform %s 'win32' or python_version == '2.4') "
+        expression = ("(sys_platform %s 'win32' or python_version == '2.4') "
                       "and extra == 'quux'" % relop)
         self.assertTrue(interpret(expression, {'extra': 'quux'}))
 
