@@ -105,12 +105,20 @@ class TempdirManager(object):
 
     def tearDown(self):
         for handle, name in self._files:
-            handle.close()
-            unlink(name)
+            if handle is not None:
+                handle.close()
+            os.remove(name)
 
         os.chdir(self._olddir)
         shutil.rmtree(self._basetempdir)
         super(TempdirManager, self).tearDown()
+
+    def temp_filename(self):
+        """Create a read-write temporary file name and return it."""
+        fd, fn = tempfile.mkstemp(dir=self._basetempdir)
+        os.close(fd)
+        self._files.append((None, fn))
+        return fn
 
     def mktempfile(self):
         """Create a read-write temporary file and return it."""
@@ -257,7 +265,7 @@ def can_symlink():
         return _can_symlink
     fd, TESTFN = tempfile.mkstemp()
     os.close(fd)
-    os.unlink(TESTFN)
+    os.remove(TESTFN)
     symlink_path = TESTFN + "can_symlink"
     try:
         os.symlink(TESTFN, symlink_path)

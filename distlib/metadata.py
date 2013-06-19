@@ -763,7 +763,11 @@ class Metadata(object):
         else:
             if key == 'keywords':
                 if isinstance(value, string_types):
-                    value = value.split()
+                    value = value.strip()
+                    if value:
+                        value = value.split()
+                    else:
+                        value = []
             if self.legacy:
                 self.legacy[key] = value
             else:
@@ -908,7 +912,6 @@ class Metadata(object):
         'license': 'License',
         'summary': 'Summary',
         'description': 'Description',
-        'keywords': 'Keywords',
         'classifiers': 'Classifier',
     }
 
@@ -918,6 +921,10 @@ class Metadata(object):
         lmd = self.legacy
         for nk, ok in self.LEGACY_MAPPING.items():
             result[nk] = lmd[ok]
+        kw = lmd['Keywords']
+        if kw == ['']:
+            kw = []
+        result['keywords'] = kw
         result['requires'] = lmd['Requires-Dist']
         result['build_requires'] = lmd['Setup-Requires-Dist']
         result['provides'] = self.provides
@@ -935,7 +942,7 @@ class Metadata(object):
         # TODO: other fields such as contacts
         return result
 
-    def write(self, path=None, fileobj=None, legacy=False, skip_unknown=False):
+    def write(self, path=None, fileobj=None, legacy=False, skip_unknown=True):
         if [path, fileobj].count(None) != 1:
             raise ValueError('Exactly one of path and fileobj is needed')
         self.validate()

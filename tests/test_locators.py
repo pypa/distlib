@@ -10,7 +10,7 @@ import sys
 
 from compat import unittest
 
-from distlib.compat import url2pathname, urlparse, urljoin, xmlrpclib
+from distlib.compat import url2pathname, urlparse, urljoin
 from distlib.database import DistributionPath, make_graph, make_dist
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
@@ -32,7 +32,7 @@ class LocatorTestCase(unittest.TestCase):
         locator = PyPIRPCLocator(PYPI_RPC_HOST)
         try:
             result = locator.get_project('sarge')
-        except xmlrpclib.ProtocolError:     # pragma: no cover
+        except Exception:     # pragma: no cover
             raise unittest.SkipTest('PyPI XML-RPC not available')
         self.assertIn('0.1', result)
         dist = result['0.1']
@@ -253,7 +253,7 @@ class LocatorTestCase(unittest.TestCase):
         for url in (None, PYPI_RPC_HOST):
             try:
                 all_dists = get_all_distribution_names(url)
-            except xmlrpclib.ProtocolError:     # pragma: no cover
+            except Exception:     # pragma: no cover
                 raise unittest.SkipTest('PyPI XML-RPC not available')
             self.assertGreater(len(all_dists), 0)
 

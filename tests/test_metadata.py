@@ -6,6 +6,8 @@
 """Tests for distlib.metadata."""
 from __future__ import unicode_literals
 
+import codecs
+import json
 import os
 import sys
 import codecs
@@ -488,6 +490,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(md.version, '0.3.4')
         self.assertEqual(md.requires, [])
         self.assertEqual(md.distributes, [])
+        self.assertEqual(md.provides, ['foo (0.3.4)'])
 
         # Initialise from legacy metadata
         fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
@@ -499,6 +502,8 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(md.metadata_version, '1.2')
         self.assertEqual(md.version, '2.0.0.9')
         self.assertEqual(md.distributes, [])
+        self.assertEqual(set(md.provides),
+                         set(['choxie (2.0.0.9)', 'truffles (1.0)']))
 
         # Initialise from new metadata
         fn = os.path.join(HERE, 'pymeta.json')
@@ -508,6 +513,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(md.metadata_version, '2.0')
         self.assertEqual(md.name, 'foobar')
         self.assertEqual(md.version, '0.1')
+        self.assertEqual(md.provides, ['foobar (0.1)'])
 
     def test_add_requirements(self):
         md = Metadata()
@@ -592,6 +598,35 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                 }
             ]
         })
+
+    def test_write(self):
+        dfn = self.temp_filename()
+        # Read legacy, write new
+        sfn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
+                           'METADATA')
+        md = Metadata(path=sfn)
+        md.write(path=dfn)
+        with codecs.open(dfn, 'r', 'utf-8') as f:
+            data = json.load(f)
+        self.assertEqual(data, {
+            'metadata_version': '2.0',
+            'name': 'choxie',
+            'version': '2.0.0.9',
+            'license': 'BSD',
+            'summary': 'Chocolate with a kick!',
+            'description': 'Chocolate with a longer kick!',
+            'provides': ['truffles (1.0)', 'choxie (2.0.0.9)'],
+            'requires': ['towel-stuff (0.1)', 'nut'],
+            'build_requires': [],
+            'keywords': [],
+            'classifiers': [],
+        })
+        # Write legacy, compare with original
+        md.write(path=dfn, legacy=True)
+        nmd = Metadata(path=dfn)
+        d1 = md.todict()
+        d2 = nmd.todict()
+        self.assertEqual(d1, d2)
 
 
 if __name__ == '__main__':  # pragma: no cover
