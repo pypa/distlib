@@ -1,0 +1,64 @@
+{
+  "description": "Longer description",
+  "license": "PSF",
+  "summary": "Short description",
+  "build_requires": [],
+  "metadata_version": "2.0",
+  "version": "0.1",
+  "provides": [
+    "foobar (0.1)"
+  ],
+  "keywords": [
+    "foo",
+    "bar"
+  ],
+  "requires": ["foo"],
+  "distributes": ["bar (1.0)"],
+  "extras": ["ssl", "certs"],
+  "may_require": [
+    {
+      "dependencies": ["certifi (0.0.8)"],
+      "extra": "certs"
+    },
+    {
+      "dependencies": ["wincertstore (0.1)"],
+      "extra": "ssl",
+      "environment": "sys_platform=='win32'"
+    },
+    {
+      "dependencies": ["ctypes (1.0.2)"],
+      "extra": "ssl",
+      "environment": "sys_platform=='win32' and python_version=='2.4'"
+    },
+    {
+      "dependencies": ["ssl (1.16)"],
+      "extra": "ssl",
+      "environment": "python_version in '2.4, 2.5'"
+    }
+  ],
+  "test_requires": ["nose"],
+  "test_may_require": [
+    {
+      "dependencies": ["nose-udp"],
+      "extra": "udp"
+    }
+  ],
+  "classifiers": [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Python Software Foundation License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.4",
+    "Programming Language :: Python :: 2.5",
+    "Programming Language :: Python :: 2.6",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.2",
+    "Programming Language :: Python :: 3.3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities"
+  ],
+  "name": "foobar"
+}
