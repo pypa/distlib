@@ -537,9 +537,17 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         r = md.get_requirements([], md.may_require)
         self.assertEqual(r, [])
         r = md.get_requirements([], md.may_require, extras=['certs'])
-        self.assertEqual(r, ['certifi (0.0.8)'])
+        if sys.platform != 'win32':
+            self.assertEqual(r, ['certifi (0.0.8)'])
+        else:
+            self.assertEqual(set(r), set(['certifi (0.0.8)',
+                                          'wincertstore (0.1)']))
         r = md.get_requirements([], md.may_require, extras=['certs', 'ssl'])
-        self.assertEqual(r, ['certifi (0.0.8)'])
+        if sys.platform != 'win32':
+            self.assertEqual(r, ['certifi (0.0.8)'])
+        else:
+            self.assertEqual(set(r), set(['certifi (0.0.8)',
+                                          'wincertstore (0.1)']))
         for ver in ('2.5', '2.4'):
             env = {'python_version': ver}
             r = md.get_requirements([], md.may_require,
