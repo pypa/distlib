@@ -244,13 +244,6 @@ class HTTPSServerThread(threading.Thread):
         self.server.shutdown()
 
 try:
-    import docutils
-except ImportError:
-    docutils = None
-
-requires_docutils = unittest.skipUnless(docutils, 'requires docutils')
-
-try:
     import zlib
 except ImportError:
     zlib = None

@@ -37,32 +37,6 @@ class MetadataUnrecognizedVersionError(DistlibException):
     """Unknown metadata version number."""
 
 
-try:
-    # docutils is installed
-    from docutils.utils import Reporter
-    from docutils.parsers.rst import Parser
-    from docutils import frontend
-    from docutils import nodes
-
-    class SilentReporter(Reporter, object):
-
-        def __init__(self, source, report_level, halt_level, stream=None,
-                     debug=0, encoding='ascii', error_handler='replace'):
-            self.messages = []
-            super(SilentReporter, self).__init__(
-                source, report_level, halt_level, stream,
-                debug, encoding, error_handler)
-
-        def system_message(self, level, message, *children, **kwargs):
-            self.messages.append((level, message, children, kwargs))
-            return nodes.system_message(message, level=level, type=self.
-                                        levels[level], *children, **kwargs)
-
-    _HAS_DOCUTILS = True
-except ImportError:
-    # docutils is not installed
-    _HAS_DOCUTILS = False
-
 # public API of this module
 __all__ = ['Metadata', 'PKG_INFO_ENCODING', 'PKG_INFO_PREFERRED_VERSION']
 
@@ -272,7 +246,6 @@ class LegacyMetadata(object):
             raise TypeError('path, fileobj and mapping are exclusive')
         self._fields = {}
         self.requires_files = []
-        self.docutils_support = _HAS_DOCUTILS
         self._dependencies = None
         self.scheme = scheme
         if path is not None:
@@ -317,32 +290,6 @@ class LegacyMetadata(object):
             return []
         return 'UNKNOWN'
 
-    def _check_rst_data(self, data):
-        """Return warnings when the provided data has syntax errors."""
-        source_path = StringIO()
-        parser = Parser()
-        settings = frontend.OptionParser().get_default_values()
-        settings.tab_width = 4
-        settings.pep_references = None
-        settings.rfc_references = None
-        reporter = SilentReporter(source_path,
-                          settings.report_level,
-                          settings.halt_level,
-                          stream=settings.warning_stream,
-                          debug=settings.debug,
-                          encoding=settings.error_encoding,
-                          error_handler=settings.error_encoding_error_handler)
-
-        document = nodes.document(settings, reporter, source=source_path)
-        document.note_source(source_path, -1)
-        try:
-            parser.parse(data, document)
-        except AttributeError:
-            reporter.messages.append((-1, 'Could not finish the parsing.',
-                                      '', {}))
-
-        return reporter.messages
-
     def _remove_line_prefix(self, value):
         return _LINE_PREFIX.sub('\n', value)
 
@@ -351,56 +298,56 @@ class LegacyMetadata(object):
             return self[name]
         raise AttributeError(name)
 
-    def _get_dependencies(self):
-        def handle_req(req, rlist, extras):
-            if ';' not in req:
-                rlist.append(req)
-            else:
-                r, marker = req.split(';')
-                m = EXTRA_RE.search(marker)
-                if m:
-                    extra = m.groups()[0][1:-1]
-                    extras.setdefault(extra, []).append(r)
+#    def _get_dependencies(self):
+#        def handle_req(req, rlist, extras):
+#            if ';' not in req:
+#                rlist.append(req)
+#            else:
+#                r, marker = req.split(';')
+#                m = EXTRA_RE.search(marker)
+#                if m:
+#                    extra = m.groups()[0][1:-1]
+#                    extras.setdefault(extra, []).append(r)
 
-        result = self._dependencies
-        if result is None:
-            self._dependencies = result = {}
-            extras = {}
-            setup_reqs = self['Setup-Requires-Dist']
-            if setup_reqs:
-                result['setup'] = setup_reqs
-            install_reqs = []
-            for req in self['Requires-Dist']:
-                handle_req(req, install_reqs, extras)
-            if install_reqs:
-                result['install'] = install_reqs
-            if extras:
-                result['extras'] = extras
-        return result
+#        result = self._dependencies
+#        if result is None:
+#            self._dependencies = result = {}
+#            extras = {}
+#            setup_reqs = self['Setup-Requires-Dist']
+#            if setup_reqs:
+#                result['setup'] = setup_reqs
+#            install_reqs = []
+#            for req in self['Requires-Dist']:
+#                handle_req(req, install_reqs, extras)
+#            if install_reqs:
+#                result['install'] = install_reqs
+#            if extras:
+#                result['extras'] = extras
+#        return result
 
-    def _set_dependencies(self, value):
-        if 'test' in value:
-            value = dict(value)     # don't change value passed in
-            value.setdefault('extras', {})['test'] = value.pop('test')
-        self._dependencies = value
-        setup_reqs = value.get('setup', [])
-        install_reqs = value.get('install', [])
-        klist = []
-        for k, rlist in value.get('extras', {}).items():
-            klist.append(k)
-            for r in rlist:
-                install_reqs.append('%s; extra == "%s"' % (r, k))
-        if setup_reqs:
-            self['Setup-Requires-Dist'] = setup_reqs
-        if install_reqs:
-            self['Requires-Dist'] = install_reqs
-        if klist:
-            self['Provides-Extra'] = klist
+#    def _set_dependencies(self, value):
+#        if 'test' in value:
+#            value = dict(value)     # don't change value passed in
+#            value.setdefault('extras', {})['test'] = value.pop('test')
+#        self._dependencies = value
+#        setup_reqs = value.get('setup', [])
+#        install_reqs = value.get('install', [])
+#        klist = []
+#        for k, rlist in value.get('extras', {}).items():
+#            klist.append(k)
+#            for r in rlist:
+#                install_reqs.append('%s; extra == "%s"' % (r, k))
+#        if setup_reqs:
+#            self['Setup-Requires-Dist'] = setup_reqs
+#        if install_reqs:
+#            self['Requires-Dist'] = install_reqs
+#        if klist:
+#            self['Provides-Extra'] = klist
     #
     # Public API
     #
 
-    dependencies = property(_get_dependencies, _set_dependencies)
+#    dependencies = property(_get_dependencies, _set_dependencies)
 
     def get_fullname(self, filesafe=False):
         """Return the distribution name with version.
@@ -578,7 +525,7 @@ class LegacyMetadata(object):
                 return value.split(',')
         return self._fields[name]
 
-    def check(self, strict=False, restructuredtext=False):
+    def check(self, strict=False):
         """Check if the metadata is compliant. If strict is True then raise if
         no Name or Version are provided"""
         self.set_metadata_version()
@@ -597,9 +544,6 @@ class LegacyMetadata(object):
         for attr in ('Home-page', 'Author'):
             if attr not in self:
                 missing.append(attr)
-
-        if _HAS_DOCUTILS and restructuredtext:
-            warnings.extend(self._check_rst_data(self['Description']))
 
         # checking metadata 1.2 (XXX needs to check 1.1, 1.0)
         if self['Metadata-Version'] != '1.2':
@@ -779,6 +723,7 @@ class Metadata(object):
         'dev_may_require': (None, list),
         'test_requires': (None, list),
         'test_may_require': (None, list),
+        'distributes': (None, list),
         'classifiers': ('Classifier', list),
     }
 
@@ -860,8 +805,7 @@ class Metadata(object):
         else:
             self.data['provides'] = value
 
-    def get_requirements(self, always, sometimes, extras=None,
-                          environment=None):
+    def get_requirements(self, always, sometimes, extras=None, env=None):
         """
         Base method to get dependencies, given a set of extras
         to satisfy and an optional environment context.
@@ -869,7 +813,7 @@ class Metadata(object):
         :param sometimes: A list of sometimes-wanted dependencies,
                           dependent on extras and environment.
         :param extras: A list of optional components being requested.
-        :param environment: An optional environment for marker evaluation.
+        :param env: An optional environment for marker evaluation.
         """
         if self.legacy:
             if sometimes:
@@ -883,7 +827,7 @@ class Metadata(object):
                 if include:
                     marker = d.get('environment')
                     if marker:
-                        include = interpret(marker, environment)
+                        include = interpret(marker, env)
                 if include:
                     result.extend(d['dependencies'])
             if 'test' in extras:
@@ -892,8 +836,8 @@ class Metadata(object):
                 sometimes = self.data.get('test_may_require', [])
                 # A recursive call, but it should terminate since 'test'
                 # has been removed from the extras
-                result.extend(self._get_requirements(always, sometimes,
-                              extras=extras, environment=environment))
+                result.extend(self.get_requirements(always, sometimes,
+                              extras=extras, env=env))
         return result
 
     @property
@@ -923,11 +867,13 @@ class Metadata(object):
         else:
             self.data.update(value)
 
-    def validate_name(self, name):
-        return name
+    # These are currently unused because many existing dists will
+    # have problems
+#    def validate_name(self, name):
+#        return name
 
-    def validate_version(self, version):
-        return version
+#    def validate_version(self, version):
+#        return version
 
     def validate_mapping(self, mapping):
         if mapping.get('metadata_version') != self.METADATA_VERSION:
@@ -944,9 +890,8 @@ class Metadata(object):
         if self.legacy:
             missing, warnings = self.legacy.check(True)
             if missing or warnings:
-                msg = 'Bad metadata: missing: %s, warnings: %s' % (missing,
-                                                                   warnings)
-                raise MetadataMissingError(msg)
+                logger.warning('Metadata: missing: %s, warnings: %s',
+                               missing, warnings)
         else:
             self.validate_mapping(self.data)
 

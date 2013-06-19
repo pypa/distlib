@@ -19,13 +19,12 @@ from distlib.metadata import (LegacyMetadata, Metadata,
                               MetadataConflictError, MetadataMissingError,
                               MetadataUnrecognizedVersionError, _ATTR2FIELD)
 
-from support import (LoggingCatcher, TempdirManager, EnvironRestorer,
-                      requires_docutils)
+from support import (LoggingCatcher, TempdirManager)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
+class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
                              unittest.TestCase):
 
     maxDiff = None
@@ -196,7 +195,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         metadata['Name'] = 'vimpdb'
         metadata['Home-page'] = 'http://pypi.python.org'
         metadata['Author'] = 'Monty Python'
-        metadata.docutils_support = False
         missing, warnings = metadata.check()
         self.assertEqual(missing, ['Version'])
 
@@ -205,7 +203,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         metadata['Name'] = 'vimpdb'
         metadata['Home-page'] = 'http://pypi.python.org'
         metadata['Author'] = 'Monty Python'
-        metadata.docutils_support = False
         self.assertRaises(MetadataMissingError, metadata.check, strict=True)
 
     def test_check_name(self):
@@ -213,7 +210,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         metadata['Version'] = '1.0'
         metadata['Home-page'] = 'http://pypi.python.org'
         metadata['Author'] = 'Monty Python'
-        metadata.docutils_support = False
         missing, warnings = metadata.check()
         self.assertEqual(missing, ['Name'])
 
@@ -222,7 +218,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         metadata['Version'] = '1.0'
         metadata['Home-page'] = 'http://pypi.python.org'
         metadata['Author'] = 'Monty Python'
-        metadata.docutils_support = False
         self.assertRaises(MetadataMissingError, metadata.check, strict=True)
 
     def test_check_author(self):
@@ -230,7 +225,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         metadata['Version'] = '1.0'
         metadata['Name'] = 'vimpdb'
         metadata['Home-page'] = 'http://pypi.python.org'
-        metadata.docutils_support = False
         missing, warnings = metadata.check()
         self.assertEqual(missing, ['Author'])
 
@@ -239,7 +233,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         metadata['Version'] = '1.0'
         metadata['Name'] = 'vimpdb'
         metadata['Author'] = 'Monty Python'
-        metadata.docutils_support = False
         missing, warnings = metadata.check()
         self.assertEqual(missing, ['Home-page'])
 
@@ -374,16 +367,6 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         folded_desc = desc.replace('\n', '\n' + (7 * ' ') + '|')
         self.assertIn(folded_desc, out.getvalue())
 
-    @requires_docutils
-    def test_description_invalid_rst(self):
-        # make sure bad rst is well handled in the description attribute
-        metadata = LegacyMetadata()
-        description = ':funkie:`str`'  # mimic Sphinx-specific markup
-        metadata['description'] = description
-        missing, warnings = metadata.check(restructuredtext=True)
-        warning = warnings[0][1]
-        self.assertIn('funkie', warning)
-
     def test_project_url(self):
         metadata = LegacyMetadata()
         metadata['Project-URL'] = [('one', 'http://ok')]
@@ -481,8 +464,134 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, EnvironRestorer,
         self.assertFalse(md.is_field('Frobozz'))
 
 class MetadataTestCase(LoggingCatcher, TempdirManager,
-                       EnvironRestorer, unittest.TestCase):
-    pass
+                       unittest.TestCase):
+    def test_init(self):
+        "Test initialisation"
+        md = Metadata()
+        self.assertIsNone(md.legacy)
+        self.assertRaises(MetadataMissingError, md.validate)
+        md.name = 'dummy'
+        self.assertRaises(MetadataMissingError, md.validate)
+        md.version = '0.1'
+        md.validate()
+        self.assertEqual(md.name, 'dummy')
+        self.assertEqual(md.version, '0.1')
+
+        # Initialise from mapping
+        md = Metadata(mapping={
+                        'metadata_version': '2.0',
+                        'name': 'foo',
+                        'version': '0.3.4'
+                      })
+        md.validate()
+        self.assertEqual(md.name, 'foo')
+        self.assertEqual(md.version, '0.3.4')
+        self.assertEqual(md.requires, [])
+        self.assertEqual(md.distributes, [])
+
+        # Initialise from legacy metadata
+        fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
+                          'METADATA')
+        md = Metadata(path=fn)
+        md.validate()
+        self.assertIsNotNone(md.legacy)
+        self.assertEqual(set(md.requires), set(['towel-stuff (0.1)', 'nut']))
+        self.assertEqual(md.metadata_version, '1.2')
+        self.assertEqual(md.version, '2.0.0.9')
+        self.assertEqual(md.distributes, [])
+
+        # Initialise from new metadata
+        fn = os.path.join(HERE, 'pymeta.json')
+        md = Metadata(path=fn)
+        md.validate()
+        self.assertIsNone(md.legacy)
+        self.assertEqual(md.metadata_version, '2.0')
+        self.assertEqual(md.name, 'foobar')
+        self.assertEqual(md.version, '0.1')
+
+    def test_add_requirements(self):
+        md = Metadata()
+        md.name = 'bar'
+        md.version = '0.5'
+        md.add_requirements(['foo (0.1.2)'])
+        self.assertEqual(md.requires, ['foo (0.1.2)'])
+
+        fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
+                          'METADATA')
+        md = Metadata(path=fn)
+        md.add_requirements(['foo (0.1.2)'])
+        self.assertEqual(set(md.requires),
+                         set(['towel-stuff (0.1)', 'nut', 'foo (0.1.2)']))
+
+    def test_requirements(self):
+        fn = os.path.join(HERE, 'pymeta.json')
+        md = Metadata(path=fn)
+        self.assertEqual(md.requires, ['foo'])
+        self.assertEqual(md.distributes, ['bar (1.0)'])
+        r = md.get_requirements([], md.may_require)
+        self.assertEqual(r, [])
+        r = md.get_requirements([], md.may_require, extras=['certs'])
+        self.assertEqual(r, ['certifi (0.0.8)'])
+        r = md.get_requirements([], md.may_require, extras=['certs', 'ssl'])
+        self.assertEqual(r, ['certifi (0.0.8)'])
+        for ver in ('2.5', '2.4'):
+            env = {'python_version': ver}
+            r = md.get_requirements([], md.may_require,
+                                    extras=['certs', 'ssl'], env=env)
+            self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)']))
+        env['sys_platform'] = 'win32'
+        r = md.get_requirements([], md.may_require,
+                                extras=['certs', 'ssl'], env=env)
+        self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
+                                      'ctypes (1.0.2)', 'wincertstore (0.1)']))
+        env['python_version'] = '2.5'
+        r = md.get_requirements([], md.may_require,
+                                extras=['certs', 'ssl'], env=env)
+        self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
+                                      'wincertstore (0.1)']))
+        r = md.get_requirements([], md.may_require, extras=['test'])
+        self.assertEqual(r, ['nose'])
+        r = md.get_requirements([], md.may_require, extras=['test', 'udp'])
+        self.assertEqual(set(r), set(['nose', 'nose-udp']))
+        r = md.get_requirements(md.requires, md.may_require,
+                                extras=['test', 'udp'])
+        self.assertEqual(set(r), set(['foo', 'nose', 'nose-udp']))
+        self.assertEqual(md.dependencies, {
+            'provides': ['foobar (0.1)'],
+            'requires': ['foo'],
+            'distributes': ['bar (1.0)'],
+            'extras': ['ssl', 'certs'],
+            'build_requires': [],
+            'test_requires': ['nose'],
+            'test_may_require': [
+                {
+                    'dependencies': ['nose-udp'],
+                    'extra': 'udp',
+                }
+            ],
+            'may_require': [
+                {
+                    'dependencies': ['certifi (0.0.8)'],
+                    'extra': 'certs',
+                },
+                {
+                    'dependencies': ['wincertstore (0.1)'],
+                    'extra': 'ssl',
+                    'environment': "sys_platform=='win32'",
+                },
+                {
+                    'dependencies': ['ctypes (1.0.2)'],
+                    'extra': 'ssl',
+                    'environment': "sys_platform=='win32' and "
+                                   "python_version=='2.4'",
+                },
+                {
+                    'dependencies': ['ssl (1.16)'],
+                    'extra': 'ssl',
+                    'environment': "python_version in '2.4, 2.5'",
+                }
+            ]
+        })
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -346,7 +346,7 @@ class Distribution(object):
         sometimes = getattr(self.metadata, sometimes_attr)
         return set(self.metadata.get_requirements(always, sometimes,
                                                   extras=self.extras,
-                                                  environment=self.context))
+                                                  env=self.context))
 
     @property
     def requires(self):
