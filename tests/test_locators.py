@@ -32,7 +32,7 @@ class LocatorTestCase(unittest.TestCase):
         locator = PyPIRPCLocator(PYPI_RPC_HOST)
         try:
             result = locator.get_project('sarge')
-        except xmlrpclib.ProtocolError:
+        except xmlrpclib.ProtocolError:     # pragma: no cover
             raise unittest.SkipTest('PyPI XML-RPC not available')
         self.assertIn('0.1', result)
         dist = result['0.1']
@@ -43,7 +43,10 @@ class LocatorTestCase(unittest.TestCase):
                          'sarge-0.1.tar.gz')
         self.assertEqual(dist.md5_digest,
                          '961ddd9bc085fdd8b248c6dd96ceb1c8')
-        names = locator.get_distribution_names()
+        try:
+            names = locator.get_distribution_names()
+        except Exception:   # pragma: no cover
+            raise unittest.SkipTest('PyPI XML-RPC not available')
         self.assertGreater(len(names), 25000)
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
@@ -250,7 +253,7 @@ class LocatorTestCase(unittest.TestCase):
         for url in (None, PYPI_RPC_HOST):
             try:
                 all_dists = get_all_distribution_names(url)
-            except xmlrpclib.ProtocolError:
+            except xmlrpclib.ProtocolError:     # pragma: no cover
                 raise unittest.SkipTest('PyPI XML-RPC not available')
             self.assertGreater(len(all_dists), 0)
 

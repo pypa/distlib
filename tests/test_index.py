@@ -108,7 +108,7 @@ class PackageIndexTestCase(unittest.TestCase):
         return result
 
     def check_pypi_server_available(self):
-        if self.run_test_server and not self.server:
+        if self.run_test_server and not self.server:    # pragma: no cover
             raise unittest.SkipTest('test server not available')
 
     def check_testdist_available(self):
@@ -218,7 +218,7 @@ class PackageIndexTestCase(unittest.TestCase):
             self.assertIn(expected, data)
 
     def test_verify_signature(self):
-        if not self.index.gpg:
+        if not self.index.gpg:      # pragma: no cover
             raise unittest.SkipTest('gpg not available')
         sig_file = os.path.join(HERE, 'good.bin.asc')
         good_file = os.path.join(HERE, 'good.bin')
