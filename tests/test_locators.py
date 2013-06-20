@@ -203,7 +203,6 @@ class LocatorTestCase(unittest.TestCase):
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
                                   'pytest-runner'])
-        import pdb; pdb.set_trace()
         dists, problems = finder.find('irc (5.0.1)', True)  # include tests
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
