@@ -6,7 +6,45 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- database
+
+    - Added support for PEP 426 JSON metadata (pymeta.json).
+
+    - Fixed a bug in parsing legacy metadata from .egg directories
+
+- index
+
+    - Changes relating to support for PEP 426 JSON metadata (pymeta.json).
+
+- locators
+
+    - Changes relating to support for PEP 426 JSON metadata (pymeta.json).
+
+    - Fixed a bug in scoring download URLs for preference when multiple URLs
+      are available.
+
+- markers
+
+    - Added support for markers as specified in PEP 426.
+
+- metadata
+
+    - Added support for PEP 426 JSON metadata (pymeta.json). The old
+      metadata class is renamed to LegacyMetadata, and the (new)
+      Metadata class wraps the JSON format (and also the legacy format,
+      through LegacyMetadata).
+
+    - Removed code which was only used if docutils was installed. This code
+      implemented validation of .rst descriptions, which is not done in
+      distlib.
+
+- util
+
+    - Added extract_by_key() to copy selected keys from one dict to another.
+
 - wheel
+
+    - Added support for PEP 426 JSON metadata (pymeta.json).
 
     - Added lib_only flag to install() method.
 

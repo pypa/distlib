@@ -322,6 +322,8 @@ class Distribution(object):
         """
         return self.metadata.source_url
 
+    download_url = source_url   # Backward compatibility
+
     @property
     def name_and_version(self):
         """
