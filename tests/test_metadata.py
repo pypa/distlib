@@ -470,7 +470,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
     def test_init(self):
         "Test initialisation"
         md = Metadata()
-        self.assertIsNone(md.legacy)
+        self.assertIsNone(md._legacy)
         self.assertRaises(MetadataMissingError, md.validate)
         md.name = 'dummy'
         self.assertRaises(MetadataMissingError, md.validate)
@@ -497,7 +497,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                           'METADATA')
         md = Metadata(path=fn)
         md.validate()
-        self.assertIsNotNone(md.legacy)
+        self.assertIsNotNone(md._legacy)
         self.assertEqual(set(md.requires), set(['towel-stuff (0.1)', 'nut']))
         self.assertEqual(md.metadata_version, '1.2')
         self.assertEqual(md.version, '2.0.0.9')
@@ -509,7 +509,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         fn = os.path.join(HERE, 'pymeta.json')
         md = Metadata(path=fn)
         md.validate()
-        self.assertIsNone(md.legacy)
+        self.assertIsNone(md._legacy)
         self.assertEqual(md.metadata_version, '2.0')
         self.assertEqual(md.name, 'foobar')
         self.assertEqual(md.version, '0.1')

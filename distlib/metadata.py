@@ -672,21 +672,21 @@ class Metadata(object):
                        'dev_requires dev_may_require distributes provides '
                        'obsoleted_by supports_environments')
 
-    __slots__ = ('legacy', 'data', 'scheme')
+    __slots__ = ('_legacy', '_data', 'scheme')
 
     def __init__(self, path=None, fileobj=None, mapping=None,
                  scheme='default'):
         if [path, fileobj, mapping].count(None) < 2:
             raise TypeError('path, fileobj and mapping are exclusive')
-        self.legacy = None
-        self.data = None
+        self._legacy = None
+        self._data = None
         #import pdb; pdb.set_trace()
         if mapping is not None:
             try:
                 self.validate_mapping(mapping)
-                self.data = mapping
+                self._data = mapping
             except MetadataUnrecognizedVersionError:
-                self.legacy = LegacyMetadata(mapping=mapping, scheme=scheme)
+                self._legacy = LegacyMetadata(mapping=mapping, scheme=scheme)
         else:
             self.scheme = scheme
             data = None
@@ -697,11 +697,11 @@ class Metadata(object):
                 data = fileobj.read()
             if data is None:
                 # Initialised with no args - to be added
-                self.data = {'metadata_version': self.METADATA_VERSION}
+                self._data = {'metadata_version': self.METADATA_VERSION}
             else:
                 try:
-                    self.data = json.loads(data)
-                    self.validate_mapping(self.data)
+                    self._data = json.loads(data)
+                    self.validate_mapping(self._data)
                 except ValueError:
                     # Note: MetadataUnrecognizedVersionError does not
                     # inherit from ValueError (it's a DistlibException,
@@ -709,8 +709,8 @@ class Metadata(object):
                     # The ValueError comes from the json.load - if that
                     # succeeds and we get a validation error, we want
                     # that to propagate
-                    self.legacy = LegacyMetadata(fileobj=StringIO(data),
-                                                 scheme=scheme)
+                    self._legacy = LegacyMetadata(fileobj=StringIO(data),
+                                                  scheme=scheme)
 
     common_keys = set(('name', 'version', 'license', 'keywords', 'summary'))
 
@@ -732,19 +732,19 @@ class Metadata(object):
         mapped = object.__getattribute__(self, 'mapped_keys')
         if key in mapped:
             lk, maker = mapped[key]
-            if self.legacy:
+            if self._legacy:
                 if lk is None:
                     result = None if maker is None else maker()
                 else:
-                    result = self.legacy.get(lk)
+                    result = self._legacy.get(lk)
             else:
-                result = self.data.setdefault(key, maker())
+                result = self._data.setdefault(key, maker())
         elif key not in common:
             result = object.__getattribute__(self, key)
-        elif self.legacy:
-            result = self.legacy.get(key)
+        elif self._legacy:
+            result = self._legacy.get(key)
         else:
-            result = self.data.get(key)
+            result = self._data.get(key)
         return result
 
     def __setattr__(self, key, value):
@@ -752,12 +752,12 @@ class Metadata(object):
         mapped = object.__getattribute__(self, 'mapped_keys')
         if key in mapped:
             lk, maker = mapped[key]
-            if self.legacy:
+            if self._legacy:
                 if lk is None:
                     raise NotImplementedError
-                self.legacy[lk] = value
+                self._legacy[lk] = value
             else:
-                self.data[key] = value
+                self._data[key] = value
         elif key not in common:
             object.__setattr__(self, key, value)
         else:
@@ -768,24 +768,24 @@ class Metadata(object):
                         value = value.split()
                     else:
                         value = []
-            if self.legacy:
-                self.legacy[key] = value
+            if self._legacy:
+                self._legacy[key] = value
             else:
-                self.data[key] = value
+                self._data[key] = value
 
     @property
     def metadata_version(self):
-        if self.legacy:
-            return self.legacy['Metadata-Version']
-        return self.data['metadata_version']
+        if self._legacy:
+            return self._legacy['Metadata-Version']
+        return self._data['metadata_version']
 
     @metadata_version.setter
     def metadata_version(self, value):
-        if self.legacy:
-            self.legacy['Metadata-Version'] = value
+        if self._legacy:
+            self._legacy['Metadata-Version'] = value
         else:
             assert value == METADATA_VERSION
-            self.data['metadata_version'] = value
+            self._data['metadata_version'] = value
 
     @property
     def name_and_version(self):
@@ -793,10 +793,10 @@ class Metadata(object):
 
     @property
     def provides(self):
-        if self.legacy:
-            result = self.legacy['Provides-Dist']
+        if self._legacy:
+            result = self._legacy['Provides-Dist']
         else:
-            result = self.data.setdefault('provides', [])
+            result = self._data.setdefault('provides', [])
         s = '%s (%s)' % (self.name, self.version)
         if s not in result:
             result.append(s)
@@ -804,10 +804,10 @@ class Metadata(object):
 
     @provides.setter
     def provides(self, value):
-        if self.legacy:
-            self.legacy['Provides-Dist'] = value
+        if self._legacy:
+            self._legacy['Provides-Dist'] = value
         else:
-            self.data['provides'] = value
+            self._data['provides'] = value
 
     def get_requirements(self, always, sometimes, extras=None, env=None):
         """
@@ -819,7 +819,7 @@ class Metadata(object):
         :param extras: A list of optional components being requested.
         :param env: An optional environment for marker evaluation.
         """
-        if self.legacy:
+        if self._legacy:
             if sometimes:
                 raise NotImplementedError
             result = always
@@ -836,8 +836,8 @@ class Metadata(object):
                     result.extend(d['dependencies'])
             if 'test' in extras:
                 extras.remove('test')
-                always = self.data.get('test_requires', [])
-                sometimes = self.data.get('test_may_require', [])
+                always = self._data.get('test_requires', [])
+                sometimes = self._data.get('test_may_require', [])
                 # A recursive call, but it should terminate since 'test'
                 # has been removed from the extras
                 result.extend(self.get_requirements(always, sometimes,
@@ -846,30 +846,30 @@ class Metadata(object):
 
     @property
     def source_url(self):
-        if self.legacy:
-            return self.legacy['Download-URL']
-        return self.data.get('source_url')
+        if self._legacy:
+            return self._legacy['Download-URL']
+        return self._data.get('source_url')
 
     @source_url.setter
     def source_url(self, value):
-        if self.legacy:
-            self.legacy['Download-URL'] = value
+        if self._legacy:
+            self._legacy['Download-URL'] = value
         else:
-            self.data['source_url'] = value
+            self._data['source_url'] = value
 
     @property
     def dependencies(self):
-        if self.legacy:
+        if self._legacy:
             raise NotImplementedError
         else:
-            return extract_by_key(self.data, self.DEPENDENCY_KEYS)
+            return extract_by_key(self._data, self.DEPENDENCY_KEYS)
 
     @dependencies.setter
     def dependencies(self, value):
-        if self.legacy:
+        if self._legacy:
             raise NotImplementedError
         else:
-            self.data.update(value)
+            self._data.update(value)
 
     # These are currently unused because many existing dists will
     # have problems
@@ -891,19 +891,19 @@ class Metadata(object):
             raise MetadataMissingError(msg)
 
     def validate(self):
-        if self.legacy:
-            missing, warnings = self.legacy.check(True)
+        if self._legacy:
+            missing, warnings = self._legacy.check(True)
             if missing or warnings:
                 logger.warning('Metadata: missing: %s, warnings: %s',
                                missing, warnings)
         else:
-            self.validate_mapping(self.data)
+            self.validate_mapping(self._data)
 
     def todict(self):
-        if self.legacy:
-            return self.legacy.todict(True)
+        if self._legacy:
+            return self._legacy.todict(True)
         else:
-            result = extract_by_key(self.data, self.INDEX_KEYS)
+            result = extract_by_key(self._data, self.INDEX_KEYS)
             return result
 
     LEGACY_MAPPING = {
@@ -916,9 +916,9 @@ class Metadata(object):
     }
 
     def _from_legacy(self):
-        assert self.legacy and not self.data
+        assert self._legacy and not self._data
         result = { 'metadata_version': self.METADATA_VERSION }
-        lmd = self.legacy
+        lmd = self._legacy
         for nk, ok in self.LEGACY_MAPPING.items():
             result[nk] = lmd[ok]
         kw = lmd['Keywords']
@@ -932,9 +932,9 @@ class Metadata(object):
         return result
 
     def _to_legacy(self):
-        assert self.data and not self.legacy
+        assert self._data and not self._legacy
         result = LegacyMetadata()
-        nmd = self.data
+        nmd = self._data
         for nk, ok in self.LEGACY_MAPPING.items():
             result[ok] = nmd[nk]
         result['Requires-Dist'] = self.requires + self.distributes
@@ -947,19 +947,19 @@ class Metadata(object):
             raise ValueError('Exactly one of path and fileobj is needed')
         self.validate()
         if legacy:
-            if self.legacy:
-                legacy_md = self.legacy
+            if self._legacy:
+                legacy_md = self._legacy
             else:
                 legacy_md = self._to_legacy()
             if path:
-                self.legacy.write(path, skip_unknown=skip_unknown)
+                self._legacy.write(path, skip_unknown=skip_unknown)
             else:
-                self.legacy.write_file(fileobj, skip_unknown=skip_unknown)
+                self._legacy.write_file(fileobj, skip_unknown=skip_unknown)
         else:
-            if self.legacy:
+            if self._legacy:
                 d = self._from_legacy()
             else:
-                d = self.data
+                d = self._data
             if fileobj:
                 json.dump(d, fileobj, ensure_ascii=True, indent=2)
             else:
@@ -967,7 +967,7 @@ class Metadata(object):
                     json.dump(d, f, ensure_ascii=True, indent=2)
 
     def add_requirements(self, requirements):
-        if self.legacy:
-            self.legacy.add_requirements(requirements)
+        if self._legacy:
+            self._legacy.add_requirements(requirements)
         else:
-            self.data.setdefault('requires', []).extend(requirements)
+            self._data.setdefault('requires', []).extend(requirements)
