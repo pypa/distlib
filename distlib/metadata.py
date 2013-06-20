@@ -667,7 +667,7 @@ class Metadata(object):
 
     INDEX_KEYS = 'name version license summary description'
 
-    DEPENDENCY_KEYS = ('extras requires may_require test_requires '
+    DEPENDENCY_KEYS = ('extras run_requires run_may_require test_requires '
                        'test_may_require build_requires build_may_require '
                        'dev_requires dev_may_require distributes provides '
                        'obsoleted_by supports_environments')
@@ -715,8 +715,8 @@ class Metadata(object):
     common_keys = set(('name', 'version', 'license', 'keywords', 'summary'))
 
     mapped_keys = {
-        'requires': ('Requires-Dist', list),
-        'may_require': (None, list),
+        'run_requires': ('Requires-Dist', list),
+        'run_may_require': (None, list),
         'build_requires': ('Setup-Requires-Dist', list),
         'build_may_require': (None, list),
         'dev_requires': (None, list),
@@ -724,7 +724,10 @@ class Metadata(object):
         'test_requires': (None, list),
         'test_may_require': (None, list),
         'distributes': (None, list),
+        'may_distribute': (None, list),
         'classifiers': ('Classifier', list),
+        'source_url': ('Download-URL', None),
+        'metadata_version': ('Metadata-Version', None),
     }
 
     def __getattribute__(self, key):
@@ -738,7 +741,8 @@ class Metadata(object):
                 else:
                     result = self._legacy.get(lk)
             else:
-                result = self._data.setdefault(key, maker())
+                value = None if maker is None else maker()
+                result = self._data.setdefault(key, value)
         elif key not in common:
             result = object.__getattribute__(self, key)
         elif self._legacy:
@@ -772,20 +776,6 @@ class Metadata(object):
                 self._legacy[key] = value
             else:
                 self._data[key] = value
-
-    @property
-    def metadata_version(self):
-        if self._legacy:
-            return self._legacy['Metadata-Version']
-        return self._data['metadata_version']
-
-    @metadata_version.setter
-    def metadata_version(self, value):
-        if self._legacy:
-            self._legacy['Metadata-Version'] = value
-        else:
-            assert value == METADATA_VERSION
-            self._data['metadata_version'] = value
 
     @property
     def name_and_version(self):
@@ -843,19 +833,6 @@ class Metadata(object):
                 result.extend(self.get_requirements(always, sometimes,
                               extras=extras, env=env))
         return result
-
-    @property
-    def source_url(self):
-        if self._legacy:
-            return self._legacy['Download-URL']
-        return self._data.get('source_url')
-
-    @source_url.setter
-    def source_url(self, value):
-        if self._legacy:
-            self._legacy['Download-URL'] = value
-        else:
-            self._data['source_url'] = value
 
     @property
     def dependencies(self):
@@ -970,4 +947,4 @@ class Metadata(object):
         if self._legacy:
             self._legacy.add_requirements(requirements)
         else:
-            self._data.setdefault('requires', []).extend(requirements)
+            self._data.setdefault('run_requires', []).extend(requirements)

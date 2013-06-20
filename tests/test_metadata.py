@@ -488,7 +488,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         md.validate()
         self.assertEqual(md.name, 'foo')
         self.assertEqual(md.version, '0.3.4')
-        self.assertEqual(md.requires, [])
+        self.assertEqual(md.run_requires, [])
         self.assertEqual(md.distributes, [])
         self.assertEqual(md.provides, ['foo (0.3.4)'])
 
@@ -498,7 +498,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         md = Metadata(path=fn)
         md.validate()
         self.assertIsNotNone(md._legacy)
-        self.assertEqual(set(md.requires), set(['towel-stuff (0.1)', 'nut']))
+        self.assertEqual(set(md.run_requires), set(['towel-stuff (0.1)', 'nut']))
         self.assertEqual(md.metadata_version, '1.2')
         self.assertEqual(md.version, '2.0.0.9')
         self.assertEqual(md.distributes, [])
@@ -520,25 +520,25 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         md.name = 'bar'
         md.version = '0.5'
         md.add_requirements(['foo (0.1.2)'])
-        self.assertEqual(md.requires, ['foo (0.1.2)'])
+        self.assertEqual(md.run_requires, ['foo (0.1.2)'])
 
         fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
                           'METADATA')
         md = Metadata(path=fn)
         md.add_requirements(['foo (0.1.2)'])
-        self.assertEqual(set(md.requires),
+        self.assertEqual(set(md.run_requires),
                          set(['towel-stuff (0.1)', 'nut', 'foo (0.1.2)']))
 
     def test_requirements(self):
         fn = os.path.join(HERE, 'pymeta.json')
         md = Metadata(path=fn)
-        self.assertEqual(md.requires, ['foo'])
+        self.assertEqual(md.run_requires, ['foo'])
         self.assertEqual(md.distributes, ['bar (1.0)'])
-        r = md.get_requirements([], md.may_require)
+        r = md.get_requirements([], md.run_may_require)
         self.assertEqual(r, [])
-        r = md.get_requirements([], md.may_require, extras=['certs'])
+        r = md.get_requirements([], md.run_may_require, extras=['certs'])
         self.assertEqual(r, ['certifi (0.0.8)'])
-        r = md.get_requirements([], md.may_require, extras=['certs', 'ssl'])
+        r = md.get_requirements([], md.run_may_require, extras=['certs', 'ssl'])
         if sys.platform != 'win32':
             self.assertEqual(r, ['certifi (0.0.8)'])
         else:
@@ -546,7 +546,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                                           'wincertstore (0.1)']))
         for ver in ('2.5', '2.4'):
             env = {'python_version': ver}
-            r = md.get_requirements([], md.may_require,
+            r = md.get_requirements([], md.run_may_require,
                                     extras=['certs', 'ssl'], env=env)
             if sys.platform != 'win32':
                 self.assertEqual(set(r), set(['certifi (0.0.8)',
@@ -559,25 +559,25 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                 self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
                                               'wincertstore (0.1)']))
         env['sys_platform'] = 'win32'
-        r = md.get_requirements([], md.may_require,
+        r = md.get_requirements([], md.run_may_require,
                                 extras=['certs', 'ssl'], env=env)
         self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
                                       'ctypes (1.0.2)', 'wincertstore (0.1)']))
         env['python_version'] = '2.5'
-        r = md.get_requirements([], md.may_require,
+        r = md.get_requirements([], md.run_may_require,
                                 extras=['certs', 'ssl'], env=env)
         self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
                                       'wincertstore (0.1)']))
-        r = md.get_requirements([], md.may_require, extras=['test'])
+        r = md.get_requirements([], md.run_may_require, extras=['test'])
         self.assertEqual(r, ['nose'])
-        r = md.get_requirements([], md.may_require, extras=['test', 'udp'])
+        r = md.get_requirements([], md.run_may_require, extras=['test', 'udp'])
         self.assertEqual(set(r), set(['nose', 'nose-udp']))
-        r = md.get_requirements(md.requires, md.may_require,
+        r = md.get_requirements(md.run_requires, md.run_may_require,
                                 extras=['test', 'udp'])
         self.assertEqual(set(r), set(['foo', 'nose', 'nose-udp']))
         self.assertEqual(md.dependencies, {
             'provides': ['foobar (0.1)'],
-            'requires': ['foo'],
+            'run_requires': ['foo'],
             'distributes': ['bar (1.0)'],
             'extras': ['ssl', 'certs'],
             'build_requires': [],
@@ -588,7 +588,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                     'extra': 'udp',
                 }
             ],
-            'may_require': [
+            'run_may_require': [
                 {
                     'dependencies': ['certifi (0.0.8)'],
                     'extra': 'certs',

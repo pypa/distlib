@@ -12,10 +12,10 @@
     "foo",
     "bar"
   ],
-  "requires": ["foo"],
+  "run_requires": ["foo"],
   "distributes": ["bar (1.0)"],
   "extras": ["ssl", "certs"],
-  "may_require": [
+  "run_may_require": [
     {
       "dependencies": ["certifi (0.0.8)"],
       "extra": "certs"

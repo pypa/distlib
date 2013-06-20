@@ -203,6 +203,7 @@ class LocatorTestCase(unittest.TestCase):
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
                                   'pytest-runner'])
+        import pdb; pdb.set_trace()
         dists, problems = finder.find('irc (5.0.1)', True)  # include tests
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
@@ -237,13 +238,13 @@ class LocatorTestCase(unittest.TestCase):
         # Now test with extra in dependency
         locator.clear_cache()
         dummy = make_dist('dummy', '0.1')
-        dummy.metadata.requires = ['Jinja2 [i18n]']
+        dummy.metadata.run_requires = ['Jinja2 [i18n]']
         dists, problems = finder.find(dummy)
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
         self.assertTrue(actual[0].startswith('Babel ('))
         locator.clear_cache()
-        dummy.metadata.requires = ['Jinja2']
+        dummy.metadata.run_requires = ['Jinja2']
         dists, problems = finder.find(dummy)
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
@@ -278,7 +279,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertIsNotNone(d)
         self.assertEqual(d.name_and_version, 'SQLAlchemy (0.6beta3)')
         dist = make_dist('dummy', '0.1')
-        dist.metadata.requires = [REQT]
+        dist.metadata.run_requires = [REQT]
         dists, problems = finder.find(dist, prereleases=True)
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
