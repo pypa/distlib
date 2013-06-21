@@ -272,9 +272,9 @@ class LocatorTestCase(unittest.TestCase):
             scheme='legacy')
         REQT = 'SQLAlchemy (>0.5.8, < 0.6)'
         finder = DependencyFinder(locator)
-        d = locate(REQT)
+        d = locator.locate(REQT)
         self.assertIsNone(d)
-        d = locate(REQT, True)
+        d = locator.locate(REQT, True)
         self.assertIsNotNone(d)
         self.assertEqual(d.name_and_version, 'SQLAlchemy (0.6beta3)')
         dist = make_dist('dummy', '0.1')
