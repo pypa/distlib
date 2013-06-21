@@ -20,7 +20,7 @@ from . import DistlibException
 from .compat import StringIO, string_types
 from .markers import interpret
 from .util import extract_by_key
-from .version import get_scheme
+from .version import get_scheme, PEP426_VERSION_RE
 
 logger = logging.getLogger(__name__)
 
@@ -661,6 +661,12 @@ class Metadata(object):
     instance which handles the key-value metadata format.
     """
 
+    METADATA_VERSION_MATCHER = re.compile('^\d+(\.\d+)*$')
+
+    NAME_MATCHER = re.compile('^[0-9A-Z]([0-9A-Z_.-]*[0-9A-Z])?$', re.I)
+
+    VERSION_MATCHER = PEP426_VERSION_RE
+
     METADATA_VERSION = '2.0'
 
     MANDATORY_KEYS = ('name', 'version')
@@ -671,6 +677,12 @@ class Metadata(object):
                        'test_may_require build_requires build_may_require '
                        'dev_requires dev_may_require distributes provides '
                        'obsoleted_by supports_environments')
+
+    SYNTAX_VALIDATORS = {
+        'metadata_version': (METADATA_VERSION_MATCHER, ()),
+        'name': (NAME_MATCHER, ()),
+        'version': (VERSION_MATCHER, ('legacy',))
+    }
 
     __slots__ = ('_legacy', '_data', 'scheme')
 
@@ -751,7 +763,18 @@ class Metadata(object):
             result = self._data.get(key)
         return result
 
+    def _validate_value(self, key, value):
+        if key in self.SYNTAX_VALIDATORS:
+            pattern, exclusions = self.SYNTAX_VALIDATORS[key]
+            if self.scheme not in exclusions:
+                m = pattern.match(value)
+                if not m:
+                    import pdb; pdb.set_trace()
+                    raise ValueError('%r is an invalid value for the '
+                                     '%r property' % (value, key))
+
     def __setattr__(self, key, value):
+        self._validate_value(key, value)
         common = object.__getattribute__(self, 'common_keys')
         mapped = object.__getattribute__(self, 'mapped_keys')
         if key in mapped:
@@ -848,14 +871,6 @@ class Metadata(object):
         else:
             self._data.update(value)
 
-    # These are currently unused because many existing dists will
-    # have problems
-#    def validate_name(self, name):
-#        return name
-
-#    def validate_version(self, version):
-#        return version
-
     def validate_mapping(self, mapping):
         if mapping.get('metadata_version') != self.METADATA_VERSION:
             raise MetadataUnrecognizedVersionError()
@@ -948,3 +963,9 @@ class Metadata(object):
             self._legacy.add_requirements(requirements)
         else:
             self._data.setdefault('run_requires', []).extend(requirements)
+
+    def __repr__(self):
+        name = self.name or '(no name)'
+        version = self.version or 'no version'
+        return '<%s %s %s (%s)>' % (self.__class__.__name__,
+                                    self.metadata_version, name, version)
