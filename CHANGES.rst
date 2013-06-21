@@ -10,7 +10,7 @@ Released: Not yet.
 
     - Added support for PEP 426 JSON metadata (pymeta.json).
 
-    - Fixed a bug in parsing legacy metadata from .egg directories
+    - Fixed a bug in parsing legacy metadata from .egg directories.
 
 - index
 
