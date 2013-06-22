@@ -351,7 +351,7 @@ class Distribution(object):
                                                   env=self.context))
 
     @property
-    def requires(self):
+    def run_requires(self):
         return self._get_requirements('run_requires', 'run_may_require')
 
     @property
@@ -1203,7 +1203,7 @@ def make_graph(dists, scheme='default'):
 
     # now make the edges
     for dist in dists:
-        requires = (dist.requires | dist.build_requires)
+        requires = (dist.run_requires | dist.build_requires)
         for req in requires:
             try:
                 matcher = scheme.matcher(req)

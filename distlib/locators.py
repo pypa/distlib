@@ -1090,7 +1090,7 @@ class DependencyFinder(object):
                 if other != dist:
                     self.try_to_replace(dist, other, problems)
 
-            ireqts = dist.requires
+            ireqts = dist.run_requires
             sreqts = dist.build_requires
             ereqts = set()
             if not tests or dist not in install_dists:

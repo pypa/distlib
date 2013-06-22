@@ -118,9 +118,8 @@ not instantiated directly; rather, they are returned by querying
 :class:`DistributionPath` for distributions. To create a ``DistributionPath``
 instance, you can do ::
 
-   >>> from distlib.database import DistributionPath
-   >>> dist_path = DistributionPath()
-   >>>
+    >>> from distlib.database import DistributionPath
+    >>> dist_path = DistributionPath()
 
 Querying a path for distributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,9 +128,8 @@ In this most basic form, ``dist_path`` will provide access to all non-legacy
 distributions on ``sys.path``. To get these distributions, you invoke the
 :meth:`get_distributions` method, which returns an iterable. Let's try it::
 
-   >>> list(dist_path.get_distributions())
-   []
-   >>>
+    >>> list(dist_path.get_distributions())
+    []
 
 This may seem surprising if you've just started looking at ``distlib``,
 as you won't *have* any non-legacy distributions.
@@ -143,51 +141,46 @@ To include distributions created and installed using ``setuptools`` or
 ``distribute``, you need to create the ``DistributionPath`` by specifying an
 additional keyword argument, like so::
 
-   >>> dist_path = DistributionPath(include_egg=True)
-   >>>
+    >>> dist_path = DistributionPath(include_egg=True)
 
 and then you'll get a less surprising result::
 
-   >>> len(list(dist_path.get_distributions()))
-   77
-   >>>
+    >>> len(list(dist_path.get_distributions()))
+    77
 
 The exact number returned will be different for you, of course. You can ask
 for a particular distribution by name, using the :meth:`get_distribution`
 method::
 
-   >>> dist_path.get_distribution('setuptools')
-   <EggInfoDistribution u'setuptools' 0.6c11 at '/usr/lib/python2.7/dist-packages/setuptools.egg-info'>
-   >>>
+    >>> dist_path.get_distribution('setuptools')
+    <EggInfoDistribution u'setuptools' 0.6c11 at '/usr/lib/python2.7/dist-packages/setuptools.egg-info'>
 
 If you want to look at a specific path other than ``sys.path``, you specify it
 as a positional argument to the :class:`DistributionPath` constructor::
 
-   >>> from pprint import pprint
-   >>> special_dists = DistributionPath(['tests/fake_dists'], include_egg=True)
-   >>> pprint([d.name for d in special_dists.get_distributions()])
-   ['babar',
-    'choxie',
-    'towel-stuff',
-    'grammar',
-    'truffles',
-    'coconuts-aster',
-    'nut',
-    'bacon',
-    'banana',
-    'cheese',
-    'strawberry']
-   >>>
+    >>> from pprint import pprint
+    >>> special_dists = DistributionPath(['tests/fake_dists'], include_egg=True)
+    >>> pprint([d.name for d in special_dists.get_distributions()])
+    ['babar',
+     'choxie',
+     'towel-stuff',
+     'grammar',
+     'truffles',
+     'coconuts-aster',
+     'nut',
+     'bacon',
+     'banana',
+     'cheese',
+     'strawberry']
 
 or, if you leave out egg-based distributions::
 
-   >>> special_dists = DistributionPath(['tests/fake_dists'])
-   >>> pprint([d.name for d in special_dists.get_distributions()])
-   ['babar',
-    'choxie',
-    'towel-stuff',
-    'grammar']
-   >>>
+    >>> special_dists = DistributionPath(['tests/fake_dists'])
+    >>> pprint([d.name for d in special_dists.get_distributions()])
+    ['babar',
+     'choxie',
+     'towel-stuff',
+     'grammar']
 
 Distribution properties
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -300,30 +293,31 @@ instance of :class:`distlib.database.Distribution` which can be queried for
 any distributions it requires, so that they can also be located if desired.
 Here is a basic example::
 
-      >>> from distlib.locators import locate
-      >>> flask = locate('flask')
-      >>> flask
-      <Distribution Flask (0.9) [http://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz]>
-      >>> dependencies = [locate(r) for r in flask.get_requirements('install')]
-      >>> from pprint import pprint
-      >>> pprint(dependencies)
-      [<Distribution Werkzeug (0.8.3) [http://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.8.3.tar.gz]>,
-      <Distribution Jinja2 (2.6) [http://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.6.tar.gz]>]
-      >>>
+    >>> from distlib.locators import locate
+    >>> flask = locate('flask')
+    >>> flask
+    <Distribution Flask (0.10.1) [https://pypi.python.org/packages/source/F/Flask/Flask-0.10.1.tar.gz]>
+    >>> dependencies = [locate(r) for r in flask.run_requires]
+    >>> from pprint import pprint
+    >>> pprint(dependencies)
+    [<Distribution Werkzeug (0.9.1) [https://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.9.1.tar.gz]>,
+     <Distribution Jinja2 (2.7) [https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.7.tar.gz]>,
+     <Distribution itsdangerous (0.21) [https://pypi.python.org/packages/source/i/itsdangerous/itsdangerous-0.21.tar.gz]>]
+    >>>
 
-The values returned by :meth:`get_requirements` are just strings. Here's another example,
+The values in the ``run_requires`` property are just strings. Here's another example,
 showing a little more detail::
 
-      >>> authy = locate('authy')
-      >>> authy.get_requirements('install')
-      [u'httplib2 (>= 0.7, < 0.8)', u'simplejson']
-      >>> authy
-      <Distribution authy (0.0.4) [http://pypi.python.org/packages/source/a/authy/authy-0.0.4.tar.gz]>
-      >>> deps = [locate(r) for r in authy.get_requirements('install')]
-      >>> pprint(deps)
-      [<Distribution httplib2 (0.7.6) [http://pypi.python.org/packages/source/h/httplib2/httplib2-0.7.6.tar.gz]>,
-      <Distribution simplejson (2.6.2) [http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.2.tar.gz]>]
-      >>>
+    >>> authy = locate('authy')
+    >>> authy.run_requires
+    set(['httplib2 (>= 0.7, < 0.8)', 'simplejson'])
+    >>> authy
+    <Distribution authy (1.0.0) [http://pypi.python.org/packages/source/a/authy/authy-1.0.0.tar.gz]>
+    >>> deps = [locate(r) for r in authy.run_requires]
+    >>> pprint(deps)
+    [<Distribution httplib2 (0.7.7) [http://pypi.python.org/packages/source/h/httplib2/httplib2-0.7.7.zip]>,
+     <Distribution simplejson (3.3.0) [http://pypi.python.org/packages/source/s/simplejson/simplejson-3.3.0.tar.gz]>]
+    >>>
 
 Note that the constraints on the dependencies were honoured by :func:`locate`.
 
@@ -393,11 +387,11 @@ The ``locators`` package also contains a function,
 :func:`get_all_distribution_names`, which retrieves the names of all
 distributions registered on PyPI::
 
-      >>> from distlib.locators import get_all_distribution_names
-      >>> names = get_all_package_names()
-      >>> len(names)
-      24801
-      >>>
+    >>> from distlib.locators import get_all_distribution_names
+    >>> names = get_all_distribution_names()
+    >>> len(names)
+    31905
+    >>>
 
 This is implemented using the XML-RPC API.
 
@@ -453,8 +447,8 @@ holds the index metadata used for registering. A simple example::
 
     >>> from distlib.metadata import Metadata
     >>> metadata = Metadata()
-    >>> metadata['Name'] = 'tatterdemalion'
-    >>> metadata['Version'] = '0.1'
+    >>> metadata.name = 'tatterdemalion'
+    >>> metadata.version = '0.1'
     >>> # other fields omitted
     >>> response = index.register(metadata)
 
@@ -737,93 +731,42 @@ Using the metadata and markers APIs
 
 .. currentmodule:: distlib.metadata
 
-The metadata API is exposed through a :class:`Metadata` class, which largely
-acts as a specialised dictionary. This class can read and write metadata files
-complying with any of the defined versions: 1.0 (:pep:`241`), 1.1 (:pep:`314`),
-1.2 (:pep:`345`) and 2.0 (:pep:`426`). It implements methods to parse and write
-Metadata files and provides a mapping interface to the individual metadata
-fields.
+The metadata API is exposed through a :class:`Metadata` class. This class can
+read and write metadata files complying with any of the defined versions: 1.0
+(:pep:`241`), 1.1 (:pep:`314`), 1.2 (:pep:`345`) and 2.0 (:pep:`426`). It
+implements methods to parse and write metadata files.
 
-The :pep:`345` / :pep:`426` implementation supports the micro-language for the
-environment markers and displays warnings when versions that are supposed to be
-:pep:`386`/ :pep:`426`-compliant are violating the specification.
 
 Reading metadata
 ~~~~~~~~~~~~~~~~
 
 The :class:`Metadata` class can be instantiated with the path of the
-metadata file and provides a dict-like interface to the values::
+metadata file. Here's an example with legacy metadata::
 
-   >>> from distlib.metadata import Metadata
-   >>> metadata = Metadata('PKG-INFO')
-   >>> metadata.keys()[:5]
-   ('Metadata-Version', 'Name', 'Version', 'Platform', 'Supported-Platform')
-   >>> metadata['Name']
-   'CLVault'
-   >>> metadata['Version']
-   '0.5'
-   >>> metadata['Requires-Dist']
-   ["pywin32; sys.platform == 'win32'", "Sphinx"]
-   >>>
+    >>> from distlib.metadata import Metadata
+    >>> metadata = Metadata(path='PKG-INFO')
+    >>> metadata.name
+    'CLVault'
+    >>> metadata.version
+    '0.5'
+    >>> metadata.run_requires
+    ['keyring']
 
-The fields that support environment markers can be automatically ignored if
-the object is instantiated using the ``platform_dependent`` option.
-:class:`Metadata` will interpret in this case the markers and will automatically
-remove the fields that are not compliant with the running environment. Here's an
-example under Mac OS X. The win32 dependency we saw earlier is ignored::
+Instead of using the ``path`` keyword argument to specify a file location, you
+can also specify a ``fileobj`` keyword argument to specify a file-like object
+which contains the data.
 
-   >>> from distlib.metadata import Metadata
-   >>> metadata = Metadata('PKG-INFO', platform_dependent=True)
-   >>> metadata['Requires-Dist']
-   ['Sphinx']
-   >>>
-
-If you want to provide your own execution context, let's say to test the
-metadata under a particular environment that is not the current environment,
-you can provide your own values in the ``execution_context`` option, which
-is the dict that may contain one or more keys of the context the micro-language
-expects.
-
-Here's an example, simulating a win32 environment::
-
-   >>> from distlib.metadata import Metadata
-   >>> context = {'sys.platform': 'win32'}
-   >>> metadata = Metadata('PKG-INFO', platform_dependent=True,
-   ...                     execution_context=context)
-   ...
-   >>> metadata['Requires-Dist'] = ["pywin32; sys.platform == 'win32'",
-   ...                              "Sphinx"]
-   ...
-   >>> metadata['Requires-Dist']
-   ['pywin32', 'Sphinx']
-   >>>
 
 Writing metadata
 ~~~~~~~~~~~~~~~~
 
 Writing metadata can be done using the ``write`` method::
 
-   >>> metadata.write('/to/my/PKG-INFO')
-   >>>
+   >>> metadata.write(path='/to/my/pymeta.json')
 
-The class will pick the best version for the metadata, depending on the values
-provided. If all the values provided exist in all versions, the class will
-use :attr:`PKG_INFO_PREFERRED_VERSION`. It is set by default to 1.0, the most
-widespread version.
+You can also specify a file-like object to write to, using the ``fileobj``
+keyword argument.
 
-Conflict checking and best version
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Some fields in :pep:`345` have to comply with the version number specification
-defined in :pep:`386` / :pep:`426`.  When they don't comply, a warning is
-emitted::
-
-   >>> from distlib.metadata import Metadata
-   >>> metadata = Metadata()
-   >>> metadata['Requires-Dist'] = ['Funky (Groovie)']
-   "Funky (Groovie)" is not a valid predicate
-   >>> metadata['Requires-Dist'] = ['Funky (1.2)']
-   >>>
 
 Using markers
 ~~~~~~~~~~~~~
@@ -835,9 +778,9 @@ Using markers
 Environment markers are implemented in the :mod:`distlib.markers` package
 and accessed via a single function, :func:`interpret`.
 
-See PEP 345 <http://www.python.org/dev/peps/pep-0345/#environment-markers>`_
+See `PEP 345 <http://www.python.org/dev/peps/pep-0345/#environment-markers>`_
 for more information about environment markers. They are used for some metadata
-fields. The :func:`interpret` function takes a single string argument which
+fields. The :func:`interpret` function takes a string argument which
 represents a Boolean expression, and returns either ``True`` or ``False``::
 
     >>> from distlib.markers import interpret
@@ -884,36 +827,35 @@ Access to resources in the file system
 
 You can access these resources like so::
 
-   >>> from distlib.resources import finder
-   >>> f = finder('foofoo')
-   >>> r = f.find('foo_resource.bin')
-   >>> r.is_container
-   False
-   >>> r.size
-   10
-   >>> r.bytes
-   b'more_data\n'
-   >>> s = r.as_stream()
-   >>> s.read()
-   b'more_data\n'
-   >>> s.close()
-   >>> r = f.find('nested')
-   >>> r.is_container
-   True
-   >>> r.resources
-   {'nested_resource.bin'}
-   >>> r = f.find('nested/nested_resource.bin')
-   >>> r.size
-   12
-   >>> r.bytes
-   b'nested data\n'
-   >>> f = finder('foofoo.bar')
-   >>> r = f.find('bar_resource.bin')
-   >>> r.is_container
-   False
-   >>> r.bytes
-   b'data\n'
-   >>>
+    >>> from distlib.resources import finder
+    >>> f = finder('foofoo')
+    >>> r = f.find('foo_resource.bin')
+    >>> r.is_container
+    False
+    >>> r.size
+    10
+    >>> r.bytes
+    b'more_data\n'
+    >>> s = r.as_stream()
+    >>> s.read()
+    b'more_data\n'
+    >>> s.close()
+    >>> r = f.find('nested')
+    >>> r.is_container
+    True
+    >>> r.resources
+    {'nested_resource.bin'}
+    >>> r = f.find('nested/nested_resource.bin')
+    >>> r.size
+    12
+    >>> r.bytes
+    b'nested data\n'
+    >>> f = finder('foofoo.bar')
+    >>> r = f.find('bar_resource.bin')
+    >>> r.is_container
+    False
+    >>> r.bytes
+    b'data\n'
 
 Access to resources in the ``.zip`` files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -940,18 +882,17 @@ It works the same way if the package is in a .zip file. Given the zip file
 
 You can access its resources as follows::
 
-   >>> import sys
-   >>> sys.path.append('foo.zip')
-   >>> from distlib.resources import finder
-   >>> f = finder('foo')
-   >>> r = f.find('foo_resource.bin')
-   >>> r.is_container
-   False
-   >>> r.size
-   10
-   >>> r.bytes
-   'more_data\n'
-   >>>
+    >>> import sys
+    >>> sys.path.append('foo.zip')
+    >>> from distlib.resources import finder
+    >>> f = finder('foo')
+    >>> r = f.find('foo_resource.bin')
+    >>> r.is_container
+    False
+    >>> r.size
+    10
+    >>> r.bytes
+    'more_data\n'
 
 and so on.
 
