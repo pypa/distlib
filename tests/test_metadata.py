@@ -489,7 +489,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(md.name, 'foo')
         self.assertEqual(md.version, '0.3.4')
         self.assertEqual(md.run_requires, [])
-        self.assertEqual(md.distributes, [])
+        self.assertEqual(md.meta_requires, [])
         self.assertEqual(md.provides, ['foo (0.3.4)'])
 
         # Initialise from legacy metadata
@@ -501,7 +501,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(set(md.run_requires), set(['towel-stuff (0.1)', 'nut']))
         self.assertEqual(md.metadata_version, '1.2')
         self.assertEqual(md.version, '2.0.0.9')
-        self.assertEqual(md.distributes, [])
+        self.assertEqual(md.meta_requires, [])
         self.assertEqual(set(md.provides),
                          set(['choxie (2.0.0.9)', 'truffles (1.0)']))
 
@@ -533,7 +533,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         fn = os.path.join(HERE, 'pymeta.json')
         md = Metadata(path=fn)
         self.assertEqual(md.run_requires, ['foo'])
-        self.assertEqual(md.distributes, ['bar (1.0)'])
+        self.assertEqual(md.meta_requires, ['bar (1.0)'])
         r = md.get_requirements([], md.run_may_require)
         self.assertEqual(r, [])
         r = md.get_requirements([], md.run_may_require, extras=['certs'])
@@ -578,7 +578,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(md.dependencies, {
             'provides': ['foobar (0.1)'],
             'run_requires': ['foo'],
-            'distributes': ['bar (1.0)'],
+            'meta_requires': ['bar (1.0)'],
             'extras': ['ssl', 'certs'],
             'build_requires': [],
             'test_requires': ['nose'],

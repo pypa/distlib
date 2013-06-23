@@ -678,8 +678,8 @@ class Metadata(object):
 
     DEPENDENCY_KEYS = ('extras run_requires run_may_require test_requires '
                        'test_may_require build_requires build_may_require '
-                       'dev_requires dev_may_require distributes provides '
-                       'obsoleted_by supports_environments')
+                       'dev_requires dev_may_require provides meta_requires '
+                       'meta_may_require obsoleted_by supports_environments')
 
     SYNTAX_VALIDATORS = {
         'metadata_version': (METADATA_VERSION_MATCHER, ()),
@@ -740,8 +740,8 @@ class Metadata(object):
         'dev_may_require': (None, list),
         'test_requires': (None, list),
         'test_may_require': (None, list),
-        'distributes': (None, list),
-        'may_distribute': (None, list),
+        'meta_requires': (None, list),
+        'meta_may_require': (None, list),
         'classifiers': ('Classifier', list),
         'source_url': ('Download-URL', None),
         'metadata_version': ('Metadata-Version', None),
@@ -936,7 +936,7 @@ class Metadata(object):
         nmd = self._data
         for nk, ok in self.LEGACY_MAPPING.items():
             result[ok] = nmd[nk]
-        result['Requires-Dist'] = self.requires + self.distributes
+        result['Requires-Dist'] = self.requires + self.meta_requires
         result['Setup-Requires-Dist'] = self.build_requires + self.dev_requires
         # TODO: other fields such as contacts
         return result

@@ -355,6 +355,10 @@ class Distribution(object):
         return self._get_requirements('run_requires', 'run_may_require')
 
     @property
+    def meta_requires(self):
+        return self._get_requirements('meta_requires', 'meta_may_require')
+
+    @property
     def build_requires(self):
         return self._get_requirements('build_requires', 'build_may_require')
 
