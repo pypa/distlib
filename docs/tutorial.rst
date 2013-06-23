@@ -771,7 +771,6 @@ using the following form::
     >>> metadata = Metadata(mapping=a_dictionary)
 
 
-
 Reading metadata from files and streams
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -813,10 +812,10 @@ Using markers
 Environment markers are implemented in the :mod:`distlib.markers` package
 and accessed via a single function, :func:`interpret`.
 
-See `PEP 345 <http://www.python.org/dev/peps/pep-0345/#environment-markers>`_
-for more information about environment markers. They are used for some metadata
-fields. The :func:`interpret` function takes a string argument which
-represents a Boolean expression, and returns either ``True`` or ``False``::
+See `PEP 426 <http://www.python.org/dev/peps/pep-0426/#environment-markers>`_
+for more information about environment markers. The :func:`interpret` function
+takes a string argument which represents a Boolean expression, and returns
+either ``True`` or ``False``::
 
     >>> from distlib.markers import interpret
     >>> interpret('python_version >= "1.0"')
@@ -831,6 +830,10 @@ environment::
 
     >>> interpret('python_version >= "1.0"', {'python_version': '0.5'})
     False
+
+
+You won't normally need to work with markers in this way -- they are dealt
+with by the :class:`Metadata` and :class:`Distribution` logic when needed.
 
 
 Using the resource API
