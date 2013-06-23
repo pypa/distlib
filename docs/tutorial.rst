@@ -736,9 +736,44 @@ read and write metadata files complying with any of the defined versions: 1.0
 (:pep:`241`), 1.1 (:pep:`314`), 1.2 (:pep:`345`) and 2.0 (:pep:`426`). It
 implements methods to parse and write metadata files.
 
+Instantiating metadata
+~~~~~~~~~~~~~~~~~~~~~~
 
-Reading metadata
-~~~~~~~~~~~~~~~~
+You can simply instantiate a :class:`Metadata` instance and start populating
+it::
+
+    >>> from distlib.metadata import Metadata
+    >>> md = Metadata()
+    >>> md.name = 'foo'
+    >>> md.version = '1.0'
+
+An instance so created may not be valid unless it has some minimal properties
+which meet certain constraints, as specified in
+`PEP 426 <http://www.python.org/dev/peps/pep-0426/#core-metadata>`_.
+
+These constraints aren't applicable to legacy metadata. Therefore, when
+creating :class:`Metadata` instances to deal with such metadata, you can
+specify the ``scheme`` keyword when creating the instance::
+
+    >>> legacy_metadata = Metadata(scheme='legacy')
+
+Legacy metadata is also subject to constraints, but they are less stringent
+(for example, the name and version number are less constrained).
+
+Whether dealing with current or legacy metadata. an instance's ``validate()``
+method can be called to ensure that the metadata has no missing or invalid
+data. This raises a ``DistlibException`` (either ``MetadataMissingError`` or
+``MetadataInvalidError``) if the metadata isn't valid.
+
+You can initialise an instance with a dictionary which conforms to :pep:`426`
+using the following form::
+
+    >>> metadata = Metadata(mapping=a_dictionary)
+
+
+
+Reading metadata from files and streams
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :class:`Metadata` class can be instantiated with the path of the
 metadata file. Here's an example with legacy metadata::
@@ -757,8 +792,8 @@ can also specify a ``fileobj`` keyword argument to specify a file-like object
 which contains the data.
 
 
-Writing metadata
-~~~~~~~~~~~~~~~~
+Writing metadata to paths and streams
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Writing metadata can be done using the ``write`` method::
 
@@ -1365,13 +1400,13 @@ build wheels::
 
     logger = logging.getLogger('wheeler')
 
-    from distlib.compat import configparser
-    from distlib.database import DistributionPath, make_graph
+    from distlib.compat import configparser, filter
+    from distlib.database import DistributionPath, Distribution, make_graph
     from distlib.locators import (JSONLocator, SimpleScrapingLocator,
                                   AggregatingLocator, DependencyFinder)
     from distlib.manifest import Manifest
     from distlib.metadata import Metadata
-    from distlib.util import parse_requirement
+    from distlib.util import parse_requirement, get_package_data
     from distlib.wheel import Wheel
 
     EGG_INFO_RE = re.compile(r'(-py\d\.\d)?\.egg-info', re.I)
@@ -1399,6 +1434,7 @@ build wheels::
                 extra = line[1:i]
                 extras[extra] = reqts = []
         return result
+
 
     def convert_egg_info(libdir, prefix, options):
         files = os.listdir(libdir)
@@ -1432,16 +1468,19 @@ build wheels::
                         reqts = get_requirements(f.read())
                 elif oldfn == 'PKG-INFO':
                     metadata = Metadata(path=pn)
-                    mdname = os.path.join(newdn, 'METADATA')
+                    pd = get_package_data(metadata.name, metadata.version)
+                    metadata = Metadata(mapping=pd['index-metadata'])
+                    mdname = os.path.join(newdn, 'pymeta.json')
                 if oldfn in excludes or not options.compatible:
                     os.remove(pn)
         if metadata:
-            # Use Metadata 1.2
-            metadata['Provides-Dist'] += ['%s (%s)' % (metadata.name,
-                                                       metadata.version)]
-            if reqts and reqts['install']:
-                metadata['Requires-Dist'] = reqts['install']
-            metadata.write(mdname, True)
+            # Use Metadata 1.2 or later
+            metadata.provides += ['%s (%s)' % (metadata.name,
+                                               metadata.version)]
+            # Update if not set up by get_package_data
+            if reqts and not metadata.run_requires:
+                metadata.dependencies = reqts
+            metadata.write(path=mdname)
         manifest = Manifest(os.path.dirname(libdir))
         manifest.findall()
         paths = manifest.allfiles
@@ -1463,7 +1502,7 @@ build wheels::
         if not files:
             prog = 'pip'
         else:
-            prog = os.path.join(d, files[0])
+            prog = os.path.join(d, next(files))
         cmd = [prog, 'install',
                '--no-deps', '--quiet',
                '--index-url', 'http://pypi.python.org/simple/',
@@ -1489,8 +1528,8 @@ build wheels::
         dp = DistributionPath([libdir])
         dist = next(dp.get_distributions())
         md = dist.metadata
-        result['name'] = md['Name']
-        result['version'] = md['Version']
+        result['name'] = md.name
+        result['version'] = md.version
         return result
 
 

@@ -37,6 +37,9 @@ class MetadataUnrecognizedVersionError(DistlibException):
     """Unknown metadata version number."""
 
 
+class MetadataInvalidError(DistlibException):
+    """A metadata value is invalid"""
+
 # public API of this module
 __all__ = ['Metadata', 'PKG_INFO_ENCODING', 'PKG_INFO_PREFERRED_VERSION']
 
@@ -692,15 +695,16 @@ class Metadata(object):
             raise TypeError('path, fileobj and mapping are exclusive')
         self._legacy = None
         self._data = None
+        self.scheme = scheme
         #import pdb; pdb.set_trace()
         if mapping is not None:
             try:
-                self.validate_mapping(mapping)
+                self._validate_mapping(mapping, scheme)
                 self._data = mapping
             except MetadataUnrecognizedVersionError:
                 self._legacy = LegacyMetadata(mapping=mapping, scheme=scheme)
+                self.validate()
         else:
-            self.scheme = scheme
             data = None
             if path:
                 with codecs.open(path, 'r', 'utf-8') as f:
@@ -713,7 +717,7 @@ class Metadata(object):
             else:
                 try:
                     self._data = json.loads(data)
-                    self.validate_mapping(self._data)
+                    self._validate_mapping(self._data, scheme)
                 except ValueError:
                     # Note: MetadataUnrecognizedVersionError does not
                     # inherit from ValueError (it's a DistlibException,
@@ -723,6 +727,7 @@ class Metadata(object):
                     # that to propagate
                     self._legacy = LegacyMetadata(fileobj=StringIO(data),
                                                   scheme=scheme)
+                    self.validate()
 
     common_keys = set(('name', 'version', 'license', 'keywords', 'summary'))
 
@@ -763,15 +768,15 @@ class Metadata(object):
             result = self._data.get(key)
         return result
 
-    def _validate_value(self, key, value):
+    def _validate_value(self, key, value, scheme=None):
         if key in self.SYNTAX_VALIDATORS:
             pattern, exclusions = self.SYNTAX_VALIDATORS[key]
-            if self.scheme not in exclusions:
+            if (scheme or self.scheme) not in exclusions:
                 m = pattern.match(value)
                 if not m:
-                    import pdb; pdb.set_trace()
-                    raise ValueError('%r is an invalid value for the '
-                                     '%r property' % (value, key))
+                    raise MetadataInvalidError('%r is an invalid value for '
+                                               'the %r property' % (value,
+                                                                    key))
 
     def __setattr__(self, key, value):
         self._validate_value(key, value)
@@ -871,7 +876,7 @@ class Metadata(object):
         else:
             self._data.update(value)
 
-    def validate_mapping(self, mapping):
+    def _validate_mapping(self, mapping, scheme):
         if mapping.get('metadata_version') != self.METADATA_VERSION:
             raise MetadataUnrecognizedVersionError()
         missing = []
@@ -881,6 +886,8 @@ class Metadata(object):
         if missing:
             msg = 'Missing metadata items: %s' % ', '.join(missing)
             raise MetadataMissingError(msg)
+        for k, v in mapping.items():
+            self._validate_value(k, v, scheme)
 
     def validate(self):
         if self._legacy:
@@ -889,7 +896,7 @@ class Metadata(object):
                 logger.warning('Metadata: missing: %s, warnings: %s',
                                missing, warnings)
         else:
-            self.validate_mapping(self._data)
+            self._validate_mapping(self._data, self.scheme)
 
     def todict(self):
         if self._legacy:

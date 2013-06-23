@@ -619,7 +619,6 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                            'METADATA')
         md = Metadata(path=sfn)
         md.write(path=dfn)
-        import pdb; pdb.set_trace()
         with codecs.open(dfn, 'r', 'utf-8') as f:
             data = json.load(f)
         self.assertEqual(data, {
