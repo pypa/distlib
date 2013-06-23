@@ -481,9 +481,9 @@ def _speed_range(min_speed, max_speed):
     return tuple(['%d KB/s' % v for v in range(min_speed,
                                                max_speed + 1)])
 
-def _eta_range(min_eta, max_eta):
-    return tuple(['ETA : 00:00:%02d' % v for v in range(min_eta,
-                                                        max_eta + 1)])
+def _eta_range(min_eta, max_eta, prefix='ETA '):
+    msg = prefix + ': 00:00:%02d'
+    return tuple([msg % v for v in range(min_eta, max_eta + 1)])
 
 class ProgressTestCase(unittest.TestCase):
     def test_basic(self):
@@ -506,7 +506,7 @@ class ProgressTestCase(unittest.TestCase):
             (' 70 %', _eta_range(1, 1), speed1),
             (' 80 %', _eta_range(1, 1), speed1),
             (' 90 %', _eta_range(0, 0), speed1),
-            ('100 %', 'Done: 00:00:04', speed2),
+            ('100 %', _eta_range(4, 5, 'Done'), speed2),
         )
         bar = Progress(maxval=100000).start()
         for i, v in enumerate(range(10000, 100000, 10000)):
@@ -519,7 +519,7 @@ class ProgressTestCase(unittest.TestCase):
         bar.stop()
         p, e, s = expected[i + 1]
         self.assertEqual(bar.percentage, p)
-        self.assertEqual(bar.ETA, e)
+        self.assertIn(bar.ETA, e, '%s != %s: %s' % (bar.ETA, e, p))
         self.assertIn(bar.speed, s)
 
     def test_unknown(self):
