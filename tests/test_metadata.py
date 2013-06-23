@@ -619,6 +619,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                            'METADATA')
         md = Metadata(path=sfn)
         md.write(path=dfn)
+        import pdb; pdb.set_trace()
         with codecs.open(dfn, 'r', 'utf-8') as f:
             data = json.load(f)
         self.assertEqual(data, {
@@ -629,7 +630,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
             'summary': 'Chocolate with a kick!',
             'description': 'Chocolate with a longer kick!',
             'provides': ['truffles (1.0)', 'choxie (2.0.0.9)'],
-            'requires': ['towel-stuff (0.1)', 'nut'],
+            'run_requires': ['towel-stuff (0.1)', 'nut'],
             'build_requires': [],
             'keywords': [],
             'classifiers': [],

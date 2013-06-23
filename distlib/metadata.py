@@ -917,7 +917,7 @@ class Metadata(object):
         if kw == ['']:
             kw = []
         result['keywords'] = kw
-        result['requires'] = lmd['Requires-Dist']
+        result['run_requires'] = lmd['Requires-Dist']
         result['build_requires'] = lmd['Setup-Requires-Dist']
         result['provides'] = self.provides
         # TODO: other fields such as contacts
