@@ -281,13 +281,16 @@ class LocatorTestCase(unittest.TestCase):
         dist.metadata.run_requires = [REQT]
         dists, problems = finder.find(dist, prereleases=True)
         self.assertFalse(problems)
-        actual = sorted([d.name_and_version for d in dists])
-        self.assertEqual(actual[0], 'SQLAlchemy (0.6beta3)')
+        actual = sorted(dists, key=lambda o: o.name_and_version)
+        self.assertEqual(actual[0].name_and_version, 'SQLAlchemy (0.6beta3)')
         dists, problems = finder.find(dist)
-        self.assertEqual(dists, set([dist]))
-        self.assertEqual(len(problems), 1)
-        problem = problems.pop()
-        self.assertEqual(problem, ('unsatisfied', REQT))
+        # Test changed since now prereleases as found as a last resort.
+        #self.assertEqual(dists, set([dist]))
+        #self.assertEqual(len(problems), 1)
+        #problem = problems.pop()
+        #self.assertEqual(problem, ('unsatisfied', REQT))
+        self.assertEqual(dists, set([actual[0], dist]))
+        self.assertFalse(problems)
 
     def test_dist_reqts(self):
         r = 'config (<=0.3.5)'

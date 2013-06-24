@@ -317,7 +317,8 @@ class Locator(object):
                         if prereleases or not vcls(k).is_prerelease:
                             slist.append(k)
                         else:
-                            logger.debug('skipping pre-release version %s', k)
+                            logger.debug('skipping pre-release '
+                                         'version %s of %s', k, matcher.name)
                 except Exception:
                     logger.warning('error matching %s with %r', matcher, k)
                     pass # slist.append(k)
@@ -1106,6 +1107,10 @@ class DependencyFinder(object):
                 if not providers:
                     logger.debug('No providers found for %r', r)
                     provider = self.locator.locate(r, prereleases=prereleases)
+                    # If no provider is found and we didn't consider
+                    # prereleases, consider them now.
+                    if provider is None and not prereleases:
+                        provider = self.locator.locate(r, prereleases=True)
                     if provider is None:
                         logger.debug('Cannot satisfy %r', r)
                         problems.add(('unsatisfied', r))
