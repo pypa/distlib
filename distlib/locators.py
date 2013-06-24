@@ -796,6 +796,9 @@ class JSONLocator(Locator):
             for info in data.get('files', []):
                 if info['ptype'] != 'sdist' or info['pyversion'] != 'source':
                     continue
+                # We don't store summary in project metadata as it makes
+                # the data bigger for no benefit during dependency
+                # resolution
                 dist = make_dist(data['name'], info['version'],
                                  summary=data.get('summary',
                                                   'Placeholder for summary'),

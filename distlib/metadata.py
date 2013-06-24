@@ -674,7 +674,11 @@ class Metadata(object):
 
     METADATA_VERSION = '2.0'
 
-    MANDATORY_KEYS = ('name', 'version', 'summary')
+    MANDATORY_KEYS = {
+        'name': (),
+        'version': (),
+        'summary': ('legacy',),
+    }
 
     INDEX_KEYS = 'name version license summary description'
 
@@ -883,9 +887,10 @@ class Metadata(object):
         if mapping.get('metadata_version') != self.METADATA_VERSION:
             raise MetadataUnrecognizedVersionError()
         missing = []
-        for key in self.MANDATORY_KEYS:
+        for key, exclusions in self.MANDATORY_KEYS.items():
             if key not in mapping:
-                missing.append(key)
+                if scheme not in exclusions:
+                    missing.append(key)
         if missing:
             msg = 'Missing metadata items: %s' % ', '.join(missing)
             raise MetadataMissingError(msg)
