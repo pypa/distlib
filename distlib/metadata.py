@@ -683,7 +683,7 @@ class Metadata(object):
 
     SYNTAX_VALIDATORS = {
         'metadata_version': (METADATA_VERSION_MATCHER, ()),
-        'name': (NAME_MATCHER, ()),
+        'name': (NAME_MATCHER, ('legacy',)),
         'version': (VERSION_MATCHER, ('legacy',))
     }
 
