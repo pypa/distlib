@@ -797,6 +797,8 @@ class JSONLocator(Locator):
                 if info['ptype'] != 'sdist' or info['pyversion'] != 'source':
                     continue
                 dist = make_dist(data['name'], info['version'],
+                                 summary=data.get('summary',
+                                                  'Placeholder for summary'),
                                  scheme=self.scheme)
                 md = dist.metadata
                 md.source_url = info['url']

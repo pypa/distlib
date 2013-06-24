@@ -1290,7 +1290,9 @@ def make_dist(name, version, **kwargs):
     """
     A convenience method for making a dist given just a name and version.
     """
+    summary = kwargs.pop('summary', 'Placeholder for summary')
     md = Metadata(**kwargs)
     md.name = name
     md.version = version
+    md.summary = summary or 'Plaeholder for summary'
     return Distribution(md)
