@@ -673,6 +673,8 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
             md.summary = ' ' * 2048
         except MetadataInvalidError:
             pass
+        md.summary = ' ' * 2047
+        md.validate()
         md.summary = ' '
         md.validate()
 
