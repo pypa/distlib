@@ -670,9 +670,11 @@ class Metadata(object):
 
     VERSION_MATCHER = PEP426_VERSION_RE
 
+    SUMMARY_MATCHER = re.compile('.{1,2047}')
+
     METADATA_VERSION = '2.0'
 
-    MANDATORY_KEYS = ('name', 'version')
+    MANDATORY_KEYS = ('name', 'version', 'summary')
 
     INDEX_KEYS = 'name version license summary description'
 
@@ -684,7 +686,8 @@ class Metadata(object):
     SYNTAX_VALIDATORS = {
         'metadata_version': (METADATA_VERSION_MATCHER, ()),
         'name': (NAME_MATCHER, ('legacy',)),
-        'version': (VERSION_MATCHER, ('legacy',))
+        'version': (VERSION_MATCHER, ('legacy',)),
+        'summary': (SUMMARY_MATCHER, ('legacy',)),
     }
 
     __slots__ = ('_legacy', '_data', 'scheme')

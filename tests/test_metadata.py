@@ -19,7 +19,8 @@ from distlib.compat import StringIO
 from distlib.metadata import (LegacyMetadata, Metadata,
                               PKG_INFO_PREFERRED_VERSION,
                               MetadataConflictError, MetadataMissingError,
-                              MetadataUnrecognizedVersionError, _ATTR2FIELD)
+                              MetadataUnrecognizedVersionError,
+                              MetadataInvalidError, _ATTR2FIELD)
 
 from support import (LoggingCatcher, TempdirManager)
 
@@ -475,6 +476,8 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         md.name = 'dummy'
         self.assertRaises(MetadataMissingError, md.validate)
         md.version = '0.1'
+        self.assertRaises(MetadataMissingError, md.validate)
+        md.summary = 'Summary'
         md.validate()
         self.assertEqual(md.name, 'dummy')
         self.assertEqual(md.version, '0.1')
@@ -483,7 +486,8 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         md = Metadata(mapping={
                         'metadata_version': '2.0',
                         'name': 'foo',
-                        'version': '0.3.4'
+                        'version': '0.3.4',
+                        'summary': 'Summary',
                       })
         md.validate()
         self.assertEqual(md.name, 'foo')
@@ -640,6 +644,37 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         d1 = md.todict()
         d2 = nmd.todict()
         self.assertEqual(d1, d2)
+
+    def test_valid(self):
+        """
+        Tests to check that missing and invalid metadata is caught.
+        """
+        md = Metadata()
+        self.assertRaises(MetadataMissingError, md.validate)
+        try:
+            md.name = 'Foo Bar'
+        except MetadataInvalidError:
+            pass
+        md.name = 'foo_bar'
+        # Name now OK, but version and summary to be checked
+        self.assertRaises(MetadataMissingError, md.validate)
+        try:
+            md.version = '1.0a'
+        except MetadataInvalidError:
+            pass
+        md.version = '1.0'
+        # Name and version now OK, but summary to be checked
+        self.assertRaises(MetadataMissingError, md.validate)
+        try:
+            md.summary = ''
+        except MetadataInvalidError:
+            pass
+        try:
+            md.summary = ' ' * 2048
+        except MetadataInvalidError:
+            pass
+        md.summary = ' '
+        md.validate()
 
 
 if __name__ == '__main__':  # pragma: no cover

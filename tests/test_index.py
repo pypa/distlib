@@ -145,6 +145,7 @@ class PackageIndexTestCase(unittest.TestCase):
         md.name = self.dist_project
         self.assertRaises(MetadataMissingError, self.index.register, md)
         md.version = data['version']
+        md.summary = data['summary']
         response = self.index.register(md)
         self.assertEqual(response.code, 200)
 
