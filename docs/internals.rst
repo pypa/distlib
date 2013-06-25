@@ -678,19 +678,17 @@ Python ecosystem are:
   for release candidates, nor for post-release versions.
 
 * Versioning in ``setuptools``/``distribute``. This is described in
-  :pep:`386` in `this section
-  <http://www.python.org/dev/peps/pep-0386/#setuptools>`_ -- it's perhaps the
-  most widely used Python version scheme, but since it tries to be very
-  flexible and work with a wide range of conventions, it ends up allowing a
-  very chaotic mess of version conventions in the Python community as a whole.
+  :pep:`386` in
+  `this section <http://www.python.org/dev/peps/pep-0386/#setuptools>`_ --
+  it's perhaps the most widely used Python version scheme, but since it tries
+  to be very flexible and work with a wide range of conventions, it ends up
+  allowing a very chaotic mess of version conventions in the Python community
+  as a whole.
 
-* The proposed versioning scheme described in :pep:`386`, in `this section
-  <http://www.python.org/dev/peps/pep-0386/#the-new-versioning-algorithm>`_.
+* The proposed versioning scheme described in :pep:`440`.
 
 * `Semantic versioning <http://semver.org/>`_, which is rational, simple and
-  well-regarded in the software community in general. However, for reasons
-  not immediately apparent, it has not been mentioned in :pep:`386` and not
-  compared with the new versioning scheme proposed therein.
+  well-regarded in the software community in general.
 
 Although the new versioning scheme mentioned in PEP 386 was implemented in
 ``distutils2`` and that code has been copied over to ``distlib``, there are
