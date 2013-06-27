@@ -75,8 +75,8 @@ class Version(object):
 class Matcher(object):
     version_class = None
 
-    predicate_re = re.compile(r"^(\w[\s\w'.-]*)(\((.*)\))?")
-    constraint_re = re.compile(r'^(<=|>=|<|>|!=|==)?\s*([^\s,]+)$')
+    dist_re = re.compile(r"^(\w[\s\w'.-]*)(\((.*)\))?")
+    comp_re = re.compile(r'^(<=|>=|<|>|!=|==)?\s*([^\s,]+)$')
 
     _operators = {
         "<": lambda x, y: x < y,
@@ -91,7 +91,7 @@ class Matcher(object):
         if self.version_class is None:
             raise ValueError('Please specify a version class')
         self._string = s = s.strip()
-        m = self.predicate_re.match(s)
+        m = self.dist_re.match(s)
         if not m:
             raise ValueError('Not valid: %r' % s)
         groups = m.groups('')
@@ -101,11 +101,12 @@ class Matcher(object):
         if groups[2]:
             constraints = [c.strip() for c in groups[2].split(',')]
             for c in constraints:
-                m = self.constraint_re.match(c)
+                m = self.comp_re.match(c)
                 if not m:
                     raise ValueError('Invalid %r in %r' % (c, s))
-                groups = m.groups('==')
-                clist.append((groups[0], self.version_class(groups[1])))
+                groups = m.groups()
+                op = groups[0] or '=='
+                clist.append((op, self.version_class(groups[1])))
         self._parts = tuple(clist)
 
     def match(self, version):
@@ -311,7 +312,7 @@ class NormalizedVersion(Version):
 
 # We want '2.5' to match '2.5.4' but not '2.50'.
 
-def _match_at_front(x, y):
+def _match_prefix(x, y):
     if x == y:
         return True
     x = str(x)
@@ -326,10 +327,10 @@ class NormalizedMatcher(Matcher):
 
     _operators = dict(Matcher._operators)
     _operators.update({
-        "<=": lambda x, y: _match_at_front(x, y) or x < y,
-        ">=": lambda x, y: _match_at_front(x, y) or x > y,
-        "==": lambda x, y: _match_at_front(x, y),
-        "!=": lambda x, y: not _match_at_front(x, y),
+        "<=": lambda x, y: _match_prefix(x, y) or x < y,
+        ">=": lambda x, y: _match_prefix(x, y) or x > y,
+        "==": lambda x, y: _match_prefix(x, y),
+        "!=": lambda x, y: not _match_prefix(x, y),
     })
 
 _REPLACEMENTS = (
