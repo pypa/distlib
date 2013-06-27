@@ -62,7 +62,7 @@ class Version(object):
         return hash(self._parts)
 
     def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self._string)
+        return "%s('%s')" % (self.__class__.__name__, self._string)
 
     def __str__(self):
         return self._string
@@ -70,6 +70,7 @@ class Version(object):
     @property
     def is_prerelease(self):
         raise NotImplementedError('Please implement in subclasses.')
+
 
 class Matcher(object):
     version_class = None
