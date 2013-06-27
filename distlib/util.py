@@ -610,6 +610,25 @@ def split_filename(filename, project_name=None):
             result = m.group(1), m.group(3), pyver
     return result
 
+# Allow spaces in name because of legacy dists like "Twisted Core"
+NAME_VERSION_RE = re.compile(r'(?P<name>[\w .-]+)\s*'
+                             r'\(\s*(==\s*)?(?P<ver>[^)]+)\)$')
+
+def parse_name_and_version(p):
+    """
+    A utility method used to get name and version from a string.
+
+    From e.g. a Provides-Dist value.
+
+    :param p: A value in a form 'foo (1.0)' or 'foo (== 2.4)'
+    :return: The name and version as a tuple.
+    """
+    m = NAME_VERSION_RE.match(p)
+    if not m:
+        raise DistlibException('Ill-formed name/version string: \'%s\'' % p)
+    d = m.groupdict()
+    return d['name'].strip().lower(), d['ver']
+
 #
 # Extended metadata functionality
 #

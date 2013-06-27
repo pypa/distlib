@@ -24,7 +24,7 @@ from .database import Distribution, DistributionPath, make_dist
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
                    split_filename, get_project_data, parse_requirement,
-                   ServerProxy)
+                   parse_name_and_version, ServerProxy)
 from .version import get_scheme, UnsupportedVersionError
 from .wheel import Wheel, is_compatible
 
@@ -918,20 +918,6 @@ class DependencyFinder(object):
         self.locator = locator or default_locator
         self.scheme = get_scheme(self.locator.scheme)
 
-    def _get_name_and_version(self, p):
-        """
-        A utility method used to get name and version from e.g. a Provides-Dist
-        value.
-
-        :param p: A value in a form 'foo (1.0)' or 'foo (== 2.4)'
-        :return: The name and version as a tuple.
-        """
-        m = NAME_VERSION_RE.match(p)
-        if not m:
-            raise DistlibException('Ill-formed provides field: %r' % p)
-        d = m.groupdict()
-        return d['name'].lower(), d['ver']
-
     def add_distribution(self, dist):
         """
         Add a distribution to the finder. This will update internal information
@@ -943,7 +929,7 @@ class DependencyFinder(object):
         self.dists_by_name[name] = dist
         self.dists[(name, dist.version)] = dist
         for p in dist.provides:
-            name, version = self._get_name_and_version(p)
+            name, version = parse_name_and_version(p)
             logger.debug('Add to provided: %s, %s, %s', name, version, dist)
             self.provided.setdefault(name, set()).add((version, dist))
 
@@ -958,7 +944,7 @@ class DependencyFinder(object):
         del self.dists_by_name[name]
         del self.dists[(name, dist.version)]
         for p in dist.provides:
-            name, version = self._get_name_and_version(p)
+            name, version = parse_name_and_version(p)
             logger.debug('Remove from provided: %s, %s, %s', name, version, dist)
             s = self.provided[name]
             s.remove((version, dist))

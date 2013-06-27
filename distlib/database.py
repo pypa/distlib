@@ -21,7 +21,7 @@ from .version import get_scheme, UnsupportedVersionError
 from .markers import interpret
 from .metadata import Metadata
 from .util import (parse_requirement, cached_property, get_export_entry,
-                   CSVReader, CSVWriter)
+                   parse_name_and_version, CSVReader, CSVWriter)
 
 
 __all__ = ['Distribution', 'BaseInstalledDistribution',
@@ -239,18 +239,12 @@ class DistributionPath(object):
             provided = dist.provides
 
             for p in provided:
-                p_components = p.rsplit(' ', 1)
-                if len(p_components) == 1 or matcher is None:
-                    if name == p_components[0]:
+                p_name, p_ver = parse_name_and_version(p)
+                if matcher is None:
+                    if p_name == name:
                         yield dist
                         break
                 else:
-                    p_name, p_ver = p_components
-                    if len(p_ver) < 2 or p_ver[0] != '(' or p_ver[-1] != ')':
-                        raise DistlibException(
-                            'distribution %r has invalid Provides field: %r' %
-                            (dist.name, p))
-                    p_ver = p_ver[1:-1]  # trim off the parenthesis
                     if p_name == name and matcher.match(p_ver):
                         yield dist
                         break
