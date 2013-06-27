@@ -902,6 +902,9 @@ default_locator = AggregatingLocator(
 
 locate = default_locator.locate
 
+NAME_VERSION_RE = re.compile(r'(?P<name>[\w-]+)\s*'
+                             r'\(\s*(==\s*)?(?P<ver>[^)]+)\)$')
+
 class DependencyFinder(object):
     """
     Locate dependencies for distributions.
@@ -920,19 +923,14 @@ class DependencyFinder(object):
         A utility method used to get name and version from e.g. a Provides-Dist
         value.
 
-        :param p: A value in a form foo (1.0)
+        :param p: A value in a form 'foo (1.0)' or 'foo (== 2.4)'
         :return: The name and version as a tuple.
         """
-        comps = p.strip().rsplit(' ', 1)
-        name = comps[0]
-        version = None
-        if len(comps) == 2:
-            version = comps[1]
-            if len(version) < 3 or version[0] != '(' or version[-1] != ')':
-                raise DistlibException('Ill-formed provides field: %r' % p)
-            version = version[1:-1]  # trim off parentheses
-        # Name in lower case for case-insensitivity
-        return name.lower(), version
+        m = NAME_VERSION_RE.match(p)
+        if not m:
+            raise DistlibException('Ill-formed provides field: %r' % p)
+        d = m.groupdict()
+        return d['name'].lower(), d['ver']
 
     def add_distribution(self, dist):
         """
