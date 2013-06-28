@@ -15,7 +15,6 @@ from .compat import string_types
 __all__ = ['NormalizedVersion', 'NormalizedMatcher',
            'LegacyVersion', 'LegacyMatcher',
            'SemanticVersion', 'SemanticMatcher',
-           'AdaptiveVersion', 'AdaptiveMatcher',
            'UnsupportedVersionError', 'get_scheme']
 
 class UnsupportedVersionError(ValueError):
@@ -513,9 +512,6 @@ def _suggest_normalized_version(s):
         rs = None
     return rs
 
-def _suggest_adaptive_version(s):
-    return _suggest_normalized_version(s) or _suggest_semantic_version(s)
-
 #
 #   Legacy version processing (distribute-compatible)
 #
@@ -615,42 +611,6 @@ class SemanticVersion(Version):
 class SemanticMatcher(Matcher):
     version_class = SemanticVersion
 
-#
-# Adaptive versioning. When handed a legacy version string, tries to
-# determine a suggested normalized version, and work with that.
-#
-
-def _adaptive_key(s):
-    try:
-        result = _normalized_key(s)
-    except UnsupportedVersionError:
-        ss = _suggest_normalized_version(s)
-        if ss is not None:
-            result = _normalized_key(ss)     # "guaranteed" to work
-        else:
-            ss = s # _suggest_semantic_version(s) or s
-            result = _semantic_key(ss)       # let's hope ...
-    return result
-
-
-class AdaptiveVersion(NormalizedVersion):
-    def parse(self, s): return _adaptive_key(s)
-
-    @property
-    def is_prerelease(self):
-        try:
-            _normalized_key(self._string)
-            not_sem = True
-        except UnsupportedVersionError:
-            ss = _suggest_normalized_version(self._string)
-            not_sem = ss is not None
-        if not_sem:
-            return any(t[0] in self.PREREL_TAGS for t in self._parts)
-        return self._parts[1][0] != '|'
-
-class AdaptiveMatcher(NormalizedMatcher):
-    version_class = AdaptiveVersion
-
 
 class VersionScheme(object):
     def __init__(self, key, matcher, suggester=None):
@@ -693,11 +653,9 @@ _SCHEMES = {
     'legacy': VersionScheme(_legacy_key, LegacyMatcher, lambda self, s: s),
     'semantic': VersionScheme(_semantic_key, SemanticMatcher,
                               _suggest_semantic_version),
-    'adaptive': VersionScheme(_adaptive_key, AdaptiveMatcher,
-                              _suggest_adaptive_version),
 }
 
-_SCHEMES['default'] = _SCHEMES['adaptive']
+_SCHEMES['default'] = _SCHEMES['normalized']
 
 def get_scheme(name):
     if name not in _SCHEMES:

@@ -18,8 +18,7 @@ from test_resources import (ZipResourceTestCase, FileResourceTestCase,
                             CacheTestCase)
 from test_scripts import ScriptTestCase
 from test_version import (VersionTestCase, CompatibilityTestCase,
-                          LegacyVersionTestCase, SemanticVersionTestCase,
-                          AdaptiveVersionTestCase)
+                          LegacyVersionTestCase, SemanticVersionTestCase)
 from test_wheel import WheelTestCase
 
 if _ver == (2, 6):

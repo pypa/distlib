@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2012-2013 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
@@ -12,11 +11,9 @@ from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
                              UnsupportedVersionError,
                              _suggest_normalized_version,
                              _suggest_semantic_version,
-                             _suggest_adaptive_version,
                              LegacyVersion as LV, LegacyMatcher as LM,
                              SemanticVersion as SV, SemanticMatcher as SM,
-                             AdaptiveVersion as AV, AdaptiveMatcher as AM,
-                             is_semver, get_scheme, _adaptive_key,
+                             is_semver, get_scheme,
                              _normalized_key, _legacy_key, _semantic_key,
                              _pep386_key)
 
@@ -192,8 +189,6 @@ class VersionTestCase(unittest.TestCase):
         self.assertEqual(suggest(''), '0.0.0')
         self.assertEqual(suggest('1'), '1.0.0')
         self.assertEqual(suggest('1.2'), '1.2.0')
-        suggest = _suggest_adaptive_version
-        self.assertEqual(suggest('1.0-alpha1'), '1.0a1')
 
     def test_matcher(self):
         # NormalizedMatcher knows how to parse stuff like:
@@ -276,7 +271,6 @@ class VersionTestCase(unittest.TestCase):
             ('normalized', (_normalized_key, NV, NM)),
             ('legacy', (_legacy_key, LV, LM)),
             ('semantic', (_semantic_key, SV, SM)),
-            ('adaptive', (_adaptive_key, AV, AM)),
         )
 
         for name, values in cases:
@@ -286,7 +280,7 @@ class VersionTestCase(unittest.TestCase):
             self.assertIs(matcher, scheme.matcher)
             self.assertIs(version, scheme.matcher.version_class)
 
-        self.assertIs(get_scheme('default'), get_scheme('adaptive'))
+        self.assertIs(get_scheme('default'), get_scheme('normalized'))
 
         self.assertRaises(ValueError, get_scheme, 'random')
 
@@ -525,96 +519,6 @@ class SemanticVersionTestCase(unittest.TestCase):
         for s in final_releases:
             self.assertFalse(SV(s).is_prerelease)
 
-class AdaptiveVersionTestCase(unittest.TestCase):
-    def test_basic(self):
-        versions = (
-            # normalized versions
-            '1.0',
-            '1.2.3',
-            '1.2.3a4',
-            '1.2.3b3',
-            '1.2c4',
-            '4.17rc2',
-            '1.2.3.4',
-            '1.0.dev345',
-            '1.0.post456.dev623',
-
-            # legacy versions
-            '0.4.0-0',
-            '0.0.0preview1',
-            '0.0c1',
-            '1.2a1',
-            '1.2.a.1',
-            '1.2a',
-
-            # semantic versions
-            '1.0.0-alpha',
-            '1.0.0-alpha.1',
-            '1.0.0-beta.2',
-            '1.0.0-beta.11',
-            '1.0.0-rc.1',
-            '1.0.0-rc.1+build.1',
-            '1.0.0',
-            '1.0.0+0.3.7',
-            '1.3.7+build',
-            '1.3.7+build.2.b8f12d7',
-            '1.3.7+build.11.e0f985a',
-        )
-
-        bad_versions = (
-            '0pl1',
-            '0pre1',
-            '0rc1',
-            '1.2...a',
-        )
-
-        for v in versions:
-            AV(v)
-
-        for v in bad_versions:
-            self.assertRaises(UnsupportedVersionError, AV, v)
-
-
-    def test_prereleases(self):
-        pre_releases = (
-            # normalized versions
-            '1.2.3a4',
-            '1.2.3b3',
-            '1.2c4',
-            '4.17rc2',
-            '1.0.dev345',
-            '1.0.post456.dev623',
-
-            # legacy versions
-            '0.0.0preview1',
-            '0.0c1',
-            '1.2a1',
-            '1.2.a.1',
-            '1.2a',
-
-            # semantic versions
-            '1.0.0-alpha',
-            '1.0.0-alpha.1',
-            '1.0.0-beta.2',
-            '1.0.0-beta.11',
-            '1.0.0-rc.1',
-            '1.0.0-rc.1+build.1',
-        )
-        final_releases = (
-            '0.4.0-0',
-            '1.0',
-            '1.2.3',
-            '1.2.3.4',
-            '1.0.0',
-            '1.0.0+0.3.7',
-            '1.3.7+build',
-            '1.3.7+build.2.b8f12d7',
-            '1.3.7+build.11.e0f985a',
-        )
-        for s in pre_releases:
-            self.assertTrue(AV(s).is_prerelease, s)
-        for s in final_releases:
-            self.assertFalse(AV(s).is_prerelease, s)
 
 class CompatibilityTestCase(unittest.TestCase):
     def test_basic(self):
@@ -643,7 +547,6 @@ def test_suite():
     suite = [unittest.makeSuite(VersionTestCase),
              unittest.makeSuite(CompatibilityTestCase),
              unittest.makeSuite(LegacyVersionTestCase),
-             unittest.makeSuite(AdaptiveVersionTestCase),
              unittest.makeSuite(SemanticVersionTestCase)]
     return unittest.TestSuite(suite)
 
