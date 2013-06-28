@@ -371,9 +371,12 @@ class Distribution(object):
         :rtype req: str
         :return: True if it matches, else False.
         """
+        # Requirement may contain extras - parse to lose those
+        # from what's passed to the matcher
+        r = parse_requirement(req)
         scheme = get_scheme(self.metadata.scheme)
         try:
-            matcher = scheme.matcher(req)
+            matcher = scheme.matcher(r.requirement)
         except UnsupportedVersionError:
             # XXX compat-mode if cannot read the version
             logger.warning('could not read version %r - using name only',
@@ -384,15 +387,12 @@ class Distribution(object):
         name = matcher.key   # case-insensitive
 
         result = False
-        # Note this is similar to code in make_graph - to be refactored
         for p in self.provides:
-            vm = scheme.matcher(p)
-            if vm.key != name:
+            p_name, p_ver = parse_name_and_version(p)
+            if p_name != name:
                 continue
-            version = vm.exact_version
-            assert version
             try:
-                result = matcher.match(version)
+                result = matcher.match(p_ver)
                 break
             except UnsupportedVersionError:
                 pass
@@ -1180,22 +1180,7 @@ def make_graph(dists, scheme='default'):
         graph.add_distribution(dist)
 
         for p in dist.provides:
-            comps = p.strip().rsplit(" ", 1)
-            name = comps[0]
-            version = None
-            if len(comps) == 2:
-                version = comps[1]
-                if len(version) < 3 or version[0] != '(' or version[-1] != ')':
-                    logger.warning('distribution %r has ill-formed '
-                                   'provides field: %r', dist.name, p)
-                    continue
-                    # don't raise an exception. Legacy installed distributions
-                    # could have all manner of metadata
-                    #raise DistlibException('distribution %r has ill-formed '
-                    #                       'provides field: %r' % (dist.name, p))
-                version = version[1:-1]  # trim off parenthesis
-            # Add name in lower case for case-insensitivity
-            name = name.lower()
+            name, version = parse_name_and_version(p)
             logger.debug('Add to provided: %s, %s, %s', name, version, dist)
             provided.setdefault(name, []).append((version, dist))
 
