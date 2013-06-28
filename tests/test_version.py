@@ -211,9 +211,9 @@ class VersionTestCase(unittest.TestCase):
         self.assertTrue(NM('Ho (<3.0,!=2.5)').match('2.6.0'))
         self.assertFalse(NM('Ho (<3.0,!=2.6)').match('2.6.0'))
         self.assertTrue(NM('Ho (2.5)').match('2.5.4'))
-        self.assertFalse(NM('Ho (2.5)').match('2.50'))
-        self.assertFalse(NM('Ho (!=2.5)').match('2.5.2'))
-        self.assertTrue(NM('Hey (<=2.5)').match('2.5.9'))
+        self.assertFalse(NM('Ho (==2.5)').match('2.50'))
+        self.assertTrue(NM('Ho (!=2.5)').match('2.5.2'))
+        self.assertFalse(NM('Hey (<=2.5)').match('2.5.9'))
         self.assertFalse(NM('Hey (<=2.5)').match('2.6.0'))
         self.assertTrue(NM('Hey (>=2.5)').match('2.5.1'))
 
@@ -224,8 +224,7 @@ class VersionTestCase(unittest.TestCase):
         #self.assertTrue(NM('vi5two 1.0').match('1.0'))
         #self.assertTrue(NM('5two 1.0').match('1.0'))
 
-        # XXX need to silent the micro version in this case
-        self.assertFalse(NM('Ho (<3.0,!=2.6)').match('2.6.3'))
+        self.assertTrue(NM('Ho (<3.0,!=2.6)').match('2.6.3'))
 
         # Make sure a constraint that ends with a number works
         self.assertTrue(NM('virtualenv5 (1.0)').match('1.0'))
@@ -240,7 +239,7 @@ class VersionTestCase(unittest.TestCase):
         #Test exact_version
         cases = (
             ('Dummy', False),
-            ('Dummy (1.0)', True),
+            ('Dummy (1.0)', False),
             ('Dummy (<1.0)', False),
             ('Dummy (<=1.0)', False),
             ('Dummy (>1.0)', False),
@@ -259,12 +258,6 @@ class VersionTestCase(unittest.TestCase):
         self.assertEqual('Hey', NM('Hey (<1.1)').name)
         self.assertEqual('Foo-Bar', NM('Foo-Bar (1.1)').name)
         self.assertEqual('Foo Bar', NM('Foo Bar (1.1)').name)
-
-    def test_micro_matching(self):
-        #self.assertNotEqual(NV('3.4.0'), NV('3.4'))
-        matcher = NM('zope.event (3.4.0)')
-        self.assertTrue(matcher.match('3.4.0'))
-        self.assertFalse(matcher.match('3.4.1'))
 
     def test_schemes(self):
         cases = (
@@ -362,6 +355,83 @@ class VersionTestCase(unittest.TestCase):
             v1 = versions[i]
             v2 = versions[i + 1]
             self.assertLess(F(v1), F(v2), v1)
+
+    def test_440(self):
+        # compatible release matching
+        for s in ('foo (1.2)', 'foo (~= 1.2)'):
+            m = NM(s)
+            for should_match in ('1.2', '1.3', '1.2.post0'):
+                msg = 'Failed for %s' % should_match
+                self.assertTrue(m.match(should_match), msg)
+            for should_not_match in ('1.0', '1.1', '1.2.dev0', '2.0'):
+                msg = 'Failed for %s' % should_not_match
+                self.assertFalse(m.match(should_not_match), msg)
+        for s in ('foo (1.4.5)', 'foo (~= 1.4.5)', 'foo (1.4.5a4)'):
+            m = NM(s)
+            for should_match in ('1.4.5', '1.4.6', '1.4.7.dev0'):
+                msg = 'Failed for %s' % should_match
+                self.assertTrue(m.match(should_match), msg)
+            for should_not_match in ('1.5', '1.6', '1.4.5.dev0', '2.4.5'):
+                msg = 'Failed for %s' % should_not_match
+                self.assertFalse(m.match(should_not_match), msg)
+        m = NM('foo (1.4.5.0)')
+        for should_match in ('1.4.5.0', '1.4.5.1', '1.4.5.9.post1'):
+            msg = 'Failed for %s' % should_match
+            self.assertTrue(m.match(should_match), msg)
+        for should_not_match in ('1.4.6', '1.5', '2.0'):
+            msg = 'Failed for %s' % should_not_match
+            self.assertFalse(m.match(should_not_match), msg)
+
+        # prefix matching
+        v = '1.1.post1'
+        cases = (('(== 1.1)', False),
+                 ('(== 1.1.post1)', True),
+                 ('(== 1.1.*)', True),
+                 ('(!= 1.1)', True),
+                 ('(!= 1.1.post1)', False),
+                 ('(!= 1.1.*)', False))
+        for s, expected in cases:
+            m = NM('foo %s' % s)
+            actual = m.match(v)
+            self.assertEqual(expected, actual, 'Failed for %s' % s)
+
+        # inclusive ordered
+        m = NM('foo (<= 1.5)')
+        for should_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0',
+                             '1.5', '1.5.0', '1.5.0.0'):
+            msg = 'Failed for %s' % should_match
+            self.assertTrue(m.match(should_match), msg)
+        for should_not_match in ('1.5.post1', '1.5.post0.dev0', '1.6', '2.0'):
+            msg = 'Failed for %s' % should_not_match
+            self.assertFalse(m.match(should_not_match), msg)
+        m = NM('foo (>= 1.5)')
+        for should_match in ('1.5.post1', '1.5.post0.dev0', '1.6', '2.0',
+                             '1.5', '1.5.0', '1.5.0.0'):
+            msg = 'Failed for %s' % should_match
+            self.assertTrue(m.match(should_match), msg)
+        for should_not_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0'):
+            msg = 'Failed for %s' % should_not_match
+            self.assertFalse(m.match(should_not_match), msg)
+
+        # exclusive ordered
+        m = NM('foo (< 1.5)')
+        for should_match in ('0.1', '1.4', '1.4.9.post1'):
+            msg = 'Failed for %s' % should_match
+            self.assertTrue(m.match(should_match), msg)
+        for should_not_match in ('1.5.post1', '1.5.post0.dev0', '1.5.dev0',
+                                 '1.5', '1.5.0', '1.5.0.1', '1.6', '2.0'):
+            msg = 'Failed for %s' % should_not_match
+            self.assertFalse(m.match(should_not_match), msg)
+        m = NM('foo (> 1.5)')
+        for should_match in ('1.6', '2.0'):
+            msg = 'Failed for %s' % should_match
+            self.assertTrue(m.match(should_match), msg)
+        for should_not_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0',
+                                 '1.5', '1.5.0', '1.5.post0','1.5.post0.dev0',
+                                 '1.5.0.1'):
+            msg = 'Failed for %s' % should_not_match
+            self.assertFalse(m.match(should_not_match), msg)
+
 
 class LegacyVersionTestCase(unittest.TestCase):
     # These tests are the same as distribute's

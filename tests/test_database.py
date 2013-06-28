@@ -475,10 +475,10 @@ class TestDatabase(LoggingCatcher,
         checkLists(l, ['choxie', 'towel-stuff'])
 
         l = [dist.name for dist in d.provides_distribution('truffles', '1.0')]
-        checkLists(l, ['choxie'])
+        checkLists(l, ['choxie', 'towel-stuff'])
 
         l = [dist.name for dist in ed.provides_distribution('truffles', '1.0')]
-        checkLists(l, ['choxie', 'cheese'])
+        checkLists(l, ['choxie', 'cheese', 'towel-stuff'])
 
         l = [dist.name for dist in d.provides_distribution('truffles', '1.1.2')]
         checkLists(l, ['towel-stuff'])
@@ -488,11 +488,11 @@ class TestDatabase(LoggingCatcher,
 
         l = [dist.name for dist in d.provides_distribution('truffles',
                                                            '!=1.1,<=2.0')]
-        checkLists(l, ['choxie'])
+        checkLists(l, ['choxie', 'towel-stuff'])
 
         l = [dist.name for dist in ed.provides_distribution('truffles',
                                                             '!=1.1,<=2.0')]
-        checkLists(l, ['choxie', 'bacon', 'cheese'])
+        checkLists(l, ['choxie', 'bacon', 'cheese', 'towel-stuff'])
 
         l = [dist.name for dist in d.provides_distribution('truffles', '>1.0')]
         checkLists(l, ['towel-stuff'])

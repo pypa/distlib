@@ -75,15 +75,18 @@ class Matcher(object):
     version_class = None
 
     dist_re = re.compile(r"^(\w[\s\w'.-]*)(\((.*)\))?")
-    comp_re = re.compile(r'^(<=|>=|<|>|!=|==)?\s*([^\s,]+)$')
+    comp_re = re.compile(r'^(<=|>=|<|>|!=|==|~=)?\s*([^\s,]+)$')
 
+    # value is either a callable or the name of a method
     _operators = {
-        "<": lambda x, y: x < y,
-        ">": lambda x, y: x > y,
-        "<=": lambda x, y: x == y or x < y,
-        ">=": lambda x, y: x == y or x > y,
-        "==": lambda x, y: x == y,
-        "!=": lambda x, y: x != y,
+        '<': lambda v, c, p: v < c,
+        '>': lambda v, c, p: v > c,
+        '<=': lambda v, c, p: v == c or v < c,
+        '>=': lambda v, c, p: v == c or v > c,
+        '==': lambda v, c, p: v == c,
+        # by default, compatible => >=.
+        '~=': lambda v, c, p: v == c or v > c,
+        '!=': lambda v, c, p: v != c,
     }
 
     def __init__(self, s):
@@ -104,16 +107,35 @@ class Matcher(object):
                 if not m:
                     raise ValueError('Invalid %r in %r' % (c, s))
                 groups = m.groups()
-                op = groups[0] or '=='
-                clist.append((op, self.version_class(groups[1])))
+                op = groups[0] or '~='
+                s = groups[1]
+                if s.endswith('.*'):
+                    if op not in ('==', '!='):
+                        raise ValueError('\'.*\' not allowed for '
+                                         '%r constraints' % op)
+                    # Could be a partial version (e.g. for '2.*') which
+                    # won't parse as a version, so keep it as a string
+                    vn, prefix = s[:-2], True
+                else:
+                    # Should parse as a version, so we can create an
+                    # instance for the comparison
+                    vn, prefix = self.version_class(s), False
+                clist.append((op, vn, prefix))
         self._parts = tuple(clist)
 
     def match(self, version):
         """Check if the provided version matches the constraints."""
         if isinstance(version, string_types):
             version = self.version_class(version)
-        for operator, constraint in self._parts:
-            if not self._operators[operator](version, constraint):
+        for operator, constraint, prefix in self._parts:
+            f = self._operators.get(operator)
+            if isinstance(f, string_types):
+                f = getattr(self, f)
+            if not f:
+                msg = ('%r not implemented '
+                       'for %s' % (operator, self.__class__.__name__))
+                raise NotImplementedError(msg)
+            if not f(version, constraint, prefix):
                 return False
         return True
 
@@ -301,7 +323,16 @@ class NormalizedVersion(Version):
         1.2a        # release level must have a release serial
         1.2.3b
     """
-    def parse(self, s): return _normalized_key(s)
+    def parse(self, s):
+        result = _normalized_key(s)
+        # _normalized_key loses trailing zeroes in the release
+        # clause, since that's needed to ensure that X.Y == X.Y.0 == X.Y.0.0
+        # However, PEP 440 prefix matching needs it: for example,
+        # (~= 1.4.5.0) matches differently to (~= 1.4.5.0.0).
+        m = PEP426_VERSION_RE.match(s)      # must succeed
+        groups = m.groups()
+        self._release_clause = tuple(int(v) for v in groups[0].split('.'))
+        return result
 
     PREREL_TAGS = set(['a', 'b', 'c', 'rc', 'dev'])
 
@@ -312,10 +343,10 @@ class NormalizedVersion(Version):
 # We want '2.5' to match '2.5.4' but not '2.50'.
 
 def _match_prefix(x, y):
-    if x == y:
-        return True
     x = str(x)
     y = str(y)
+    if x == y:
+        return True
     if not x.startswith(y):
         return False
     n = len(y)
@@ -324,13 +355,61 @@ def _match_prefix(x, y):
 class NormalizedMatcher(Matcher):
     version_class = NormalizedVersion
 
-    _operators = dict(Matcher._operators)
-    _operators.update({
-        "<=": lambda x, y: _match_prefix(x, y) or x < y,
-        ">=": lambda x, y: _match_prefix(x, y) or x > y,
-        "==": lambda x, y: _match_prefix(x, y),
-        "!=": lambda x, y: not _match_prefix(x, y),
-    })
+    # value is either a callable or the name of a method
+    _operators = {
+        '~=': '_match_compatible',
+        '<': '_match_lt',
+        '>': '_match_gt',
+        '<=': '_match_le',
+        '>=': '_match_ge',
+        '==': '_match_eq',
+        '!=': '_match_ne',
+    }
+
+    def _match_lt(self, version, constraint, prefix):
+        if version >= constraint:
+            return False
+        release_clause = constraint._release_clause
+        pfx = '.'.join([str(i) for i in release_clause])
+        return not _match_prefix(version, pfx)
+
+    def _match_gt(self, version, constraint, prefix):
+        if version <= constraint:
+            return False
+        release_clause = constraint._release_clause
+        pfx = '.'.join([str(i) for i in release_clause])
+        return not _match_prefix(version, pfx)
+
+    def _match_le(self, version, constraint, prefix):
+        return version <= constraint
+
+    def _match_ge(self, version, constraint, prefix):
+        return version >= constraint
+
+    def _match_eq(self, version, constraint, prefix):
+        if not prefix:
+            result = (version == constraint)
+        else:
+            result = _match_prefix(version, constraint)
+        return result
+
+    def _match_ne(self, version, constraint, prefix):
+        if not prefix:
+            result = (version != constraint)
+        else:
+            result = not _match_prefix(version, constraint)
+        return result
+
+    def _match_compatible(self, version, constraint, prefix):
+        if version == constraint:
+            return True
+        if version < constraint:
+            return False
+        release_clause = constraint._release_clause
+        if len(release_clause) > 1:
+            release_clause = release_clause[:-1]
+        pfx = '.'.join([str(i) for i in release_clause])
+        return _match_prefix(version, pfx)
 
 _REPLACEMENTS = (
     (re.compile('[.+-]$'), ''),                     # remove trailing puncts

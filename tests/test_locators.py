@@ -198,12 +198,12 @@ class LocatorTestCase(unittest.TestCase):
                                   timeout=3.0),
             scheme='legacy')
         finder = DependencyFinder(locator)
-        dists, problems = finder.find('irc (5.0.1)')
+        dists, problems = finder.find('irc (== 5.0.1)')
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
                                   'pytest-runner'])
-        dists, problems = finder.find('irc (5.0.1)', True)  # include tests
+        dists, problems = finder.find('irc (== 5.0.1)', True)  # include tests
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
@@ -222,11 +222,11 @@ class LocatorTestCase(unittest.TestCase):
         self.assertIn(tuple(names), expected)
 
         # Test with extras
-        dists, problems = finder.find('Jinja2 (2.6)')
+        dists, problems = finder.find('Jinja2 (== 2.6)')
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
         self.assertEqual(actual, ['Jinja2 (2.6)'])
-        dists, problems = finder.find('Jinja2 [i18n] (2.6)')
+        dists, problems = finder.find('Jinja2 [i18n] (== 2.6)')
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
         self.assertEqual(actual[-1], 'Jinja2 (2.6)')

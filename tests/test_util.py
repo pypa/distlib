@@ -817,7 +817,7 @@ class GlobTestCase(GlobTestCaseBase):
         r = parse_requirement('a')
         validate(r, ('a', None, None, 'a'))
         r = parse_requirement('a 1.2')
-        validate(r, ('a', [('==', '1.2')], None, 'a (== 1.2)'))
+        validate(r, ('a', [('~=', '1.2')], None, 'a (~= 1.2)'))
         r = parse_requirement('a >= 1.2, <2.0,!=1.7')
         validate(r, ('a', [('>=', '1.2'), ('<', '2.0'), ('!=', '1.7')], None,
                      'a (>= 1.2, < 2.0, != 1.7)'))

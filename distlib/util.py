@@ -50,7 +50,7 @@ COMMA = r'\s*,\s*'
 COMMA_RE = re.compile(COMMA)
 
 IDENT = r'(\w|[.-])+'
-RELOP = '([<>=!]=)|[<>]'
+RELOP = '([<>=!~]=)|[<>]'
 
 #
 # The first relop is optional - if absent, will be taken as '=='
@@ -94,7 +94,7 @@ def parse_requirement(s):
             rs = d['dn']
         else:
             if cons[0] not in '<>!=':
-                cons = '==' + cons
+                cons = '~=' + cons
             iterator = RELOP_IDENT_RE.finditer(cons)
             cons = [get_constraint(m) for m in iterator]
             rs = '%s (%s)' % (name, ', '.join(['%s %s' % con for con in cons]))
@@ -612,7 +612,7 @@ def split_filename(filename, project_name=None):
 
 # Allow spaces in name because of legacy dists like "Twisted Core"
 NAME_VERSION_RE = re.compile(r'(?P<name>[\w .-]+)\s*'
-                             r'\(\s*(==\s*)?(?P<ver>[^)]+)\)$')
+                             r'\(\s*(?P<ver>[^\s)]+)\)$')
 
 def parse_name_and_version(p):
     """
@@ -620,7 +620,7 @@ def parse_name_and_version(p):
 
     From e.g. a Provides-Dist value.
 
-    :param p: A value in a form 'foo (1.0)' or 'foo (== 2.4)'
+    :param p: A value in a form 'foo (1.0)'
     :return: The name and version as a tuple.
     """
     m = NAME_VERSION_RE.match(p)
