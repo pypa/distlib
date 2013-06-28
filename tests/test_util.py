@@ -826,6 +826,9 @@ class GlobTestCase(GlobTestCaseBase):
                      'a (>= 1.2, < 2.0)'))
         r = parse_requirement('a[]')
         validate(r, ('a', None, None, 'a'))
+        r = parse_requirement('a (== 1.2.*, != 1.2.1.*)')
+        validate(r, ('a', [('==', '1.2.*'), ('!=', '1.2.1.*')], None,
+                 'a (== 1.2.*, != 1.2.1.*)'))
 
 
 if __name__ == '__main__':  # pragma: no cover

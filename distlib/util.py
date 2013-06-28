@@ -49,11 +49,11 @@ class Container(object):
 COMMA = r'\s*,\s*'
 COMMA_RE = re.compile(COMMA)
 
-IDENT = r'(\w|[.-])+'
+IDENT = r'(\w|[.-])+\*?'
 RELOP = '([<>=!~]=)|[<>]'
 
 #
-# The first relop is optional - if absent, will be taken as '=='
+# The first relop is optional - if absent, will be taken as '~='
 #
 BARE_CONSTRAINTS = ('(' + RELOP + r')?\s*(' + IDENT + ')(' + COMMA + '(' +
                     RELOP + r')\s*(' + IDENT + '))*')
