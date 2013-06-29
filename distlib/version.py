@@ -76,6 +76,7 @@ class Matcher(object):
 
     dist_re = re.compile(r"^(\w[\s\w'.-]*)(\((.*)\))?")
     comp_re = re.compile(r'^(<=|>=|<|>|!=|==|~=)?\s*([^\s,]+)$')
+    num_re = re.compile(r'^\d+(\.\d+)*$')
 
     # value is either a callable or the name of a method
     _operators = {
@@ -116,6 +117,9 @@ class Matcher(object):
                     # Could be a partial version (e.g. for '2.*') which
                     # won't parse as a version, so keep it as a string
                     vn, prefix = s[:-2], True
+                    if not self.num_re.match(vn):
+                        # Just to check that vn is a valid version
+                        self.version_class(vn)
                 else:
                     # Should parse as a version, so we can create an
                     # instance for the comparison

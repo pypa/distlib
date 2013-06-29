@@ -432,6 +432,23 @@ class VersionTestCase(unittest.TestCase):
             msg = 'Failed for %s' % should_not_match
             self.assertFalse(m.match(should_not_match), msg)
 
+        #unusual prefix matching
+        m = NM('foo (== 1.2.post0.*)')
+        for should_match in ('1.2.post0', '1.2.post0.dev0'):
+            msg = 'Failed for %s' % should_match
+            self.assertTrue(m.match(should_match), msg)
+        for should_not_match in ('1.2', '1.2.dev0'):
+            msg = 'Failed for %s' % should_not_match
+            self.assertFalse(m.match(should_not_match), msg)
+
+        # invalid
+        for op in ('<', '<=', '>', '>=', '~='):
+            s = 'foo (%s 1.*)' % op
+            self.assertRaises(ValueError, NM, s)
+        for v in ('', '1.*.*'):
+            s = 'foo (== %s)' % v
+            self.assertRaises(ValueError, NM, s)
+
 
 class LegacyVersionTestCase(unittest.TestCase):
     # These tests are the same as distribute's
