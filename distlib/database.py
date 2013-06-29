@@ -1186,7 +1186,8 @@ def make_graph(dists, scheme='default'):
 
     # now make the edges
     for dist in dists:
-        requires = (dist.run_requires | dist.build_requires)
+        requires = (dist.run_requires | dist.meta_requires |
+                    dist.build_requires | dist.dev_requires)
         for req in requires:
             try:
                 matcher = scheme.matcher(req)
