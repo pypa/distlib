@@ -12,6 +12,8 @@ Released: Not yet.
 
     - Fixed a bug in parsing legacy metadata from .egg directories.
 
+    - Removed duplicated code relating to parsing "provides" fields.
+
 - index
 
     - Changes relating to support for PEP 426 JSON metadata (pymeta.json).
@@ -22,6 +24,13 @@ Released: Not yet.
 
     - Fixed a bug in scoring download URLs for preference when multiple URLs
       are available.
+
+    - The legacy scheme is used for the default locator.
+
+    - Changes relating to parsing "provides" fields.
+
+    - If no release version is found for a requirement, prereleases are
+      now considered even if not explicitly requested.
 
 - markers
 
@@ -42,11 +51,28 @@ Released: Not yet.
 
     - Added extract_by_key() to copy selected keys from one dict to another.
 
+    - Added parse_name_and_version() for use in parsing "provides" fields.
+
+- version
+
+    - Added support for PEP 440 version matching.
+
+    - Removed AdaptiveVersion, AdaptiveMatcher etc. as they don't add
+      sufficient value to justify keeping them in.
+
 - wheel
 
     - Added support for PEP 426 JSON metadata (pymeta.json).
 
     - Added lib_only flag to install() method.
+
+- docs
+
+    - Numerous documentation updates, not detailed further here.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
 
 
 0.1.2
