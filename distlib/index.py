@@ -376,12 +376,14 @@ class PackageIndex(object):
         """
         if digest is None:
             digester = None
+            logger.debug('No digest specified')
         else:
             if isinstance(digest, (list, tuple)):
                 hasher, digest = digest
             else:
                 hasher = 'md5'
             digester = getattr(hashlib, hasher)()
+            logger.debug('Digest specified: %s' % digest)
         # The following code is equivalent to urlretrieve.
         # We need to do it this way so that we can compute the
         # digest of the file as we go.
@@ -425,6 +427,7 @@ class PackageIndex(object):
                 raise DistlibException('MD5 digest mismatch for %s: expected '
                                        '%s, got %s' % (destfile, digest,
                                                        actual))
+            logger.debug('Digest verified: %s', digest)
 
     def send_request(self, req):
         """
