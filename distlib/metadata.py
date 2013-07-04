@@ -852,11 +852,20 @@ class Metadata(object):
             result = list(always)   # make a copy, as we may add to it
             extras = set(extras or [])
             for d in sometimes:
-                include = d.get('extra') in extras
-                if include:
-                    marker = d.get('environment')
-                    if marker:
-                        include = interpret(marker, env)
+                if 'extra' not in d and 'environment' not in d:
+                    # unconditional
+                    include = True
+                else:
+                    if 'extra' not in d:
+                        # Not extra-dependent - only environment-dependent
+                        include = True
+                    else:
+                        include = d.get('extra') in extras
+                    if include:
+                        # Not excluded because of extras, check environment
+                        marker = d.get('environment')
+                        if marker:
+                            include = interpret(marker, env)
                 if include:
                     result.extend(d['dependencies'])
             if 'test' in extras:
