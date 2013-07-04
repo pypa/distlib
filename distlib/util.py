@@ -49,16 +49,19 @@ class Container(object):
 COMMA = r'\s*,\s*'
 COMMA_RE = re.compile(COMMA)
 
-IDENT = r'(\w|[.-])+\*?'
+IDENT = r'(\w|[.-])+'
+EXTRA_IDENT = r'(\*|:(\*|\w+):|' + IDENT + ')'
+VERSPEC = IDENT + r'\*?'
+
 RELOP = '([<>=!~]=)|[<>]'
 
 #
 # The first relop is optional - if absent, will be taken as '~='
 #
-BARE_CONSTRAINTS = ('(' + RELOP + r')?\s*(' + IDENT + ')(' + COMMA + '(' +
-                    RELOP + r')\s*(' + IDENT + '))*')
+BARE_CONSTRAINTS = ('(' + RELOP + r')?\s*(' + VERSPEC + ')(' + COMMA + '(' +
+                    RELOP + r')\s*(' + VERSPEC + '))*')
 
-DIRECT_REF = '(from (?P<diref>.*))'
+DIRECT_REF = '(from\s+(?P<diref>.*))'
 
 #
 # Either the bare constraints or the bare constraints in parentheses
@@ -66,7 +69,7 @@ DIRECT_REF = '(from (?P<diref>.*))'
 CONSTRAINTS = (r'\(\s*(?P<c1>' + BARE_CONSTRAINTS + '|' + DIRECT_REF +
                r')\s*\)|(?P<c2>' + BARE_CONSTRAINTS + '\s*)')
 
-EXTRA_LIST = IDENT + '(' + COMMA + IDENT + ')*'
+EXTRA_LIST = EXTRA_IDENT + '(' + COMMA + EXTRA_IDENT + ')*'
 EXTRAS = r'\[\s*(?P<ex>' + EXTRA_LIST + r')?\s*\]'
 REQUIREMENT = ('(?P<dn>'  + IDENT + r')\s*(' + EXTRAS + r'\s*)?(\s*' +
                CONSTRAINTS + ')?$')
@@ -75,7 +78,7 @@ REQUIREMENT_RE = re.compile(REQUIREMENT)
 #
 # Used to scan through the constraints
 #
-RELOP_IDENT = '(?P<op>' + RELOP + r')\s*(?P<vn>' + IDENT + ')'
+RELOP_IDENT = '(?P<op>' + RELOP + r')\s*(?P<vn>' + VERSPEC + ')'
 RELOP_IDENT_RE = re.compile(RELOP_IDENT)
 
 def parse_requirement(s):

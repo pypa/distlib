@@ -832,6 +832,9 @@ class GlobTestCase(GlobTestCaseBase):
                  'a (== 1.2.*, != 1.2.1.*)', None))
         r = parse_requirement('a (from http://domain.com/path#abc=def)')
         validate(r, ('a', None, None, 'a', 'http://domain.com/path#abc=def'))
+        for e in ('*', ':*:', ':meta:'):
+            r = parse_requirement('a [%s]' % e)
+            validate(r, ('a', None, [e], 'a', None))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
