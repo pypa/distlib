@@ -93,9 +93,12 @@ def parse_requirement(s):
         d = m.groupdict()
         name = d['dn']
         cons = d['c1'] or d['c2']
-        if d['diref']:
+        if not d['diref']:
+            url = None
+        else:
             # direct reference
             cons = None
+            url = d['diref'].strip()
         if not cons:
             cons = None
             constr = ''
@@ -111,7 +114,7 @@ def parse_requirement(s):
         else:
             extras = COMMA_RE.split(d['ex'])
         result = Container(name=name, constraints=cons, extras=extras,
-                           requirement=rs, source=s, url=d['diref'])
+                           requirement=rs, source=s, url=url)
     return result
 
 
