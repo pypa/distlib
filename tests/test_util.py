@@ -813,23 +813,25 @@ class GlobTestCase(GlobTestCaseBase):
             self.assertEqual(r.constraints, values[1])
             self.assertEqual(r.extras, values[2])
             self.assertEqual(r.requirement, values[3])
+            self.assertEqual(r.url, values[4])
 
         r = parse_requirement('a')
-        validate(r, ('a', None, None, 'a'))
+        validate(r, ('a', None, None, 'a', None))
         r = parse_requirement('a 1.2')
-        validate(r, ('a', [('~=', '1.2')], None, 'a (~= 1.2)'))
+        validate(r, ('a', [('~=', '1.2')], None, 'a (~= 1.2)', None))
         r = parse_requirement('a >= 1.2, <2.0,!=1.7')
         validate(r, ('a', [('>=', '1.2'), ('<', '2.0'), ('!=', '1.7')], None,
-                     'a (>= 1.2, < 2.0, != 1.7)'))
+                     'a (>= 1.2, < 2.0, != 1.7)', None))
         r = parse_requirement('a [ab,cd , ef] >= 1.2, <2.0')
         validate(r, ('a', [('>=', '1.2'), ('<', '2.0')], ['ab', 'cd', 'ef'],
-                     'a (>= 1.2, < 2.0)'))
+                     'a (>= 1.2, < 2.0)', None))
         r = parse_requirement('a[]')
-        validate(r, ('a', None, None, 'a'))
+        validate(r, ('a', None, None, 'a', None))
         r = parse_requirement('a (== 1.2.*, != 1.2.1.*)')
         validate(r, ('a', [('==', '1.2.*'), ('!=', '1.2.1.*')], None,
-                 'a (== 1.2.*, != 1.2.1.*)'))
-
+                 'a (== 1.2.*, != 1.2.1.*)', None))
+        r = parse_requirement('a (from http://domain.com/path#abc=def)')
+        validate(r, ('a', None, None, 'a', 'http://domain.com/path#abc=def'))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -58,11 +58,13 @@ RELOP = '([<>=!~]=)|[<>]'
 BARE_CONSTRAINTS = ('(' + RELOP + r')?\s*(' + IDENT + ')(' + COMMA + '(' +
                     RELOP + r')\s*(' + IDENT + '))*')
 
+DIRECT_REF = '(from (?P<diref>.*))'
+
 #
 # Either the bare constraints or the bare constraints in parentheses
 #
-CONSTRAINTS = (r'\(\s*(?P<c1>' + BARE_CONSTRAINTS + r')\s*\)|(?P<c2>' +
-               BARE_CONSTRAINTS + '\s*)')
+CONSTRAINTS = (r'\(\s*(?P<c1>' + BARE_CONSTRAINTS + '|' + DIRECT_REF +
+               r')\s*\)|(?P<c2>' + BARE_CONSTRAINTS + '\s*)')
 
 EXTRA_LIST = IDENT + '(' + COMMA + IDENT + ')*'
 EXTRAS = r'\[\s*(?P<ex>' + EXTRA_LIST + r')?\s*\]'
@@ -88,6 +90,9 @@ def parse_requirement(s):
         d = m.groupdict()
         name = d['dn']
         cons = d['c1'] or d['c2']
+        if d['diref']:
+            # direct reference
+            cons = None
         if not cons:
             cons = None
             constr = ''
@@ -103,7 +108,7 @@ def parse_requirement(s):
         else:
             extras = COMMA_RE.split(d['ex'])
         result = Container(name=name, constraints=cons, extras=extras,
-                           requirement=rs, source=s)
+                           requirement=rs, source=s, url=d['diref'])
     return result
 
 
