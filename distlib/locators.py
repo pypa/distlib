@@ -1030,14 +1030,14 @@ class DependencyFinder(object):
             result = True
         return result
 
-    def find(self, requirement, extras=None, prereleases=False):
+    def find(self, requirement, meta_extras=None, prereleases=False):
         """
         Find a distribution and all distributions it depends on.
 
         :param requirement: The requirement specifying the distribution to
                             find, or a Distribution instance.
-        :param extras: Additional extras. This can be used e.g. to include
-                       special extras such as :test:, :build: and so on.
+        :param meta_extras: A list of meta extras such as :test:, :build: and
+                            so on.
         :param prereleases: If ``True``, allow pre-release versions to be
                             returned - otherwise, don't return prereleases
                             unless they're all that's available.
@@ -1061,7 +1061,7 @@ class DependencyFinder(object):
         self.dists_by_name = {}
         self.reqts = {}
 
-        extras = set(extras or [])
+        meta_extras = set(meta_extras or [])
         if isinstance(requirement, Distribution):
             dist = odist = requirement
             logger.debug('passed %s as requirement', odist)
@@ -1092,7 +1092,7 @@ class DependencyFinder(object):
             if dist in install_dists:
                 for key in ('test', 'build', 'dev'):
                     e = ':%s:' % key
-                    if e in extras:
+                    if e in meta_extras:
                         ereqts |= getattr(dist, '%s_requires' % key)
             all_reqts = ireqts | sreqts | ereqts
             for r in all_reqts:

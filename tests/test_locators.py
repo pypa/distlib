@@ -203,7 +203,8 @@ class LocatorTestCase(unittest.TestCase):
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
                                   'pytest-runner'])
-        dists, problems = finder.find('irc (== 5.0.1)', extras=[':test:'])
+        dists, problems = finder.find('irc (== 5.0.1)',
+                                      meta_extras=[':test:'])
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
