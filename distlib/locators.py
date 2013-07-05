@@ -1061,6 +1061,7 @@ class DependencyFinder(object):
         self.dists_by_name = {}
         self.reqts = {}
 
+        extras = set(extras or [])
         if isinstance(requirement, Distribution):
             dist = odist = requirement
             logger.debug('passed %s as requirement', odist)
@@ -1087,7 +1088,7 @@ class DependencyFinder(object):
 
             ireqts = dist.run_requires | dist.meta_requires
             sreqts = dist.build_requires
-            if not tests or dist not in install_dists:
+            if ':test:' not in extras or dist not in install_dists:
                 treqts = set()
             else:
                 treqts = dist.test_requires
