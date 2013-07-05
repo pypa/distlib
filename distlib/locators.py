@@ -1088,11 +1088,13 @@ class DependencyFinder(object):
 
             ireqts = dist.run_requires | dist.meta_requires
             sreqts = dist.build_requires
-            if ':test:' not in extras or dist not in install_dists:
-                treqts = set()
-            else:
-                treqts = dist.test_requires
-            all_reqts = ireqts | sreqts | treqts
+            ereqts = set()
+            if dist in install_dists:
+                for key in ('test', 'build', 'dev'):
+                    e = ':%s:' % key
+                    if e in extras:
+                        ereqts |= getattr(dist, '%s_requires' % key)
+            all_reqts = ireqts | sreqts | ereqts
             for r in all_reqts:
                 providers = self.find_providers(r)
                 if not providers:
