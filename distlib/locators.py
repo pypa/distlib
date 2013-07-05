@@ -1030,15 +1030,17 @@ class DependencyFinder(object):
             result = True
         return result
 
-    def find(self, requirement, tests=False, prereleases=False):
+    def find(self, requirement, extras=None, prereleases=False):
         """
-        Find a distribution matching requirement and all distributions
-        it depends on. Use the ``tests`` argument to determine whether
-        distributions used only for testing should be included in the
-        results. Allow ``requirement`` to be either a :class:`Distribution`
-        instance or a string expressing a requirement. If ``prereleases``
-        is True, allow pre-release versions to be returned - otherwise,
-        don't.
+        Find a distribution and all distributions it depends on.
+
+        :param requirement: The requirement specifying the distribution to
+                            find, or a Distribution instance.
+        :param extras: Additional extras. This can be used e.g. to include
+                       special extras such as :test:, :build: and so on.
+        :param prereleases: If ``True``, allow pre-release versions to be
+                            returned - otherwise, don't return prereleases
+                            unless they're all that's available.
 
         Return a set of :class:`Distribution` instances and a set of
         problems.
@@ -1074,7 +1076,7 @@ class DependencyFinder(object):
         install_dists = set([odist])
         while todo:
             dist = todo.pop()
-            name = dist.key # case-insensitive
+            name = dist.key     # case-insensitive
             if name not in self.dists_by_name:
                 self.add_distribution(dist)
             else:
@@ -1085,12 +1087,11 @@ class DependencyFinder(object):
 
             ireqts = dist.run_requires | dist.meta_requires
             sreqts = dist.build_requires
-            ereqts = set()
             if not tests or dist not in install_dists:
                 treqts = set()
             else:
                 treqts = dist.test_requires
-            all_reqts = ireqts | sreqts | treqts | ereqts
+            all_reqts = ireqts | sreqts | treqts
             for r in all_reqts:
                 providers = self.find_providers(r)
                 if not providers:
