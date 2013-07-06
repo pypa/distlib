@@ -740,7 +740,7 @@ Classes
       Initialise an instance with the locator to be used for locating
       distributions.
 
-   .. method:: find(requirement, tests=False)
+   .. method:: find(requirement, metas_extras=None, prereleases=False)
 
       Find all the distributions needed to fulfill ``requirement``.
 
@@ -748,8 +748,11 @@ Classes
                           version can include an inequality constraint, or an
                           instance of :class:`Distribution` (e.g. representing
                           a distribution on the local hard disk).
-      :param tests: If ``True``, include requirements which are only needed for
-                    running tests. Otherwise, leave these out.
+      :param meta_extras: A list of meta extras such as :test:, :build: and
+                          so on, to be included in the dependencies.
+      :param prereleases: If ``True``, allow pre-release versions to be
+                          returned - otherwise, don't return prereleases
+                          unless they're all that's available.
       :returns: A 2-tuple. The first element is a set of :class:`Distribution`
                 instances. The second element is a set of problems encountered
                 during dependency resolution. Currently, if this set is non-

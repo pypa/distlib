@@ -133,13 +133,16 @@ locator as a constructor argument. It might look something like this::
             to locate distributions.
             """
 
-        def find(self, requirement, tests=False):
+        def find(self, requirement, meta_extras=None, prereleases=False):
             """
             Find a distribution matching requirement and all distributions
-            it depends on. Use the ``tests`` argument to determine whether
-            distributions used only for testing should be included in the
-            results. Allow ``requirement`` to be either a :class:`Distribution`
-            instance or a string expressing a requirement.
+            it depends on. Use the ``meta_extras`` argument to determine
+            whether distributions used only for build, test etc. should be
+            included in the results. Allow ``requirement`` to be either a
+            :class:`Distribution` instance or a string expressing a
+            requirement. If ``prereleases`` is True, treat pre-releases as
+            normal releases; otherwise only return pre-releases if they're
+            all that's available.
 
             Return a set of :class:`Distribution` instances and a set of
             problems.
