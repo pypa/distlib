@@ -106,6 +106,10 @@ class Locator(object):
         # Because of bugs in some of the handlers on some of the platforms,
         # we use our own opener rather than just using urlopen.
         self.opener = build_opener(RedirectHandler())
+        # If get_project() is called from locate(), the matcher instance
+        # is set from the requirement passed to locate(). See issue #18 for
+        # why this can be useful to know.
+        self.matcher = None
 
     def clear_cache(self):
         self._cache.clear()
@@ -124,6 +128,9 @@ class Locator(object):
         instances.
 
         This should be implemented in subclasses.
+
+        If called from a locate() request, self.matcher will be set to a
+        matcher for the requirement to satisfy, otherwise it will be None.
         """
         raise NotImplementedError('Please implement in the subclass')
 
@@ -295,20 +302,17 @@ class Locator(object):
                  distribution could be located.
         """
         result = None
-        scheme = get_scheme(self.scheme)
         r = parse_requirement(requirement)
         if r is None:
             raise DistlibException('Not a valid requirement: %r' % requirement)
-        if r.extras:
-            # lose the extras part of the requirement
-            requirement = r.requirement
-        matcher = scheme.matcher(requirement)
-        vcls = matcher.version_class
+        scheme = get_scheme(self.scheme)
+        self.matcher = matcher = scheme.matcher(r.requirement)
         logger.debug('matcher: %s (%s)', matcher, type(matcher).__name__)
-        versions = self.get_project(matcher.name)
+        versions = self.get_project(r.name)
         if versions:
             # sometimes, versions are invalid
             slist = []
+            vcls = matcher.version_class
             for k in versions:
                 try:
                     if not matcher.match(k):
@@ -329,6 +333,7 @@ class Locator(object):
                 result = versions[slist[-1]]
         if result and r.extras:
             result.extras = r.extras
+        self.matcher = None
         return result
 
 
@@ -870,13 +875,32 @@ class AggregatingLocator(Locator):
     def _get_project(self, name):
         result = {}
         for locator in self.locators:
-            r = locator.get_project(name)
-            if r:
+            d = locator.get_project(name)
+            if d:
                 if self.merge:
-                    result.update(r)
+                    result.update(d)
                 else:
-                    result = r
-                    break
+                    # See issue #18. If any dists are found and we're looking
+                    # for specific constraints, we only return something if
+                    # a match is found. For example, if a DirectoryLocator
+                    # returns just foo (1.0) while we're looking for
+                    # foo (>= 2.0), we'll pretend there was nothing there so
+                    # that subsequent locators can be queried. Otherwise we
+                    # would just return foo (1.0) which would then lead to a
+                    # failure to find foo (>= 2.0), because other locators
+                    # weren't searched. Note that this only matters when
+                    # merge=False.
+                    if self.matcher is None:
+                        found = True
+                    else:
+                        found = False
+                        for k in d:
+                            if self.matcher.match(k):
+                                found = True
+                                break
+                    if found:
+                        result = d
+                        break
         return result
 
     def get_distribution_names(self):
