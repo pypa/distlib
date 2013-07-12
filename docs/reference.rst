@@ -635,6 +635,28 @@ Classes
       :returns: All distributions known to this locator.
       :rtype: set
 
+   .. method:: locate(requirement, prereleases=False)
+
+      This tries to locate the latest version of a potentially downloadable
+      distribution which matches a requirement (name and version constraints).
+      If a potentially downloadable distribution (i.e. one with a download
+      URL) is not found, ``None`` is returned -- otherwise, an instance of
+      :class:`~distlib.database.Distribution` is returned. The returned
+      instance will have, at a minimum, ``name``, ``version`` and
+      ``source_url`` populated.
+
+      :param requirement: The name and optional version constraints of the
+                          distribution to locate, e.g. ``'Flask'`` or
+                          ``'Flask (>= 0.7, < 0.9)'``.
+      :type requirement: str
+      :param prereleases: If ``True``, prereleases are treated like normal
+                          releases. The default behaviour is to not return any
+                          prereleases unless they are the only ones which match
+                          the requirement.
+      :type prereleases: bool
+      :returns: A matching instance of :class:`~distlib.database.Distribution`,
+                or ``None``.
+
 .. class:: DirectoryLocator(Locator)
 
    This locator scans the file system under a base directory, looking for
@@ -784,7 +806,7 @@ Functions
              Note that some of the names may be Unicode.
    :rtype: list
 
-.. function:: locate(requirement)
+.. function:: locate(requirement, prereleases=False)
 
    This convenience function returns the latest version of a potentially
    downloadable distribution which matches a requirement (name and version
@@ -798,6 +820,11 @@ Functions
                        distribution to locate, e.g. ``'Flask'`` or
                        ``'Flask (>= 0.7, < 0.9)'``.
    :type requirement: str
+   :param prereleases: If ``True``, prereleases are treated like normal
+                       releases. The default behaviour is to not return any
+                       prereleases unless they are the only ones which match
+                       the requirement.
+   :type prereleases: bool
    :returns: A matching instance of :class:`~distlib.database.Distribution`,
              or ``None``.
 

@@ -114,6 +114,12 @@ will look something like this::
             instance, or an empty dictionary if nothing was found.
             """
 
+When attempting to :meth:`locate`, it would be useful to pass requirement
+information to :meth:`get_project` / :meth:`_get_project`. This can be done in
+a :attr:`matcher` attribute which is normally ``None`` but set to a
+:class:`distlib.version.Matcher` instance when a :meth:`locate` call is in
+progress.
+
 
 Finding dependencies
 ~~~~~~~~~~~~~~~~~~~~

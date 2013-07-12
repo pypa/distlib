@@ -757,6 +757,11 @@ specify the ``scheme`` keyword when creating the instance::
 
     >>> legacy_metadata = Metadata(scheme='legacy')
 
+The term 'legacy' is somewhat ambiguous, as it could refer to either the
+metadata format (legacy => key-value, non-legacy =< JSON as described in
+:pep:`426`) or the version specification (legacy => setuptools-compatible,
+non-legacy => as described in :pep:`440`). In this case, it refers to the
+**version scheme** and *not* the metadata format.
 Legacy metadata is also subject to constraints, but they are less stringent
 (for example, the name and version number are less constrained).
 
