@@ -882,7 +882,7 @@ class Metadata(object):
     def dictionary(self):
         if self._legacy:
             return self._from_legacy()
-        return self._dict
+        return self._data
 
     @property
     def dependencies(self):
