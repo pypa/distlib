@@ -139,6 +139,18 @@ else:
 
     from ssl import match_hostname, CertificateError
 
+
+try:
+    from types import SimpleNamespace as Container
+except ImportError:
+    class Container(object):
+        """
+        A generic container for when multiple values need to be returned
+        """
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+
 # ZipFile is a context manager in 2.7, but not in 2.6
 
 from zipfile import ZipFile as BaseZipFile

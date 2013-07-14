@@ -19,12 +19,12 @@ from compat import unittest
 from support import TempdirManager
 
 from distlib import DistlibException
-from distlib.compat import cache_from_source
+from distlib.compat import cache_from_source,  Container
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir, zip_dir,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
-                          iglob, RICH_GLOB, parse_requirement, Container,
+                          iglob, RICH_GLOB, parse_requirement,
                           Configurator,
                           FileOperator, is_string_sequence, get_package_data)
 

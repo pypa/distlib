@@ -25,17 +25,10 @@ from . import DistlibException
 from .compat import (string_types, text_type, shutil, raw_input,
                      cache_from_source, urlopen, httplib, xmlrpclib, splittype,
                      HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
-                     BaseConfigurator, valid_ident,
+                     BaseConfigurator, valid_ident, Container,
                      URLError, match_hostname, CertificateError, ZipFile)
 
 logger = logging.getLogger(__name__)
-
-class Container(object):
-    """
-    A generic container for when multiple values need to be returned
-    """
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
 
 #
 # Requirement parsing code for name + optional constraints + optional extras
