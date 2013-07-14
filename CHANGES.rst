@@ -8,7 +8,7 @@ Released: Not yet.
 
 - database
 
-    - Added support for PEP 426 JSON metadata (pymeta.json).
+    - Added support for PEP 426 JSON metadata (pydist.json).
 
     - Fixed a bug in parsing legacy metadata from .egg directories.
 
@@ -16,11 +16,11 @@ Released: Not yet.
 
 - index
 
-    - Changes relating to support for PEP 426 JSON metadata (pymeta.json).
+    - Changes relating to support for PEP 426 JSON metadata (pydist.json).
 
 - locators
 
-    - Changes relating to support for PEP 426 JSON metadata (pymeta.json).
+    - Changes relating to support for PEP 426 JSON metadata (pydist.json).
 
     - Fixed a bug in scoring download URLs for preference when multiple URLs
       are available.
@@ -38,7 +38,7 @@ Released: Not yet.
 
 - metadata
 
-    - Added support for PEP 426 JSON metadata (pymeta.json). The old
+    - Added support for PEP 426 JSON metadata (pydist.json). The old
       metadata class is renamed to LegacyMetadata, and the (new)
       Metadata class wraps the JSON format (and also the legacy format,
       through LegacyMetadata).
@@ -62,7 +62,7 @@ Released: Not yet.
 
 - wheel
 
-    - Added support for PEP 426 JSON metadata (pymeta.json).
+    - Added support for PEP 426 JSON metadata (pydist.json).
 
     - Added lib_only flag to install() method.
 

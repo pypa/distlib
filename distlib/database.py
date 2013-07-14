@@ -31,7 +31,7 @@ __all__ = ['Distribution', 'BaseInstalledDistribution',
 
 logger = logging.getLogger(__name__)
 
-DIST_FILES = ('INSTALLER', 'METADATA', 'pymeta.json', 'RECORD', 'REQUESTED',
+DIST_FILES = ('INSTALLER', 'METADATA', 'pydist.json', 'RECORD', 'REQUESTED',
               'RESOURCES', 'EXPORTS', 'SHARED')
 
 DISTINFO_EXT = '.dist-info'
@@ -337,32 +337,30 @@ class Distribution(object):
             plist.append(s)
         return plist
 
-    def _get_requirements(self, always_attr, sometimes_attr):
-        always = getattr(self.metadata, always_attr)
-        sometimes = getattr(self.metadata, sometimes_attr)
-        return set(self.metadata.get_requirements(always, sometimes,
-                                                  extras=self.extras,
+    def _get_requirements(self, req_attr):
+        reqts = getattr(self.metadata, req_attr)
+        return set(self.metadata.get_requirements(reqts, extras=self.extras,
                                                   env=self.context))
 
     @property
     def run_requires(self):
-        return self._get_requirements('run_requires', 'run_may_require')
+        return self._get_requirements('run_requires')
 
     @property
     def meta_requires(self):
-        return self._get_requirements('meta_requires', 'meta_may_require')
+        return self._get_requirements('meta_requires')
 
     @property
     def build_requires(self):
-        return self._get_requirements('build_requires', 'build_may_require')
+        return self._get_requirements('build_requires')
 
     @property
     def test_requires(self):
-        return self._get_requirements('test_requires', 'test_may_require')
+        return self._get_requirements('test_requires')
 
     @property
     def dev_requires(self):
-        return self._get_requirements('dev_requires', 'dev_may_require')
+        return self._get_requirements('dev_requires')
 
     def matches_requirement(self, req):
         """
@@ -487,7 +485,7 @@ class BaseInstalledDistribution(Distribution):
 
 class InstalledDistribution(BaseInstalledDistribution):
     """Created with the *path* of the ``.dist-info`` directory provided to the
-    constructor. It reads the metadata contained in ``pymeta.json`` when it is
+    constructor. It reads the metadata contained in ``pydist.json`` when it is
     instantiated., or uses a passed in Metadata instance (useful for when
     dry-run mode is being used)."""
 
@@ -497,12 +495,12 @@ class InstalledDistribution(BaseInstalledDistribution):
         if env and env._cache_enabled and path in env._cache.path:
             metadata = env._cache.path[path].metadata
         elif metadata is None:
-            for fn in ('pymeta.json', 'METADATA'):
+            for fn in ('pydist.json', 'METADATA'):
                 metadata_path = os.path.join(path, fn)
                 if os.path.exists(metadata_path):
                     break
                 if fn == 'METADATA':    # must be one or t'other
-                    raise ValueError('no pymeta.json or METADATA found')
+                    raise ValueError('no pydist.json or METADATA found')
             metadata = Metadata(path=metadata_path, scheme='legacy')
 
         super(InstalledDistribution, self).__init__(metadata, path, env)

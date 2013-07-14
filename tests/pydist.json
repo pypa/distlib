@@ -12,34 +12,42 @@
     "foo",
     "bar"
   ],
-  "run_requires": ["foo"],
-  "meta_requires": ["bar (1.0)"],
-  "extras": ["ssl", "certs"],
-  "run_may_require": [
+  "meta_requires": [
     {
-      "dependencies": ["certifi (0.0.8)"],
+      "requires": ["bar (1.0)"]
+    }
+  ],
+  "extras": ["ssl", "certs"],
+  "run_requires": [
+    {
+      "requires": ["foo"]
+    },
+    {
+      "requires": ["certifi (0.0.8)"],
       "extra": "certs"
     },
     {
-      "dependencies": ["wincertstore (0.1)"],
+      "requires": ["wincertstore (0.1)"],
       "extra": "ssl",
       "environment": "sys_platform=='win32'"
     },
     {
-      "dependencies": ["ctypes (1.0.2)"],
+      "requires": ["ctypes (1.0.2)"],
       "extra": "ssl",
       "environment": "sys_platform=='win32' and python_version=='2.4'"
     },
     {
-      "dependencies": ["ssl (1.16)"],
+      "requires": ["ssl (1.16)"],
       "extra": "ssl",
       "environment": "python_version in '2.4, 2.5'"
     }
   ],
-  "test_requires": ["nose"],
-  "test_may_require": [
+  "test_requires": [
     {
-      "dependencies": ["nose-udp"],
+      "requires": ["nose"]
+    },
+    {
+      "requires": ["nose-udp"],
       "extra": "udp"
     }
   ],

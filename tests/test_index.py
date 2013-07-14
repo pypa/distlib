@@ -92,14 +92,14 @@ class PackageIndexTestCase(unittest.TestCase):
 
     def load_package_metadata(self, path):
         result = None
-        for bn in ('pymeta.json', 'package.json'):
+        for bn in ('pydist.json', 'package.json'):
             fn = os.path.join(path, bn)
             if os.path.exists(fn):
                 with codecs.open(fn, 'r', 'utf-8') as jf:
                     result = json.load(jf)
                     break
         if not result:
-            raise ValueError('neither pymeta.json nor package.json '
+            raise ValueError('neither pydist.json nor package.json '
                              'found in %s' % fn)
         if bn == 'package.json':
             result = result.get('index-metadata', {})

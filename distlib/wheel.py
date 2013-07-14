@@ -197,7 +197,7 @@ class Wheel(object):
         info_dir = '%s.dist-info' % name_ver
         wrapper = codecs.getreader('utf-8')
         with ZipFile(pathname, 'r') as zf:
-            for fn in ('pymeta.json', 'METADATA'):
+            for fn in ('pydist.json', 'METADATA'):
                 metadata_filename = posixpath.join(info_dir, fn)
                 try:
                     with zf.open(metadata_filename) as bf:

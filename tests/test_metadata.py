@@ -510,7 +510,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                          set(['choxie (2.0.0.9)', 'truffles (1.0)']))
 
         # Initialise from new metadata
-        fn = os.path.join(HERE, 'pymeta.json')
+        fn = os.path.join(HERE, 'pydist.json')
         md = Metadata(path=fn)
         md.validate()
         self.assertIsNone(md._legacy)
@@ -534,26 +534,25 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                          set(['towel-stuff (0.1)', 'nut', 'foo (0.1.2)']))
 
     def test_requirements(self):
-        fn = os.path.join(HERE, 'pymeta.json')
+        fn = os.path.join(HERE, 'pydist.json')
         md = Metadata(path=fn)
-        self.assertEqual(md.run_requires, ['foo'])
-        self.assertEqual(md.meta_requires, ['bar (1.0)'])
-        r = md.get_requirements([], md.run_may_require)
-        self.assertEqual(r, [])
-        r = md.get_requirements([], md.run_may_require, extras=['certs'])
-        self.assertEqual(r, ['certifi (0.0.8)'])
-        r = md.get_requirements([], md.run_may_require, extras=['certs', 'ssl'])
+        self.assertEqual(md.meta_requires, [{'requires': ['bar (1.0)']}])
+        r = md.get_requirements(md.run_requires)
+        self.assertEqual(r, ['foo'])
+        r = md.get_requirements(md.run_requires, extras=['certs'])
+        self.assertEqual(r, ['foo', 'certifi (0.0.8)'])
+        r = md.get_requirements(md.run_requires, extras=['certs', 'ssl'])
         if sys.platform != 'win32':
-            self.assertEqual(r, ['certifi (0.0.8)'])
+            self.assertEqual(r, ['foo', 'certifi (0.0.8)'])
         else:
             self.assertEqual(set(r), set(['certifi (0.0.8)',
                                           'wincertstore (0.1)']))
         for ver in ('2.5', '2.4'):
             env = {'python_version': ver}
-            r = md.get_requirements([], md.run_may_require,
+            r = md.get_requirements(md.run_requires,
                                     extras=['certs', 'ssl'], env=env)
             if sys.platform != 'win32':
-                self.assertEqual(set(r), set(['certifi (0.0.8)',
+                self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)',
                                               'ssl (1.16)']))
             elif ver == '2.4':
                 self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
@@ -563,53 +562,58 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                 self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
                                               'wincertstore (0.1)']))
         env['sys_platform'] = 'win32'
-        r = md.get_requirements([], md.run_may_require,
+        r = md.get_requirements(md.run_requires,
                                 extras=['certs', 'ssl'], env=env)
-        self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
+        self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)', 'ssl (1.16)',
                                       'ctypes (1.0.2)', 'wincertstore (0.1)']))
         env['python_version'] = '2.5'
-        r = md.get_requirements([], md.run_may_require,
+        r = md.get_requirements(md.run_requires,
                                 extras=['certs', 'ssl'], env=env)
-        self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
+        self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)', 'ssl (1.16)',
                                       'wincertstore (0.1)']))
-        r = md.get_requirements([], md.run_may_require, extras=['test'])
-        self.assertEqual(r, ['nose'])
-        r = md.get_requirements([], md.run_may_require, extras=['test', 'udp'])
-        self.assertEqual(set(r), set(['nose', 'nose-udp']))
-        r = md.get_requirements(md.run_requires, md.run_may_require,
-                                extras=['test', 'udp'])
+        r = md.get_requirements(md.run_requires, extras=[':test:'])
+        self.assertEqual(r, ['foo', 'nose'])
+        r = md.get_requirements(md.run_requires, extras=[':test:', 'udp'])
         self.assertEqual(set(r), set(['foo', 'nose', 'nose-udp']))
         self.assertEqual(md.dependencies, {
             'provides': ['foobar (0.1)'],
-            'run_requires': ['foo'],
-            'meta_requires': ['bar (1.0)'],
+            'meta_requires': [
+                {
+                    'requires': ['bar (1.0)']
+                }
+            ],
             'extras': ['ssl', 'certs'],
             'build_requires': [],
-            'test_requires': ['nose'],
-            'test_may_require': [
+            'test_requires': [
                 {
-                    'dependencies': ['nose-udp'],
+                    'requires': ['nose'],
+                },
+                {
+                    'requires': ['nose-udp'],
                     'extra': 'udp',
                 }
             ],
-            'run_may_require': [
+            'run_requires': [
                 {
-                    'dependencies': ['certifi (0.0.8)'],
+                    'requires': ['foo']
+                },
+                {
+                    'requires': ['certifi (0.0.8)'],
                     'extra': 'certs',
                 },
                 {
-                    'dependencies': ['wincertstore (0.1)'],
+                    'requires': ['wincertstore (0.1)'],
                     'extra': 'ssl',
                     'environment': "sys_platform=='win32'",
                 },
                 {
-                    'dependencies': ['ctypes (1.0.2)'],
+                    'requires': ['ctypes (1.0.2)'],
                     'extra': 'ssl',
                     'environment': "sys_platform=='win32' and "
                                    "python_version=='2.4'",
                 },
                 {
-                    'dependencies': ['ssl (1.16)'],
+                    'requires': ['ssl (1.16)'],
                     'extra': 'ssl',
                     'environment': "python_version in '2.4, 2.5'",
                 }

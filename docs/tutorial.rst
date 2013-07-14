@@ -801,7 +801,7 @@ Writing metadata to paths and streams
 
 Writing metadata can be done using the ``write`` method::
 
-   >>> metadata.write(path='/to/my/pymeta.json')
+   >>> metadata.write(path='/to/my/pydist.json')
 
 You can also specify a file-like object to write to, using the ``fileobj``
 keyword argument.
@@ -1478,7 +1478,7 @@ build wheels::
                     metadata = Metadata(path=pn)
                     pd = get_package_data(metadata.name, metadata.version)
                     metadata = Metadata(mapping=pd['index-metadata'])
-                    mdname = os.path.join(newdn, 'pymeta.json')
+                    mdname = os.path.join(newdn, 'pydist.json')
                 if oldfn in excludes or not options.compatible:
                     os.remove(pn)
         if metadata:

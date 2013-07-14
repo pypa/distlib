@@ -657,6 +657,7 @@ class LegacyMetadata(object):
         return '<%s %s %s>' % (self.__class__.__name__, self.name,
                                self.version)
 
+
 class Metadata(object):
     """
     The metadata of a release. This implementation uses 2.0 (JSON)
@@ -682,10 +683,9 @@ class Metadata(object):
 
     INDEX_KEYS = 'name version license summary description'
 
-    DEPENDENCY_KEYS = ('extras run_requires run_may_require test_requires '
-                       'test_may_require build_requires build_may_require '
-                       'dev_requires dev_may_require provides meta_requires '
-                       'meta_may_require obsoleted_by supports_environments')
+    DEPENDENCY_KEYS = ('extras run_requires test_requires build_requires '
+                       'dev_requires provides meta_requires obsoleted_by '
+                       'supports_environments')
 
     SYNTAX_VALIDATORS = {
         'metadata_version': (METADATA_VERSION_MATCHER, ()),
@@ -740,15 +740,10 @@ class Metadata(object):
 
     mapped_keys = {
         'run_requires': ('Requires-Dist', list),
-        'run_may_require': (None, list),
         'build_requires': ('Setup-Requires-Dist', list),
-        'build_may_require': (None, list),
         'dev_requires': (None, list),
-        'dev_may_require': (None, list),
         'test_requires': (None, list),
-        'test_may_require': (None, list),
         'meta_requires': (None, list),
-        'meta_may_require': (None, list),
         'classifiers': ('Classifier', list),
         'source_url': ('Download-URL', None),
         'metadata_version': ('Metadata-Version', None),
@@ -790,7 +785,7 @@ class Metadata(object):
         common = object.__getattribute__(self, 'common_keys')
         mapped = object.__getattribute__(self, 'mapped_keys')
         if key in mapped:
-            lk, maker = mapped[key]
+            lk, _ = mapped[key]
             if self._legacy:
                 if lk is None:
                     raise NotImplementedError
@@ -834,24 +829,21 @@ class Metadata(object):
         else:
             self._data['provides'] = value
 
-    def get_requirements(self, always, sometimes, extras=None, env=None):
+    def get_requirements(self, reqts, extras=None, env=None):
         """
         Base method to get dependencies, given a set of extras
         to satisfy and an optional environment context.
-        :param always: A list of always-wanted dependencies.
-        :param sometimes: A list of sometimes-wanted dependencies,
-                          dependent on extras and environment.
+        :param reqts: A list of sometimes-wanted dependencies,
+                      perhaps dependent on extras and environment.
         :param extras: A list of optional components being requested.
         :param env: An optional environment for marker evaluation.
         """
         if self._legacy:
-            if sometimes:
-                raise NotImplementedError
-            result = always
+            result = reqts
         else:
-            result = list(always)   # make a copy, as we may add to it
+            result = []
             extras = set(extras or [])
-            for d in sometimes:
+            for d in reqts:
                 if 'extra' not in d and 'environment' not in d:
                     # unconditional
                     include = True
@@ -867,15 +859,16 @@ class Metadata(object):
                         if marker:
                             include = interpret(marker, env)
                 if include:
-                    result.extend(d['dependencies'])
-            if 'test' in extras:
-                extras.remove('test')
-                always = self._data.get('test_requires', [])
-                sometimes = self._data.get('test_may_require', [])
-                # A recursive call, but it should terminate since 'test'
-                # has been removed from the extras
-                result.extend(self.get_requirements(always, sometimes,
-                              extras=extras, env=env))
+                    result.extend(d['requires'])
+            for key in ('build', 'dev', 'test'):
+                e = ':%s:' % key
+                if e in extras:
+                    extras.remove(e)
+                    # A recursive call, but it should terminate since 'test'
+                    # has been removed from the extras
+                    reqts = self._data.get('%s_requires' % key, [])
+                    result.extend(self.get_requirements(reqts, extras=extras,
+                                                        env=env))
         return result
 
     @property
