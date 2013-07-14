@@ -16,7 +16,7 @@ import logging
 import re
 
 
-from . import DistlibException
+from . import DistlibException, __version__
 from .compat import StringIO, string_types
 from .markers import interpret
 from .util import extract_by_key
@@ -720,7 +720,10 @@ class Metadata(object):
                 data = fileobj.read()
             if data is None:
                 # Initialised with no args - to be added
-                self._data = {'metadata_version': self.METADATA_VERSION}
+                self._data = {
+                    'metadata_version': self.METADATA_VERSION,
+                    'generator': 'distlib (%s)' % __version__,
+                }
             else:
                 try:
                     self._data = json.loads(data)
