@@ -500,7 +500,8 @@ class InstalledDistribution(BaseInstalledDistribution):
                 if os.path.exists(metadata_path):
                     break
                 if fn == 'METADATA':    # must be one or t'other
-                    raise ValueError('no pydist.json or METADATA found')
+                    raise ValueError('no pydist.json or METADATA found '
+                                     'in %s' % path)
             metadata = Metadata(path=metadata_path, scheme='legacy')
 
         super(InstalledDistribution, self).__init__(metadata, path, env)
