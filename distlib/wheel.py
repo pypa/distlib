@@ -26,7 +26,7 @@ import zipfile
 from . import __version__, DistlibException
 from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import DistributionPath, InstalledDistribution
-from .metadata import Metadata
+from .metadata import Metadata, METADATA_FILENAME
 from .scripts import ScriptMaker
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter,
                    cached_property, get_cache_base)
@@ -196,17 +196,15 @@ class Wheel(object):
         name_ver = '%s-%s' % (self.name, self.version)
         info_dir = '%s.dist-info' % name_ver
         wrapper = codecs.getreader('utf-8')
+        metadata_filename = posixpath.join(info_dir, METADATA_FILENAME)
         with ZipFile(pathname, 'r') as zf:
-            for fn in ('pydist.json', 'METADATA'):
-                metadata_filename = posixpath.join(info_dir, fn)
-                try:
-                    with zf.open(metadata_filename) as bf:
-                        wf = wrapper(bf)
-                        result = Metadata(fileobj=wf)
-                        break
-                except Exception:
-                    if fn == 'METADATA':    # must have one or the other
-                        raise
+            try:
+                with zf.open(metadata_filename) as bf:
+                    wf = wrapper(bf)
+                    result = Metadata(fileobj=wf)
+            except KeyError:
+                raise ValueError('Invalid wheel, because %s is '
+                                 'missing' % METADATA_FILENAME)
         return result
 
     @cached_property

@@ -19,7 +19,7 @@ from . import DistlibException
 from .compat import StringIO, configparser, string_types
 from .version import get_scheme, UnsupportedVersionError
 from .markers import interpret
-from .metadata import Metadata
+from .metadata import Metadata, METADATA_FILENAME
 from .util import (parse_requirement, cached_property, get_export_entry,
                    parse_name_and_version, CSVReader, CSVWriter)
 
@@ -31,7 +31,7 @@ __all__ = ['Distribution', 'BaseInstalledDistribution',
 
 logger = logging.getLogger(__name__)
 
-DIST_FILES = ('INSTALLER', 'METADATA', 'pydist.json', 'RECORD', 'REQUESTED',
+DIST_FILES = ('INSTALLER', METADATA_FILENAME, 'RECORD', 'REQUESTED',
               'RESOURCES', 'EXPORTS', 'SHARED')
 
 DISTINFO_EXT = '.dist-info'
@@ -495,13 +495,10 @@ class InstalledDistribution(BaseInstalledDistribution):
         if env and env._cache_enabled and path in env._cache.path:
             metadata = env._cache.path[path].metadata
         elif metadata is None:
-            for fn in ('pydist.json', 'METADATA'):
-                metadata_path = os.path.join(path, fn)
-                if os.path.exists(metadata_path):
-                    break
-                if fn == 'METADATA':    # must be one or t'other
-                    raise ValueError('no pydist.json or METADATA found '
-                                     'in %s' % path)
+            metadata_path = os.path.join(path, METADATA_FILENAME)
+            if not os.path.exists(metadata_path):
+                raise ValueError('no %s found in %s' % (METADATA_FILENAME,
+                                                        path))
             metadata = Metadata(path=metadata_path, scheme='legacy')
 
         super(InstalledDistribution, self).__init__(metadata, path, env)

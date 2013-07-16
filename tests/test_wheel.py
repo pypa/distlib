@@ -21,6 +21,7 @@ from distlib import DistlibException
 from distlib.compat import ZipFile
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
+from distlib.metadata import Metadata, METADATA_FILENAME
 from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS,
                            is_compatible)
 
@@ -43,16 +44,14 @@ def convert_egg_info(libdir, prefix):
     di = EGG_INFO_RE.sub('.dist-info', ei)
     newdn = os.path.join(libdir, di)
     os.rename(olddn, newdn)
-    renames = {
-        'PKG-INFO': 'METADATA',
-    }
     files = os.listdir(newdn)
     for oldfn in files:
         pn = os.path.join(newdn, oldfn)
-        if oldfn in renames:
-            os.rename(pn, os.path.join(newdn, renames[oldfn]))
-        else:
-            os.remove(pn)
+        if oldfn == 'PKG-INFO':
+            md = Metadata(path=pn)
+            mn = os.path.join(newdn, METADATA_FILENAME)
+            md.write(mn)
+        os.remove(pn)
     manifest = Manifest(os.path.dirname(libdir))
     manifest.findall()
     dp = DistributionPath([libdir])

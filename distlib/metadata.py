@@ -609,6 +609,8 @@ class LegacyMetadata(object):
                 ('provides_dist', 'Provides-Dist'),
                 ('obsoletes_dist', 'Obsoletes-Dist'),
                 ('project_url', 'Project-URL'),
+                ('maintainer', 'Maintainer'),
+                ('maintainer_email', 'Maintainer-email'),
             )
             for key, field_name in mapping_1_2:
                 if not skip_missing or field_name in self._fields:
@@ -658,6 +660,9 @@ class LegacyMetadata(object):
                                self.version)
 
 
+METADATA_FILENAME = 'pydist.json'
+
+
 class Metadata(object):
     """
     The metadata of a release. This implementation uses 2.0 (JSON)
@@ -674,6 +679,8 @@ class Metadata(object):
     SUMMARY_MATCHER = re.compile('.{1,2047}')
 
     METADATA_VERSION = '2.0'
+
+    GENERATOR = 'distlib (%s)' % __version__
 
     MANDATORY_KEYS = {
         'name': (),
@@ -722,7 +729,7 @@ class Metadata(object):
                 # Initialised with no args - to be added
                 self._data = {
                     'metadata_version': self.METADATA_VERSION,
-                    'generator': 'distlib (%s)' % __version__,
+                    'generator': self.GENERATOR,
                 }
             else:
                 try:
@@ -924,29 +931,33 @@ class Metadata(object):
             result = extract_by_key(self._data, self.INDEX_KEYS)
             return result
 
-    LEGACY_MAPPING = {
-        'name': 'Name',
-        'version': 'Version',
-        'license': 'License',
-        'summary': 'Summary',
-        'description': 'Description',
-        'classifiers': 'Classifier',
-    }
-
     def _from_legacy(self):
         assert self._legacy and not self._data
-        result = { 'metadata_version': self.METADATA_VERSION }
-        lmd = self._legacy
-        for nk, ok in self.LEGACY_MAPPING.items():
-            result[nk] = lmd[ok]
-        kw = lmd['Keywords']
+        result = {
+            'metadata_version': self.METADATA_VERSION,
+            'generator': self.GENERATOR,
+        }
+        lmd = self._legacy.todict(True) # skip missing ones
+        for k in ('name', 'version', 'license', 'summary', 'description',
+                  'classifier'):
+            if k in lmd:
+                if k == 'classifier':
+                    nk = 'classifiers'
+                else:
+                    nk = k
+                result[nk] = lmd[k]
+        kw = lmd.get('Keywords', [])
         if kw == ['']:
             kw = []
         result['keywords'] = kw
-        result['run_requires'] = lmd['Requires-Dist']
-        result['build_requires'] = lmd['Setup-Requires-Dist']
+        keys = (('requires_dist', 'run_requires'),
+                ('setup_requires_dist', 'build_requires'))
+        for ok, nk in keys:
+            if ok in lmd and lmd[ok]:
+                result[nk] = [{'requires': lmd[ok]}]
         result['provides'] = self.provides
-        # TODO: other fields such as contacts
+        author = {}
+        maintainer = {}
         return result
 
     def _to_legacy(self):

@@ -15,8 +15,9 @@ from textwrap import dedent
 
 from compat import unittest
 
+from distlib import __version__
 from distlib.compat import StringIO
-from distlib.metadata import (LegacyMetadata, Metadata,
+from distlib.metadata import (LegacyMetadata, Metadata, METADATA_FILENAME,
                               PKG_INFO_PREFERRED_VERSION,
                               MetadataConflictError, MetadataMissingError,
                               MetadataUnrecognizedVersionError,
@@ -510,7 +511,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                          set(['choxie (2.0.0.9)', 'truffles (1.0)']))
 
         # Initialise from new metadata
-        fn = os.path.join(HERE, 'pydist.json')
+        fn = os.path.join(HERE, METADATA_FILENAME)
         md = Metadata(path=fn)
         md.validate()
         self.assertIsNone(md._legacy)
@@ -534,7 +535,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                          set(['towel-stuff (0.1)', 'nut', 'foo (0.1.2)']))
 
     def test_requirements(self):
-        fn = os.path.join(HERE, 'pydist.json')
+        fn = os.path.join(HERE, METADATA_FILENAME)
         md = Metadata(path=fn)
         self.assertEqual(md.meta_requires, [{'requires': ['bar (1.0)']}])
         r = md.get_requirements(md.run_requires)
@@ -631,16 +632,15 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
             data = json.load(f)
         self.assertEqual(data, {
             'metadata_version': '2.0',
+            'generator': 'distlib (%s)' % __version__,
             'name': 'choxie',
             'version': '2.0.0.9',
             'license': 'BSD',
             'summary': 'Chocolate with a kick!',
             'description': 'Chocolate with a longer kick!',
             'provides': ['truffles (1.0)', 'choxie (2.0.0.9)'],
-            'run_requires': ['towel-stuff (0.1)', 'nut'],
-            'build_requires': [],
+            'run_requires': [{'requires': ['towel-stuff (0.1)', 'nut']}],
             'keywords': [],
-            'classifiers': [],
         })
         # Write legacy, compare with original
         md.write(path=dfn, legacy=True)

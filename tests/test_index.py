@@ -21,7 +21,7 @@ from support import HTTPSServerThread
 from distlib import DistlibException
 from distlib.compat import urlopen, HTTPError, URLError
 from distlib.index import PackageIndex, DEFAULT_MIRROR_HOST
-from distlib.metadata import Metadata, MetadataMissingError
+from distlib.metadata import Metadata, MetadataMissingError, METADATA_FILENAME
 from distlib.util import zip_dir, HTTPSHandler
 
 logger = logging.getLogger(__name__)
@@ -92,15 +92,15 @@ class PackageIndexTestCase(unittest.TestCase):
 
     def load_package_metadata(self, path):
         result = None
-        for bn in ('pydist.json', 'package.json'):
+        for bn in (METADATA_FILENAME, 'package.json'):
             fn = os.path.join(path, bn)
             if os.path.exists(fn):
                 with codecs.open(fn, 'r', 'utf-8') as jf:
                     result = json.load(jf)
                     break
         if not result:
-            raise ValueError('neither pydist.json nor package.json '
-                             'found in %s' % fn)
+            raise ValueError('neither %s nor package.json '
+                             'found in %s' % (METADATA_FILENAME, fn))
         if bn == 'package.json':
             result = result.get('index-metadata', {})
         if result.get('metadata_version') != '2.0':
