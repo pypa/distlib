@@ -20,7 +20,7 @@ from compat import unittest
 from distlib import DistlibException
 from distlib.compat import text_type, file_type, StringIO
 import distlib.database
-from distlib.metadata import Metadata
+from distlib.metadata import Metadata, METADATA_FILENAME
 from distlib.database import (InstalledDistribution, EggInfoDistribution,
                               BaseInstalledDistribution,
                               DistributionPath, make_graph,
@@ -158,7 +158,8 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
     def setUp(self):
         def get_files(location):
-            for path in ('REQUESTED', 'INSTALLER', 'METADATA', 'EXPORTS'):
+            for path in ('REQUESTED', 'INSTALLER', 'METADATA',
+                         METADATA_FILENAME, 'EXPORTS'):
                 p = os.path.join(location + '.dist-info', path)
                 if os.path.exists(p):
                     yield p
@@ -206,7 +207,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
         # Test for known good file matches
         distinfo_files = [
             # Relative paths
-            'INSTALLER', 'METADATA',
+            'INSTALLER', METADATA_FILENAME,
             # Absolute paths
             os.path.join(distinfo_dir, 'RECORD'),
             os.path.join(distinfo_dir, 'REQUESTED'),
@@ -748,20 +749,13 @@ class DataFilesTestCase(GlobTestCaseBase):
         dist_info = os.path.join(temp_site_packages, 'test-0.1.dist-info')
         os.mkdir(dist_info)
 
-        metadata_path = os.path.join(dist_info, 'METADATA')
+        metadata_path = os.path.join(dist_info, 'pydist.json')
         resources_path = os.path.join(dist_info, 'RESOURCES')
-
-        fp = open(metadata_path, 'w')
-        try:
-            fp.write(dedent("""\
-                Metadata-Version: 1.2
-                Name: test
-                Version: 0.1
-                Summary: test
-                Author: me
-                """))
-        finally:
-            fp.close()
+        md = Metadata()
+        md.name = 'test'
+        md.version = '0.1'
+        md.summary = 'test'
+        md.write(path=metadata_path)
         test_path = 'test.cfg'
 
         fd, test_resource_path = tempfile.mkstemp()

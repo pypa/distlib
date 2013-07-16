@@ -2,6 +2,7 @@
 tests/run/
 docs/_build/
 .idea/
+.dict-validwords
 MANIFEST$
 distlib-vcsid|cover
 tests/passwords

@@ -778,8 +778,8 @@ class InstalledDistribution(BaseInstalledDistribution):
 
         # The file must be relative
         if path not in DIST_FILES:
-            raise DistlibException('invalid path for a dist-info file: %r' %
-                                  path)
+            raise DistlibException('invalid path for a dist-info file: '
+                                   '%r at %r' % (path, self.path))
 
         return os.path.join(self.path, path)
 

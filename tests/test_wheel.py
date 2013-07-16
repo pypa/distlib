@@ -314,13 +314,14 @@ class WheelTestCase(unittest.TestCase):
     def test_info(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)
+        actual = w.info
+        actual.pop('Generator', None)
         expected = {
-            'Generator': 'distlib 0.1',
             'Root-Is-Purelib': 'true',
             'Tag': 'py27-none-any',
             'Wheel-Version': '2.0'
         }
-        self.assertEqual(w.info, expected)
+        self.assertEqual(actual, expected)
 
     @unittest.skipIf(sys.version_info[:2] != (2, 7), 'The test wheel is only '
                                                '2.7 mountable')
