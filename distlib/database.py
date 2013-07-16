@@ -16,12 +16,12 @@ import sys
 import zipimport
 
 from . import DistlibException
-from .compat import StringIO, configparser, string_types
+from .compat import StringIO, string_types
 from .version import get_scheme, UnsupportedVersionError
 from .markers import interpret
 from .metadata import Metadata, METADATA_FILENAME
-from .util import (parse_requirement, cached_property, get_export_entry,
-                   parse_name_and_version, CSVReader, CSVWriter)
+from .util import (parse_requirement, cached_property, parse_name_and_version,
+                   read_exports, write_exports, CSVReader, CSVWriter)
 
 
 __all__ = ['Distribution', 'BaseInstalledDistribution',
@@ -565,16 +565,8 @@ class InstalledDistribution(BaseInstalledDistribution):
         result = {}
         rf = filename or self.get_distinfo_file('EXPORTS')
         if os.path.exists(rf):
-            cp = configparser.ConfigParser()
-            cp.read(rf)
-            for key in cp.sections():
-                result[key] = entries = {}
-                for name, value in cp.items(key):
-                    s = '%s = %s' % (name, value)
-                    entry = get_export_entry(s)
-                    assert entry is not None
-                    entry.dist = self
-                    entries[name] = entry
+            with open(rf, 'r') as f:
+                result = read_exports(f)
         return result
 
     def write_exports(self, exports, filename=None):
@@ -588,20 +580,8 @@ class InstalledDistribution(BaseInstalledDistribution):
                          directory is written to.
         """
         rf = filename or self.get_distinfo_file('EXPORTS')
-        cp = configparser.ConfigParser()
-        for k, v in exports.items():
-            # TODO check k, v for valid values
-            cp.add_section(k)
-            for entry in v.values():
-                if entry.suffix is None:
-                    s = entry.prefix
-                else:
-                    s = '%s:%s' % (entry.prefix, entry.suffix)
-                if entry.flags:
-                    s = '%s [%s]' % (s, ', '.join(entry.flags))
-                cp.set(k, entry.name, s)
         with open(rf, 'w') as f:
-            cp.write(f)
+            write_exports(exports, f)
 
     def get_resource_path(self, relative_path):
         """

@@ -25,7 +25,7 @@ from . import DistlibException
 from .compat import (string_types, text_type, shutil, raw_input,
                      cache_from_source, urlopen, httplib, xmlrpclib, splittype,
                      HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
-                     BaseConfigurator, valid_ident, Container,
+                     BaseConfigurator, valid_ident, Container, configparser,
                      URLError, match_hostname, CertificateError, ZipFile)
 
 logger = logging.getLogger(__name__)
@@ -181,6 +181,39 @@ def extract_by_key(d, keys):
         if key in d:
             result[key] = d[key]
     return result
+
+def read_exports(stream):
+    cp = configparser.ConfigParser()
+    if hasattr(cp, 'read_file'):
+        cp.read_file(stream)
+    else:
+        cp.readfp(stream)
+    result = {}
+    for key in cp.sections():
+        result[key] = entries = {}
+        for name, value in cp.items(key):
+            s = '%s = %s' % (name, value)
+            entry = get_export_entry(s)
+            assert entry is not None
+            #entry.dist = self
+            entries[name] = entry
+    return result
+
+
+def write_exports(exports, stream):
+    cp = configparser.ConfigParser()
+    for k, v in exports.items():
+        # TODO check k, v for valid values
+        cp.add_section(k)
+        for entry in v.values():
+            if entry.suffix is None:
+                s = entry.prefix
+            else:
+                s = '%s:%s' % (entry.prefix, entry.suffix)
+            if entry.flags:
+                s = '%s [%s]' % (s, ', '.join(entry.flags))
+            cp.set(k, entry.name, s)
+    cp.write(stream)
 
 
 @contextlib.contextmanager
