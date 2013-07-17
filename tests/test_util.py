@@ -497,8 +497,8 @@ class ProgressTestCase(unittest.TestCase):
             speed1 = _speed_range(16, 19)
             speed2 = _speed_range(20, 22)
         expected = (
-            (' 10 %', _eta_range(4, 5), speed1),
-            (' 20 %', _eta_range(4, 5), speed1),
+            (' 10 %', _eta_range(4, 7), speed1),
+            (' 20 %', _eta_range(4, 7), speed1),
             (' 30 %', _eta_range(3, 4), speed1),
             (' 40 %', _eta_range(3, 3), speed1),
             (' 50 %', _eta_range(2, 2), speed1),
@@ -514,12 +514,12 @@ class ProgressTestCase(unittest.TestCase):
             bar.update(v)
             p, e, s = expected[i]
             self.assertEqual(bar.percentage, p)
-            self.assertIn(bar.ETA, e, '%s != %s: %s' % (bar.ETA, e, p))
+            self.assertIn(bar.ETA, e, p)
             self.assertIn(bar.speed, s)
         bar.stop()
         p, e, s = expected[i + 1]
         self.assertEqual(bar.percentage, p)
-        self.assertIn(bar.ETA, e, '%s != %s: %s' % (bar.ETA, e, p))
+        self.assertIn(bar.ETA, e, p)
         self.assertIn(bar.speed, s)
 
     def test_unknown(self):
