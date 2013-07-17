@@ -22,7 +22,7 @@ from distlib.compat import text_type, file_type, StringIO
 import distlib.database
 from distlib.metadata import Metadata, METADATA_FILENAME
 from distlib.database import (InstalledDistribution, EggInfoDistribution,
-                              BaseInstalledDistribution,
+                              BaseInstalledDistribution, EXPORTS_FILENAME,
                               DistributionPath, make_graph,
                               get_required_dists, get_dependent_dists)
 from distlib.util import get_resources_dests, ExportEntry, CSVReader
@@ -159,7 +159,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
     def setUp(self):
         def get_files(location):
             for path in ('REQUESTED', 'INSTALLER', 'METADATA',
-                         METADATA_FILENAME, 'EXPORTS'):
+                         METADATA_FILENAME, EXPORTS_FILENAME):
                 p = os.path.join(location + '.dist-info', path)
                 if os.path.exists(p):
                     yield p

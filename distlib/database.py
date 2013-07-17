@@ -31,8 +31,10 @@ __all__ = ['Distribution', 'BaseInstalledDistribution',
 
 logger = logging.getLogger(__name__)
 
+EXPORTS_FILENAME = 'EXPORTS'
+
 DIST_FILES = ('INSTALLER', METADATA_FILENAME, 'RECORD', 'REQUESTED',
-              'RESOURCES', 'EXPORTS', 'SHARED')
+              'RESOURCES', EXPORTS_FILENAME, 'SHARED')
 
 DISTINFO_EXT = '.dist-info'
 
@@ -547,7 +549,7 @@ class InstalledDistribution(BaseInstalledDistribution):
                  export entries.
         """
         result = {}
-        rf = self.get_distinfo_file('EXPORTS')
+        rf = self.get_distinfo_file(EXPORTS_FILENAME)
         if os.path.exists(rf):
             result = self.read_exports(rf)
         return result
@@ -563,7 +565,7 @@ class InstalledDistribution(BaseInstalledDistribution):
                  export entries.
         """
         result = {}
-        rf = filename or self.get_distinfo_file('EXPORTS')
+        rf = filename or self.get_distinfo_file(EXPORTS_FILENAME)
         if os.path.exists(rf):
             with open(rf, 'r') as f:
                 result = read_exports(f)
@@ -579,7 +581,7 @@ class InstalledDistribution(BaseInstalledDistribution):
                          specified, the EXPORTS file in the .dist-info
                          directory is written to.
         """
-        rf = filename or self.get_distinfo_file('EXPORTS')
+        rf = filename or self.get_distinfo_file(EXPORTS_FILENAME)
         with open(rf, 'w') as f:
             write_exports(exports, f)
 
