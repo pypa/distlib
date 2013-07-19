@@ -447,6 +447,10 @@ class Wheel(object):
                         u_arcname = arcname
                     else:
                         u_arcname = arcname.decode('utf-8')
+                    # The signature file won't be in RECORD,
+                    # and we  don't currently don't do anything with it
+                    if u_arcname.endswith('/RECORD.jws'):
+                        continue
                     row = records[u_arcname]
                     if row[2] and str(zinfo.file_size) != row[2]:
                         raise DistlibException('size mismatch for '
