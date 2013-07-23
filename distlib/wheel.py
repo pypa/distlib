@@ -416,7 +416,7 @@ class Wheel(object):
                 libdir = paths['platlib']
             records = {}
             with zf.open(record_name) as bf:
-                with CSVReader(record_name, stream=bf) as reader:
+                with CSVReader(stream=bf) as reader:
                     for row in reader:
                         p = row[0]
                         records[p] = row

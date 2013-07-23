@@ -72,6 +72,7 @@ Thanks to:
 - Sean Reifschneider
 - Antoine Reversat
 - Arc Riley
+- C. Anthony Risinger
 - Elson Rodriguez
 - Luis Rojas
 - Erik Rose

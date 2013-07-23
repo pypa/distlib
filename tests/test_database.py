@@ -25,7 +25,8 @@ from distlib.database import (InstalledDistribution, EggInfoDistribution,
                               BaseInstalledDistribution, EXPORTS_FILENAME,
                               DistributionPath, make_graph,
                               get_required_dists, get_dependent_dists)
-from distlib.util import get_resources_dests, ExportEntry, CSVReader
+from distlib.util import (get_resources_dests, ExportEntry, CSVReader,
+                          read_exports, write_exports)
 
 from test_util import GlobTestCaseBase
 from support import LoggingCatcher, requires_zlib
@@ -183,7 +184,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
             prefix = os.path.dirname(dist_location)
             dist.write_installed_files(get_files(dist_location), prefix)
 
-            with CSVReader(record_file) as record_reader:
+            with CSVReader(path=record_file) as record_reader:
                 record_data = {}
                 for row in record_reader:
                     if row == []:
@@ -581,28 +582,6 @@ class TestDatabase(LoggingCatcher,
         self.check_entry(e, 'real', 'cgi', 'print_directory', [])
         import cgi
         self.assertIs(e.value, cgi.print_directory)
-
-    def test_write_exports(self):
-        exports = {
-            'foo': {
-                'v1': ExportEntry('v1', 'p1', 's1', []),
-                'v2': ExportEntry('v2', 'p2', 's2', ['f2=a', 'g2']),
-            },
-            'bar': {
-                'v3': ExportEntry('v3', 'p3', 's3', ['f3', 'g3=h']),
-                'v4': ExportEntry('v4', 'p4', 's4', ['f4', 'g4']),
-            },
-        }
-
-        fd, fn = tempfile.mkstemp()
-        try:
-            os.close(fd)
-            d = DistributionPath().get_distribution('babar')    # any one will do
-            d.write_exports(exports, fn)
-            actual = d.read_exports(fn)
-            self.assertEqual(actual, exports)
-        finally:
-            os.remove(fn)
 
     def test_exports_iteration(self):
         d = DistributionPath()

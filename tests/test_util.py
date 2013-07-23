@@ -25,7 +25,7 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
                           iglob, RICH_GLOB, parse_requirement,
-                          Configurator,
+                          Configurator, read_exports, write_exports,
                           FileOperator, is_string_sequence, get_package_data)
 
 
@@ -835,6 +835,30 @@ class GlobTestCase(GlobTestCaseBase):
         for e in ('*', ':*:', ':meta:', '-', '-abc'):
             r = parse_requirement('a [%s]' % e)
             validate(r, ('a', None, [e], 'a', None))
+
+    def test_write_exports(self):
+        exports = {
+            'foo': {
+                'v1': ExportEntry('v1', 'p1', 's1', []),
+                'v2': ExportEntry('v2', 'p2', 's2', ['f2=a', 'g2']),
+            },
+            'bar': {
+                'v3': ExportEntry('v3', 'p3', 's3', ['f3', 'g3=h']),
+                'v4': ExportEntry('v4', 'p4', 's4', ['f4', 'g4']),
+            },
+        }
+
+        fd, fn = tempfile.mkstemp()
+        try:
+            os.close(fd)
+            with open(fn, 'wb') as f:
+                write_exports(exports, f)
+            with open(fn, 'rb') as f:
+                actual = read_exports(f)
+            self.assertEqual(actual, exports)
+        finally:
+            os.remove(fn)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

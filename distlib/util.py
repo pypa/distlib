@@ -185,6 +185,9 @@ def extract_by_key(d, keys):
     return result
 
 def read_exports(stream):
+    if sys.version_info[0] >= 3:
+        # needs to be a text stream
+        stream = codecs.getreader('utf-8')(stream)
     cp = configparser.ConfigParser()
     if hasattr(cp, 'read_file'):
         cp.read_file(stream)
@@ -203,6 +206,9 @@ def read_exports(stream):
 
 
 def write_exports(exports, stream):
+    if sys.version_info[0] >= 3:
+        # needs to be a text stream
+        stream = codecs.getwriter('utf-8')(stream)
     cp = configparser.ConfigParser()
     for k, v in exports.items():
         # TODO check k, v for valid values
@@ -1311,7 +1317,7 @@ class CSVBase(object):
 
 
 class CSVReader(CSVBase):
-    def __init__(self, fn, **kwargs):
+    def __init__(self, **kwargs):
         if 'stream' in kwargs:
             stream = kwargs['stream']
             if sys.version_info[0] >= 3:
@@ -1319,7 +1325,7 @@ class CSVReader(CSVBase):
                 stream = codecs.getreader('utf-8')(stream)
             self.stream = stream
         else:
-            self.stream = _csv_open(fn, 'r')
+            self.stream = _csv_open(kwargs['path'], 'r')
         self.reader = csv.reader(self.stream, **self.defaults)
 
     def __iter__(self):

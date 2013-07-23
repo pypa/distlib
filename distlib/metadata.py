@@ -17,7 +17,7 @@ import re
 
 
 from . import DistlibException, __version__
-from .compat import StringIO, string_types
+from .compat import StringIO, string_types, text_type
 from .markers import interpret
 from .util import extract_by_key
 from .version import get_scheme, PEP426_VERSION_RE
@@ -722,7 +722,7 @@ class Metadata(object):
         else:
             data = None
             if path:
-                with codecs.open(path, 'r', 'utf-8') as f:
+                with open(path, 'rb') as f:
                     data = f.read()
             elif fileobj:
                 data = fileobj.read()
@@ -733,6 +733,8 @@ class Metadata(object):
                     'generator': self.GENERATOR,
                 }
             else:
+                if not isinstance(data, text_type):
+                    data = data.decode('utf-8')
                 try:
                     self._data = json.loads(data)
                     self._validate_mapping(self._data, scheme)

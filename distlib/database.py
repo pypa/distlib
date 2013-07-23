@@ -9,16 +9,17 @@ from __future__ import unicode_literals
 
 import base64
 import codecs
+import contextlib
 import hashlib
 import logging
 import os
+import posixpath
 import sys
 import zipimport
 
-from . import DistlibException
-from .compat import StringIO, string_types
+from . import DistlibException, resources
+from .compat import StringIO
 from .version import get_scheme, UnsupportedVersionError
-from .markers import interpret
 from .metadata import Metadata, METADATA_FILENAME
 from .util import (parse_requirement, cached_property, parse_name_and_version,
                    read_exports, write_exports, CSVReader, CSVWriter)
@@ -68,6 +69,7 @@ class _Cache(object):
             self.path[dist.path] = dist
             self.name.setdefault(dist.key, []).append(dist)
 
+
 class DistributionPath(object):
     """
     Represents a set of distributions installed on a path (typically sys.path).
@@ -112,17 +114,39 @@ class DistributionPath(object):
         """
         Yield .dist-info and/or .egg(-info) distributions.
         """
+        # We need to check if we've seen some resources already, because on
+        # some Linux systems (e.g. some Debian/Ubuntu variants) there are
+        # symlinks which alias other files in the environment.
+        seen = set()
         for path in self.path:
-            realpath = os.path.realpath(path)
-            if not os.path.isdir(realpath):
+            finder = resources.finder_for_path(path)
+            if finder is None:
                 continue
-            for dir in os.listdir(realpath):
-                dist_path = os.path.join(realpath, dir)
-                if self._include_dist and dir.endswith(DISTINFO_EXT):
-                    yield new_dist_class(dist_path, env=self)
-                elif self._include_egg and dir.endswith(('.egg-info',
-                                                         '.egg')):
-                    yield old_dist_class(dist_path, self)
+            r = finder.find('')
+            if not r or not r.is_container:
+                continue
+            rset = sorted(r.resources)
+            for entry in rset:
+                r = finder.find(entry)
+                if not r or r.path in seen:
+                    continue
+                if self._include_dist and entry.endswith(DISTINFO_EXT):
+                    metadata_path = posixpath.join(entry, METADATA_FILENAME)
+                    pydist = finder.find(metadata_path)
+                    if not pydist:
+                        continue
+
+                    metadata = Metadata(fileobj=pydist.as_stream(),
+                                        scheme='legacy')
+                    logger.debug('Found %s', r.path)
+                    seen.add(r.path)
+                    yield new_dist_class(r.path, metadata=metadata,
+                                         env=self)
+                elif self._include_egg and entry.endswith(('.egg-info',
+                                                          '.egg')):
+                    logger.debug('Found %s', r.path)
+                    seen.add(r.path)
+                    yield old_dist_class(r.path, self)
 
     def _generate_cache(self):
         """
@@ -165,7 +189,6 @@ class DistributionPath(object):
         name = name.replace('-', '_')
         return '-'.join([name, version]) + DISTINFO_EXT
 
-
     def get_distributions(self):
         """
         Provides an iterator that looks for distributions and returns
@@ -187,7 +210,6 @@ class DistributionPath(object):
             if self._include_egg:
                 for dist in self._cache_egg.path.values():
                     yield dist
-
 
     def get_distribution(self, name):
         """
@@ -278,6 +300,7 @@ class DistributionPath(object):
                     for v in d.values():
                         yield v
 
+
 class Distribution(object):
     """
     A base class for distributions, whether installed or from indexes.
@@ -308,8 +331,8 @@ class Distribution(object):
         self.version = metadata.version
         self.locator = None
         self.md5_digest = None
-        self.extras = None  # additional features requested during installation
-        self.context = None # environment marker overrides
+        self.extras = None      # additional features requested
+        self.context = None     # environment marker overrides
 
     @property
     def source_url(self):
@@ -452,7 +475,7 @@ class BaseInstalledDistribution(Distribution):
         """
         super(BaseInstalledDistribution, self).__init__(metadata)
         self.path = path
-        self.dist_path  = env
+        self.dist_path = env
 
     def get_hash(self, data, hasher=None):
         """
@@ -485,34 +508,44 @@ class BaseInstalledDistribution(Distribution):
         digest = base64.urlsafe_b64encode(digest).rstrip(b'=').decode('ascii')
         return '%s%s' % (prefix, digest)
 
+
 class InstalledDistribution(BaseInstalledDistribution):
-    """Created with the *path* of the ``.dist-info`` directory provided to the
+    """
+    Created with the *path* of the ``.dist-info`` directory provided to the
     constructor. It reads the metadata contained in ``pydist.json`` when it is
     instantiated., or uses a passed in Metadata instance (useful for when
-    dry-run mode is being used)."""
+    dry-run mode is being used).
+    """
 
     hasher = 'sha256'
 
     def __init__(self, path, metadata=None, env=None):
+        self.finder = finder = resources.finder_for_path(path)
+        if finder is None:
+            import pdb; pdb.set_trace ()
         if env and env._cache_enabled and path in env._cache.path:
             metadata = env._cache.path[path].metadata
         elif metadata is None:
-            metadata_path = os.path.join(path, METADATA_FILENAME)
+            r = finder.find(METADATA_FILENAME)
             # Temporary - for legacy support
-            if not os.path.exists(metadata_path):
-                metadata_path = os.path.join(path, 'METADATA')
-            if not os.path.exists(metadata_path):
+            if r is None:
+                r = finder.find('METADATA')
+            if r is None:
                 raise ValueError('no %s found in %s' % (METADATA_FILENAME,
                                                         path))
-            metadata = Metadata(path=metadata_path, scheme='legacy')
+            with contextlib.closing(r.as_stream()) as stream:
+                metadata = Metadata(fileobj=stream, scheme='legacy')
 
         super(InstalledDistribution, self).__init__(metadata, path, env)
 
         if env and env._cache_enabled:
             env._cache.add(self)
 
-        path = self.get_distinfo_file('REQUESTED')
-        self.requested = os.path.exists(path)
+        try:
+            r = finder.find('REQUESTED')
+        except AttributeError:
+            import pdb; pdb.set_trace ()
+        self.requested = r is not None
 
     def __repr__(self):
         return '<InstalledDistribution %r %s at %r>' % (
@@ -529,18 +562,19 @@ class InstalledDistribution(BaseInstalledDistribution):
                  as stored in the file (which is as in PEP 376).
         """
         results = []
-        path = self.get_distinfo_file('RECORD')
-        with CSVReader(path) as record_reader:
-            # Base location is parent dir of .dist-info dir
-            #base_location = os.path.dirname(self.path)
-            #base_location = os.path.abspath(base_location)
-            for row in record_reader:
-                missing = [None for i in range(len(row), 3)]
-                path, checksum, size = row + missing
-                #if not os.path.isabs(path):
-                #    path = path.replace('/', os.sep)
-                #    path = os.path.join(base_location, path)
-                results.append((path, checksum, size))
+        r = self.get_distinfo_resource('RECORD')
+        with contextlib.closing(r.as_stream()) as stream:
+            with CSVReader(stream=stream) as record_reader:
+                # Base location is parent dir of .dist-info dir
+                #base_location = os.path.dirname(self.path)
+                #base_location = os.path.abspath(base_location)
+                for row in record_reader:
+                    missing = [None for i in range(len(row), 3)]
+                    path, checksum, size = row + missing
+                    #if not os.path.isabs(path):
+                    #    path = path.replace('/', os.sep)
+                    #    path = os.path.join(base_location, path)
+                    results.append((path, checksum, size))
         return results
 
     @cached_property
@@ -552,39 +586,34 @@ class InstalledDistribution(BaseInstalledDistribution):
                  export entries.
         """
         result = {}
-        rf = self.get_distinfo_file(EXPORTS_FILENAME)
-        if os.path.exists(rf):
-            result = self.read_exports(rf)
+        r = self.get_distinfo_resource(EXPORTS_FILENAME)
+        if r:
+            result = self.read_exports()
         return result
 
-    def read_exports(self, filename=None):
+    def read_exports(self):
         """
         Read exports data from a file in .ini format.
-        :param filename: An absolute pathname of the file to read. If not
-                         specified, the EXPORTS file in the .dist-info
-                         directory of the distribution is read.
+
         :return: A dictionary of exports, mapping an export category to a list
                  of :class:`ExportEntry` instances describing the individual
                  export entries.
         """
         result = {}
-        rf = filename or self.get_distinfo_file(EXPORTS_FILENAME)
-        if os.path.exists(rf):
-            with open(rf, 'r') as f:
-                result = read_exports(f)
+        r = self.get_distinfo_resource(EXPORTS_FILENAME)
+        if r:
+            with contextlib.closing(r.as_stream()) as stream:
+                result = read_exports(stream)
         return result
 
-    def write_exports(self, exports, filename=None):
+    def write_exports(self, exports):
         """
         Write a dictionary of exports to a file in .ini format.
         :param exports: A dictionary of exports, mapping an export category to
                         a list of :class:`ExportEntry` instances describing the
                         individual export entries.
-        :param filename: The absolute pathname of the file to write to. If not
-                         specified, the EXPORTS file in the .dist-info
-                         directory is written to.
         """
-        rf = filename or self.get_distinfo_file(EXPORTS_FILENAME)
+        rf = self.get_distinfo_file(EXPORTS_FILENAME)
         with open(rf, 'w') as f:
             write_exports(exports, f)
 
@@ -599,11 +628,12 @@ class InstalledDistribution(BaseInstalledDistribution):
                               of interest.
         :return: The absolute path where the resource is to be found.
         """
-        path = self.get_distinfo_file('RESOURCES')
-        with CSVReader(path) as resources_reader:
-            for relative, destination in resources_reader:
-                if relative == relative_path:
-                    return destination
+        r = self.get_distinfo_resource('RESOURCES')
+        with contextlib.closing(r.as_stream()) as stream:
+            with CSVReader(stream=stream) as resources_reader:
+                for relative, destination in resources_reader:
+                    if relative == relative_path:
+                        return destination
         raise KeyError('no resource file with relative path %r '
                        'is installed' % relative_path)
 
@@ -628,7 +658,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         base = os.path.dirname(self.path)
         base_under_prefix = base.startswith(prefix)
         base = os.path.join(base, '')
-        record_path = os.path.join(self.path, 'RECORD')
+        record_path = self.get_distinfo_file('RECORD')
         logger.info('creating %s', record_path)
         if dry_run:
             return None
@@ -642,7 +672,7 @@ class InstalledDistribution(BaseInstalledDistribution):
                     with open(path, 'rb') as fp:
                         hash_value = self.get_hash(fp.read())
                 if path.startswith(base) or (base_under_prefix and
-                                                 path.startswith(prefix)):
+                                             path.startswith(prefix)):
                     path = os.path.relpath(path, base)
                 writer.writerow((path, hash_value, size))
 
@@ -663,7 +693,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         """
         mismatches = []
         base = os.path.dirname(self.path)
-        record_path = os.path.join(self.path, 'RECORD')
+        record_path = self.get_distinfo_file('RECORD')
         for path, hash_value, size in self.list_installed_files():
             if not os.path.isabs(path):
                 path = os.path.join(base, path)
@@ -739,6 +769,15 @@ class InstalledDistribution(BaseInstalledDistribution):
             f.write('\n'.join(lines))
         return shared_path
 
+    def get_distinfo_resource(self, path):
+        if path not in DIST_FILES:
+            raise DistlibException('invalid path for a dist-info file: '
+                                   '%r at %r' % (path, self.path))
+        finder = resources.finder_for_path(self.path)
+        if finder is None:
+            raise DistlibException('Unable to get a finder for %s' % self.path)
+        return finder.find(path)
+
     def get_distinfo_file(self, path):
         """
         Returns a path located under the ``.dist-info`` directory. Returns a
@@ -749,7 +788,7 @@ class InstalledDistribution(BaseInstalledDistribution):
                          If *path* is an absolute path and doesn't start
                          with the ``.dist-info`` directory path,
                          a :class:`DistlibException` is raised
-        :type path: string
+        :type path: str
         :rtype: str
         """
         # Check if it is an absolute path  # XXX use relpath, add tests
@@ -808,7 +847,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
             s.version = v
 
         self.path = path
-        self.dist_path  = env
+        self.dist_path = env
         if env and env._cache_enabled and path in env._cache_egg.path:
             metadata = env._cache_egg.path[path].metadata
             set_name_and_version(self, metadata.name, metadata.version)
@@ -916,14 +955,14 @@ class EggInfoDistribution(BaseInstalledDistribution):
         mismatches = []
         record_path = os.path.join(self.path, 'installed-files.txt')
         if os.path.exists(record_path):
-            for path, hash, size in self.list_installed_files():
+            for path, _, _ in self.list_installed_files():
                 if path == record_path:
                     continue
                 if not os.path.exists(path):
                     mismatches.append((path, 'exists', True, False))
         return mismatches
 
-    def list_installed_files(self, local=False):
+    def list_installed_files(self):
         """
         Iterates over the ``installed-files.txt`` entries and returns a tuple
         ``(path, hash, size)`` for each line.
@@ -961,16 +1000,16 @@ class EggInfoDistribution(BaseInstalledDistribution):
             result.append((record_path, None, None))
         return result
 
-    def list_distinfo_files(self, local=False):
+    def list_distinfo_files(self, absolute=False):
         """
         Iterates over the ``installed-files.txt`` entries and returns paths for
         each line if the path is pointing to a file located in the
         ``.egg-info`` directory or one of its subdirectories.
 
-        :parameter local: If *local* is ``True``, each returned path is
+        :parameter absolute: If *absolute* is ``True``, each returned path is
                           transformed into a local absolute path. Otherwise the
                           raw value from ``installed-files.txt`` is returned.
-        :type local: boolean
+        :type absolute: boolean
         :returns: iterator of paths
         """
         record_path = os.path.join(self.path, 'installed-files.txt')
@@ -984,7 +1023,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
                 if not skip:
                     p = os.path.normpath(os.path.join(self.path, line))
                     if p.startswith(self.path):
-                        if local:
+                        if absolute:
                             yield p
                         else:
                             yield line
@@ -1091,7 +1130,7 @@ class DependencyGraph(object):
             for other, label in adjs:
                 if not label is None:
                     f.write('"%s" -> "%s" [label="%s"]\n' %
-                                                (dist.name, other.name, label))
+                            (dist.name, other.name, label))
                 else:
                     f.write('"%s" -> "%s"\n' % (dist.name, other.name))
         if not skip_disconnected and len(disconnected) > 0:
@@ -1132,7 +1171,7 @@ class DependencyGraph(object):
             for k, v in alist.items():
                 alist[k] = [(d, r) for d, r in v if d not in to_remove]
             logger.debug('Moving to result: %s',
-                ['%s (%s)' % (d.name, d.version) for d in to_remove])
+                         ['%s (%s)' % (d.name, d.version) for d in to_remove])
             result.extend(to_remove)
         return result, list(alist.keys())
 
@@ -1223,6 +1262,7 @@ def get_dependent_dists(dists, dist):
     dep.pop(0)  # remove dist from dep, was there to prevent infinite loops
     return dep
 
+
 def get_required_dists(dists, dist):
     """Recursively generate a list of distributions from *dists* that are
     required by *dist*.
@@ -1246,6 +1286,7 @@ def get_required_dists(dists, dist):
                 todo.append(pred)
 
     return req
+
 
 def make_dist(name, version, **kwargs):
     """
