@@ -8,6 +8,7 @@ Implementation of a flexible versioning scheme providing support for PEP-386,
 distribute-compatible and semantic versioning.
 """
 
+import logging
 import re
 
 from .compat import string_types
@@ -16,6 +17,9 @@ __all__ = ['NormalizedVersion', 'NormalizedMatcher',
            'LegacyVersion', 'LegacyMatcher',
            'SemanticVersion', 'SemanticMatcher',
            'UnsupportedVersionError', 'get_scheme']
+
+logger = logging.getLogger(__name__)
+
 
 class UnsupportedVersionError(ValueError):
     """This is an unsupported version."""
@@ -128,7 +132,12 @@ class Matcher(object):
         self._parts = tuple(clist)
 
     def match(self, version):
-        """Check if the provided version matches the constraints."""
+        """
+        Check if the provided version matches the constraints.
+
+        :param version: The version to match against this instance.
+        :type version: Strring or :class:`Version` instance.
+        """
         if isinstance(version, string_types):
             version = self.version_class(version)
         for operator, constraint, prefix in self._parts:
@@ -156,7 +165,7 @@ class Matcher(object):
 
     def __eq__(self, other):
         self._check_compatible(other)
-        return (self.key == other.key and self._parts == other._parts)
+        return self.key == other.key and self._parts == other._parts
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -171,99 +180,10 @@ class Matcher(object):
     def __str__(self):
         return self._string
 
-# A marker used in the second and third parts of the `parts` tuple, for
-# versions that don't have those segments, to sort properly. An example
-# of versions in sort order ('highest' last):
-#   1.0b1                 ((1,0), ('b',1), ('z',))
-#   1.0.dev345            ((1,0), ('z',),  ('dev', 345))
-#   1.0                   ((1,0), ('z',),  ('z',))
-#   1.0.post256.dev345    ((1,0), ('z',),  ('z', 'post', 256, 'dev', 345))
-#   1.0.post345           ((1,0), ('z',),  ('z', 'post', 345, 'z'))
-#                                   ^        ^                 ^
-#   'b' < 'z' ---------------------/         |                 |
-#                                            |                 |
-#   'dev' < 'z' ----------------------------/                  |
-#                                                              |
-#   'dev' < 'z' ----------------------------------------------/
-# 'f' for 'final' would be kind of nice, but due to bugs in the support of
-# 'rc' we must use 'z'
-_FINAL_MARKER = ('z',)
-
-_VERSION_RE = re.compile(r'''
-    ^
-    (?P<version>\d+\.\d+(\.\d+)*)          # minimum 'N.N'
-    (?:
-        (?P<prerel>[abc]|rc)       # 'a'=alpha, 'b'=beta, 'c'=release candidate
-                                   # 'rc'= alias for release candidate
-        (?P<prerelversion>\d+(?:\.\d+)*)
-    )?
-    (?P<postdev>(\.post(?P<post>\d+))?(\.dev(?P<dev>\d+))?)?
-    $''', re.VERBOSE)
-
-
-def _parse_numdots(s, full_ver, drop_zeroes=False, min_length=0):
-    """Parse 'N.N.N' sequences, return a list of ints.
-
-    @param s {str} 'N.N.N...' sequence to be parsed
-    @param full_ver_str {str} The full version string from which this
-           comes. Used for error strings.
-    @param min_length {int} The length to which to pad the
-           returned list with zeros, if necessary. Default 0.
-    """
-    result = []
-    for n in s.split("."):
-        #if len(n) > 1 and n[0] == '0':
-        #    raise UnsupportedVersionError("cannot have leading zero in "
-        #        "version number segment: '%s' in %r" % (n, full_ver))
-        result.append(int(n))
-    if drop_zeroes:
-        while (result and result[-1] == 0 and
-               (1 + len(result)) > min_length):
-            result.pop()
-    return result
-
-def _pep386_key(s):
-    """Parses a string version into parts using PEP-386 logic."""
-
-    match = _VERSION_RE.search(s)
-    if not match:
-        raise UnsupportedVersionError(s)
-
-    groups = match.groupdict()
-    parts = []
-
-    # main version
-    block = _parse_numdots(groups['version'], s, min_length=2)
-    parts.append(tuple(block))
-
-    # prerelease
-    prerel = groups.get('prerel')
-    if prerel is not None:
-        block = [prerel]
-        block += _parse_numdots(groups.get('prerelversion'), s, min_length=1)
-        parts.append(tuple(block))
-    else:
-        parts.append(_FINAL_MARKER)
-
-    # postdev
-    if groups.get('postdev'):
-        post = groups.get('post')
-        dev = groups.get('dev')
-        postdev = []
-        if post is not None:
-            postdev.extend((_FINAL_MARKER[0], 'post', int(post)))
-            if dev is None:
-                postdev.append(_FINAL_MARKER[0])
-        if dev is not None:
-            postdev.extend(('dev', int(dev)))
-        parts.append(tuple(postdev))
-    else:
-        parts.append(_FINAL_MARKER)
-    return tuple(parts)
-
 
 PEP426_VERSION_RE = re.compile('^(\d+\.\d+(\.\d+)*)((a|b|c|rc)(\d+))?'
                                '(\.(post)(\d+))?(\.(dev)(\d+))?$')
+
 
 def _pep426_key(s):
     s = s.strip()
@@ -294,9 +214,9 @@ def _pep426_key(s):
         # either before pre-release, or final release and after
         if not post and dev:
             # before pre-release
-            pre = ('a', -1) # to sort before a0
+            pre = ('a', -1)     # to sort before a0
         else:
-            pre = ('z',)    # to sort after all pre-releases
+            pre = ('z',)        # to sort after all pre-releases
     # now look at the state of post and dev.
     if not post:
         post = ('_',)   # sort before 'a'
@@ -308,6 +228,7 @@ def _pep426_key(s):
 
 
 _normalized_key = _pep426_key
+
 
 class NormalizedVersion(Version):
     """A rational version.
@@ -344,7 +265,6 @@ class NormalizedVersion(Version):
     def is_prerelease(self):
         return any(t[0] in self.PREREL_TAGS for t in self._parts)
 
-# We want '2.5' to match '2.5.4' but not '2.50'.
 
 def _match_prefix(x, y):
     x = str(x)
@@ -355,6 +275,7 @@ def _match_prefix(x, y):
         return False
     n = len(y)
     return x[n] == '.'
+
 
 class NormalizedMatcher(Matcher):
     version_class = NormalizedVersion
@@ -431,13 +352,14 @@ _REPLACEMENTS = (
 
 _SUFFIX_REPLACEMENTS = (
     (re.compile('^[:~._+-]+'), ''),                   # remove leading puncts
-    (re.compile('[,*")([\]]'), ''),                        # remove unwanted chars
+    (re.compile('[,*")([\]]'), ''),                   # remove unwanted chars
     (re.compile('[~:+_ -]'), '.'),                    # replace illegal chars
     (re.compile('[.]{2,}'), '.'),                   # multiple runs of '.'
     (re.compile(r'\.$'), ''),                       # trailing '.'
 )
 
 _NUMERIC_PREFIX = re.compile(r'(\d+(\.\d+)*)')
+
 
 def _suggest_semantic_version(s):
     """
@@ -601,11 +523,11 @@ def _suggest_normalized_version(s):
 
 _VERSION_PART = re.compile(r'([a-z]+|\d+|[\.-])', re.I)
 _VERSION_REPLACE = {
-    'pre':'c',
-    'preview':'c',
-    '-':'final-',
-    'rc':'c',
-    'dev':'@',
+    'pre': 'c',
+    'preview': 'c',
+    '-': 'final-',
+    'rc': 'c',
+    'dev': '@',
     '': None,
     '.': None,
 }
@@ -617,7 +539,7 @@ def _legacy_key(s):
         for p in _VERSION_PART.split(s.lower()):
             p = _VERSION_REPLACE.get(p, p)
             if p:
-                if '0' <= p[:1]  <= '9':
+                if '0' <= p[:1] <= '9':
                     p = p.zfill(8)
                 else:
                     p = '*' + p
@@ -636,8 +558,10 @@ def _legacy_key(s):
         result.append(p)
     return tuple(result)
 
+
 class LegacyVersion(Version):
-    def parse(self, s): return _legacy_key(s)
+    def parse(self, s):
+        return _legacy_key(s)
 
     PREREL_TAGS = set(
         ['*a', '*alpha', '*b', '*beta', '*c', '*rc', '*r', '*@', '*pre']
@@ -646,6 +570,7 @@ class LegacyVersion(Version):
     @property
     def is_prerelease(self):
         return any(x in self.PREREL_TAGS for x in self._parts)
+
 
 class LegacyMatcher(Matcher):
     version_class = LegacyVersion
@@ -676,8 +601,10 @@ _SEMVER_RE = re.compile(r'^(\d+)\.(\d+)\.(\d+)'
                         r'(-[a-z0-9]+(\.[a-z0-9-]+)*)?'
                         r'(\+[a-z0-9]+(\.[a-z0-9-]+)*)?$', re.I)
 
+
 def is_semver(s):
     return _SEMVER_RE.match(s)
+
 
 def _semantic_key(s):
     def make_tuple(s, absent):
@@ -690,7 +617,6 @@ def _semantic_key(s):
             result = tuple([p.zfill(8) if p.isdigit() else p for p in parts])
         return result
 
-    result = None
     m = is_semver(s)
     if not m:
         raise UnsupportedVersionError(s)
@@ -698,11 +624,12 @@ def _semantic_key(s):
     major, minor, patch = [int(i) for i in groups[:3]]
     # choose the '|' and '*' so that versions sort correctly
     pre, build = make_tuple(groups[3], '|'), make_tuple(groups[5], '*')
-    return ((major, minor, patch), pre, build)
+    return (major, minor, patch), pre, build
 
 
 class SemanticVersion(Version):
-    def parse(self, s): return _semantic_key(s)
+    def parse(self, s):
+        return _semantic_key(s)
 
     @property
     def is_prerelease(self):
@@ -757,6 +684,7 @@ _SCHEMES = {
 }
 
 _SCHEMES['default'] = _SCHEMES['normalized']
+
 
 def get_scheme(name):
     if name not in _SCHEMES:
