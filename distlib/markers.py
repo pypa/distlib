@@ -16,6 +16,7 @@ from .util import in_venv
 
 __all__ = ['interpret']
 
+
 class Evaluator(object):
     """
     A limited evaluator for Python expressions.
@@ -44,7 +45,7 @@ class Evaluator(object):
         'platform_release': platform.release(),
         'platform_version': platform.version(),
         'platform_machine': platform.machine(),
-        'platform_python_implementation': platform.python_implementation(),
+        'platform_python_implementation': python_implementation(),
     }
 
     def __init__(self, context=None):
@@ -103,7 +104,6 @@ class Evaluator(object):
         return '%s.%s' % (node.value.id, node.attr)
 
     def do_attribute(self, node):
-        valid = True
         if not isinstance(node.value, ast.Name):
             valid = False
         else:

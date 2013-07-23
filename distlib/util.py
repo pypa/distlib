@@ -250,7 +250,7 @@ class cached_property(object):
         #for attr in ('__name__', '__module__', '__doc__'):
         #    setattr(self, attr, getattr(func, attr, None))
 
-    def __get__(self, obj, type=None):
+    def __get__(self, obj, cls=None):
         if obj is None:
             return self
         value = self.func(obj)
@@ -395,7 +395,7 @@ class FileOperator(object):
                 else:
                     assert path.startswith(prefix)
                     diagpath = path[len(prefix):]
-            py_compile.compile(path, dpath, diagpath, True) # raise on error
+            py_compile.compile(path, dpath, diagpath, True)     # raise error
         self.record_as_written(dpath)
         return dpath
 
@@ -457,7 +457,7 @@ class FileOperator(object):
                     assert flist == ['__pycache__']
                     sd = os.path.join(d, flist[0])
                     os.rmdir(sd)
-                os.rmdir(d) # should fail if non-empty
+                os.rmdir(d)     # should fail if non-empty
         self._init_record()
 
 def resolve(module_name, dotted_path):
@@ -701,9 +701,6 @@ def get_package_data(name, version):
            '%s/%s/package-%s.json' % (name[0].upper(), name, version))
     return _get_external_data(url)
 
-#
-# Simple event pub/sub
-#
 
 class EventMixin(object):
     """
@@ -781,7 +778,7 @@ class Sequencer(object):
     def __init__(self):
         self._preds = {}
         self._succs = {}
-        self._nodes = set() # nodes with no preds/succs
+        self._nodes = set()     # nodes with no preds/succs
 
     def add_node(self, node):
         self._nodes.add(node)
@@ -979,6 +976,7 @@ def zip_dir(directory):
 
 UNITS = ('', 'K', 'M', 'G','T','P')
 
+
 class Progress(object):
     unknown = 'UNKNOWN'
 
@@ -1112,8 +1110,8 @@ def _iglob(path_glob):
                 radical = radical.lstrip('\\')
             for path, dir, files in os.walk(prefix):
                 path = os.path.normpath(path)
-                for file in _iglob(os.path.join(path, radical)):
-                    yield file
+                for fn in _iglob(os.path.join(path, radical)):
+                    yield fn
 
 
 

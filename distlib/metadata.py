@@ -231,6 +231,7 @@ def _get_name_and_version(name, version, for_filename=False):
         version = _FILESAFE.sub('-', version.replace(' ', '.'))
     return '%s-%s' % (name, version)
 
+
 class LegacyMetadata(object):
     """The legacy metadata of a release.
 
@@ -938,7 +939,7 @@ class Metadata(object):
             'metadata_version': self.METADATA_VERSION,
             'generator': self.GENERATOR,
         }
-        lmd = self._legacy.todict(True) # skip missing ones
+        lmd = self._legacy.todict(True)     # skip missing ones
         for k in ('name', 'version', 'license', 'summary', 'description',
                   'classifier'):
             if k in lmd:
@@ -997,8 +998,6 @@ class Metadata(object):
         nmd = self._data
         for nk, ok in self.LEGACY_MAPPING.items():
             result[ok] = nmd[nk]
-        extras = set()
-        rlist = set()
         r1 = process_entries(self.run_requires + self.meta_requires)
         r2 = process_entries(self.build_requires + self.dev_requires)
         if self.extras:

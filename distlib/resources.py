@@ -19,6 +19,7 @@ from .util import cached_property, get_cache_base, path_to_cache_dir
 
 logger = logging.getLogger(__name__)
 
+
 class Cache(object):
     """
     A class implementing a cache for resources that need to live in the file system
@@ -101,10 +102,12 @@ class Cache(object):
 
 cache = Cache()
 
+
 class ResourceBase(object):
     def __init__(self, finder, name):
         self.finder = finder
         self.name = name
+
 
 class Resource(ResourceBase):
     """
@@ -112,10 +115,15 @@ class Resource(ResourceBase):
     not normally instantiated by user code, but rather by a
     :class:`ResourceFinder` which manages the resource.
     """
-    is_container = False # Backwards compatibility
+    is_container = False        # Backwards compatibility
 
     def as_stream(self):
-        "Get the resource as a stream. Not a property, as not idempotent."
+        """
+        Get the resource as a stream.
+
+        This is not a property to make it obvious that it returns a new stream
+        each time.
+        """
         return self.finder.get_stream(self)
 
     @cached_property
@@ -130,12 +138,14 @@ class Resource(ResourceBase):
     def size(self):
         return self.finder.get_size(self)
 
+
 class ResourceContainer(ResourceBase):
-    is_container = True # Backwards compatibility
+    is_container = True     # Backwards compatibility
 
     @cached_property
     def resources(self):
         return self.finder.get_resources(self)
+
 
 class ResourceFinder(object):
     """
@@ -188,6 +198,7 @@ class ResourceFinder(object):
         return self._is_directory(resource.path)
 
     _is_directory = staticmethod(os.path.isdir)
+
 
 class ZipResourceFinder(ResourceFinder):
     """
@@ -274,10 +285,12 @@ try:
 except (ImportError, AttributeError):
     pass
 
+
 def register_finder(loader, finder_maker):
     _finder_registry[type(loader)] = finder_maker
 
 _finder_cache = {}
+
 
 def finder(package):
     """
