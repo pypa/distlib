@@ -161,7 +161,7 @@ class ResourceFinder(object):
     def _make_path(self, resource_name):
         parts = resource_name.split('/')
         parts.insert(0, self.base)
-        return os.path.join(*parts)
+        return os.path.realpath(os.path.join(*parts))
 
     def _find(self, path):
         return os.path.exists(path)
