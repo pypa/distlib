@@ -13,7 +13,7 @@ import sys
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.resources import finder, Cache
+from distlib.resources import finder, finder_for_path, Cache
 from distlib.util import get_cache_base
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -96,6 +96,17 @@ class ZipResourceTestCase(unittest.TestCase):
         r = f.find('baz_resource.bin')
         self.assertTrue(r)
         self.assertFalse(r.is_container)
+
+    def test_finder_for_path(self):
+        f = finder_for_path(sys.path[0])
+        r = f.find('')
+        self.assertIsNotNone(r)
+        self.assertTrue(r.is_container)
+        p = os.path.join(sys.path[0], 'foo')
+        f = finder_for_path(p)
+        r = f.find('')
+        self.assertIsNotNone(r)
+        self.assertTrue(r.is_container)
 
 class FileResourceTestCase(unittest.TestCase):
     def setUp(self):
@@ -199,3 +210,7 @@ class CacheTestCase(unittest.TestCase):
             with open(fp, 'rb') as df:
                 data = df.read()
             self.assertEqual(data, r.bytes)
+
+
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()

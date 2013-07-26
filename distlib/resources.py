@@ -10,8 +10,10 @@ import bisect
 import io
 import logging
 import os
+import pkgutil
 import shutil
 import sys
+import types
 import zipimport
 
 from . import DistlibException
@@ -220,7 +222,7 @@ class ZipResourceFinder(ResourceFinder):
         if path in self._files:
             result = True
         else:
-            if path[-1] != os.sep:
+            if path and path[-1] != os.sep:
                 path = path + os.sep
             i = bisect.bisect(self.index, path)
             try:
@@ -250,7 +252,7 @@ class ZipResourceFinder(ResourceFinder):
 
     def get_resources(self, resource):
         path = resource.path[self.prefix_len:]
-        if path[-1] != os.sep:
+        if path and path[-1] != os.sep:
             path += os.sep
         plen = len(path)
         result = set()
@@ -265,7 +267,7 @@ class ZipResourceFinder(ResourceFinder):
 
     def _is_directory(self, path):
         path = path[self.prefix_len:]
-        if path[-1] != os.sep:
+        if path and path[-1] != os.sep:
             path += os.sep
         i = bisect.bisect(self.index, path)
         try:
@@ -314,4 +316,27 @@ def finder(package):
             raise DistlibException('Unable to locate finder for %r' % package)
         result = finder_maker(module)
         _finder_cache[package] = result
+    return result
+
+
+_dummy_module = types.ModuleType(str('__dummy__'))
+
+
+def finder_for_path(path):
+    """
+    Return a resource finder for a path, which should represent a container.
+
+    :param path: The path.
+    :return: A :class:`ResourceFinder` instance for the path.
+    """
+    result = None
+    # calls any path hooks, gets importer into cache
+    pkgutil.get_importer(path)
+    loader = sys.path_importer_cache.get(path)
+    finder = _finder_registry.get(type(loader))
+    if finder:
+        module = _dummy_module
+        module.__file__ = os.path.join(path, '')
+        module.__loader__ = loader
+        result = finder(module)
     return result
