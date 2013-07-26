@@ -14,6 +14,7 @@ from compat import unittest
 # Always find our sources first
 sys.path.insert(0, '..')
 import distlib_tests
+sys.path.pop(0)
 
 def main():
     verbosity = 1
