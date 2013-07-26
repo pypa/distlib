@@ -997,7 +997,8 @@ class Metadata(object):
         result = LegacyMetadata()
         nmd = self._data
         for nk, ok in self.LEGACY_MAPPING.items():
-            result[ok] = nmd[nk]
+            if nk in nmd:
+                result[ok] = nmd[nk]
         r1 = process_entries(self.run_requires + self.meta_requires)
         r2 = process_entries(self.build_requires + self.dev_requires)
         if self.extras:
