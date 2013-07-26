@@ -284,6 +284,7 @@ _finder_registry = {
 try:
     import _frozen_importlib
     _finder_registry[_frozen_importlib.SourceFileLoader] = ResourceFinder
+    _finder_registry[_frozen_importlib.FileFinder] = ResourceFinder
 except (ImportError, AttributeError):
     pass
 
