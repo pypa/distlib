@@ -230,10 +230,11 @@ class LocatorTestCase(unittest.TestCase):
         dists, problems = finder.find('Jinja2 [i18n] (== 2.6)')
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
-        self.assertEqual(actual[-1], 'Jinja2 (2.6)')
+        self.assertEqual(actual[-2], 'Jinja2 (2.6)')
+        self.assertTrue(actual[-1].startswith('pytz ('))
         self.assertTrue(actual[0].startswith('Babel ('))
         actual = [d.build_time_dependency for d in dists]
-        self.assertEqual(actual, [False, False])
+        self.assertEqual(actual, [False, False, False])
 
         # Now test with extra in dependency
         locator.clear_cache()
