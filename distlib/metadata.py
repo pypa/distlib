@@ -984,7 +984,7 @@ class Metadata(object):
                     else:
                         marker = ''
                         if extra:
-                            marker = 'extra == %r' % extra
+                            marker = 'extra == "%s"' % extra
                         if env:
                             if marker:
                                 marker = '(%s) and %s' % (env, marker)
