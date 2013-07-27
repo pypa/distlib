@@ -546,7 +546,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         if sys.platform != 'win32':
             self.assertEqual(r, ['foo', 'certifi (0.0.8)'])
         else:
-            self.assertEqual(set(r), set(['certifi (0.0.8)',
+            self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)',
                                           'wincertstore (0.1)']))
         for ver in ('2.5', '2.4'):
             env = {'python_version': ver}
@@ -557,11 +557,11 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
                                               'ssl (1.16)']))
             elif ver == '2.4':
                 self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
-                                              'wincertstore (0.1)',
+                                              'wincertstore (0.1)', 'foo',
                                               'ctypes (1.0.2)']))
             else:
                 self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
-                                              'wincertstore (0.1)']))
+                                              'wincertstore (0.1)', 'foo']))
         env['sys_platform'] = 'win32'
         r = md.get_requirements(md.run_requires,
                                 extras=['certs', 'ssl'], env=env)
