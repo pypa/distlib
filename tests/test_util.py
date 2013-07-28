@@ -131,9 +131,10 @@ class UtilTestCase(unittest.TestCase):
                          ('advpy', '0.99b', None))
         self.assertEqual(split_filename('asv_files-dev-20120501-01', 'asv_files'),
                          ('asv_files', 'dev-20120501-01', None))
-        #import pdb; pdb.set_trace()
-        #self.assertEqual(split_filename('asv_files-test-dev-20120501-01', 'asv_files'),
-        #                 ('asv_files-test', 'dev-20120501-01', None))
+        self.assertEqual(split_filename('greenlet-0.4.0-py27-win32'),
+                         ('greenlet', '0.4.0', '27'))
+        self.assertEqual(split_filename('greenlet-0.4.0-py27-linux_x86_64'),
+                         ('greenlet', '0.4.0', '27'))
 
     def test_events(self):
         collected = []
