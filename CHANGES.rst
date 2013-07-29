@@ -10,6 +10,8 @@ Released: Not yet.
 
     - Added support for PEP 426 JSON metadata (pydist.json).
 
+    - Generalised digests to support e.g. SHA256.
+
     - Fixed a bug in parsing legacy metadata from .egg directories.
 
     - Removed duplicated code relating to parsing "provides" fields.
@@ -27,7 +29,9 @@ Released: Not yet.
 
     - The legacy scheme is used for the default locator.
 
-    - Changes relating to parsing "provides" fields.
+    - Made changes relating to parsing "provides" fields.
+
+    - Generalised digests to support e.g. SHA256.
 
     - If no release version is found for a requirement, prereleases are
       now considered even if not explicitly requested.

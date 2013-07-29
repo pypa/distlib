@@ -102,9 +102,15 @@ Classes
       The metadata for the distribution. This is a
       :class:`distlib.metadata.Metadata` instance.
 
-   .. attribute:: download_url
+   .. attribute:: source_url
 
-      The download URL for the distribution.
+      The download URL for the source distribution.
+
+   .. attribute:: digest
+
+      The digest for the source distribution. This is either ``None`` or a
+      2-tuple consisting of the hashing algorithm and the digest using that
+      algorithm, e.g. ``('sha256', '01234...')``.
 
    .. attribute:: locator
 
