@@ -330,7 +330,7 @@ class Distribution(object):
         self.key = self.name.lower()    # for case-insensitive comparisons
         self.version = metadata.version
         self.locator = None
-        self.md5_digest = None
+        self.digest = None
         self.extras = None      # additional features requested
         self.context = None     # environment marker overrides
 

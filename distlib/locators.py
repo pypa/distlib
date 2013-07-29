@@ -30,7 +30,7 @@ from .wheel import Wheel, is_compatible
 
 logger = logging.getLogger(__name__)
 
-MD5_HASH = re.compile('^md5=([a-f0-9]+)$')
+HASHER_HASH = re.compile('^(\w+)=([a-f0-9]+)')
 CHARSET = re.compile(r';\s*charset\s*=\s*(.*)\s*$', re.I)
 HTML_CONTENT_TYPE = re.compile('text/html|application/x(ht)?ml')
 DEFAULT_INDEX = 'http://python.org/pypi'
@@ -215,6 +215,11 @@ class Locator(object):
         if frag.lower().startswith('egg='):
             logger.debug('%s: version hint in fragment: %r',
                          project_name, frag)
+        m = HASHER_HASH.match(frag)
+        if m:
+            algo, digest = m.groups()
+        else:
+            algo, digest = None, None
         origpath = path
         if path and path[-1] == '/':
             path = path[:-1]
@@ -236,9 +241,6 @@ class Locator(object):
                             'python-version': ', '.join(
                                 ['.'.join(list(v[2:])) for v in wheel.pyver]),
                         }
-                        m = MD5_HASH.match(frag)
-                        if m:
-                            result['md5_digest'] = m.group(1)
             except Exception as e:
                 logger.warning('invalid path for wheel: %s', path)
         elif path.endswith(self.downloadable_extensions):
@@ -262,10 +264,25 @@ class Locator(object):
                             }
                             if pyver:
                                 result['python-version'] = pyver
-                            m = MD5_HASH.match(frag)
-                            if m:
-                                result['md5_digest'] = m.group(1)
                     break
+        if algo:
+            result['%s_digest' % algo] = digest
+        return result
+
+    def _get_digest(self, info):
+        """
+        Get a digest from a dictionary by looking at keys of the form
+        'algo_digest'.
+
+        Returns a 2-tuple (algo, digest) if found, else None. Currently
+        looks only for SHA256, then MD5.
+        """
+        result = None
+        for algo in ('sha256', 'md5'):
+            key = '%s_digest' % algo
+            if key in info:
+                result = (algo, info[key])
+                break
         return result
 
     def _update_version_data(self, result, info):
@@ -282,7 +299,7 @@ class Locator(object):
         else:
             dist = make_dist(name, version, scheme=self.scheme)
             md = dist.metadata
-        dist.md5_digest = info.get('md5_digest')
+        dist.digest = self._get_digest(info)
         if md.source_url != info['url']:
             md.source_url = self.prefer_url(md.source_url, info['url'])
         dist.locator = self
@@ -375,7 +392,7 @@ class PyPIRPCLocator(Locator):
             if urls:
                 info = urls[0]
                 metadata.source_url = info['url']
-                dist.md5_digest = info.get('md5_digest')
+                dist.digest = self._get_digest(info)
                 dist.locator = self
                 result[v] = dist
         return result
@@ -414,7 +431,7 @@ class PyPIJSONLocator(Locator):
             if urls:
                 info = urls[0]
                 md.source_url = info['url']
-                dist.md5_digest = info.get('md5_digest')
+                dist.digest = self._get_digest(info)
                 dist.locator = self
                 result[md.version] = dist
         except Exception as e:
@@ -810,7 +827,9 @@ class JSONLocator(Locator):
                                  scheme=self.scheme)
                 md = dist.metadata
                 md.source_url = info['url']
-                dist.md5_digest = info.get('digest')
+                # TODO SHA256 digest
+                if 'digest' in info:
+                    dist.digest = ('md5', info['digest'])
                 md.dependencies = info.get('new-requirements', {})
                 dist.exports = info.get('exports', {})
                 result[dist.version] = dist

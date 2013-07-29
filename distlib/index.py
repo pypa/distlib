@@ -267,13 +267,15 @@ class PackageIndex(object):
                 sig_file = self.sign_file(filename, signer, sign_password)
         with open(filename, 'rb') as f:
             file_data = f.read()
-        digest = hashlib.md5(file_data).hexdigest()
+        md5_digest = hashlib.md5(file_data).hexdigest()
+        sha256_digest = hashlib.sha256(file_data).hexdigest()
         d.update({
             ':action': 'file_upload',
             'protcol_version': '1',
             'filetype': filetype,
             'pyversion': pyversion,
-            'md5_digest': digest,
+            'md5_digest': md5_digest,
+            'sha256_digest': sha256_digest,
         })
         files = [('content', os.path.basename(filename), file_data)]
         if sig_file:
@@ -424,9 +426,9 @@ class PackageIndex(object):
         if digester:
             actual = digester.hexdigest()
             if digest != actual:
-                raise DistlibException('MD5 digest mismatch for %s: expected '
-                                       '%s, got %s' % (destfile, digest,
-                                                       actual))
+                raise DistlibException('%s digest mismatch for %s: expected '
+                                       '%s, got %s' % (hasher, destfile,
+                                                       digest, actual))
             logger.debug('Digest verified: %s', digest)
 
     def send_request(self, req):

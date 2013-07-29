@@ -518,7 +518,7 @@ Provide a ``digest`` if you want the call to check that the has digest of the
 downloaded file matches a specific value: if not provided, no matching is done.
 The value passed can just be a plain string in the case of an MD5 digest or, if
 you want to specify the hashing algorithm to use, specify a tuple such as
-``(sha1, '0123456789abcdef...')``. The hashing algorithm must be one that's
+``('sha1', '0123456789abcdef...')``. The hashing algorithm must be one that's
 supported by the :mod:`hashlib` module.
 
 Benefits to using this method over plain :func:`urlretrieve` are:

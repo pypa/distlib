@@ -623,6 +623,9 @@ Classes
                 * md5_digest -- the MD5 hash of the archive, for verification
                   after downloading. This is extracted from the fragment
                   portion, if any, of the passed-in URL.
+                * sha256_digest -- the SHA256 hash of the archive, for
+                  verification after downloading. This is extracted from the
+                  fragment portion, if any, of the passed-in URL.
       :rtype: dict
 
    .. method:: get_distribution_names

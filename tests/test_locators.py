@@ -41,8 +41,8 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.source_url,
                          'https://pypi.python.org/packages/source/s/sarge/'
                          'sarge-0.1.tar.gz')
-        self.assertEqual(dist.md5_digest,
-                         '961ddd9bc085fdd8b248c6dd96ceb1c8')
+        self.assertEqual(dist.digest,
+                         ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'))
         try:
             names = locator.get_distribution_names()
         except Exception:   # pragma: no cover
@@ -60,8 +60,8 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.source_url,
                          'https://pypi.python.org/packages/source/s/sarge/'
                          'sarge-0.1.1.tar.gz')
-        self.assertEqual(dist.md5_digest,
-                         '2a9b9d46e4ef6ae51e2a5ff7de93d9dd')
+        self.assertEqual(dist.digest,
+                         ('md5', '2a9b9d46e4ef6ae51e2a5ff7de93d9dd'))
         self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
@@ -76,8 +76,8 @@ class LocatorTestCase(unittest.TestCase):
             self.assertEqual(dist.source_url,
                              'https://pypi.python.org/packages/source/s/sarge/'
                              'sarge-0.1.tar.gz')
-            self.assertEqual(dist.md5_digest,
-                             '961ddd9bc085fdd8b248c6dd96ceb1c8')
+            self.assertEqual(dist.digest,
+                             ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'))
         return
         # The following is too slow
         names = locator.get_distribution_names()
