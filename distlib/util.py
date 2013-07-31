@@ -24,7 +24,7 @@ import threading
 import time
 
 from . import DistlibException
-from .compat import (string_types, text_type, shutil, raw_input,
+from .compat import (string_types, text_type, shutil, raw_input, StringIO,
                      cache_from_source, urlopen, httplib, xmlrpclib, splittype,
                      HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
                      BaseConfigurator, valid_ident, Container, configparser,
@@ -188,6 +188,14 @@ def read_exports(stream):
     if sys.version_info[0] >= 3:
         # needs to be a text stream
         stream = codecs.getreader('utf-8')(stream)
+    # Try to load as JSON, falling back on legacy format
+    data = stream.read()
+    stream = StringIO(data)
+    try:
+        result = json.load(stream)
+        return result
+    except Exception:
+        stream.seek(0, 0)
     cp = configparser.ConfigParser()
     if hasattr(cp, 'read_file'):
         cp.read_file(stream)
