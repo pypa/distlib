@@ -265,7 +265,7 @@ class Locator(object):
                             if pyver:
                                 result['python-version'] = pyver
                     break
-        if algo:
+        if result and algo:
             result['%s_digest' % algo] = digest
         return result
 
