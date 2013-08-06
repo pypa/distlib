@@ -613,6 +613,21 @@ class FileOpsTestCase(unittest.TestCase):
         self.fileop.ensure_dir(path)
         return set(written), set([path])
 
+    def test_copy_check(self):
+        srcpath = os.path.join(self.workdir, 'file1')
+        self.fileop.write_text_file(srcpath, 'test', 'utf-8')
+        dstpath = os.path.join(self.workdir, 'file2')
+        os.mkdir(dstpath)
+        self.assertRaises(ValueError, self.fileop.copy_file, srcpath,
+                          dstpath)
+        os.rmdir(dstpath)
+        if os.name == 'posix':      # symlinks available
+            linkpath = os.path.join(self.workdir, 'file3')
+            self.fileop.write_text_file(linkpath, 'linkdest', 'utf-8')
+            os.symlink(linkpath, dstpath)
+            self.assertRaises(ValueError, self.fileop.copy_file, srcpath,
+                              dstpath)
+
     def test_commit(self):
         # will assert if record isn't set
         self.assertRaises(AssertionError, self.fileop.commit)

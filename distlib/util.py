@@ -336,19 +336,18 @@ class FileOperator(object):
 
         return os.stat(source).st_mtime > os.stat(target).st_mtime
 
-    def copy_file(self, infile, outfile, check=False):
+    def copy_file(self, infile, outfile, check=True):
         """Copy a file respecting dry-run and force flags.
         """
-        assert not os.path.isdir(outfile)
         self.ensure_dir(os.path.dirname(outfile))
         logger.info('Copying %s to %s', infile, outfile)
         if not self.dry_run:
-            if not check:
-                msg = None
-            if os.path.islink(outfile):
-                msg = '%s is a symlink' % outfile
-            elif os.path.exists(outfile) and not os.path.isfile(outfile):
-                msg = '%s is a non-regular file' % outfile
+            msg = None
+            if check:
+                if os.path.islink(outfile):
+                    msg = '%s is a symlink' % outfile
+                elif os.path.exists(outfile) and not os.path.isfile(outfile):
+                    msg = '%s is a non-regular file' % outfile
             if msg:
                 raise ValueError(msg + ' which would be overwritten')
             shutil.copyfile(infile, outfile)
