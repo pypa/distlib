@@ -356,8 +356,8 @@ class Locator(object):
 
 class PyPIRPCLocator(Locator):
     """
-    This locator uses XML-RPC to locate distributions. It therefore cannot be
-    used with simple mirrors (that only mirror file content).
+    This locator uses XML-RPC to locate distributions. It therefore
+    cannot be used with simple mirrors (that only mirror file content).
     """
     def __init__(self, url, **kwargs):
         """

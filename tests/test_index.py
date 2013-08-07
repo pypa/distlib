@@ -20,7 +20,7 @@ from support import HTTPSServerThread
 
 from distlib import DistlibException
 from distlib.compat import urlopen, HTTPError, URLError
-from distlib.index import PackageIndex, DEFAULT_MIRROR_HOST
+from distlib.index import PackageIndex
 from distlib.metadata import Metadata, MetadataMissingError, METADATA_FILENAME
 from distlib.util import zip_dir, HTTPSHandler
 
@@ -80,15 +80,6 @@ class PackageIndexTestCase(unittest.TestCase):
             self.index = PackageIndex(self.test_server_url)
             self.index.username = 'test'
             self.index.password = 'secret'
-
-    def test_mirrors(self):
-        "Test list of mirrors"
-        actual = self.index.mirrors
-        if actual:
-            host = socket.gethostbyname_ex(DEFAULT_MIRROR_HOST)[0]
-            self.assertEqual(actual[-1], host)
-            prefix, suffix = host.split('.', 1)
-            self.assertEqual(actual[0], '.'.join(('a', suffix)))
 
     def load_package_metadata(self, path):
         result = None
