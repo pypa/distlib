@@ -155,7 +155,7 @@ class ScriptTestCase(unittest.TestCase):
                     data = f.readline()
                     self.assertIn(executable, data)
         # Now test making scripts gui and console
-        files = self.maker.make('foo = foo:main [gui]')
+        files = self.maker.make('foo = foo:main', {'gui': True})
         self.assertEqual(len(files), 6)
         filenames = set([os.path.basename(f) for f in files])
         specific = sys.version[:3]
