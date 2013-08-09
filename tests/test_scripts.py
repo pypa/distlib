@@ -84,23 +84,27 @@ class ScriptTestCase(unittest.TestCase):
         ofiles = os.listdir(self.maker.target_dir)
         self.assertEqual(set(specs), set(ofiles))
 
-    def test_callable(self):
+    def test_generation(self):
         self.maker.clobber = True
         for name in ('main', 'other_main'):
-            spec = 'foo = foo:' + name
-            files = self.maker.make(spec)
-            self.assertEqual(len(files), 2)
-            actual = set()
-            for f in files:
-                d, f = os.path.split(f)
-                actual.add(f)
-            self.assertEqual(actual, set(['foo', 'foo-%s' % sys.version[:3]]))
-            self.assertEqual(d, self.maker.target_dir)
-            for fn in files:
-                with open(fn, 'r') as f:
-                    text = f.read()
-                self.assertIn("_resolve('foo', '%s')" % name, text)
-
+            for options in (None, {}, {'gui': False}, {'gui': True}):
+                spec = 'foo = foo:' + name
+                files = self.maker.make(spec, options)
+                self.assertEqual(len(files), 2)
+                actual = set()
+                for f in files:
+                    d, f = os.path.split(f)
+                    actual.add(f)
+                expected = set(['foo', 'foo-%s' % sys.version[:3]])
+                self.assertEqual(actual, expected)
+                self.assertEqual(d, self.maker.target_dir)
+                for fn in files:
+                    with open(fn, 'r') as f:
+                        text = f.read()
+                    self.assertIn("_resolve('foo', '%s')" % name, text)
+                    first_line = text.split('\n', 1)
+                    if options and options['gui'] and os.name == 'nt':
+                        self.assertIn('pythonw', first_line)
     def test_clobber(self):
         files = self.maker.make('foo = foo:main')
         saved_files = files

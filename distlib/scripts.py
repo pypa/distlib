@@ -82,14 +82,14 @@ class ScriptMaker(object):
         self.variants = set(('', 'X.Y'))
         self._fileop = fileop or FileOperator(dry_run)
 
-    def _get_alternate_executable(self, executable, flags):
-        if 'gui' in flags and os.name == 'nt':
+    def _get_alternate_executable(self, executable, options):
+        if options.get('gui', False) and os.name == 'nt':
             dn, fn = os.path.split(executable)
             fn = fn.replace('python', 'pythonw')
             executable = os.path.join(dn, fn)
         return executable
 
-    def _get_shebang(self, encoding, post_interp=b'', flags=None):
+    def _get_shebang(self, encoding, post_interp=b'', options=None):
         if self.executable:
             executable = self.executable
         elif not sysconfig.is_python_build():
@@ -103,8 +103,8 @@ class ScriptMaker(object):
                 sysconfig.get_config_var('BINDIR'),
                'python%s%s' % (sysconfig.get_config_var('VERSION'),
                                sysconfig.get_config_var('EXE')))
-        if flags:
-            executable = self._get_alternate_executable(executable, flags)
+        if options:
+            executable = self._get_alternate_executable(executable, options)
 
         executable = fsencode(executable)
         shebang = b'#!' + executable + post_interp + b'\n'
@@ -141,8 +141,8 @@ class ScriptMaker(object):
         base = os.path.basename(exename)
         return self.manifest % base
 
-    def _make_script(self, entry, filenames):
-        shebang = self._get_shebang('utf-8', flags=entry.flags).decode('utf-8')
+    def _make_script(self, entry, filenames, options=None):
+        shebang = self._get_shebang('utf-8', options=options).decode('utf-8')
         script = self._get_script_text(shebang, entry)
         name = entry.name
         scriptnames = set()
@@ -157,7 +157,7 @@ class ScriptMaker(object):
             use_launcher = self.add_launchers and os.name == 'nt'
             if use_launcher:
                 exename = '%s.exe' % outname
-                if 'gui' in entry.flags:
+                if options.get('gui', False):
                     ext = 'pyw'
                     launcher = self._get_launcher('w')
                 else:
@@ -265,7 +265,7 @@ class ScriptMaker(object):
 
     # Public API follows
 
-    def make(self, specification):
+    def make(self, specification, options=None):
         """
         Make a script.
 
@@ -273,17 +273,18 @@ class ScriptMaker(object):
                               entry specification (to make a script from a
                               callable) or a filename (to make a script by
                               copying from a source location).
-        :return: A list of all absolute pathnames written to,
+        :param options: A dictionary of options controlling script generation.
+        :return: A list of all absolute pathnames written to.
         """
         filenames = []
         entry = get_export_entry(specification)
         if entry is None:
             self._copy_script(specification, filenames)
         else:
-            self._make_script(entry, filenames)
+            self._make_script(entry, filenames, options=options)
         return filenames
 
-    def make_multiple(self, specifications):
+    def make_multiple(self, specifications, options=None):
         """
         Take a list of specifications and make scripts from them,
         :param specifications: A list of specifications.
@@ -291,5 +292,5 @@ class ScriptMaker(object):
         """
         filenames = []
         for specification in specifications:
-            filenames.extend(self.make(specification))
+            filenames.extend(self.make(specification, options))
         return filenames
