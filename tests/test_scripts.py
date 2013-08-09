@@ -102,9 +102,10 @@ class ScriptTestCase(unittest.TestCase):
                     with open(fn, 'r') as f:
                         text = f.read()
                     self.assertIn("_resolve('foo', '%s')" % name, text)
-                    first_line = text.split('\n', 1)
                     if options and options['gui'] and os.name == 'nt':
+                        first_line, rest = text.split('\n', 1)
                         self.assertIn('pythonw', first_line)
+
     def test_clobber(self):
         files = self.maker.make('foo = foo:main')
         saved_files = files
