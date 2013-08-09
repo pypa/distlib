@@ -255,6 +255,10 @@ be used for any purpose determined by the distribution author (for example, the
 This entry format is used in the :mod:`distlib.scripts` package for installing
 scripts based on Python callables.
 
+.. note:: In :pep:`426`, the ``flags`` value is limited to a single flag
+   representing an extra (optional set of dependencies, for optional features
+   of a distribution).
+
 Distribution dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -988,20 +992,26 @@ The string passed to make can take one of the following forms:
 
       name = some_package.some_module:some_callable [flags]
 
-  where the *flags* part is optional. The only flag currently in use is
-  ``'gui'``, which indicates on Windows that a Windows executable launcher
-  (rather than a launcher which is a console application) should be used.
-  (This only applies if ``add_launchers`` is true.)
+  where the *flags* part is optional.
 
   For more information about flags, see :ref:`flag-formats`.
 
   Note that this format is exactly the same as for export entries in a
   distribution (see :ref:`dist-exports`).
 
-  When this form is passed to the :meth:`ScriptMaker.make`
-  method, a Python stub script is created with the appropriate shebang line
-  and with code to load and call the specified callable with no arguments,
-  returning its value as the return code from the script.
+  When this form is passed to the :meth:`ScriptMaker.make` method, a Python
+  stub script is created with the appropriate shebang line and with code to
+  load and call the specified callable with no arguments, returning its value
+  as the return code from the script.
+
+  You can pass an optional ``options`` dictionary to the :meth:`make` method.
+  This is meant to contain options which control script generation. The only
+  option currently in use is ``'gui'``, which indicates on Windows that a
+  Windows executable launcher (rather than a launcher which is a console
+  application) should be used. (This only applies if ``add_launchers`` is
+  true.)
+
+  For example, you can pass ``{'gui': True}`` to generate a windowed script.
 
 Wrapping callables with scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1113,6 +1123,21 @@ To control overwriting of generated scripts this way, you can use the
 :attr:`clobber` attribute of a :class:`ScriptMaker` instance. This is set to
 ``False`` by default, which prevents overwriting; to force overwriting, set it
 to ``True``.
+
+Generating windowed scripts on Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: Scripts; windowed
+
+The :meth:`make` and :meth:`make_multiple` methods take an optional second
+``options`` argument, which can be used to control script generation. If
+specified, this should be a dictionary of options. Currently, only the value
+for the ``gui`` key in the dictionary is inspected: if ``True``, it generates
+scripts with ``.pyw`` extensions (rather than ``.py``) and, if
+``add_launchers`` is specified as ``True`` in the :class:`ScriptMaker`
+instance, then (on Windows) a windowed native executable launcher is created
+(otherwise, the native executable launcher will be a console application).
 
 
 Using the version API

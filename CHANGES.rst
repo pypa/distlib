@@ -51,6 +51,12 @@ Released: Not yet.
       implemented validation of .rst descriptions, which is not done in
       distlib.
 
+- scripts
+
+    - Changed the interface for script generation options: the ``make`` and
+      ``make_multiple`` methods of ``ScriptMaker`` now take an optional
+      ``options`` dictionary.
+
 - util
 
     - Added extract_by_key() to copy selected keys from one dict to another.

@@ -534,7 +534,7 @@ Classes
       :type add_launchers: bool
       :param dry_run: If true, don't actually install scripts - just pretend to.
 
-   .. method:: make(specification)
+   .. method:: make(specification, options=None)
 
       Make a script in the target directory.
 
@@ -548,12 +548,7 @@ Classes
 
                                   name = some_package.some_module:some_callable [flags]
 
-                              where the *flags* part is optional. The only flag
-                              currently in use is ``'gui'``, which indicates on
-                              Windows that a Windows executable launcher
-                              (rather than a launcher which is a console
-                              application) should be used. (This only applies if
-                              ``add_launchers`` is true.)
+                              where the *flags* part is optional.
 
                               When this form is passed, a Python stub script
                               is created with the appropriate shebang line and
@@ -565,10 +560,20 @@ Classes
                               :ref:`flag-formats`.
 
       :type specification: str
+      :param options: If specified, a dictionary of options used to control
+                      script creation. Currently, only the key ``gui`` is
+                      checked: this should be a ``bool`` which, if ``True``,
+                      indicates that the script is a windowed application.
+                      This distinction is only drawn on Windows if
+                      ``add_launchers`` is ``True``, and results in a windowed
+                      native launcher application if ``options['gui']`` is
+                      ``True`` (otherwise, the native executable launcher is a
+                      console application).
+
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
 
-   .. method:: make_multiple(specifications)
+   .. method:: make_multiple(specifications, options)
 
       Make multiple scripts from an iterable.
 
@@ -578,6 +583,7 @@ Classes
       running ``2to3`` on them).
 
       :param specifications: an iterable giving the specifications to follow.
+      :param options: As for the :meth:`make` method.
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
 
