@@ -302,51 +302,6 @@ class LegacyMetadata(object):
             return self[name]
         raise AttributeError(name)
 
-#    def _get_dependencies(self):
-#        def handle_req(req, rlist, extras):
-#            if ';' not in req:
-#                rlist.append(req)
-#            else:
-#                r, marker = req.split(';')
-#                m = EXTRA_RE.search(marker)
-#                if m:
-#                    extra = m.groups()[0][1:-1]
-#                    extras.setdefault(extra, []).append(r)
-
-#        result = self._dependencies
-#        if result is None:
-#            self._dependencies = result = {}
-#            extras = {}
-#            setup_reqs = self['Setup-Requires-Dist']
-#            if setup_reqs:
-#                result['setup'] = setup_reqs
-#            install_reqs = []
-#            for req in self['Requires-Dist']:
-#                handle_req(req, install_reqs, extras)
-#            if install_reqs:
-#                result['install'] = install_reqs
-#            if extras:
-#                result['extras'] = extras
-#        return result
-
-#    def _set_dependencies(self, value):
-#        if 'test' in value:
-#            value = dict(value)     # don't change value passed in
-#            value.setdefault('extras', {})['test'] = value.pop('test')
-#        self._dependencies = value
-#        setup_reqs = value.get('setup', [])
-#        install_reqs = value.get('install', [])
-#        klist = []
-#        for k, rlist in value.get('extras', {}).items():
-#            klist.append(k)
-#            for r in rlist:
-#                install_reqs.append('%s; extra == "%s"' % (r, k))
-#        if setup_reqs:
-#            self['Setup-Requires-Dist'] = setup_reqs
-#        if install_reqs:
-#            self['Requires-Dist'] = install_reqs
-#        if klist:
-#            self['Provides-Extra'] = klist
     #
     # Public API
     #
@@ -775,7 +730,7 @@ class Metadata(object):
                     result = self._legacy.get(lk)
             else:
                 value = None if maker is None else maker()
-                result = self._data.setdefault(key, value)
+                result = self._data.get(key, value)
         elif key not in common:
             result = object.__getattribute__(self, key)
         elif self._legacy:
