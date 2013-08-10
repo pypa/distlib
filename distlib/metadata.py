@@ -706,17 +706,26 @@ class Metadata(object):
 
     common_keys = set(('name', 'version', 'license', 'keywords', 'summary'))
 
+    none_list = (None, list)
+    none_dict = (None, dict)
+
     mapped_keys = {
         'run_requires': ('Requires-Dist', list),
         'build_requires': ('Setup-Requires-Dist', list),
-        'dev_requires': (None, list),
-        'test_requires': (None, list),
-        'meta_requires': (None, list),
+        'dev_requires': none_list,
+        'test_requires': none_list,
+        'meta_requires': none_list,
         'extras': ('Provides-Extra', list),
+        'modules': none_list,
+        'namespaces': none_list,
+        'exports': none_dict,
+        'commands': none_dict,
         'classifiers': ('Classifier', list),
         'source_url': ('Download-URL', None),
         'metadata_version': ('Metadata-Version', None),
     }
+
+    del none_list, none_dict
 
     def __getattribute__(self, key):
         common = object.__getattribute__(self, 'common_keys')
