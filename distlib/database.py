@@ -582,9 +582,9 @@ class InstalledDistribution(BaseInstalledDistribution):
     def exports(self):
         """
         Return the information exported by this distribution.
-        :return: A dictionary of exports, mapping an export category to a list
+        :return: A dictionary of exports, mapping an export category to a dict
                  of :class:`ExportEntry` instances describing the individual
-                 export entries.
+                 export entries, and keyed by name.
         """
         result = {}
         r = self.get_distinfo_resource(EXPORTS_FILENAME)
