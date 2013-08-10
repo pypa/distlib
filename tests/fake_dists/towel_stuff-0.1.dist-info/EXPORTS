@@ -1,6 +1,0 @@
-[foo]
-bar = towel:towel
-baz = towel:beach_towel
-
-[bar.baz]
-foobar = hoopy:frood [dent]

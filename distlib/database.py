@@ -32,7 +32,8 @@ __all__ = ['Distribution', 'BaseInstalledDistribution',
 
 logger = logging.getLogger(__name__)
 
-EXPORTS_FILENAME = 'EXPORTS'
+EXPORTS_FILENAME = 'pydist-exports.json'
+COMMANDS_FILENAME = 'pydist-commands.json'
 
 DIST_FILES = ('INSTALLER', METADATA_FILENAME, 'RECORD', 'REQUESTED',
               'RESOURCES', EXPORTS_FILENAME, 'SHARED')

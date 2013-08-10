@@ -192,7 +192,14 @@ def read_exports(stream):
     data = stream.read()
     stream = StringIO(data)
     try:
-        result = json.load(stream)
+        data = json.load(stream)
+        result = data['exports']
+        for group, entries in result.items():
+            for k, v in entries.items():
+                s = '%s = %s' % (k, v)
+                entry = get_export_entry(s)
+                assert entry is not None
+                entries[k] = entry
         return result
     except Exception:
         stream.seek(0, 0)
