@@ -18,10 +18,11 @@ import tempfile
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.compat import ZipFile
+from distlib.compat import ZipFile, Container
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
 from distlib.metadata import Metadata, METADATA_FILENAME
+from distlib.scripts import ScriptMaker
 from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS,
                            is_compatible)
 
@@ -267,8 +268,9 @@ class WheelTestCase(unittest.TestCase):
         for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
             paths[key] = os.path.join(dstdir, key)
         w = Wheel(pathname)
-        executable = os.path.join(paths['scripts'], 'python')
-        dist = w.install(paths, executable=executable)
+        maker = ScriptMaker(None, None, add_launchers=False)
+        maker.executable = os.path.join(paths['scripts'], 'python')
+        dist = w.install(paths, maker, None)
         self.assertIsNotNone(dist)
         self.assertEqual(dist.name, w.name)
         self.assertEqual(dist.version, w.version)
@@ -300,14 +302,16 @@ class WheelTestCase(unittest.TestCase):
         for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
             paths[key] = os.path.join(dstdir, key)
         warner = Warner()
-        w.install(paths, warner=warner)
+        options = Container(warner=warner)
+        maker = ScriptMaker(None, None)
+        w.install(paths, maker, options)
         self.assertEqual(warner.wheel_version, w.wheel_version)
         self.assertEqual(warner.file_version, (2, 0))
         # Now set the wheel's instance to the higher value and ensure
         # warner isn't called
         warner = Warner()
         w.wheel_version = (2, 0)
-        w.install(paths, warner=warner)
+        w.install(paths, maker, options)
         self.assertFalse(hasattr(warner, 'wheel_version'))
         self.assertFalse(hasattr(warner, 'file_version'))
 

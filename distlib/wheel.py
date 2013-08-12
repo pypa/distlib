@@ -24,7 +24,7 @@ import tempfile
 import zipfile
 
 from . import __version__, DistlibException
-from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
+from .compat import sysconfig, ZipFile, fsdecode, text_type, filter, Container
 from .database import DistributionPath, InstalledDistribution
 from .metadata import Metadata, METADATA_FILENAME
 from .scripts import ScriptMaker
@@ -375,22 +375,27 @@ class Wheel(object):
                 zf.write(p, ap)
         return pathname
 
-    def install(self, paths, dry_run=False, executable=None, warner=None,
-                lib_only=False):
+    def install(self, paths, maker, options=None):
         """
-        Install a wheel to the specified paths. If ``executable`` is specified,
-        it should be the Unicode absolute path the to the executable written
-        into the shebang lines of any scripts installed. If ``warner`` is
+        Install a wheel to the specified paths. If ``options.warner`` is
         specified, it should be a callable, which will be called with two
         tuples indicating the wheel version of this software and the wheel
         version in the file, if there is a discrepancy in the versions.
         This can be used to issue any warnings to raise any exceptions.
-        If ``lib_only`` is True, only the purelib/platlib files are installed,
-        and the headers, scripts, data and dist-info metadata are not written.
+        If ``options.lib_only`` is True, only the purelib/platlib files are
+        installed, and the headers, scripts, data and dist-info metadata are
+        not written.
 
         The return value is a :class:`InstalledDistribution` instance unless
-        ``lib_only`` is True, in which case the return value is ``None``.
+        ``options.lib_only`` is True, in which case the return value is ``None``.
         """
+
+        dry_run = maker.dry_run
+        if options is None:
+            options = Container()
+        warner = getattr(options, 'warner', None)
+        lib_only = getattr(options, 'lib_only', False)
+
         pathname = os.path.join(self.dirname, self.filename)
         name_ver = '%s-%s' % (self.name, self.version)
         data_dir = '%s.data' % name_ver
@@ -425,6 +430,8 @@ class Wheel(object):
             info_pfx = posixpath.join(info_dir, '')
             script_pfx = posixpath.join(data_dir, 'scripts', '')
 
+            # make a new instance rather than a copy of maker's,
+            # as we mutate it
             fileop = FileOperator(dry_run=dry_run)
             fileop.record = True    # so we can rollback if needed
 
@@ -437,9 +444,8 @@ class Wheel(object):
             # set target dir later
             # we default add_launchers to False, as the
             # Python Launcher should be used instead
-            maker = ScriptMaker(workdir, None, fileop=fileop,
-                                add_launchers=False)
-            maker.executable = executable
+            maker.source_dir = workdir
+            maker.target_dir = None
             try:
                 for zinfo in zf.infolist():
                     arcname = zinfo.filename
