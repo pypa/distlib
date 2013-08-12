@@ -24,7 +24,7 @@ import tempfile
 import zipfile
 
 from . import __version__, DistlibException
-from .compat import sysconfig, ZipFile, fsdecode, text_type, filter, Container
+from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import DistributionPath, InstalledDistribution
 from .metadata import Metadata, METADATA_FILENAME
 from .scripts import ScriptMaker
@@ -375,14 +375,14 @@ class Wheel(object):
                 zf.write(p, ap)
         return pathname
 
-    def install(self, paths, maker, options=None):
+    def install(self, paths, maker, **kwargs):
         """
-        Install a wheel to the specified paths. If ``options.warner`` is
+        Install a wheel to the specified paths. If kwarg ``warner`` is
         specified, it should be a callable, which will be called with two
         tuples indicating the wheel version of this software and the wheel
         version in the file, if there is a discrepancy in the versions.
         This can be used to issue any warnings to raise any exceptions.
-        If ``options.lib_only`` is True, only the purelib/platlib files are
+        If kwarg ``lib_only`` is True, only the purelib/platlib files are
         installed, and the headers, scripts, data and dist-info metadata are
         not written.
 
@@ -391,10 +391,8 @@ class Wheel(object):
         """
 
         dry_run = maker.dry_run
-        if options is None:
-            options = Container()
-        warner = getattr(options, 'warner', None)
-        lib_only = getattr(options, 'lib_only', False)
+        warner = kwargs.get('warner')
+        lib_only = kwargs.get('lib_only', False)
 
         pathname = os.path.join(self.dirname, self.filename)
         name_ver = '%s-%s' % (self.name, self.version)

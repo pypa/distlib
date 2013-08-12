@@ -1341,6 +1341,7 @@ Installing from wheels is similarly straightforward. You just need to indicate
 where you want the files in the wheel to be installed::
 
     from distlib.wheel import Wheel
+    from distlib.scripts import ScriptMaker
 
     wheel = Wheel('/path/to/my_dist-0.1-py32-none-any.whl')
 
@@ -1355,18 +1356,23 @@ where you want the files in the wheel to be installed::
         'data': '/path/to/data',
     }
 
-    # Now install. The method accepts a ``dry_run`` keyword argument that goes
-    # through the installation procedure but doesn't actually install anything.
-    # It also accepts:
+    maker = ScriptMaker(None, None)
+    # You can specify a custom executable in script shebang lines, whether
+    # or not to install native executable launchers, whether to do a dry run
+    # etc. by setting attributes on the maker, wither when creating it or
+    # subsequently.
+
+    # Now install. The method accepts optional keyword arguments:
     #
-    # - An ``executable`` keyword argument which, if specified, should be the
-    #   absolute Unicode pathname of the executable you want to specify in the
-    #   shebang lines of scripts installed from the wheel.
-    # - A ``warner`` keyword argument which, if specified, should be a callable
-    #   that will be called with (software_wheel_version, file_wheel_version)
-    #   if they differ. They will both be in the form (major_ver, minor_ver).
+    # - A ``warner`` argument which, if specified, should be a callable that
+    #   will be called with (software_wheel_version, file_wheel_version) if
+    #   they differ. They will both be in the form (major_ver, minor_ver).
     #
-    wheel.install(paths)
+    # - A ``lib_only`` argument which indicates that only the library portion
+    #   of the wheel should be installed - no scripts, header files or
+    #   non-package data.
+
+    wheel.install(paths, maker)
 
 Only one of the ``purelib`` or ``platlib`` paths will actually be written to
 (assuming that they are different, which isn't often the case). Which one it is

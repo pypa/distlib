@@ -1117,8 +1117,7 @@ Classes
                    tags which indicate environments with which the wheel is
                    compatible.
 
-   .. method:: install(self, paths, dry_run=False, executable=None,
-                       warner=None)
+   .. method:: install(self, paths, maker, **kwargs)
 
       Install from a wheel.
 
@@ -1130,18 +1129,22 @@ Classes
                     the case where they are different), depending on whether
                     the wheel is for a pure-Python distribution.
 
-      :param dry_run: If ``True``, the method goes through the motions but
-                      doesn't actually install anything.
-      :param executable: If specified, this should be the absolute Unicode
-                         pathname of the Python interpreter to be specified in
-                         the shebang lines of installed scripts. If not
-                         specified, the interpreter running the ``install``
-                         method is used.
-      :param warner: If specified, this should be a callable that will be
-                     called with (``software_wheel_version``,
-                     ``file_wheel_version``) if they differ. They will both be
-                     in the form of tuples (``major_version``,
-                     ``minor_version``).
+      :param maker: This should be set to a suitably configured instance of
+                    :class:`ScriptMaker`. The ``source_dir`` and ``target_dir``
+                    arguments can be set to ``None`` when creating the
+                    instance - these will be set to appropriate values inside
+                    this method.
+
+      :param warner: If specified, should be a callable that will be called
+                     with (software_wheel_ver, file_wheel_ver) if they differ.
+                     They will both be in the form of tuples (major_ver,
+                     minor_ver).
+
+      :param lib_only: It's conceivable that one might want to install only
+                       the library portion of a package -- not installing
+                       scripts, headers, data and so on. If ``lib_only`` is
+                       specified as ``True``, only the ``site-packages``
+                       contents will be installed.
 
    .. method:: mount(append=False)
 

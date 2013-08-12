@@ -960,8 +960,7 @@ support the required operations::
             indicate environments with which the wheel is compatible.
             """
 
-        def install(self, paths, dry_run=False, executable=None, warner=None,
-                    lib_only=False):
+        def install(self, paths, maker, **kwargs):
             """
             Install from a wheel. The ``paths`` should be a dictionary with
             keys 'prefix', 'scripts', 'headers', 'data', 'purelib' and
@@ -971,20 +970,24 @@ support the required operations::
             different), depending on whether the wheel is for a pure-
             Python distribution.
 
-            The ``dry_run`` argument, if ``True``, goes through the motions
-            but doesn't actually install anything. The ``executable``, if
-            specified, should be the absolute Unicode pathname of the Python
-            interpreter to be specified in the shebang lines of installed
-            scripts. If not specified, the interpreter running the ``install``
-            method is used. The ``warner``, if specified, should be a callable
-            that will be called with (software_wheel_ver, file_wheel_ver)
-            if they differ. They will both be in the form of tuples
-            (major_ver, minor_ver).
+            The ``maker`` argument should be a suitably configured
+            :class:`ScriptMaker` instance. The ``source_dir`` and
+            ``target_dir`` arguments can be set to ``None`` when creating the
+            instance - these will be set to appropriate values inside this
+            method.
 
-            It's conceivable that one might want to install only the library
-            portion of a package -- not installing scripts, headers data and
-            so on. If ``lib_only`` is specified as ``True``, only the
-            ``site-packages`` contents will be installed.
+            The following keyword arguments are recognised:
+
+            * ``warner``, if specified, should be a callable
+              that will be called with (software_wheel_ver, file_wheel_ver)
+              if they differ. They will both be in the form of tuples
+              (major_ver, minor_ver). The ``warner`` defaults to ``None``.
+
+            * It's conceivable that one might want to install only the library
+              portion of a package -- not installing scripts, headers data and
+              so on. If ``lib_only`` is specified as ``True``, only the
+              ``site-packages`` contents will be installed. The default value
+              is ``False`` (meaning everything will be installed).
             """
 
 In addition to the above, the following attributes can be identified for a

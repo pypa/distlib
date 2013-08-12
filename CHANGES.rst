@@ -72,6 +72,8 @@ Released: Not yet.
 
 - wheel
 
+    - Changed Wheel.install API (after consultation on distutils-sig).
+
     - Added support for PEP 426 JSON metadata (pydist.json).
 
     - Added lib_only flag to install() method.
