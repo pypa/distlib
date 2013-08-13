@@ -25,9 +25,8 @@ import zipfile
 
 from . import __version__, DistlibException
 from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
-from .database import DistributionPath, InstalledDistribution
+from .database import InstalledDistribution
 from .metadata import Metadata, METADATA_FILENAME
-from .scripts import ScriptMaker
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter,
                    cached_property, get_cache_base)
 
@@ -524,7 +523,7 @@ class Wheel(object):
                     dist = InstalledDistribution(p)
 
                     # Write SHARED
-                    paths = dict(paths) # don't change passed in dict
+                    paths = dict(paths)     # don't change passed in dict
                     del paths['purelib']
                     del paths['platlib']
                     paths['lib'] = libdir
@@ -536,7 +535,7 @@ class Wheel(object):
                     dist.write_installed_files(outfiles, paths['prefix'],
                                                dry_run)
                 return dist
-            except Exception as e:  # pragma: no cover
+            except Exception:  # pragma: no cover
                 logger.exception('installation failed.')
                 fileop.rollback()
                 raise
@@ -650,6 +649,7 @@ def compatible_tags():
 COMPATIBLE_TAGS = compatible_tags()
 
 del compatible_tags
+
 
 def is_compatible(wheel, tags=None):
     if not isinstance(wheel, Wheel):

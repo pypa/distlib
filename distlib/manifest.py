@@ -203,9 +203,12 @@ class Manifest(object):
         :return: A tuple of action, patterns, thedir, dir_patterns
         """
         words = directive.split()
-        if len(words) == 1 and words[0] not in (
-            'include', 'exclude', 'global-include', 'global-exclude',
-            'recursive-include', 'recursive-exclude', 'graft', 'prune'):
+        if len(words) == 1 and words[0] not in ('include', 'exclude',
+                                                'global-include',
+                                                'global-exclude',
+                                                'recursive-include',
+                                                'recursive-exclude',
+                                                'graft', 'prune'):
             # no action given, let's use the default 'include'
             words.insert(0, 'include')
 

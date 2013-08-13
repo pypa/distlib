@@ -10,7 +10,6 @@ import re
 import struct
 import sys
 
-from . import DistlibException
 from .compat import sysconfig, fsencode, detect_encoding
 from .resources import finder
 from .util import FileOperator, get_export_entry, convert_path, get_executable
@@ -95,9 +94,8 @@ class ScriptMaker(object):
         elif not sysconfig.is_python_build():
             executable = get_executable()
         elif hasattr(sys, 'base_prefix') and sys.prefix != sys.base_prefix:
-            executable = os.path.join(
-                sysconfig.get_path('scripts'),
-               'python%s' % sysconfig.get_config_var('EXE'))
+            executable = os.path.join(sysconfig.get_path('scripts'),
+                            'python%s' % sysconfig.get_config_var('EXE'))
         else:
             executable = os.path.join(
                 sysconfig.get_config_var('BINDIR'),

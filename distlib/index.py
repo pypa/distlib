@@ -5,12 +5,9 @@
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 import hashlib
-import itertools
 import logging
 import os
 import shutil
-import socket
-from string import ascii_lowercase
 import subprocess
 import tempfile
 from threading import Thread
