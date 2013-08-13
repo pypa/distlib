@@ -828,7 +828,7 @@ class JSONLocator(Locator):
                 md = dist.metadata
                 md.source_url = info['url']
                 # TODO SHA256 digest
-                if 'digest' in info:
+                if 'digest' in info and info['digest']:
                     dist.digest = ('md5', info['digest'])
                 md.dependencies = info.get('new-requirements', {})
                 dist.exports = info.get('exports', {})
