@@ -398,6 +398,7 @@ class Wheel(object):
         data_dir = '%s.data' % name_ver
         info_dir = '%s.dist-info' % name_ver
 
+        metadata_name = posixpath.join(info_dir, METADATA_FILENAME)
         wheel_metadata_name = posixpath.join(info_dir, 'WHEEL')
         record_name = posixpath.join(info_dir, 'RECORD')
 
@@ -416,6 +417,18 @@ class Wheel(object):
                 libdir = paths['purelib']
             else:
                 libdir = paths['platlib']
+
+            # Try to get pydist.json so we can see if there are
+            # any commands to generate. If this fails (e.g. because
+            # of a legacy wheel), log a warning but don't give up.
+            try:
+                with zf.open(metadata_name) as bwf:
+                    wf = wrapper(bwf)
+                    metadict = json.load(wf)
+            except Exception:
+                logger.warning('Unable to read JSON metadata, so unable to '
+                               'generate scripts')
+                metadict = {}
             records = {}
             with zf.open(record_name) as bf:
                 with CSVReader(stream=bf) as reader:
@@ -519,6 +532,29 @@ class Wheel(object):
                     logger.debug('lib_only: returning None')
                     dist = None
                 else:
+                    # Generate scripts
+                    commands = metadict.get('commands')
+                    if commands:
+                        console_scripts = commands.get('wrap_console', {})
+                        gui_scripts = commands.get('wrap_gui', {})
+                        if console_scripts or gui_scripts:
+                            script_dir = paths.get('scripts', '')
+                            if not os.path.isdir(script_dir):
+                                raise ValueError('Valid script path not '
+                                                 'specified')
+                            maker.target_dir = script_dir
+                            for k, v in console_scripts.items():
+                                script = '%s = %s' % (k, v)
+                                filenames = maker.make(script)
+                                fileop.set_executable_mode(filenames)
+
+                            if gui_scripts:
+                                options = {'gui': True }
+                                for k, v in gui_scripts.items():
+                                    script = '%s = %s' % (k, v)
+                                    filenames = maker.make(script, options)
+                                    fileop.set_executable_mode(filenames)
+
                     p = os.path.join(libdir, info_dir)
                     dist = InstalledDistribution(p)
 
