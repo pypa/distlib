@@ -89,6 +89,7 @@ class ScriptTestCase(unittest.TestCase):
         self.maker.clobber = True
         for name in ('main', 'other_main'):
             for options in (None, {}, {'gui': False}, {'gui': True}):
+                gui = options and options.get('gui', False)
                 spec = 'foo = foo:' + name
                 files = self.maker.make(spec, options)
                 self.assertEqual(len(files), 2)
@@ -96,7 +97,15 @@ class ScriptTestCase(unittest.TestCase):
                 for f in files:
                     d, f = os.path.split(f)
                     actual.add(f)
-                expected = set(['foo', 'foo-%s' % sys.version[:3]])
+                if os.name == 'nt':
+                    if gui:
+                        ext = 'pyw'
+                    else:
+                        ext = 'py'
+                    expected = set(['foo.%s' % ext,
+                                    'foo-%s.%s' % (sys.version[:3], ext)])
+                else:
+                    expected = set(['foo', 'foo-%s' % sys.version[:3]])
                 self.assertEqual(actual, expected)
                 self.assertEqual(d, self.maker.target_dir)
                 for fn in files:
@@ -124,17 +133,17 @@ class ScriptTestCase(unittest.TestCase):
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
                  'shell.sh')
         files = self.maker.make_multiple(specs)
-        self.assertEqual(len(specs), len(files) - 3)
+        self.assertEqual(len(specs), len(files))
         filenames = set([os.path.basename(f) for f in files])
-        self.assertEqual(filenames, set(('foo.py', 'script1-script.py',
-                                         'script1.exe', 'script2-script.py',
-                                         'script2.exe', 'script3-script.py',
-                                         'script3.exe', 'shell.sh')))
+        self.assertEqual(filenames, set(('foo.py', 'script1.exe',
+                                         'script2.exe', 'script3.exe',
+                                         'shell.sh')))
         for fn in files:
-            if fn.endswith('.exe'):
-                with open(fn, 'rb') as f:
-                    data = f.read()
-                self.assertEqual(data, tlauncher)
+            if not fn.endswith('.exe'):
+                continue
+            with open(fn, 'rb') as f:
+                data = f.read()
+            self.assertTrue(data.startswith(tlauncher))
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_windows(self):
@@ -142,65 +151,49 @@ class ScriptTestCase(unittest.TestCase):
         tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
         executable = sys.executable.encode('utf-8')
+        wexecutable = executable.replace(b'python.exe', b'pythonw.exe')
         files = self.maker.make('script4.py')
-        self.assertEqual(len(files), 2)
+        self.assertEqual(len(files), 1)
         filenames = set([os.path.basename(f) for f in files])
-        self.assertEqual(filenames, set(('script4-script.pyw', 'script4.exe')))
+        self.assertEqual(filenames, set(['script4.exe']))
         for fn in files:
-            if fn.endswith('.exe'):
-                with open(fn, 'rb') as f:
-                    data = f.read()
-                self.assertEqual(data, wlauncher)
-            elif fn.endswith(('.py', '.pyw')):
-                with open(fn, 'rb') as f:
-                    data = f.readline()
-                    self.assertIn(executable, data)
+            with open(fn, 'rb') as f:
+                data = f.read()
+            self.assertTrue(data.startswith(wlauncher))
+            self.assertIn(executable, data)
         # Now test making scripts gui and console
         files = self.maker.make('foo = foo:main', {'gui': True})
-        self.assertEqual(len(files), 6)
+        self.assertEqual(len(files), 2)
         filenames = set([os.path.basename(f) for f in files])
         specific = sys.version[:3]
-        self.assertEqual(filenames, set(('foo-script.pyw', 'foo.exe',
-                                         'foo.exe.manifest',
-                                         'foo-%s-script.pyw' % specific,
-                                         'foo-%s.exe' % specific,
-                                         'foo-%s.exe.manifest' % specific)))
+        self.assertEqual(filenames, set(('foo.exe', 'foo-%s.exe' % specific)))
         for fn in files:
-            if fn.endswith('.exe'):
-                with open(fn, 'rb') as f:
-                    data = f.read()
-                self.assertEqual(data, wlauncher)
-            elif fn.endswith(('.py', '.pyw')):
-                with open(fn, 'rb') as f:
-                    data = f.readline()
-                    # can be pythonw.exe or pythonwXY.exe
-                    self.assertIn(b'pythonw', data)
+            with open(fn, 'rb') as f:
+                data = f.read()
+            self.assertTrue(data.startswith(wlauncher))
+            self.assertIn(wexecutable, data)
 
         files = self.maker.make('foo = foo:main')
-        self.assertEqual(len(files), 6)
+        self.assertEqual(len(files), 2)
         filenames = set([os.path.basename(f) for f in files])
-        self.assertEqual(filenames, set(('foo-script.py', 'foo.exe',
-                                         'foo.exe.manifest',
-                                         'foo-%s-script.py' % specific,
-                                         'foo-%s.exe' % specific,
-                                         'foo-%s.exe.manifest' % specific)))
+        self.assertEqual(filenames, set(('foo.exe', 'foo-%s.exe' % specific)))
         for fn in files:
-            if fn.endswith('foo.exe'):
-                with open(fn, 'rb') as f:
-                    data = f.read()
-                self.assertEqual(data, tlauncher)
-            elif fn.startswith('foo') and fn.endswith(('.py', '.pyw')):
-                with open(fn, 'rb') as f:
-                    data = f.readline()
-                    self.assertIn(b'python.exe', data)
+            with open(fn, 'rb') as f:
+                data = f.read()
+            self.assertTrue(data.startswith(tlauncher))
+            self.assertIn(executable, data)
 
     def test_dry_run(self):
         self.maker.dry_run = True
         self.maker.variants = set([''])
-        specs = ('foo.py', 'foo = foo:main')
+        specs = ('foo.py', 'bar = foo:main')
         files = self.maker.make_multiple(specs)
         self.assertEqual(len(specs), len(files))
-        self.assertEqual(set(('foo.py', 'foo')),
+        if os.name == 'nt':
+            bar = 'bar.py'
+        else:
+            bar = 'bar'
+        self.assertEqual(set(('foo.py', bar)),
                          set([os.path.basename(f) for f in files]))
         ofiles = os.listdir(self.maker.target_dir)
         self.assertFalse(ofiles)

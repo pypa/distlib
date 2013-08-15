@@ -163,7 +163,7 @@ class ScriptMaker(object):
                 outname = '%s.exe' % outname
                 self._fileop.write_binary_file(outname, script_bytes)
             else:
-                if os.name == 'nt':
+                if os.name == 'nt' and not outname.endswith('.' + ext):
                     outname = '%s.%s' % (outname, ext)
                 if os.path.exists(outname) and not self.clobber:
                     logger.warning('Skipping existing file %s', outname)
