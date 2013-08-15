@@ -157,7 +157,10 @@ class ScriptMaker(object):
         for name in names:
             outname = os.path.join(self.target_dir, name)
             if use_launcher:
-                outname = '%s.exe' % os.path.splitext(outname)[0]
+                n, e = os.path.splitext(outname)
+                if e.startswith('.py'):
+                    outname = n
+                outname = '%s.exe' % outname
                 self._fileop.write_binary_file(outname, script_bytes)
             else:
                 if os.name == 'nt':
