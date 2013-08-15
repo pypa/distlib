@@ -80,9 +80,10 @@ class ScriptTestCase(unittest.TestCase):
                  'shell.sh')
         files = self.maker.make_multiple(specs)
         self.assertEqual(len(specs), len(files))
-        self.assertEqual(set(specs), set([os.path.basename(f) for f in files]))
+        expected = set(specs)
+        self.assertEqual(expected, set([os.path.basename(f) for f in files]))
         ofiles = os.listdir(self.maker.target_dir)
-        self.assertEqual(set(specs), set(ofiles))
+        self.assertEqual(expected, set(ofiles))
 
     def test_generation(self):
         self.maker.clobber = True

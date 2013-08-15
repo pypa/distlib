@@ -4,13 +4,14 @@
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
+from io import BytesIO
 import logging
 import os
 import re
 import struct
 import sys
 
-from .compat import sysconfig, fsencode, detect_encoding
+from .compat import sysconfig, fsencode, detect_encoding, ZipFile
 from .resources import finder
 from .util import FileOperator, get_export_entry, convert_path, get_executable
 
@@ -36,7 +37,7 @@ _DEFAULT_MANIFEST = '''
 
 # check if Python is called on the first line with this expression
 FIRST_LINE_RE = re.compile(b'^#!.*pythonw?[0-9.]*([ \t].*)?$')
-SCRIPT_TEMPLATE = '''%(shebang)s
+SCRIPT_TEMPLATE = '''# -*- coding: utf-8 -*-
 if __name__ == '__main__':
     import sys, re
 
@@ -50,7 +51,7 @@ if __name__ == '__main__':
         return result
 
     try:
-        sys.argv[0] = re.sub('-script.pyw?$', '', sys.argv[0])
+        sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
 
         func = _resolve('%(module)s', '%(func)s')
         rc = func() # None interpreted as 0
@@ -128,9 +129,8 @@ class ScriptMaker(object):
                     'from the script encoding (%r)' % (shebang, encoding))
         return shebang
 
-    def _get_script_text(self, shebang, entry):
-        return self.script_template % dict(shebang=shebang,
-                                           module=entry.prefix,
+    def _get_script_text(self, entry):
+        return self.script_template % dict(module=entry.prefix,
                                            func=entry.suffix)
 
     manifest = _DEFAULT_MANIFEST
@@ -139,9 +139,40 @@ class ScriptMaker(object):
         base = os.path.basename(exename)
         return self.manifest % base
 
+    def _write_script(self, names, shebang, script_bytes, filenames, ext):
+        use_launcher = self.add_launchers and os.name == 'nt'
+        linesep = os.linesep.encode('utf-8')
+        if not use_launcher:
+            script_bytes = shebang + linesep + script_bytes
+        else:
+            if ext == 'py':
+                launcher = self._get_launcher('t')
+            else:
+                launcher = self._get_launcher('w')
+            stream = BytesIO()
+            with ZipFile(stream, 'w') as zf:
+                zf.writestr('__main__.py', script_bytes)
+            zip_data = stream.getvalue()
+            script_bytes = launcher + shebang + linesep + zip_data
+        for name in names:
+            outname = os.path.join(self.target_dir, name)
+            if use_launcher:
+                outname = '%s.exe' % os.path.splitext(outname)[0]
+                self._fileop.write_binary_file(outname, script_bytes)
+            else:
+                if os.name == 'nt':
+                    outname = '%s.%s' % (outname, ext)
+                if os.path.exists(outname) and not self.clobber:
+                    logger.warning('Skipping existing file %s', outname)
+                    continue
+                self._fileop.write_binary_file(outname, script_bytes)
+                if self.set_mode:
+                    self._fileop.set_executable_mode([outname])
+            filenames.append(outname)
+
     def _make_script(self, entry, filenames, options=None):
-        shebang = self._get_shebang('utf-8', options=options).decode('utf-8')
-        script = self._get_script_text(shebang, entry)
+        shebang = self._get_shebang('utf-8', options=options)
+        script = self._get_script_text(entry).encode('utf-8')
         name = entry.name
         scriptnames = set()
         if '' in self.variants:
@@ -150,39 +181,16 @@ class ScriptMaker(object):
             scriptnames.add('%s%s' % (name, sys.version[0]))
         if 'X.Y' in self.variants:
             scriptnames.add('%s-%s' % (name, sys.version[:3]))
-        for name in scriptnames:
-            outname = os.path.join(self.target_dir, name)
-            use_launcher = self.add_launchers and os.name == 'nt'
-            if use_launcher:
-                exename = '%s.exe' % outname
-                if options and options.get('gui', False):
-                    ext = 'pyw'
-                    launcher = self._get_launcher('w')
-                else:
-                    ext = 'py'
-                    launcher = self._get_launcher('t')
-                outname = '%s-script.%s' % (outname, ext)
-            if os.path.exists(outname) and not self.clobber:
-                logger.warning('Skipping existing file %s', outname)
-                continue
-            self._fileop.write_text_file(outname, script, 'utf-8')
-            if self.set_mode:
-                self._fileop.set_executable_mode([outname])
-            filenames.append(outname)
-            if use_launcher:
-                self._fileop.write_binary_file(exename, launcher)
-                filenames.append(exename)
-                manifest = self.get_manifest(exename)
-                manifestname = exename + '.manifest'
-                self._fileop.write_text_file(manifestname, manifest, 'utf-8')
-                filenames.append(manifestname)
+        if options and options.get('gui', False):
+            ext = 'pyw'
+        else:
+            ext = 'py'
+        self._write_script(scriptnames, shebang, script, filenames, ext)
 
     def _copy_script(self, script, filenames):
         adjust = False
-        script = convert_path(script)
+        script = os.path.join(self.source_dir, convert_path(script))
         outname = os.path.join(self.target_dir, os.path.basename(script))
-        filenames.append(outname)
-        script = os.path.join(self.source_dir, script)
         if not self.force and not self._fileop.newer(script, outname):
             logger.debug('not copying %s (up-to-date)', script)
             return
@@ -214,31 +222,22 @@ class ScriptMaker(object):
             if f:
                 f.close()
             self._fileop.copy_file(script, outname)
+            if self.set_mode:
+                self._fileop.set_executable_mode([outname])
+            filenames.append(outname)
         else:
             logger.info('copying and adjusting %s -> %s', script,
                         self.target_dir)
             if not self._fileop.dry_run:
                 shebang = self._get_shebang(encoding, post_interp)
-                use_launcher = self.add_launchers and os.name == 'nt'
-                if use_launcher:
-                    n, e = os.path.splitext(outname)
-                    exename = n + '.exe'
-                    if b'pythonw' in first_line:
-                        launcher = self._get_launcher('w')
-                        suffix = '-script.pyw'
-                    else:
-                        launcher = self._get_launcher('t')
-                        suffix = '-script.py'
-                    outname = n + suffix
-                    filenames[-1] = outname
-                self._fileop.write_binary_file(outname, shebang + f.read())
-                if use_launcher:
-                    self._fileop.write_binary_file(exename, launcher)
-                    filenames.append(exename)
+                if b'pythonw' in first_line:
+                    ext = 'pyw'
+                else:
+                    ext = 'py'
+                n = os.path.basename(outname)
+                self._write_script([n], shebang, f.read(), filenames, ext)
             if f:
                 f.close()
-        if self.set_mode:
-            self._fileop.set_executable_mode([outname])
 
     @property
     def dry_run(self):
