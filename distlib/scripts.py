@@ -161,7 +161,23 @@ class ScriptMaker(object):
                 if e.startswith('.py'):
                     outname = n
                 outname = '%s.exe' % outname
-                self._fileop.write_binary_file(outname, script_bytes)
+                try:
+                    self._fileop.write_binary_file(outname, script_bytes)
+                except Exception:
+                    # Failed writing an executable - it might be in use.
+                    logger.warning('Failed to write executable - trying to '
+                                   'use .deleteme logic')
+                    dfname = '%s.deleteme' % outname
+                    if os.path.exists(dfname):
+                        os.remove(dfname)       # Not allowed to fail here
+                    os.rename(outname, dfname)  # nor here
+                    self._fileop.write_binary_file(outname, script_bytes)
+                    logger.debug('Able to replace executable using '
+                                 '.deleteme logic')
+                    try:
+                        os.remove(dfname)
+                    except Exception:
+                        pass    # still in use - ignore error
             else:
                 if os.name == 'nt' and not outname.endswith('.' + ext):
                     outname = '%s.%s' % (outname, ext)
