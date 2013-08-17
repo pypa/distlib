@@ -53,6 +53,14 @@ Released: Not yet.
 
 - scripts
 
+    - Updated the logic for writing executable files to deal as best we can
+      with files which are already in use and hence cannot be deleted on
+      Windows.
+
+    - Changed the script generation when launchers are used to write a
+      single executable which wraps a script (whether pre-built or generated)
+      and includes a manifest to avoid UAC prompts on Windows.
+
     - Changed the interface for script generation options: the ``make`` and
       ``make_multiple`` methods of ``ScriptMaker`` now take an optional
       ``options`` dictionary.
