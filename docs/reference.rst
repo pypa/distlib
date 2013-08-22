@@ -1103,7 +1103,7 @@ Classes
                    build of a named project).
       :type spec: str
 
-   .. method:: build(paths, tags=None)
+   .. method:: build(paths, tags=None, wheel_version=None)
 
       Build a wheel. The ``name``, ``version`` and ``buildver`` should already
       have been set correctly.
@@ -1116,6 +1116,10 @@ Classes
                    ``'pyver'``, ``'abi'`` and ``'arch'`` indicating lists of
                    tags which indicate environments with which the wheel is
                    compatible.
+      :param wheel_version: If specified, this is written to the wheel's
+                            "Wheel-Version" metadata. If not specified, the
+                            implementation's latest supported wheel version is
+                            used.
 
    .. method:: install(self, paths, maker, **kwargs)
 

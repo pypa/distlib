@@ -1330,6 +1330,13 @@ This would set the ``pyver`` tags to be ``pyX.pyXY`` where ``X`` and ``Y``
 relate to the building Python. You can similarly pass values using the ``abi``
 and ``arch`` keys in the ``tags`` dictionary.
 
+Specifying a wheel's version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also specify a particular "Wheel-Version" to be written to the wheel
+metadata of a wheel you're building. Simply pass a (major, minor) tuple in
+the ``wheel_version`` keyword argument to :meth:`~Wheel.build`. If not
+specified, the most recent version supported is written.
 
 Installing from wheels
 ~~~~~~~~~~~~~~~~~~~~~~

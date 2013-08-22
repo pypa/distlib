@@ -255,7 +255,7 @@ class Wheel(object):
             p = to_posix(os.path.relpath(record_path, base))
             writer.writerow((p, '', ''))
 
-    def build(self, paths, tags=None):
+    def build(self, paths, tags=None, wheel_version=None):
         """
         Build a wheel from files in specified paths, and use any specified tags
         when determining the name of the wheel.
@@ -339,7 +339,7 @@ class Wheel(object):
                 archive_paths.append((ap, p))
 
         wheel_metadata = [
-            'Wheel-Version: %d.%d' % self.wheel_version,
+            'Wheel-Version: %d.%d' % (wheel_version or self.wheel_version),
             'Generator: distlib %s' % __version__,
             'Root-Is-Purelib: %s' % is_pure,
         ]

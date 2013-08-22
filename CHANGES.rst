@@ -80,6 +80,8 @@ Released: Not yet.
 
 - wheel
 
+    - Added wheel_version kwarg to Wheel.build API.
+
     - Changed Wheel.install API (after consultation on distutils-sig).
 
     - Added support for PEP 426 JSON metadata (pydist.json).
