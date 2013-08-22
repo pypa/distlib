@@ -111,7 +111,7 @@ class WheelTestCase(unittest.TestCase):
 
         for name, values in cases:
             w = Wheel(name)
-            self.assertEqual(w.wheel_version, (1, 0))
+            self.assertEqual(w.wheel_version, (1, 1))
             self.assertEqual(w.filename, name)
             for attr, value in zip(attrs, values):
                 self.assertEqual(getattr(w, attr), value)
@@ -144,7 +144,7 @@ class WheelTestCase(unittest.TestCase):
         ENDING = '-%s-none-any.whl' % PYVER
         for name, values in cases:
             w = Wheel(name)
-            self.assertEqual(w.wheel_version, (1, 0))
+            self.assertEqual(w.wheel_version, (1, 1))
             self.assertTrue(w.filename.endswith(ENDING))
             for attr, value in zip(attrs, values):
                 self.assertEqual(getattr(w, attr), value)

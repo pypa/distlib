@@ -28,7 +28,7 @@ from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import InstalledDistribution
 from .metadata import Metadata, METADATA_FILENAME
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter,
-                   cached_property, get_cache_base)
+                   cached_property, get_cache_base, read_exports)
 
 
 logger = logging.getLogger(__name__)
@@ -124,7 +124,7 @@ class Wheel(object):
     Class to build and install from Wheel files (PEP 427).
     """
 
-    wheel_version = (1, 0)
+    wheel_version = (1, 1)
     hash_kind = 'sha256'
 
     def __init__(self, filename=None, sign=False, verify=False):
@@ -418,17 +418,6 @@ class Wheel(object):
             else:
                 libdir = paths['platlib']
 
-            # Try to get pydist.json so we can see if there are
-            # any commands to generate. If this fails (e.g. because
-            # of a legacy wheel), log a warning but don't give up.
-            try:
-                with zf.open(metadata_name) as bwf:
-                    wf = wrapper(bwf)
-                    metadict = json.load(wf)
-            except Exception:
-                logger.warning('Unable to read JSON metadata, so unable to '
-                               'generate scripts')
-                metadict = {}
             records = {}
             with zf.open(record_name) as bf:
                 with CSVReader(stream=bf) as reader:
@@ -533,7 +522,40 @@ class Wheel(object):
                     dist = None
                 else:
                     # Generate scripts
-                    commands = metadict.get('commands')
+
+                    # Try to get pydist.json so we can see if there are
+                    # any commands to generate. If this fails (e.g. because
+                    # of a legacy wheel), log a warning but don't give up.
+                    commands = None
+                    file_version = self.info['Wheel-Version']
+                    if file_version == '1.0':
+                        # Use legacy info
+                        ep = posixpath.join(info_dir, 'entry_points.txt')
+                        try:
+                            with zf.open(ep) as bwf:
+                                epdata = read_exports(bwf)
+                            commands = {}
+                            for key in ('console', 'gui'):
+                                k = '%s_scripts' % key
+                                if k in epdata:
+                                    commands['wrap_%s' % key] = d = {}
+                                    for v in epdata[k].values():
+                                        s = '%s:%s' % (v.prefix, v.suffix)
+                                        if v.flags:
+                                            s += ' %s' % v.flags
+                                        d[v.name] = s
+                        except Exception:
+                            logger.warning('Unable to read legacy script '
+                                           'metadata, so cannot generate '
+                                           'scripts')
+                    else:
+                        try:
+                            with zf.open(metadata_name) as bwf:
+                                wf = wrapper(bwf)
+                                commands = json.load(wf).get('commands')
+                        except Exception:
+                            logger.warning('Unable to read JSON metadata, so '
+                                           'cannot generate scripts')
                     if commands:
                         console_scripts = commands.get('wrap_console', {})
                         gui_scripts = commands.get('wrap_gui', {})
