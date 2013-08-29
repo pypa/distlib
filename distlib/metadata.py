@@ -993,10 +993,12 @@ class Metadata(object):
             else:
                 d = self._data
             if fileobj:
-                json.dump(d, fileobj, ensure_ascii=True, indent=2)
+                json.dump(d, fileobj, ensure_ascii=True, indent=2,
+                          sort_keys=True)
             else:
                 with codecs.open(path, 'w', 'utf-8') as f:
-                    json.dump(d, f, ensure_ascii=True, indent=2)
+                    json.dump(d, f, ensure_ascii=True, indent=2,
+                              sort_keys=True)
 
     def add_requirements(self, requirements):
         if self._legacy:
