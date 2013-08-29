@@ -24,7 +24,7 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir, zip_dir,
                           parse_credentials, ensure_slash, split_filename,
                           EventMixin, Sequencer, unarchive, Progress,
-                          iglob, RICH_GLOB, parse_requirement,
+                          iglob, RICH_GLOB, parse_requirement, get_extras,
                           Configurator, read_exports, write_exports,
                           FileOperator, is_string_sequence, get_package_data)
 
@@ -875,6 +875,13 @@ class GlobTestCase(GlobTestCaseBase):
         finally:
             os.remove(fn)
 
-
+    def test_get_extras(self):
+        cases = (
+            (['*'], ['i18n'], set(['i18n'])),
+            (['*', '-bar'], ['foo', 'bar'], set(['foo'])),
+        )
+        for requested, available, expected in cases:
+            actual = get_extras(requested, available)
+            self.assertEqual(actual, expected)
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

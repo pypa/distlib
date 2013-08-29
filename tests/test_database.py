@@ -341,10 +341,9 @@ class TestEggInfoDistribution(CommonDistributionTests,
     @unittest.skip('not implemented yet')
     def test_list_installed_files(self):
         # EggInfoDistribution defines list_installed_files but there is no
-        # test for it yet; someone with setuptools expertise needs to add a
-        # file with the list of installed files for one of the egg fake dists
-        # and write the support code to populate self.records (and then delete
-        # this method)
+        # test for it yet; someone needs to add a file with the list of
+        # installed files for one of the egg fake dists and write the support
+        # code to populate self.records (and then delete this method)
         pass
 
 

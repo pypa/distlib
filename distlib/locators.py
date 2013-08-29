@@ -1105,6 +1105,11 @@ class DependencyFinder(object):
         self.reqts = {}
 
         meta_extras = set(meta_extras or [])
+        if ':*:' in meta_extras:
+            meta_extras.remove(':*:')
+            # :meta: and :run: are implicitly included
+            meta_extras |= set([':test:', ':build:', ':dev:'])
+
         if isinstance(requirement, Distribution):
             dist = odist = requirement
             logger.debug('passed %s as requirement', odist)

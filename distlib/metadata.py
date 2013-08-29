@@ -19,7 +19,7 @@ import re
 from . import DistlibException, __version__
 from .compat import StringIO, string_types, text_type
 from .markers import interpret
-from .util import extract_by_key
+from .util import extract_by_key, get_extras
 from .version import get_scheme, PEP426_VERSION_RE
 
 logger = logging.getLogger(__name__)
@@ -820,7 +820,7 @@ class Metadata(object):
             result = reqts
         else:
             result = []
-            extras = set(extras or [])
+            extras = get_extras(extras or [], self.extras)
             for d in reqts:
                 if 'extra' not in d and 'environment' not in d:
                     # unconditional
