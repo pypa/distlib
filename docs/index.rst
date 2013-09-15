@@ -8,10 +8,10 @@
 Welcome to distlib's documentation!
 ===================================
 
-Welcome to the documentation for ``distlib``, a low-level library of packaging
+Welcome to the documentation for ``distlib``, **a library of packaging
 functionality which is intended to be used as the basis for third-party
-packaging tools. Using a common low-level layer will improve interoperability
-and consistency of user experience across those tools which use the library.
+packaging tools**. Using a common layer will improve interoperability and
+consistency of user experience across those tools which use the library.
 
 **Please note:** this documentation is a *work in progress*.
 

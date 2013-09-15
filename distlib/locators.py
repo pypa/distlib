@@ -830,7 +830,7 @@ class JSONLocator(Locator):
                 # TODO SHA256 digest
                 if 'digest' in info and info['digest']:
                     dist.digest = ('md5', info['digest'])
-                md.dependencies = info.get('new-requirements', {})
+                md.dependencies = info.get('requirements', {})
                 dist.exports = info.get('exports', {})
                 result[dist.version] = dist
         return result
