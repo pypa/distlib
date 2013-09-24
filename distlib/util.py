@@ -834,8 +834,21 @@ class Sequencer(object):
     def add_node(self, node):
         self._nodes.add(node)
 
-    def remove_node(self, node):
-        self._nodes.remove(node)
+    def remove_node(self, node, edges=False):
+        if node in self._nodes:
+            self._nodes.remove(node)
+        if edges:
+            for p in set(self._preds.get(node, ())):
+                self.remove(p, node)
+            for s in set(self._succs.get(node, ())):
+                self.remove(node, s)
+            # Remove empties
+            for k, v in list(self._preds.items()):
+                if not v:
+                    del self._preds[k]
+            for k, v in list(self._succs.items()):
+                if not v:
+                    del self._succs[k]
 
     def add(self, pred, succ):
         assert pred != succ

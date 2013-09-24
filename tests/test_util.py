@@ -354,6 +354,30 @@ class UtilTestCase(unittest.TestCase):
         seq.remove('C', 'A')
         self.assertEqual(list(seq.get_steps('D')), ['A', 'B', 'C', 'D'])
 
+    def test_sequencer_removal(self):
+        seq = Sequencer()
+        seq.add('A', 'B')
+        seq.add('B', 'C')
+        seq.add('C', 'D')
+        preds = {
+            'B': set(['A']),
+            'C': set(['B']),
+            'D': set(['C'])
+        }
+        succs =  {
+            'A': set(['B']),
+            'B': set(['C']),
+            'C': set(['D'])
+        }
+        self.assertEqual(seq._preds, preds)
+        self.assertEqual(seq._succs, succs)
+        seq.remove_node('C')
+        self.assertEqual(seq._preds, preds)
+        self.assertEqual(seq._succs, succs)
+        seq.remove_node('C', True)
+        self.assertEqual(seq._preds, {'B': set(['A'])})
+        self.assertEqual(seq._succs, {'A': set(['B'])})
+
     def test_unarchive(self):
         import zipfile, tarfile
 
