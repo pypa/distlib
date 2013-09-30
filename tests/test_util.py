@@ -135,6 +135,12 @@ class UtilTestCase(unittest.TestCase):
                          ('greenlet', '0.4.0', '27'))
         self.assertEqual(split_filename('greenlet-0.4.0-py27-linux_x86_64'),
                          ('greenlet', '0.4.0', '27'))
+        self.assertEqual(split_filename('django-altuser-v0.6.8'),
+                         ('django-altuser', 'v0.6.8', None))
+        self.assertEqual(split_filename('youtube_dl_server-alpha.1'),
+                         ('youtube_dl_server', 'alpha.1', None))
+        self.assertEqual(split_filename('pytest-xdist-dev'),
+                         ('pytest-xdist', 'dev', None))
 
     def test_events(self):
         collected = []
