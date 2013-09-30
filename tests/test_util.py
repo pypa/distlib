@@ -141,6 +141,15 @@ class UtilTestCase(unittest.TestCase):
                          ('youtube_dl_server', 'alpha.1', None))
         self.assertEqual(split_filename('pytest-xdist-dev'),
                          ('pytest-xdist', 'dev', None))
+        self.assertEqual(split_filename('pytest_xdist-0.1_myfork', None),
+                         ('pytest_xdist', '0.1_myfork', None))
+        self.assertEqual(split_filename('pytest_xdist-0.1_myfork',
+                                        'pytest-xdist'),
+                         ('pytest_xdist', '0.1_myfork', None))
+        self.assertEqual(split_filename('pytest_xdist-0.1_myfork',
+                                        'pytest_dist'),
+                         ('pytest_xdist', '0.1_myfork', None))
+
 
     def test_events(self):
         collected = []
