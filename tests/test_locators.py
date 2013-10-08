@@ -219,6 +219,7 @@ class LocatorTestCase(unittest.TestCase):
             ('hgtools', 'py', 'pytest', 'pytest-runner', 'irc'),
             ('py', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
             ('hgtools', 'py', 'pytest-runner', 'pytest', 'irc'),
+            ('py', 'hgtools', 'pytest-runner', 'pytest', 'irc')
         ])
         self.assertIn(tuple(names), expected)
 
