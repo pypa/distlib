@@ -53,6 +53,35 @@ if sys.version_info[0] < 3:
         if match: return match.group(1, 2)
         return None, host
 
+else:
+    from io import StringIO
+    string_types = str,
+    text_type = str
+    from io import TextIOWrapper as file_type
+    import builtins
+    import configparser
+    import shutil
+    from urllib.parse import (urlparse, urlunparse, urljoin, splituser, quote,
+                              unquote, urlsplit, urlunsplit, splittype)
+    from urllib.request import (urlopen, urlretrieve, Request, url2pathname,
+                                pathname2url,
+                                HTTPBasicAuthHandler, HTTPPasswordMgr,
+                                HTTPSHandler, HTTPHandler, HTTPRedirectHandler,
+                                build_opener)
+    from urllib.error import HTTPError, URLError, ContentTooShortError
+    import http.client as httplib
+    import urllib.request as urllib2
+    import xmlrpc.client as xmlrpclib
+    import queue
+    from html.parser import HTMLParser
+    import html.entities as htmlentitydefs
+    raw_input = input
+    from itertools import filterfalse
+    filter = filter
+
+try:
+    from ssl import match_hostname, CertificateError
+except ImportError:
     class CertificateError(ValueError):
         pass
 
@@ -110,34 +139,6 @@ if sys.version_info[0] < 3:
         else:
             raise CertificateError("no appropriate commonName or "
                 "subjectAltName fields were found")
-
-else:
-    from io import StringIO
-    string_types = str,
-    text_type = str
-    from io import TextIOWrapper as file_type
-    import builtins
-    import configparser
-    import shutil
-    from urllib.parse import (urlparse, urlunparse, urljoin, splituser, quote,
-                              unquote, urlsplit, urlunsplit, splittype)
-    from urllib.request import (urlopen, urlretrieve, Request, url2pathname,
-                                pathname2url,
-                                HTTPBasicAuthHandler, HTTPPasswordMgr,
-                                HTTPSHandler, HTTPHandler, HTTPRedirectHandler,
-                                build_opener)
-    from urllib.error import HTTPError, URLError, ContentTooShortError
-    import http.client as httplib
-    import urllib.request as urllib2
-    import xmlrpc.client as xmlrpclib
-    import queue
-    from html.parser import HTMLParser
-    import html.entities as htmlentitydefs
-    raw_input = input
-    from itertools import filterfalse
-    filter = filter
-
-    from ssl import match_hostname, CertificateError
 
 
 try:
