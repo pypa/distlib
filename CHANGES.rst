@@ -71,6 +71,8 @@ Released: Not yet.
 
     - Added parse_name_and_version() for use in parsing "provides" fields.
 
+    - Made split_filename more flexible.
+
 - version
 
     - Added support for PEP 440 version matching.
