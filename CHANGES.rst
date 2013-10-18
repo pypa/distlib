@@ -1,10 +1,16 @@
 Change log for ``distlib``
 --------------------------
 
-0.1.3
+0.1.4
 ~~~~~
 
 Released: Not yet.
+
+
+0.1.3
+~~~~~
+
+Released: 2013-10-18.
 
 - database
 
