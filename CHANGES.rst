@@ -1,16 +1,26 @@
 Change log for ``distlib``
 --------------------------
 
+
 0.1.4
 ~~~~~
 
 Released: Not yet.
 
+- scripts
+
+    - Updated the logic for finding the distlib package using a relative,
+      rather than absolute method. This fixes a problem for pip, where
+      distlib is kept in the pip.vendor.distlib package.
+
+- _backports/sysconfig
+
+    - The same change as for scripts above.
 
 0.1.3
 ~~~~~
 
-Released: 2013-10-18.
+Released: 2013-10-18
 
 - database
 
