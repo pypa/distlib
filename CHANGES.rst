@@ -2,10 +2,16 @@ Change log for ``distlib``
 --------------------------
 
 
-0.1.4
+0.1.5
 ~~~~~
 
 Released: Not yet.
+
+
+0.1.4
+~~~~~
+
+Released: 2013-10-31
 
 - scripts
 
@@ -15,7 +21,7 @@ Released: Not yet.
 
 - _backports/sysconfig
 
-    - The same change as for scripts above.
+    - The analogous change to that made for scripts, described above.
 
 0.1.3
 ~~~~~
