@@ -209,6 +209,7 @@ class ScriptTestCase(unittest.TestCase):
 
     @unittest.skipUnless(os.name == 'posix', 'Test only valid for POSIX')
     def test_mode(self):
+        self.maker.set_mode = False
         files = self.maker.make('foo = foo:main')
         self.assertEqual(len(files), 2)
         for f in files:

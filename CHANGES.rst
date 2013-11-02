@@ -19,7 +19,7 @@ Released: 2013-10-31
       rather than absolute method. This fixes a problem for pip, where
       distlib is kept in the pip.vendor.distlib package.
 
-- _backports/sysconfig
+- _backport/sysconfig
 
     - The analogous change to that made for scripts, described above.
 
