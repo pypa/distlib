@@ -145,10 +145,10 @@ https://travis-ci.org/vsajip/distlib/
 
 The source repository for the project is on BitBucket:
 
-https://bitbucket.org/vinay.sajip/distlib/
+https://bitbucket.org/pypa/distlib/
 
 You can leave feedback by raising a new issue on the `issue
-tracker <https://bitbucket.org/vinay.sajip/distlib/issues/new>`_
+tracker <https://bitbucket.org/pypa/distlib/issues/new>`_
 (BitBucket registration not necessary, but recommended).
 
 .. include:: ../CHANGES.rst
