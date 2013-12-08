@@ -13,7 +13,10 @@ import socket
 import subprocess
 import sys
 import tempfile
-import threading
+try:
+    import threading
+except ImportError:
+    import dummy_threading as threading
 
 from compat import unittest, Request
 from support import HTTPSServerThread

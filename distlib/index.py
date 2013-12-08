@@ -10,7 +10,10 @@ import os
 import shutil
 import subprocess
 import tempfile
-from threading import Thread
+try:
+    from threading import Thread
+except ImportError:
+    from dummy_threading import Thread
 
 from distlib import DistlibException
 from distlib.compat import (HTTPBasicAuthHandler, Request, HTTPPasswordMgr,
