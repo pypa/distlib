@@ -2,10 +2,50 @@ Change log for ``distlib``
 --------------------------
 
 
-0.1.5
+0.1.6
 ~~~~~
 
 Released: Not yet.
+
+
+
+0.1.5
+~~~~~
+
+Released: 2013-12-14
+
+- compat
+
+    - Changed source of import for unescape in Python >= 3.4.
+
+- index
+
+    - Used dummy_threading when threading isn't available.
+
+    - Used https for default index.
+
+- locators
+
+    - Used dummy_threading when threading isn't available.
+
+- scripts
+
+    - Defaulted to setting script mode bits on POSIX.
+
+    - Use uncompressed executable launchers, since some anti-virus
+      products raise false positive errors.
+
+- util
+
+    - Used dummy_threading when threading isn't available.
+
+- docs
+
+    - Updated out-of-date links in overview.
+
+- tests
+
+    - Used dummy_threading when threading isn't available.
 
 
 0.1.4
