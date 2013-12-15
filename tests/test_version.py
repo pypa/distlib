@@ -30,7 +30,9 @@ class VersionTestCase(unittest.TestCase):
                 #(NV('1.2.3.4.0b3', drop_trailing_zeros=True), '1.2.3.4b3'),
                 #(NV('1.2.0.0.0', drop_trailing_zeros=True), '1.2'),
                 (NV('1.0.dev345'), '1.0.dev345'),
-                (NV('1.0.post456.dev623'), '1.0.post456.dev623'))
+                (NV('1.0.post456.dev623'), '1.0.post456.dev623'),
+                (NV('1.2.3-1.2'), '1.2.3-1.2'),
+               )
 
     def test_repr(self):
         self.assertEqual(repr(NV('1.0')), "NormalizedVersion('1.0')")
@@ -53,13 +55,13 @@ class VersionTestCase(unittest.TestCase):
         unsupported = ('1', '1.2a', '1.2.3b',
                       #'1.02', '1.2a03', '1.2a3.04',
                       '1.2.dev.2', '1.2dev', '1.2.dev',
+                      '1.2-', '1.2-a',
                       '1.2.dev2.post2', '1.2.post2.dev3.post4')
 
         for s in unsupported:
             self.assertRaises(UnsupportedVersionError, NV, s)
 
     def test_huge_version(self):
-        raise unittest.SkipTest('Test disabled for now')
         self.assertEqual(str(NV('1980.0')), '1980.0')
 
     def test_comparison(self):
@@ -130,6 +132,8 @@ class VersionTestCase(unittest.TestCase):
         ...  < NV('1.0b2')
         ...  < NV('1.0c1.dev456')
         ...  < NV('1.0c1')
+        ...  < NV('1.0c1-1')
+        ...  < NV('1.0c1-1.1')
         ...  < NV('1.0.dev7')
         ...  < NV('1.0.dev18')
         ...  < NV('1.0.dev456')
@@ -137,8 +141,14 @@ class VersionTestCase(unittest.TestCase):
         ...  < NV('1.0rc1')
         ...  < NV('1.0rc2')
         ...  < NV('1.0')
+        ...  < NV('1.0-1')
+        ...  < NV('1.0-1.1')
         ...  < NV('1.0.post456.dev623')  # development version of a post release
-        ...  < NV('1.0.post456'))
+        ...  < NV('1.0.post456.dev623-1')
+        ...  < NV('1.0.post456.dev623-1.1')
+        ...  < NV('1.0.post456')
+             < NV('1.0.post456-1')
+             < NV('1.0.post456-1.1'))
         True
         """
         doctest.script_from_examples(comparison_doctest_string)
@@ -292,10 +302,12 @@ class VersionTestCase(unittest.TestCase):
             '1.0rc1',
             '1.0.post345.dev456',
             '1.1.dev1',
+            '1.1.dev1-1.2',
         )
         final_releases = (
             '1.0',
             '1.0.post345',
+            '1.0.post345-2.3',
         )
         for s in pre_releases:
             self.assertTrue(NV(s).is_prerelease)
