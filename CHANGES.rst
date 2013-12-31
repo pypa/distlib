@@ -2,11 +2,30 @@ Change log for ``distlib``
 --------------------------
 
 
-0.1.6
+0.1.7
 ~~~~~
 
 Released: Not yet.
 
+
+
+0.1.6
+~~~~~
+
+Released: 2013-12-31
+
+- scripts
+
+    - Updated binary launchers because the wrong variant was shipped
+      with the previous release.
+
+- version
+
+    - Added support for local component in PEP 440 versions.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
 
 
 0.1.5
