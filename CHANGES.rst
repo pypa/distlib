@@ -7,7 +7,13 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- metadata
 
+    - Added some more fields to the metadata for the index.
+
+- resources
+
+    - Issue #40: Only do a realpath call for symlinks.
 
 0.1.6
 ~~~~~

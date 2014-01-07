@@ -161,7 +161,14 @@ class ResourceFinder(object):
     def _make_path(self, resource_name):
         parts = resource_name.split('/')
         parts.insert(0, self.base)
-        return os.path.realpath(os.path.join(*parts))
+        result = os.path.join(*parts)
+        # Issue 40: Do realpath only for symlinks.
+        # If calculating a path in a zip, the realpath
+        # call can lead to prefix mismatches when trying
+        # to find the path.
+        if os.path.islink(result):
+            result = os.path.realpath(result)
+        return result
 
     def _find(self, path):
         return os.path.exists(path)
