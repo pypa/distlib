@@ -13,7 +13,18 @@ Released: Not yet.
 
 - resources
 
-    - Issue #40: Only do a realpath call for symlinks.
+    - Use native literal string in cache path.
+
+    - Issue #40: Only do a realpath call for files.
+
+- util
+
+    - Issue #39: Fall back to temporary directory for cache if home directory
+      unavailable.
+
+- wheel
+
+    - Use native literal string in cache path.
 
 0.1.6
 ~~~~~

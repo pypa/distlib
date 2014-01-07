@@ -599,7 +599,13 @@ def get_cache_base(suffix=None):
     # we use 'isdir' instead of 'exists', because we want to
     # fail if there's a file with that name
     if not os.path.isdir(result):
-        os.makedirs(result)
+        try:
+            os.makedirs(result)
+        except OSError:
+            s = tempfile.mkdtemp()
+            logger.warning('Unable to create %s, using %s instead', result,
+                           s, exc_info=True)
+            result = s
     return result
 
 

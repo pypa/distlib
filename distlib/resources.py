@@ -37,7 +37,8 @@ class Cache(object):
                      directory under whatever :func:`get_cache_base` returns.
         """
         if base is None:
-            base = os.path.join(get_cache_base(), 'resource-cache')
+            # Use native string to avoid issues on 2.x: see Python #20140.
+            base = os.path.join(get_cache_base(), str('resource-cache'))
             # we use 'isdir' instead of 'exists', because we want to
             # fail if there's a file with that name
             if not os.path.isdir(base):
