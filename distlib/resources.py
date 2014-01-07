@@ -158,17 +158,14 @@ class ResourceFinder(object):
         self.loader = getattr(module, '__loader__', None)
         self.base = os.path.dirname(getattr(module, '__file__', ''))
 
+    def _adjust_path(self, path):
+        return os.path.realpath(path)
+
     def _make_path(self, resource_name):
         parts = resource_name.split('/')
         parts.insert(0, self.base)
         result = os.path.join(*parts)
-        # Issue 40: Do realpath only for symlinks.
-        # If calculating a path in a zip, the realpath
-        # call can lead to prefix mismatches when trying
-        # to find the path.
-        if os.path.islink(result):
-            result = os.path.realpath(result)
-        return result
+        return self._adjust_path(result)
 
     def _find(self, path):
         return os.path.exists(path)
@@ -223,6 +220,9 @@ class ZipResourceFinder(ResourceFinder):
         else:
             self._files = zipimport._zip_directory_cache[archive]
         self.index = sorted(self._files)
+
+    def _adjust_path(self, path):
+        return path
 
     def _find(self, path):
         path = path[self.prefix_len:]
