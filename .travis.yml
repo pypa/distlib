@@ -5,4 +5,5 @@ python:
     - "3.2"
     - "3.3"
     - "pypy"
+before_script: "ls -ld $HOME/.distlib"
 script: "PYTHONHASHSEED=0 python setup.py test"
