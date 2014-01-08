@@ -5,6 +5,6 @@ python:
     - "3.2"
     - "3.3"
     - "pypy"
-before_install: "[ -d ~/.distlib ] && sudo chown travis ~/.distlib || true"
+before_install: "[ -d ~/.distlib ] && sudo chown -R travis:travis ~/.distlib || true"
 before_script: "whoami && ls -ld $HOME/.distlib"
 script: "PYTHONHASHSEED=0 python setup.py test"
