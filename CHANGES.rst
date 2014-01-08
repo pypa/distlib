@@ -17,6 +17,10 @@ Released: Not yet.
 
     - Issue #40: Only do a realpath call for files.
 
+- scripts
+
+    - Improved checking for venvs when generating scripts.
+
 - util
 
     - Issue #39: Fall back to temporary directory for cache if home directory
