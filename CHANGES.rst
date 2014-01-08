@@ -15,7 +15,7 @@ Released: Not yet.
 
     - Use native literal string in cache path.
 
-    - Issue #40: Only do a realpath call for files.
+    - Issue #40: Now does path adjustments differently for files and zips.
 
 - scripts
 

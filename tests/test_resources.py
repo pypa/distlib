@@ -181,7 +181,7 @@ class FileResourceTestCase(unittest.TestCase):
 class CacheTestCase(unittest.TestCase):
     def test_base(self):
         cache = Cache()
-        expected = os.path.join(get_cache_base(), 'resource-cache')
+        expected = os.path.join(get_cache_base(), str('resource-cache'))
         self.assertEqual(expected, cache.base)
         self.assertTrue(os.path.isdir(expected))
 
