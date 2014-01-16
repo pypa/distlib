@@ -2,10 +2,15 @@ Change log for ``distlib``
 --------------------------
 
 
-0.1.7
+0.1.8
 ~~~~~
 
 Released: Not yet.
+
+0.1.7
+~~~~~
+
+Released: 2014-01-16
 
 - metadata
 
