@@ -53,15 +53,17 @@ class LocatorTestCase(unittest.TestCase):
     def test_json(self):
         locator = PyPIJSONLocator(PYPI_RPC_HOST)
         result = locator.get_project('sarge')
-        self.assertIn('0.1.2', result)
-        dist = result['0.1.2']
+        LATEST_SARGE_VERSION = '0.1.3'
+        LATEST_SARGE_MD5 = '5fa790cc26a97c66be735629b0e6671c'
+        self.assertIn(LATEST_SARGE_VERSION, result)
+        dist = result[LATEST_SARGE_VERSION]
         self.assertEqual(dist.name, 'sarge')
-        self.assertEqual(dist.version, '0.1.2')
+        self.assertEqual(dist.version, LATEST_SARGE_VERSION)
         self.assertEqual(dist.source_url,
                          'https://pypi.python.org/packages/source/s/sarge/'
-                         'sarge-0.1.2.tar.gz')
+                         'sarge-%s.tar.gz' % LATEST_SARGE_VERSION)
         self.assertEqual(dist.digest,
-                         ('md5', '28c0f3183f75f9efd205573883a79e24'))
+                         ('md5', LATEST_SARGE_MD5))
         self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
