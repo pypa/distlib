@@ -52,7 +52,7 @@ class VersionTestCase(unittest.TestCase):
         self.assertEqual(set([NV('1.0')]), set([NV('1.0'), NV('1.0')]))
 
     def test_unsupported_versions(self):
-        unsupported = ('1', '1.2a', '1.2.3b',
+        unsupported = ('1.2a', '1.2.3b',
                       #'1.02', '1.2a03', '1.2a3.04',
                       '1.2.dev.2', '1.2dev', '1.2.dev',
                       '1.2-', '1.2-a',

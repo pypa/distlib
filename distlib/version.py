@@ -181,7 +181,7 @@ class Matcher(object):
         return self._string
 
 
-PEP426_VERSION_RE = re.compile(r'^(\d+\.\d+(\.\d+)*)((a|b|c|rc)(\d+))?'
+PEP426_VERSION_RE = re.compile(r'^(\d+(\.\d+)*)((a|b|c|rc)(\d+))?'
                                r'(\.(post)(\d+))?(\.(dev)(\d+))?'
                                r'(-(\d+(\.\d+)?))?$')
 

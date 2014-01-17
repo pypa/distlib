@@ -427,7 +427,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         # argument of the constructor), see comment in LegacyMetadata.update
         metadata = LegacyMetadata()
         metadata['Requires-Dist'] = 'Funky (Groovie)'
-        metadata['Requires-Python'] = '1-4'
+        metadata['Requires-Python'] = '1a-4'
         self.assertEqual(len(self.get_logs()), 2)
 
         # test multiple version matches

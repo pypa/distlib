@@ -7,6 +7,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- version
+
+    - Allowed versions with a single numeric component.
+
 0.1.7
 ~~~~~
 
