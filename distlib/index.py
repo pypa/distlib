@@ -17,7 +17,7 @@ except ImportError:
 
 from . import DistlibException
 from .compat import (HTTPBasicAuthHandler, Request, HTTPPasswordMgr,
-                            urlparse, build_opener)
+                     urlparse, build_opener)
 from .util import cached_property, zip_dir
 
 logger = logging.getLogger(__name__)
