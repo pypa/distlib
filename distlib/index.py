@@ -15,10 +15,10 @@ try:
 except ImportError:
     from dummy_threading import Thread
 
-from distlib import DistlibException
-from distlib.compat import (HTTPBasicAuthHandler, Request, HTTPPasswordMgr,
+from . import DistlibException
+from .compat import (HTTPBasicAuthHandler, Request, HTTPPasswordMgr,
                             urlparse, build_opener)
-from distlib.util import cached_property, zip_dir
+from .util import cached_property, zip_dir
 
 logger = logging.getLogger(__name__)
 
