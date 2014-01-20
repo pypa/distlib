@@ -1387,6 +1387,84 @@ depends on whether the wheel metadata declares that the wheel contains pure
 Python code.
 
 
+Verifying wheels
+~~~~~~~~~~~~~~~~
+
+.. index::
+   pair: verifying; wheels
+
+You can verify that a wheel's contents match the declared contents in the
+wheel's ``RECORD`` entry, by calling the :meth:`~Wheel.verify` method. This will
+raise a :class:`DistlibException` if a size or digest mismatch is found.
+
+
+Modifying wheels
+~~~~~~~~~~~~~~~~
+
+.. index::
+   pair: modifying; wheels
+
+.. note:: In an ideal world one would not need to modify wheels, but in the
+   short term there might be a need to do so (for example, to add dependency
+   information which is missing). If you are working with wheels on your own
+   projects, you *shouldn't* use the method described here, as you will have
+   full control of the wheels you build yourself. However, if you are working
+   with third party wheels which you don't build yourself but you need to
+   modify in some way, then the approach described below might be useful.
+
+You can update existing wheels with ``distlib`` by calling the
+:meth:`~Wheel.update` method of a wheel. This is called as follows::
+
+    modified = wheel.update(modifier, dest_dir, **kwargs)
+
+where the ``modifier`` is a callable which you specify, and ``kwargs`` are
+options you want to pass to it (currently, the :meth:`update` method passes
+``kwargs`` unchanged to the ``modifier``). The ``dest_dir`` argument indicates
+where you want any new wheel to be written - it is optional and if not
+specified, *the existing wheel will be overwritten*.
+
+The  :meth:`update` method extracts the entire contents of the wheel to
+a temporary location, and then calls ``modifier`` as follows::
+
+    modified = modifier(path_map, **kwargs)
+
+where ``path_map`` is a dictionary mapping archive paths to the location
+of the corresponding extracted archive entry, and ``kwargs`` is whatever
+was passed to the ``update`` method. If the modifier returns ``True``,
+a new wheel is built from the (possibly updated) contents of ``path_map``
+and its path name. The passed ``path_map`` will contain all of the wheel's
+entries other than the ``RECORD`` entry (which will be recreated if a new
+wheel is built).
+
+For example, if you wanted to add ``numpy`` as a dependency in a ``scipy``
+wheel, you might do something like this::
+
+    def add_numpy_dependency(path_map, **kwargs):
+        mdpath = path_map['scipy-0.11.dist-info/pydist.json']
+        md = Metadata(path=mdpath)
+        md.add_requirements(['numpy'])
+        md.write(path=mdpath)
+        return True
+
+    wheel = Wheel('scipy-0.11-py27-abi3-linux_x86_64.whl')
+    wheel.update(add_numpy_dependency)
+
+In the above example, the modifier doesn't actually use ``kwargs``,
+but you could pass useful information which can be used to control the
+modifier's operation. For example, you might make the function work with
+other distributions than ``scipy``, or other versions of ``scipy``::
+
+    def add_numpy_dependency(path_map, **kwargs):
+        name = kwargs.get('name', 'scipy')
+        version = kwargs.get('version', '0.11')
+        key = '%s-%s.dist-info/pydist.json' % (name, version)
+        mdpath = path_map[key]
+        md = Metadata(path=mdpath)
+        md.add_requirements(['numpy'])
+        md.write(path=mdpath)
+        return True
+
+
 Mounting wheels
 ~~~~~~~~~~~~~~~
 

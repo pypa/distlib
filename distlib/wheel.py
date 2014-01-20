@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013 Vinay Sajip.
+# Copyright (C) 2013-2014 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -28,7 +28,7 @@ from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import InstalledDistribution
 from .metadata import Metadata, METADATA_FILENAME
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter,
-                   cached_property, get_cache_base, read_exports)
+                   cached_property, get_cache_base, read_exports, tempdir)
 
 
 logger = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ class Wheel(object):
         Initialise an instance using a (valid) filename.
         """
         self.sign = sign
-        self.verify = verify
+        self.should_verify = verify
         self.buildver = ''
         self.pyver = [PYVER]
         self.abi = ['none']
@@ -255,6 +255,28 @@ class Wheel(object):
             p = to_posix(os.path.relpath(record_path, base))
             writer.writerow((p, '', ''))
 
+    def write_records(self, info, libdir, archive_paths):
+        records = []
+        distinfo, info_dir = info
+        hasher = getattr(hashlib, self.hash_kind)
+        for ap, p in archive_paths:
+            with open(p, 'rb') as f:
+                data = f.read()
+            digest = '%s=%s' % self.get_hash(data)
+            size = os.path.getsize(p)
+            records.append((ap, digest, size))
+
+        p = os.path.join(distinfo, 'RECORD')
+        self.write_record(records, p, libdir)
+        ap = to_posix(os.path.join(info_dir, 'RECORD'))
+        archive_paths.append((ap, p))
+
+    def build_zip(self, pathname, archive_paths):
+        with ZipFile(pathname, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for ap, p in archive_paths:
+                logger.debug('Wrote %s to %s in wheel', p, ap)
+                zf.write(p, ap)
+
     def build(self, paths, tags=None, wheel_version=None):
         """
         Build a wheel from files in specified paths, and use any specified tags
@@ -353,25 +375,10 @@ class Wheel(object):
 
         # Now, at last, RECORD.
         # Paths in here are archive paths - nothing else makes sense.
-        records = []
-        hasher = getattr(hashlib, self.hash_kind)
-        for ap, p in archive_paths:
-            with open(p, 'rb') as f:
-                data = f.read()
-            digest = '%s=%s' % self.get_hash(data)
-            size = os.path.getsize(p)
-            records.append((ap, digest, size))
-
-        p = os.path.join(distinfo, 'RECORD')
-        self.write_record(records, p, libdir)
-        ap = to_posix(os.path.join(info_dir, 'RECORD'))
-        archive_paths.append((ap, p))
+        self.write_records((distinfo, info_dir), libdir, archive_paths)
         # Now, ready to build the zip file
         pathname = os.path.join(self.dirname, self.filename)
-        with ZipFile(pathname, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for ap, p in archive_paths:
-                logger.debug('Wrote %s to %s in wheel', p, ap)
-                zf.write(p, ap)
+        self.build_zip(pathname, archive_paths)
         return pathname
 
     def install(self, paths, maker, **kwargs):
@@ -667,6 +674,59 @@ class Wheel(object):
                 if _hook in sys.meta_path:
                     sys.meta_path.remove(_hook)
 
+    def verify(self):
+        pathname = os.path.join(self.dirname, self.filename)
+        name_ver = '%s-%s' % (self.name, self.version)
+        data_dir = '%s.data' % name_ver
+        info_dir = '%s.dist-info' % name_ver
+
+        metadata_name = posixpath.join(info_dir, METADATA_FILENAME)
+        wheel_metadata_name = posixpath.join(info_dir, 'WHEEL')
+        record_name = posixpath.join(info_dir, 'RECORD')
+
+        wrapper = codecs.getreader('utf-8')
+
+        with ZipFile(pathname, 'r') as zf:
+            with zf.open(wheel_metadata_name) as bwf:
+                wf = wrapper(bwf)
+                message = message_from_file(wf)
+            wv = message['Wheel-Version'].split('.', 1)
+            file_version = tuple([int(i) for i in wv])
+            # TODO version verification
+
+            records = {}
+            with zf.open(record_name) as bf:
+                with CSVReader(stream=bf) as reader:
+                    for row in reader:
+                        p = row[0]
+                        records[p] = row
+
+            for zinfo in zf.infolist():
+                arcname = zinfo.filename
+                if isinstance(arcname, text_type):
+                    u_arcname = arcname
+                else:
+                    u_arcname = arcname.decode('utf-8')
+                if '..' in u_arcname:
+                    raise DistlibException('invalid entry in '
+                                           'wheel: %r' % u_arcname)
+
+                # The signature file won't be in RECORD,
+                # and we  don't currently don't do anything with it
+                if u_arcname.endswith('/RECORD.jws'):
+                    continue
+                row = records[u_arcname]
+                if row[2] and str(zinfo.file_size) != row[2]:
+                    raise DistlibException('size mismatch for '
+                                           '%s' % u_arcname)
+                if row[1]:
+                    kind, value = row[1].split('=', 1)
+                    with zf.open(arcname) as bf:
+                        data = bf.read()
+                    _, digest = self.get_hash(data, kind)
+                    if digest != value:
+                        raise DistlibException('digest mismatch for '
+                                               '%s' % arcname)
 
 def compatible_tags():
     """

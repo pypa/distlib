@@ -1170,6 +1170,30 @@ Classes
       directly. If the wheel contains C extensions and has metadata about these
       extensions, the extensions are also made unavailable for import.
 
+    .. method:: verify()
+
+      Verify sizes and hashes of the wheel's contents against the sizes and
+      hashes declared in the wheel's RECORD. Raise a
+      :class:`DistlibException` if a size or digest mismatch is detected.
+
+    .. method:: update(modifier, dest_dir=None, **kwargs)
+
+      Allows a user-defined callable access to the contents of a wheel. The
+      callable can modify the contents of the wheel, add new entries or
+      remove entries. The method first extracts the wheel's contents to a
+      temporary location, and then calls the modifier like this::
+
+          modified = modifier(path_map, **kwargs)
+
+      where ``path_map`` is a dictionary mapping archive paths to the location
+      of the corresponding extracted archive entry, and ``kwargs`` is whatever
+      was passed to the ``update`` method. If the modifier returns ``True``,
+      a new wheel is built from the (possibly updated) contents of ``path_map``
+      and, as a final step, copied to the location of the original wheel
+      (hence effectively modifying it in-place). The passed ``path_map`` will
+      contain all of the wheel's entries other than the ``RECORD`` entry (which
+      will be recreated if a new wheel is built).
+
    .. attribute:: name
 
       The name of the distribution.

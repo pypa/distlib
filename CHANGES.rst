@@ -11,6 +11,11 @@ Released: Not yet.
 
     - Allowed versions with a single numeric component.
 
+- wheel
+
+    - Added ``verify`` and ``update`` methods to the ``Wheel`` class.
+
+
 0.1.7
 ~~~~~
 

@@ -314,6 +314,24 @@ class WheelTestCase(unittest.TestCase):
         self.assertFalse(hasattr(warner, 'wheel_version'))
         self.assertFalse(hasattr(warner, 'file_version'))
 
+    def test_verify(self):
+        fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
+        w = Wheel(fn)
+        w.verify()
+        fn = os.path.join(HERE, 'bad_wheels', 'dummy-0.1-py27-none-any.whl')
+        w = Wheel(fn)
+        self.assertRaises(DistlibException, w.verify)
+
+    def wheel_modifier_nop(self, path_map):
+        return False
+
+    def wheel_modifier(self, path_map):
+        mdpath = path_map['dummy-0.1.dist-info/pydist.json']
+        md = Metadata(path=mdpath)
+        md.add_requirements(['numpy'])
+        md.write(path=mdpath)
+        return True
+
     def test_info(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)
