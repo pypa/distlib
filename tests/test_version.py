@@ -268,6 +268,11 @@ class VersionTestCase(unittest.TestCase):
         self.assertEqual('Foo-Bar', NM('Foo-Bar (1.1)').name)
         self.assertEqual('Foo Bar', NM('Foo Bar (1.1)').name)
 
+    def test_matcher_local(self):
+        self.assertTrue(NM('Foo (>=2.5-1.2)').match('2.6.0-1.3'))
+        self.assertFalse(NM('Foo (>=2.6-1.4)').match('2.6.0-1.3'))
+        self.assertTrue(NM('Foo (>=2.6)').match('2.6-1.3'))
+
     def test_schemes(self):
         cases = (
             ('normalized', (_normalized_key, NV, NM)),
@@ -622,4 +627,17 @@ def test_suite():
     return unittest.TestSuite(suite)
 
 if __name__ == "__main__":  # pragma: no cover
+    import logging
+    import os
+    import sys
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    rundir = os.path.join(here, 'run')
+    if not os.path.exists(rundir):
+        os.mkdir(rundir)
+    elif not os.path.isdir(rundir):
+        raise ValueError('Not a directory: %r' % rundir)
+    fn = os.path.join(rundir, 'test_version_%d.%d.log' % sys.version_info[:2])
+    logging.basicConfig(level=logging.DEBUG, filename=fn, filemode='w',
+                        format='%(name)s %(funcName)s %(message)s')
     unittest.main(defaultTest="test_suite")
