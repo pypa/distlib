@@ -525,7 +525,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         md.name = 'bar'
         md.version = '0.5'
         md.add_requirements(['foo (0.1.2)'])
-        self.assertEqual(md.run_requires, ['foo (0.1.2)'])
+        self.assertEqual(md.run_requires, [{ 'requires': ['foo (0.1.2)']}])
 
         fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
                           'METADATA')
