@@ -17,6 +17,7 @@ except ImportError: # pragma: no cover
     class NullHandler(logging.Handler):
         def handle(self, record): pass
         def emit(self, record): pass
+        def createLock(self): self.lock = None
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
