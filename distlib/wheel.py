@@ -179,7 +179,11 @@ class Wheel(object):
         pyver = '.'.join(self.pyver)
         abi = '.'.join(self.abi)
         arch = '.'.join(self.arch)
-        return '%s-%s%s-%s-%s-%s.whl' % (self.name, self.version, buildver,
+        version = self.version
+        if '-' in version:
+            # lose any local component
+            version = version.split('-', 1)[0]
+        return '%s-%s%s-%s-%s-%s.whl' % (self.name, version, buildver,
                                          pyver, abi, arch)
 
     @property
