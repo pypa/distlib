@@ -67,6 +67,7 @@ class MarkersTestCase(unittest.TestCase):
         self.assertTrue(interpret("python_version >= '1.0'"))
         self.assertTrue(interpret("'%s' in os_name" % os_name))
         self.assertTrue(interpret("'buuuu' not in os_name"))
+        self.assertTrue(interpret("'buu' in os_name", {'os_name': 'buuu'}))
         self.assertTrue(interpret(
             "'buuuu' not in os_name and '%s' in os_name" % os_name))
 
