@@ -187,6 +187,11 @@ class Wheel(object):
                                          pyver, abi, arch)
 
     @property
+    def exists(self):
+        path = os.path.join(self.dirname, self.filename)
+        return os.path.isfile(path)
+
+    @property
     def tags(self):
         for pyver in self.pyver:
             for abi in self.abi:
