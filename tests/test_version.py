@@ -519,7 +519,9 @@ class LegacyVersionTestCase(unittest.TestCase):
             '1.0rc1',
             'A56',
             '1.0b',
-            '0.79.9999+0.80.0'
+            '0.79.9999+0.80.0',
+            '2013b',
+            '2013f',
         )
         final_releases = (
             '0.80.1-3',
