@@ -519,12 +519,12 @@ class LegacyVersionTestCase(unittest.TestCase):
             '1.0rc1',
             'A56',
             '1.0b',
+            '0.79.9999+0.80.0'
         )
         final_releases = (
             '0.80.1-3',
             '2.1.0',
             '3.2pl1-1',
-            '0.79.9999+0.80.0'
         )
         for s in pre_releases:
             self.assertTrue(LV(s).is_prerelease, s)

@@ -590,13 +590,15 @@ class LegacyVersion(Version):
     def parse(self, s):
         return _legacy_key(s)
 
-    PREREL_TAGS = set(
-        ['*a', '*alpha', '*b', '*beta', '*c', '*rc', '*r', '*@', '*pre']
-    )
-
     @property
     def is_prerelease(self):
-        return any(x in self.PREREL_TAGS for x in self._parts)
+        result = False
+        for x in self._parts:
+            if (isinstance(x, string_types) and x.startswith('*') and
+                x < '*final'):
+                result = True
+                break
+        return result
 
 
 class LegacyMatcher(Matcher):
