@@ -2,18 +2,51 @@ Change log for ``distlib``
 --------------------------
 
 
-0.1.8
-~~~~~
+0.1.8 (future)
+~~~~~~~~~~~~~~
 
 Released: Not yet.
 
+- index
+
+    - Replaced absolute imports with relative ones.
+
+- metadata
+
+    - Fixed bug in add_requirements implementation.
+
 - version
 
-    - Allowed versions with a single numeric component.
+    - Allowed versions with a single numeric component and a local
+      version component.
+
+    - Adjusted pre-release computation to be the same as the logic in the
+      setuptools documentation.
 
 - wheel
 
-    - Added ``verify`` and ``update`` methods to the ``Wheel`` class.
+    - Added ``verify``method to the ``Wheel`` class.
+
+    - Converted local version separators from '-' to '_' and back.
+
+    - If SOABI not available, used Py_DEBUG, Py_UNICODE_SIZE and
+      WITH_PYMALLOC to derive the ABI.
+
+    - Added "exists" property to Wheel instances.
+
+    - Factored out RECORD writing and zip building to separate methods.
+
+- _backport/sysconfig
+
+    - Replaced an absolute import with a relative one.
+
+- docs
+
+    - Numerous documentation updates, not detailed further here.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
 
 
 0.1.7
