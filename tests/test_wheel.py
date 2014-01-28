@@ -18,7 +18,7 @@ import tempfile
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.compat import ZipFile
+from distlib.compat import ZipFile, sysconfig
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
 from distlib.metadata import Metadata, METADATA_FILENAME
@@ -378,6 +378,30 @@ class WheelTestCase(unittest.TestCase):
         w.unmount()
         del sys.modules['minimext']
         self.assertRaises(ImportError, __import__, 'minimext')
+
+    def test_local_version(self):
+        w = Wheel('dummy-0.1_1.2')
+        self.assertEqual(w.filename, 'dummy-0.1_1.2-%s'
+                                     '-none-any.whl' % PYVER)
+        self.assertEqual(w.name, 'dummy')
+        self.assertEqual(w.version, '0.1-1.2')
+        self.assertFalse(w.exists)
+        w.version = '0.1-1.3'
+        self.assertEqual(w.filename, 'dummy-0.1_1.3-%s'
+                                     '-none-any.whl' % PYVER)
+
+    def test_abi(self):
+        pyver = sysconfig.get_config_var('py_version_nodot')
+        if not pyver:
+            pyver = '%s%s' % sys.version_info[:2]
+        parts = ['cp', pyver]
+        if sysconfig.get_config_var('Py_DEBUG'):
+            parts.append('d')
+        if sysconfig.get_config_var('WITH_PYMALLOC'):
+            parts.append('m')
+        if sysconfig.get_config_var('Py_UNICODE_SIZE') == 4:
+            parts.append('u')
+        self.assertEqual(''.join(parts), ABI)
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')

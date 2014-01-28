@@ -28,7 +28,7 @@ from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import InstalledDistribution
 from .metadata import Metadata, METADATA_FILENAME
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter,
-                   cached_property, get_cache_base, read_exports, tempdir)
+                   cached_property, get_cache_base, read_exports)
 
 
 logger = logging.getLogger(__name__)
@@ -55,7 +55,17 @@ ABI = sysconfig.get_config_var('SOABI')
 if ABI and ABI.startswith('cpython-'):
     ABI = ABI.replace('cpython-', 'cp')
 else:
-    ABI = 'none'
+    def _derive_abi():
+        parts = ['cp', VER_SUFFIX]
+        if sysconfig.get_config_var('Py_DEBUG'):
+            parts.append('d')
+        if sysconfig.get_config_var('WITH_PYMALLOC'):
+            parts.append('m')
+        if sysconfig.get_config_var('Py_UNICODE_SIZE') == 4:
+            parts.append('u')
+        return ''.join(parts)
+    ABI = _derive_abi()
+    del _derive_abi
 
 FILENAME_RE = re.compile(r'''
 (?P<nm>[^-]+)
@@ -147,7 +157,8 @@ class Wheel(object):
             if m:
                 info = m.groupdict('')
                 self.name = info['nm']
-                self.version = info['vn']
+                # Reinstate the local version separator
+                self.version = info['vn'].replace('_', '-')
                 self.buildver = info['bn']
                 self._filename = self.filename
             else:
@@ -179,10 +190,8 @@ class Wheel(object):
         pyver = '.'.join(self.pyver)
         abi = '.'.join(self.abi)
         arch = '.'.join(self.arch)
-        version = self.version
-        if '-' in version:
-            # lose any local component
-            version = version.split('-', 1)[0]
+        # replace - with _ as a local version separator
+        version = self.version.replace('-', '_')
         return '%s-%s%s-%s-%s-%s.whl' % (self.name, version, buildver,
                                          pyver, abi, arch)
 
