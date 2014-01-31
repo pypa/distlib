@@ -1052,11 +1052,13 @@ Functions
         system, because they are used by APIs which either expect filesystem
         paths, or to be able to use OS-level file handles. An example of the
         former is the :meth:`SSLContext.load_verify_locations` method in
-        Python's ``ssl`` module.
+        Python's ``ssl`` module. The subdirectory ``resource-cache`` is used
+        for this purpose.
 
       * As a place to cache shared libraries which are extracted as a result
         of calling the :meth:`~wheel.Wheel.mount` method of the
-        :class:`~wheel.Wheel` class.
+        :class:`~wheel.Wheel` class. The subdirectory ``dylib-cache`` is used
+        for this purpose.
 
       The application using this cache functionality, whether through the
       above mechanisms or through using the value returned from here directly,
