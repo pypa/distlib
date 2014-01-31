@@ -368,7 +368,7 @@ class WheelTestCase(unittest.TestCase):
             raise unittest.SkipTest('Suitable wheel not found.')
         fn = os.path.join(HERE, fn)
         w = Wheel(fn)
-        if not is_compatible(w):    # pragma: no cover
+        if not w.is_compatible() or not w.is_mountable():     # pragma: no cover
             raise unittest.SkipTest('Wheel not suitable for mounting.')
         self.assertRaises(ImportError, __import__, 'minimext')
         w.mount()

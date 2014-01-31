@@ -27,12 +27,13 @@ from . import __version__, DistlibException
 from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import InstalledDistribution
 from .metadata import Metadata, METADATA_FILENAME
-from .util import (FileOperator, convert_path, CSVReader, CSVWriter,
+from .util import (FileOperator, convert_path, CSVReader, CSVWriter, Cache,
                    cached_property, get_cache_base, read_exports)
 
 
 logger = logging.getLogger(__name__)
 
+cache = None    # created when needed
 
 if hasattr(sys, 'pypy_version_info'):
     IMP_PREFIX = 'pp'
@@ -627,10 +628,14 @@ class Wheel(object):
 
     def _get_dylib_cache(self):
         # Use native string to avoid issues on 2.x: see Python #20140.
-        result = os.path.join(get_cache_base(), str('dylib-cache'), sys.version[:3])
-        if not os.path.isdir(result):
-            os.makedirs(result)
-        return result
+        global cache
+        if cache is None:
+            base = os.path.join(get_cache_base(), str('dylib-cache'),
+                                sys.version[:3])
+            if not os.path.isdir(base):
+                os.makedirs(base)
+            cache = Cache(base)
+        return cache
 
     def _get_extensions(self):
         pathname = os.path.join(self.dirname, self.filename)
@@ -644,7 +649,11 @@ class Wheel(object):
                 with zf.open(arcname) as bf:
                     wf = wrapper(bf)
                     extensions = json.load(wf)
-                    cache_base = self._get_dylib_cache()
+                    cache = self._get_dylib_cache()
+                    prefix = cache.prefix_to_dir(pathname)
+                    cache_base = os.path.join(cache.base, prefix)
+                    if not os.path.isdir(cache_base):
+                        os.makedirs(cache_base)
                     for name, relpath in extensions.items():
                         dest = os.path.join(cache_base, convert_path(relpath))
                         if not os.path.exists(dest):
