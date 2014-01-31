@@ -768,6 +768,89 @@ def get_package_data(name, version):
     return _get_external_data(url)
 
 
+class Cache(object):
+    """
+    A class implementing a cache for resources that need to live in the file system
+    e.g. shared libraries. This class was moved from resources to here because it
+    could be used by other modules, e.g. the wheel module.
+    """
+
+    def __init__(self, base=None):
+        """
+        Initialise an instance.
+
+        :param base: The base directory where the cache should be located. If
+                     not specified, this will be the ``resource-cache``
+                     directory under whatever :func:`get_cache_base` returns.
+        """
+        if base is None:
+            # Use native string to avoid issues on 2.x: see Python #20140.
+            base = os.path.join(get_cache_base(), str('resource-cache'))
+            # we use 'isdir' instead of 'exists', because we want to
+            # fail if there's a file with that name
+            if not os.path.isdir(base):
+                os.makedirs(base)
+        self.base = os.path.abspath(os.path.normpath(base))
+
+    def prefix_to_dir(self, prefix):
+        """
+        Converts a resource prefix to a directory name in the cache.
+        """
+        return path_to_cache_dir(prefix)
+
+    def is_stale(self, resource, path):
+        """
+        Is the cache stale for the given resource?
+
+        :param resource: The :class:`Resource` being cached.
+        :param path: The path of the resource in the cache.
+        :return: True if the cache is stale.
+        """
+        # Cache invalidation is a hard problem :-)
+        return True
+
+    def get(self, resource):
+        """
+        Get a resource into the cache,
+
+        :param resource: A :class:`Resource` instance.
+        :return: The pathname of the resource in the cache.
+        """
+        prefix, path = resource.finder.get_cache_info(resource)
+        if prefix is None:
+            result = path
+        else:
+            result = os.path.join(self.base, self.prefix_to_dir(prefix), path)
+            dirname = os.path.dirname(result)
+            if not os.path.isdir(dirname):
+                os.makedirs(dirname)
+            if not os.path.exists(result):
+                stale = True
+            else:
+                stale = self.is_stale(resource, path)
+            if stale:
+                # write the bytes of the resource to the cache location
+                with open(result, 'wb') as f:
+                    f.write(resource.bytes)
+        return result
+
+    def clear(self):
+        """
+        Clear the cache.
+        """
+        not_removed = []
+        for fn in os.listdir(self.base):
+            fn = os.path.join(self.base, fn)
+            try:
+                if os.path.islink(fn) or os.path.isfile(fn):
+                    os.remove(fn)
+                elif os.path.isdir(fn):
+                    shutil.rmtree(fn)
+            except Exception:
+                not_removed.append(fn)
+        return not_removed
+
+
 class EventMixin(object):
     """
     A very simple publish/subscribe system.
