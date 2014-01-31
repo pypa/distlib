@@ -25,7 +25,8 @@ Released: Not yet.
 
 - wheel
 
-    - Added ``verify``method to the ``Wheel`` class.
+    - Added ``verify``, ``is_compatible`` and ``is_mountable`` methods to the
+      ``Wheel`` class.
 
     - Converted local version separators from '-' to '_' and back.
 

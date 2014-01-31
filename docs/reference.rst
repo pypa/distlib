@@ -368,8 +368,10 @@ Classes
       This attribute is the same as the path for file-based resource.
       For resources in a .zip file, the relevant resource is extracted
       to a file in a cache in the file system, and the name of the cached
-      file is returned. This is for use with APIs that need file names
-      or to be able to access data through OS-level file handles.
+      file is returned. This is for use with APIs that need file names,
+      or need to be able to access data through OS-level file handles. See
+      the :class:`~distlib.resources.Cache` documentation for more
+      information about the cache.
 
    Methods:
 
@@ -445,17 +447,16 @@ Classes
    .. method:: __init__(base=None)
 
       Initialise a cache instance with a specific directory which holds the
-      cache. If ``base`` is specified but does not exist, it is created.
-      If ``base`` is not specified, it defaults to
-      ``os.expanduser('~/.distlib/resource-cache') on
-      POSIX platforms (``os.name == 'posix'``). On Windows, if the environment
-      contains ``LOCALAPPDATA``, the cache will be placed in
+      cache. If ``base`` is not specified, it defaults to the directory
+      ``resource-cache`` in the directory returned by
+      :func:`~distlib.util.get_cache_base`.
 
-          ``os.path.expandvars(r'$localappdata\.distlib\resource-cache')``
-
-      Otherwise, the location will be
-
-          ``os.path.expanduser(r'~\.distlib\resource-cache')``
+      .. warning:: If ``base`` is specified, it should exist and its
+         permissions (relevant on POSIX only) should be set to 0700 - i.e. only
+         the user of the running process has any rights over the directory. If
+         this is not done, the application using this functionality may be
+         vulnerable to security breaches as a result of other processes being
+         able to interfere with the cache.
 
    .. method:: get(resource)
 
@@ -1038,6 +1039,34 @@ Functions
    The result is just the directory ``'.distlib'`` in the parent directory as
    determined above.
 
+   If a home directory is unavailable (no such directory, or if it's write-
+   protected), a parent directory for the cache is determined using
+   :func:`tempfile.mkdtemp`. This returns a directory to which only the
+   running process has access (permission mask 0700 on POSIX), meaning that
+   the cache should be isolated from possible malicious interference by other
+   processes.
+
+   .. note:: This cache is used for the following purposes:
+
+      * As a place to cache package resources which need to be in the file
+        system, because they are used by APIs which either expect filesystem
+        paths, or to be able to use OS-level file handles. An example of the
+        former is the :meth:`SSLContext.load_verify_locations` method in
+        Python's ``ssl`` module.
+
+      * As a place to cache shared libraries which are extracted as a result
+        of calling the :meth:`~wheel.Wheel.mount` method of the
+        :class:`~wheel.Wheel` class.
+
+      The application using this cache functionality, whether through the
+      above mechanisms or through using the value returned from here directly,
+      is responsible for any cache cleanup that is desired. Note that on
+      Windows, you may not be able to do cache cleanup if any of the cached
+      files are open (this will generally be the case with shared libraries,
+      i.e. DLLs). The best way to do cache cleanup in this scenario may be on
+      application startup, before any resources have been cached or wheels
+      mounted.
+
 .. function:: path_to_cache_dir(path)
 
    Converts a path (e.g. the name of an archive) into a directory name
@@ -1150,6 +1179,21 @@ Classes
                        specified as ``True``, only the ``site-packages``
                        contents will be installed.
 
+
+   .. method:: is_compatible()
+
+      Determine whether this wheel instance is compatible with the
+      running Python.
+
+      :return: ``True`` if compatible, else ``False``.
+
+   .. method:: is_mountable()
+
+      Determine whether this wheel instance is indicated suitable for
+      mounting in its metadata.
+
+      :return: ``True`` if mountable, else ``False``.
+
    .. method:: mount(append=False)
 
       Mount the wheel so that its contents can be imported directly, without
@@ -1157,18 +1201,39 @@ Classes
       has metadata about these extensions, the extensions are also available
       for import.
 
-      If the wheels tags indicate it is not compatible with the running Python,
-      a :class:`DistlibException` is raised.
+      If the wheel tags indicate it is not compatible with the running Python,
+      a :class:`DistlibException` is raised. (The :meth:`is_compatible`
+      method is used to determine compatibility.)
+
+      If the wheel is indicated as not suitable for mounting, a
+      :class:`DistlibException` is raised.  (The :meth:`is_mountable`
+      method is used to determine mountability.)
 
       :param append: If ``True``, the wheel's pathname is added to the end of
                      ``sys.path``. By default, it is added to the beginning.
 
+      .. note:: Wheels may state in their metadata that they are not
+         intended to be mountable, in which case this method will raise a
+         :class:`DistlibException` with a suitable message. If C extensions
+         are extracted, the location for extraction will be under the
+         directory ``dylib-cache`` in the directory returned by
+         :func:`~distlib.util.get_cache_base`.
+
+         Wheels may be marked by their publisher as unmountable to indicate
+         that running directly from a zip is not supported by the packaged
+         software.
 
     .. method:: unmount()
 
       Unmount the wheel so that its contents can no longer be imported
       directly. If the wheel contains C extensions and has metadata about these
       extensions, the extensions are also made unavailable for import.
+
+      .. note:: Unmounting does not automatically clean up any extracted C
+         extensions, as that may not be desired (and not possible, on Windows,
+         because the files will be open). See the
+         :func:`~distlib.util.get_cache_base` documentation for suggested
+         cleanup scenarios.
 
     .. method:: verify()
 
