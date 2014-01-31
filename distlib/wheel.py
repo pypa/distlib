@@ -662,10 +662,25 @@ class Wheel(object):
                 pass
         return result
 
+    def is_compatible(self):
+        """
+        Determine if a wheel is compatible with the running system.
+        """
+        return is_compatible(self)
+
+    def is_mountable(self):
+        """
+        Determine if a wheel is asserted as mountable by its metadata.
+        """
+        return True # for now - metadata details TBD
+
     def mount(self, append=False):
         pathname = os.path.abspath(os.path.join(self.dirname, self.filename))
-        if not is_compatible(self):
-            msg = 'Wheel %s not mountable in this Python.' % pathname
+        if not self.is_compatible():
+            msg = 'Wheel %s not compatible with this Python.' % pathname
+            raise DistlibException(msg)
+        if not self.is_mountable():
+            msg = 'Wheel %s is marked as not mountable.' % pathname
             raise DistlibException(msg)
         if pathname in sys.path:
             logger.debug('%s already in path', pathname)

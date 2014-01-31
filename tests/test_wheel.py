@@ -161,7 +161,7 @@ class WheelTestCase(unittest.TestCase):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         if 'py27' <= PYVER < 'py32':
             self.assertTrue(is_compatible(fn))
-            self.assertTrue(is_compatible(Wheel(fn)))
+            self.assertTrue(Wheel(fn).is_compatible())
 
     def test_metadata(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
