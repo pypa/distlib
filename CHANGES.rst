@@ -15,6 +15,15 @@ Released: Not yet.
 
     - Fixed bug in add_requirements implementation.
 
+- resources
+
+    - The ``Cache`` class was refactored into ``distlib.util.Cache``
+      and ``distlib.resources.ResourceCache`` classes.
+
+- util
+
+    - Gained the ``Cache`` class, which is also used in ``distlib.wheel``.
+
 - version
 
     - Allowed versions with a single numeric component and a local
@@ -36,6 +45,9 @@ Released: Not yet.
     - Added "exists" property to Wheel instances.
 
     - Factored out RECORD writing and zip building to separate methods.
+
+    - Provided the ability to determine the location where extensions are
+      extracted, by using the ``distlib.util.Cache`` class.
 
 - _backport/sysconfig
 

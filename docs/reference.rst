@@ -290,8 +290,14 @@ Attributes
 
 .. attribute:: cache
 
-   An instance of :class:`Cache`, which uses the default base location for the
-   cache (as described in the documentation for :meth:`Cache.__init__`).
+   An instance of :class:`ResourceCache`. This can be set after module
+   import, but before calling any functionality which uses it, to ensure
+   that the cache location is entirely under your control.
+
+   If you access the ``file_path`` property of :class:`Resource` instance,
+   the cache will be needed, and if not set by you, an instance with
+   a default location will be created. See :func:`distlib.util.get_cache_base`
+   for more information.
 
 Functions
 ^^^^^^^^^
@@ -439,24 +445,17 @@ Classes
 
    This has the same interface as :class:`ResourceFinder`.
 
-.. class:: Cache
+.. class:: ResourceCache
 
    This class implements a cache for resources which must be accessible as
-   files in the file system.
+   files in the file system. It is based on :class:`~distlib.util.Cache`, and
+   adds resource-specific methods.
 
    .. method:: __init__(base=None)
 
       Initialise a cache instance with a specific directory which holds the
-      cache. If ``base`` is not specified, it defaults to the directory
-      ``resource-cache`` in the directory returned by
-      :func:`~distlib.util.get_cache_base`.
-
-      .. warning:: If ``base`` is specified, it should exist and its
-         permissions (relevant on POSIX only) should be set to 0700 - i.e. only
-         the user of the running process has any rights over the directory. If
-         this is not done, the application using this functionality may be
-         vulnerable to security breaches as a result of other processes being
-         able to interfere with the cache.
+      cache. If base is not specified, the value ``resource-cache` in the
+      directory returned by :func:`~distlib.util.get_cache_base` is used.
 
    .. method:: get(resource)
 
@@ -471,11 +470,6 @@ Classes
       implementation returns ``True``, causing the resource's data to be
       re-written to the file every time.
 
-   .. method:: prefix_to_dir(prefix)
-
-      Converts a prefix for a resource (e.g. the name of its containing
-      .zip) into a directory name in the cache. This implementation
-      delegates the work to :func:`~distlib.util.path_to_cache_dir`.
 
 The ``distlib.scripts`` package
 -------------------------------
@@ -986,6 +980,29 @@ The ``distlib.util`` package
 Classes
 ^^^^^^^^
 
+.. class:: Cache
+
+   This base class implements common operations for ``distlib`` caches.
+
+   .. method:: __init__(base)
+
+      Initialise a cache instance with a specific directory which holds the
+      cache.
+
+      .. warning:: If ``base`` is specified and exists, it should exist and its
+         permissions (relevant on POSIX only) should be set to 0700 - i.e. only
+         the user of the running process has any rights over the directory. If
+         this is not done, the application using this functionality may be
+         vulnerable to security breaches as a result of other processes being
+         able to interfere with the cache.
+
+   .. method:: prefix_to_dir(prefix)
+
+      Converts a prefix (e.g. the name of a resource's containing .zip, or a
+      wheel pathname) into a directory name in the cache. This implementation
+      delegates the work to :func:`~distlib.util.path_to_cache_dir`.
+
+
 .. class:: ExportEntry
 
    Attributes:
@@ -1114,6 +1131,22 @@ The ``distlib.wheel`` package
 -----------------------------
 
 This package has functionality which allows you to work with wheels (see :pep:`427`).
+
+
+Attributes
+^^^^^^^^^^
+
+.. attribute:: cache
+
+   An instance of :class:`distlib.util.Cache`. This can be set after module
+   import, but before calling any functionality which uses it, to ensure
+   that the cache location is entirely under your control.
+
+   If you call the ``mount`` method of a :class:`Wheel` instance, and the
+   wheel is successfully mounted and contains C extensions, the cache will
+   be needed, and if not set by you, an instance with a default location
+   will be created. See :func:`distlib.util.get_cache_base` for more
+   information.
 
 
 Classes

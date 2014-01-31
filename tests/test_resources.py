@@ -13,7 +13,7 @@ import sys
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.resources import finder, finder_for_path, Cache
+from distlib.resources import finder, finder_for_path, ResourceCache
 from distlib.util import get_cache_base
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -180,7 +180,7 @@ class FileResourceTestCase(unittest.TestCase):
 
 class CacheTestCase(unittest.TestCase):
     def test_base(self):
-        cache = Cache()
+        cache = ResourceCache()
         expected = os.path.join(get_cache_base(), str('resource-cache'))
         self.assertEqual(expected, cache.base)
         self.assertTrue(os.path.isdir(expected))
