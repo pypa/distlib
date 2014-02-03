@@ -595,7 +595,6 @@ def get_cache_base(suffix=None):
     else:
         # Assume posix, or old Windows
         result = os.path.expanduser('~')
-    result = os.path.join(result, suffix)
     # we use 'isdir' instead of 'exists', because we want to
     # fail if there's a file with that name
     if os.path.isdir(result):
@@ -612,7 +611,7 @@ def get_cache_base(suffix=None):
     if not usable:
         result = tempfile.mkdtemp()
         logger.warning('Default location unusable, using %s', result)
-    return result
+    return os.path.join(result, suffix)
 
 
 def path_to_cache_dir(path):
