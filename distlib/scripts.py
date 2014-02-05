@@ -226,8 +226,6 @@ class ScriptMaker(object):
                 raise
             f = None
         else:
-            encoding, lines = detect_encoding(f.readline)
-            f.seek(0)
             first_line = f.readline()
             if not first_line:
                 logger.warning('%s: %s is an empty file (skipping)',
@@ -250,6 +248,8 @@ class ScriptMaker(object):
             logger.info('copying and adjusting %s -> %s', script,
                         self.target_dir)
             if not self._fileop.dry_run:
+                encoding, lines = detect_encoding(f.readline)
+                f.seek(0)
                 shebang = self._get_shebang(encoding, post_interp)
                 if b'pythonw' in first_line:
                     ext = 'pyw'
