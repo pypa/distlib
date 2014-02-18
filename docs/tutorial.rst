@@ -1499,9 +1499,9 @@ Running :meth:`unmount` on the wheel removes its absolute pathname from
 ``sys.path`` and makes its C extensions, if any, also unavailable for import.
 
 .. note:: The C extension mounting functionality may not work in all cases,
-   though it will work in a useful subset of cases. Use with care. Note that
-   extension information is currently only available in wheels using
-   ``distil``; for wheels built using e.g. ``pip``, this note will not apply,
+   though it should work in a useful subset of cases. Use with care. Note that
+   extension information is currently only available in wheels built using
+   ``distil`` -- for wheels built using e.g. ``pip``, this note will not apply,
    because C extensions will never be available for import.
 
    * There might be subtle differences in binary compatibility between the
@@ -1509,10 +1509,11 @@ Running :meth:`unmount` on the wheel removes its absolute pathname from
      currently does not capture all the relevant ABI information. This is a
      situation which can be expected to improve over time.
 
-   * If the extension uses custom dynamically linked libraries, it may not be
-     found by the dynamic loading machinery, for reasons that are platform-
-     dependent. You should have a good understanding of how dynamic loading
-     works on your platforms, before taking advantage of this feature.
+   * If the extension uses custom dynamically linked libraries which are
+     bundled with the extension, it may not be found by the dynamic loading
+     machinery, for reasons that are platform-dependent. In such cases, you
+     should have a good understanding of how dynamic loading works on your
+     platforms, before taking advantage of this feature.
 
 
 Using vanilla pip to build wheels for existing distributions on PyPI
