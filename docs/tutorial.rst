@@ -419,6 +419,9 @@ added in due course -- once the basic functionality is working satisfactorily.
 Using the index API
 ^^^^^^^^^^^^^^^^^^^
 
+.. currentmodule:: distlib.index
+
+
 .. index::
    single: APIs; PyPI
 
@@ -723,6 +726,135 @@ method::
 
 This will use ``distutils`` code to save a default ``.pypirc`` file which
 specifies a single index -- PyPI -- with the specified username and password.
+
+Searching PyPI
+~~~~~~~~~~~~~~
+
+You can use the :meth:`~distlib.index.PackageIndex.search` method of
+:class:`~distlib.index.PackageIndex`
+to search for distributions on PyPI::
+
+    >>> index = PackageIndex()
+    >>> from pprint import pprint
+    >>> pprint(index.search('tatterdema'))
+    [{'_pypi_ordering': 0,
+      'name': 'tatterdemalion',
+      'summary': 'A dummy distribution',
+      'version': '0.1.0'}]
+
+If a string is specified, just the name is searched for. Alternatively, you
+can specify a dictionary of attributes to search for, along with values
+to match. For example::
+
+    >>> pprint(index.search({'summary': 'dummy'}))
+    [{'_pypi_ordering': 5,
+      'name': 'collective.lorem',
+      'summary': 'A package that provides dummy content generation.',
+      'version': '0.2.3'},
+     {'_pypi_ordering': 7,
+      'name': 'collective.loremipsum',
+      'summary': 'Creates dummy content with populated Lorem Ipsum.',
+      'version': '0.8'},
+     {'_pypi_ordering': 1,
+      'name': 'cosent.dummypackage',
+      'summary': 'A dummy package for buildtools testing',
+      'version': '0.4'},
+     {'_pypi_ordering': 0,
+      'name': 'django-dummyimage',
+      'summary': 'Dynamic Dummy Image Generator For Django!',
+      'version': '0.1.1'},
+     {'_pypi_ordering': 1,
+      'name': 'django-plainpasswordhasher',
+      'summary': 'Dummy (plain text) password hashing for Django.',
+      'version': '0.2'},
+     {'_pypi_ordering': 2,
+      'name': 'django-plainpasswordhasher',
+      'summary': 'Dummy (plain text) password hashing for Django.',
+      'version': '0.3'},
+     {'_pypi_ordering': 1,
+      'name': 'dummycache',
+      'summary': 'A dummy in-memory cache for development and testing. (Not recommended for production use.)',
+      'version': '0.0.2'},
+     {'_pypi_ordering': 0,
+      'name': 'dummy-txredis',
+      'summary': 'Dummy txRedis client and factory.',
+      'version': '0.5'},
+     {'_pypi_ordering': 7,
+      'name': 'eea.eggmonkeytesttarget',
+      'summary': 'A dummy package to test eea.eggmonkey',
+      'version': '5.7'},
+     {'_pypi_ordering': 8,
+      'name': 'invewrapper',
+      'summary': 'dummy/transitional package that depends on "pew"',
+      'version': '0.1.8'},
+     {'_pypi_ordering': 0,
+      'name': 'monoprocessing',
+      'summary': 'A dummy implementation of multiprocessing.Pool',
+      'version': '0.1'},
+     {'_pypi_ordering': 0,
+      'name': 'myFun',
+      'summary': 'This is a dummy function which prints given list data.',
+      'version': '1.0.0'},
+     {'_pypi_ordering': 0,
+      'name': 'ReadableDict-a-dict-without-brackets',
+      'summary': 'provides a dummy implementation of a dict without brackets',
+      'version': '0.0'},
+     {'_pypi_ordering': 4,
+      'name': 'setuptools_dummy',
+      'summary': 'Setuptools Dummy Filefinder',
+      'version': '0.1.0.4'},
+     {'_pypi_ordering': 0,
+      'name': 'tatterdemalion',
+      'summary': 'A dummy distribution',
+      'version': '0.1.0'}]
+
+If you specify multiple attributes, then the search returns the intersection
+of matches -- an ``and`` operation::
+
+    >>> pprint(index.search({'summary': 'dummy', 'name': 'ta'}))
+    [{'_pypi_ordering': 7,
+      'name': 'eea.eggmonkeytesttarget',
+      'summary': 'A dummy package to test eea.eggmonkey',
+      'version': '5.7'},
+     {'_pypi_ordering': 0,
+      'name': 'tatterdemalion',
+      'summary': 'A dummy distribution',
+      'version': '0.1.0'}]
+
+If you want a union of matches -- an ``or`` operation -- specify a second
+argument to the :meth:`PackageIndex.search` method with the value ``'or'``::
+
+    >>> pprint(index.search({'version': '2013.9', 'name': 'pytzp'}, 'or'))
+    [{'_pypi_ordering': 65,
+      'name': 'pytz',
+      'summary': 'World timezone definitions, modern and historical',
+      'version': '2013.9'},
+     {'_pypi_ordering': 2,
+      'name': 'pytzpure',
+      'summary': 'A pure-Python version of PYTZ (timezones).',
+      'version': '0.2.4'}]
+
+The search functionality makes use of PyPI's XML-RPC interface, so it will only
+work for indexes which supply a compatible implementation. The following search
+attributes are currently supported:
+
+* name
+* version
+* stable_version
+* author
+* author_email
+* maintainer
+* maintainer_email
+* home_page
+* license
+* summary
+* description
+* keywords
+* platform
+* download_url
+* classifiers (list of classifier strings)
+* project_url
+* docs_url (URL of the pythonhosted.org docs if they've been supplied)
 
 
 .. _use-metadata:

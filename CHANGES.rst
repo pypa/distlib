@@ -11,6 +11,8 @@ Released: Not yet.
 
     - Replaced absolute imports with relative ones.
 
+    - Added ``search`` method to ``PackageIndex``.
+
 - metadata
 
     - Fixed bug in add_requirements implementation.

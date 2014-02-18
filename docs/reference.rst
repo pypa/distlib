@@ -944,6 +944,49 @@ Classes
                 an error occurs (e.g. unable to locate the public key used to
                 verify the signature), a ``ValueError`` is raised.
 
+   .. method:: search(query, operation=None)
+
+      Search the index for distributions matching a search query.
+
+      :param query: The query, either as a string or a dictionary. If a string
+                    ``'foo'`` is passed, it will be treated equivalently to
+                    passing the dictionary ``{'name': 'foo'}``. The dictionary
+                    can have the following keys:
+
+                    * name
+                    * version
+                    * stable_version
+                    * author
+                    * author_email
+                    * maintainer
+                    * maintainer_email
+                    * home_page
+                    * license
+                    * summary
+                    * description
+                    * keywords
+                    * platform
+                    * download_url
+                    * classifiers (list of classifier strings)
+                    * project_url
+                    * docs_url (URL of the pythonhosted.org docs if they've
+                      been supplied)
+
+      :param operation: If specified, it should be either ``'and'`` or
+                        ``'or'``. If not specified, ``'and'`` is assumed. This
+                        is only used if a passed dictionary has multiple keys.
+                        It determines whether the intersection or the union of
+                        matches is returned.
+
+      :returns: A (possibly empty) list of the distributions matching the
+                query. Each entry in the list will be a dictionary with the
+                following keys:
+
+                * _pypi_ordering -- the internal ordering value (an integer)
+                * name --The name of the distribution
+                * version -- the version of the distribution
+                * summary -- the summary for that version
+
    Additional attributes:
 
    .. attribute:: username
