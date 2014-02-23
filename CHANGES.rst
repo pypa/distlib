@@ -51,6 +51,9 @@ Released: Not yet.
     - Provided the ability to determine the location where extensions are
       extracted, by using the ``distlib.util.Cache`` class.
 
+    - Avoided using ``pydist.json`` in 1.0 wheels (``bdist_wheel`` writes a
+      non-conforming ``pydist.json``.)
+
 - _backport/sysconfig
 
     - Replaced an absolute import with a relative one.
