@@ -214,29 +214,38 @@ class Wheel(object):
         name_ver = '%s-%s' % (self.name, self.version)
         info_dir = '%s.dist-info' % name_ver
         wrapper = codecs.getreader('utf-8')
-        metadata_filename = posixpath.join(info_dir, METADATA_FILENAME)
         with ZipFile(pathname, 'r') as zf:
+            wheel_metadata = self.get_wheel_metadata(zf)
+            wv = wheel_metadata['Wheel-Version'].split('.', 1)
+            file_version = tuple([int(i) for i in wv])
+            if file_version < (1, 1):
+                fn = 'METADATA'
+            else:
+                fn = METADATA_FILENAME
             try:
+                metadata_filename = posixpath.join(info_dir, fn)
                 with zf.open(metadata_filename) as bf:
                     wf = wrapper(bf)
                     result = Metadata(fileobj=wf)
             except KeyError:
                 raise ValueError('Invalid wheel, because %s is '
-                                 'missing' % METADATA_FILENAME)
+                                 'missing' % fn)
         return result
+
+    def get_wheel_metadata(self, zf):
+        name_ver = '%s-%s' % (self.name, self.version)
+        info_dir = '%s.dist-info' % name_ver
+        metadata_filename = posixpath.join(info_dir, 'WHEEL')
+        with zf.open(metadata_filename) as bf:
+            wf = codecs.getreader('utf-8')(bf)
+            message = message_from_file(wf)
+        return dict(message)
 
     @cached_property
     def info(self):
         pathname = os.path.join(self.dirname, self.filename)
-        name_ver = '%s-%s' % (self.name, self.version)
-        info_dir = '%s.dist-info' % name_ver
-        metadata_filename = posixpath.join(info_dir, 'WHEEL')
-        wrapper = codecs.getreader('utf-8')
         with ZipFile(pathname, 'r') as zf:
-            with zf.open(metadata_filename) as bf:
-                wf = wrapper(bf)
-                message = message_from_file(wf)
-                result = dict(message)
+            result = self.get_wheel_metadata(zf)
         return result
 
     def process_shebang(self, data):
