@@ -57,7 +57,7 @@ if ABI and ABI.startswith('cpython-'):
     ABI = ABI.replace('cpython-', 'cp')
 else:
     def _derive_abi():
-        parts = ['cp', VER_SUFFIX]
+        parts = [IMP_PREFIX, VER_SUFFIX]
         if sysconfig.get_config_var('Py_DEBUG'):
             parts.append('d')
         if sysconfig.get_config_var('WITH_PYMALLOC'):
