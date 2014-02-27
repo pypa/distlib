@@ -75,7 +75,7 @@ def install_dist(distname, workdir):
         'headers': os.path.join(workdir, 'headers'),
         'data': os.path.join(workdir, 'data'),
     }
-    p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
     stdout, _ = p.communicate()
     if p.returncode:
