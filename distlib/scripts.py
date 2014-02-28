@@ -107,6 +107,8 @@ class ScriptMaker(object):
         if options:
             executable = self._get_alternate_executable(executable, options)
 
+        if ' ' in executable and executable[0] != '"':
+            executable = '"%s"' % executable
         executable = fsencode(executable)
         shebang = b'#!' + executable + post_interp + b'\n'
         # Python parser starts to read a script using UTF-8 until
