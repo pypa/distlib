@@ -109,7 +109,7 @@ class ScriptMaker(object):
         if options:
             executable = self._get_alternate_executable(executable, options)
 
-        # If the user didn't specify a shebang, it may be necessary to
+        # If the user didn't specify an executable, it may be necessary to
         # cater for executable paths with spaces (not uncommon on Windows)
         if enquote and ' ' in executable:
             executable = '"%s"' % executable
