@@ -154,9 +154,9 @@ def in_venv():
 
 
 def get_executable():
-    if sys.platform == 'darwin' and ('__VENV_LAUNCHER__'
+    if sys.platform == 'darwin' and ('__PYVENV_LAUNCHER__'
                                      in os.environ):
-        result =  os.environ['__VENV_LAUNCHER__']
+        result =  os.environ['__PYVENV_LAUNCHER__']
     else:
         result = sys.executable
     return result
