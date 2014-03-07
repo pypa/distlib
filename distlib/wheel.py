@@ -796,9 +796,34 @@ def compatible_tags():
     abis.append('none')
     result = []
 
+    arches = [ARCH]
+    if sys.platform == 'darwin':
+        m = re.match('(\w+)_(\d+)_(\d+)_(\w+)$', ARCH)
+        if m:
+            name, major, minor, arch = m.groups()
+            minor = int(minor)
+            matches = [arch]
+            if arch in ('i386', 'ppc'):
+                matches.append('fat')
+            if arch in ('i386', 'ppc', 'x86_64'):
+                matches.append('fat3')
+            if arch in ('ppc64', 'x86_64'):
+                matches.append('fat64')
+            if arch in ('i386', 'x86_64'):
+                matches.append('intel')
+            if arch in ('i386', 'x86_64', 'intel', 'ppc', 'ppc64'):
+                matches.append('universal')
+            while minor > 0:
+                for match in matches:
+                    s = '%s_%s_%s_%s' % (name, major, minor, match)
+                    if s != ARCH:   # already there
+                        arches.append(s)
+                minor -= 1
+
     # Most specific - our Python version, ABI and arch
     for abi in abis:
-        result.append((''.join((IMP_PREFIX, versions[0])), abi, ARCH))
+        for arch in arches:
+            result.append((''.join((IMP_PREFIX, versions[0])), abi, arch))
 
     # where no ABI / arch dependency, but IMP_PREFIX dependency
     for i, version in enumerate(versions):
