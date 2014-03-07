@@ -54,6 +54,9 @@ Released: Not yet.
     - Avoided using ``pydist.json`` in 1.0 wheels (``bdist_wheel`` writes a
       non-conforming ``pydist.json``.)
 
+    - Improved computation of compatible tags on OS X, and made COMPATIBLE_TAGS
+      a set.
+
 - _backport/sysconfig
 
     - Replaced an absolute import with a relative one.

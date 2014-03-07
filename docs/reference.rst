@@ -1404,7 +1404,7 @@ Attributes
 
 .. attribute:: COMPATIBLE_TAGS
 
-   A list of (``pyver``, ``abi``, ``arch``) tags which are compatible with this
+   A set of (``pyver``, ``abi``, ``arch``) tags which are compatible with this
    Python implementation.
 
 
