@@ -813,7 +813,7 @@ def compatible_tags():
                 matches.append('intel')
             if arch in ('i386', 'x86_64', 'intel', 'ppc', 'ppc64'):
                 matches.append('universal')
-            while minor > 0:
+            while minor >= 0:
                 for match in matches:
                     s = '%s_%s_%s_%s' % (name, major, minor, match)
                     if s != ARCH:   # already there
