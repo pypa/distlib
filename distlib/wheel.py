@@ -836,7 +836,7 @@ def compatible_tags():
         result.append((''.join(('py', version)), 'none', 'any'))
         if i == 0:
             result.append((''.join(('py', version[0])), 'none', 'any'))
-    return result
+    return set(result)
 
 
 COMPATIBLE_TAGS = compatible_tags()
