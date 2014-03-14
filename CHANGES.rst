@@ -9,6 +9,8 @@ Released: Not yet.
 
 - index
 
+    - Improved thread-safety in SimpleScrapingLocator (issue #45).
+
     - Replaced absolute imports with relative ones.
 
     - Added ``search`` method to ``PackageIndex``.
