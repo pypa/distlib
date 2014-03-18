@@ -332,6 +332,43 @@ class WheelTestCase(unittest.TestCase):
         md.write(path=mdpath)
         return True
 
+    def wheel_modifier_ver(self, path_map):
+        mdpath = path_map['dummy-0.1.dist-info/pydist.json']
+        md = Metadata(path=mdpath)
+        md.version = '0.1-123'
+        md.write(path=mdpath)
+        return True
+
+    def test_update(self):
+        workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workdir)
+        fn = 'dummy-0.1-py27-none-any.whl'
+        sfn = os.path.join(HERE, fn)
+        dfn = os.path.join(workdir, fn)
+        shutil.copyfile(sfn, dfn)
+        mtime = os.stat(dfn).st_mtime
+        w = Wheel(dfn)
+        modified = w.update(self.wheel_modifier_nop)
+        self.assertFalse(modified)
+        self.assertEqual(mtime, os.stat(dfn).st_mtime)
+        modified = w.update(self.wheel_modifier)
+        self.assertTrue(modified)
+        self.assertLess(mtime, os.stat(dfn).st_mtime)
+        w = Wheel(dfn)
+        w.verify()
+        md = w.metadata
+        self.assertEqual(md.run_requires, [{'requires': ['numpy']}])
+        self.assertEquals(md.version, '0.1-1')
+
+        modified = w.update(self.wheel_modifier_ver)
+        self.assertTrue(modified)
+        self.assertLess(mtime, os.stat(dfn).st_mtime)
+        w = Wheel(dfn)
+        w.verify()
+        md = w.metadata
+        self.assertEqual(md.run_requires, [{'requires': ['numpy']}])
+        self.assertEquals(md.version, '0.1-123')
+
     def test_info(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)
