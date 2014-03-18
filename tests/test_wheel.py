@@ -353,7 +353,7 @@ class WheelTestCase(unittest.TestCase):
         self.assertEqual(mtime, os.stat(dfn).st_mtime)
         modified = w.update(self.wheel_modifier)
         self.assertTrue(modified)
-        self.assertLess(mtime, os.stat(dfn).st_mtime)
+        self.assertLessEqual(mtime, os.stat(dfn).st_mtime)
         w = Wheel(dfn)
         w.verify()
         md = w.metadata
