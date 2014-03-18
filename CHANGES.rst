@@ -2,10 +2,16 @@ Change log for ``distlib``
 --------------------------
 
 
-0.1.8 (future)
+0.1.9 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+
+0.1.8 (future)
+~~~~~~~~~~~~~~
+
+Released: 2014-03-18
 
 - index
 
@@ -14,6 +20,10 @@ Released: Not yet.
     - Replaced absolute imports with relative ones.
 
     - Added ``search`` method to ``PackageIndex``.
+
+- locators
+
+    - Improved thread-safety in ``SimpleScrapingLocator`` (issue #45).
 
 - metadata
 
@@ -24,6 +34,10 @@ Released: Not yet.
     - The ``Cache`` class was refactored into ``distlib.util.Cache``
       and ``distlib.resources.ResourceCache`` classes.
 
+- scripts
+
+    - Implement quoting for executables with spaces in them.
+
 - util
 
     - Gained the ``Cache`` class, which is also used in ``distlib.wheel``.
@@ -33,13 +47,13 @@ Released: Not yet.
     - Allowed versions with a single numeric component and a local
       version component.
 
-    - Adjusted pre-release computation to be the same as the logic in the
-      setuptools documentation.
+    - Adjusted pre-release computation for legacy versions to be the same as
+      the logic in the setuptools documentation.
 
 - wheel
 
-    - Added ``verify``, ``is_compatible`` and ``is_mountable`` methods to the
-      ``Wheel`` class.
+    - Added ``verify``, ``update``, ``is_compatible`` and ``is_mountable``
+      methods to the ``Wheel`` class.
 
     - Converted local version separators from '-' to '_' and back.
 
