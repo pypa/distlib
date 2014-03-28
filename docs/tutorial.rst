@@ -495,22 +495,24 @@ signing program is to be found::
 
     >>> index.gpg = '/path/to/gpg'
 
-If the location of the signing key is not the default location, you can specify
-that too::
-
-    >>> index.gpg_home = '/path/to/keys'
-
-where the ``keys`` folder will hold the GnuPG key database (files like
-``pubring.gpg``, ``secring.gpg``, and ``trustdb.gpg``).
-
-Once these are set, you can sign the archive before uploading, as follows::
+Once this is set, you can sign the archive before uploading, as follows::
 
     >>> response = index.upload_file(metadata, archive_name,
     ...                              signer='Test User',
-    ...                              sign_password='secret')
+    ...                              sign_password='secret',
+                                     keystore='/path/to/keys')
+
+As an alternative to passing the keystore with each call, you can specify
+that in an instance attribute::
+
+    >>> index.gpg_home = '/path/to/keys'
+
+The ``keystore`` is a directory which contains the GnuPG key database (files
+like ``pubring.gpg``, ``secring.gpg``, and ``trustdb.gpg``).
 
 When you sign a distribution, both the distribution and the signature are
 uploaded to the index.
+
 
 Downloading files
 ~~~~~~~~~~~~~~~~~
@@ -547,39 +549,43 @@ Verifying signatures
 For any archive downloaded from an index, you can retrieve any signature by
 just appending ``.asc`` to the path portion of the download URL for the
 archive, and downloading that. The index class offers a
-:meth:`verify_signature` method for validating a signature. Before invoking it,
-you may need to specify the location of the signing public key::
+:meth:`verify_signature` method for validating a signature. If you have files
+'good.bin', 'bad.bin' which are different from each other, and 'good.bin.asc'
+has the signature for 'good.bin', then you can verify signatures like this::
+
+    >>> index.verify_signature('good.bin.asc', 'good.bin', '/path/to/keys')
+    True
+    >>> index.verify_signature('good.bin.asc', 'bad.bin', '/path/to/keys')
+    False
+
+The last argument, which is optional, specifies a directory which holds the
+GnuPG keys used for verification -- the *keystore*. Instead of specifying the
+keystore location in each call, you can specify the location in an instance
+attribute::
 
     >>> index.gpg_home = '/path/to/keys'
 
-If you have files 'good.bin', 'bad.bin' which are different from each other,
-and 'good.bin.asc' has the signature for 'good.bin', then you can verify
-signatures like this::
-
-    >>> index.verify_signature('good.bin.asc', 'good.bin')
-    True
-    >>> index.verify_signature('good.bin.asc', 'bad.bin')
-    False
+If you do this, you don't need to pass the keystore location.
 
 Note that if you don't have the ``gpg`` or ``gpg2`` programs on the path, you
 may need to specify the location of the verifier program explicitly::
 
     >>> index.gpg = '/path/to/gpg'
 
+
 Some caveats about verified signatures
 ++++++++++++++++++++++++++++++++++++++
 
 In order to be able to perform signature verification, you'll have to ensure
 that the public keys of whoever signed those distributions are in your key
-store (where you set ``index.gpg_home`` to point to). However, having these
-keys shouldn't give you a false sense of security; unless you can be sure that
-those keys actually belong to the people or organisations they purport to
-represent, the signature has no real value, even if it is verified without
-error. For you to be able to trust a key, it would need to be signed by
-someone you trust, who vouches for it -- and this requires there to be either
-a signature from a valid certifying authority (e.g. Verisign, Thawte etc.) or
-a `Web of Trust <http://wikipedia.org/wiki/Web_of_trust>`_ around the keys that
-you want to rely on.
+store. However, having these keys shouldn't give you a false sense of security;
+unless you can be sure that those keys actually belong to the people or
+organisations they purport to represent, the signature has no real value, even
+if it is verified without error. For you to be able to trust a key, it would
+need to be signed by someone you trust, who vouches for it -- and this requires
+there to be either a signature from a valid certifying authority (e.g. Verisign,
+Thawte etc.) or a `Web of Trust <http://wikipedia.org/wiki/Web_of_trust>`_ around
+the keys that you want to rely on.
 
 An index may itself countersign distributions (so *it* deals with the keys of
 the distribution publishers, but you need only deal with the public signing

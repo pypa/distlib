@@ -890,7 +890,8 @@ Classes
       :returns: An ``urllib`` HTTP response returned by the index. If an error
                 occurs, an :class:`HTTPError` exception will be raised.
 
-   .. method:: upload_file(metadata, filename, signer=None, sign_password=None, filetype='sdist', pyversion='source')
+   .. method:: upload_file(metadata, filename, signer=None, sign_password=None,
+                           filetype='sdist', pyversion='source', keystore=None)
 
       Upload a distribution to the index.
 
@@ -914,6 +915,10 @@ Classes
                         to use would be ``source`` - for distributions which
                         are for specific Python versions, you would use the
                         Python version in the form ``X.Y``.
+      :param keystore: The path to a directory which contains the keys
+                       used in signing. If not specified, the
+                       instance's ``gpg_home`` attribute is used instead. This
+                       parameter is not used unless a signer is specified.
       :returns: An ``urllib`` HTTP response returned by the index. If an error
                 occurs, an :class:`HTTPError` exception will be raised.
 
@@ -932,7 +937,8 @@ Classes
       :returns: An ``urllib`` HTTP response returned by the index. If an error
                 occurs, an :class:`HTTPError` exception will be raised.
 
-   .. method:: verify_signature(self, signature_filename, data_filename)
+   .. method:: verify_signature(self, signature_filename, data_filename,
+                                keystore=None)
 
       Verify a digital signature against a downloaded distribution.
 
@@ -940,6 +946,9 @@ Classes
                                  digital signature.
       :param data_filename: The path to the file which was supposedly signed
                             to obtain the signature in ``signature_filename``.
+      :param keystore: The path to a directory which contains the keys
+                       used in verification. If not specified, the
+                       instance's ``gpg_home`` attribute is used instead.
       :returns: ``True`` if the signature can be verified, else ``False``. If
                 an error occurs (e.g. unable to locate the public key used to
                 verify the signature), a ``ValueError`` is raised.
