@@ -922,6 +922,9 @@ Classes
       :returns: An ``urllib`` HTTP response returned by the index. If an error
                 occurs, an :class:`HTTPError` exception will be raised.
 
+      .. versionchanged:: 0.1.9
+         The ``keystore`` argument was added.
+
    .. method:: upload_documentation(metadata, doc_dir)
 
       Upload HTML documentation to the index. The contents of the specified
@@ -952,6 +955,9 @@ Classes
       :returns: ``True`` if the signature can be verified, else ``False``. If
                 an error occurs (e.g. unable to locate the public key used to
                 verify the signature), a ``ValueError`` is raised.
+
+      .. versionchanged:: 0.1.9
+         The ``keystore`` argument was added.
 
    .. method:: search(query, operation=None)
 
@@ -995,6 +1001,8 @@ Classes
                 * name --The name of the distribution
                 * version -- the version of the distribution
                 * summary -- the summary for that version
+
+      .. versionadded:: 0.1.8
 
    Additional attributes:
 
@@ -1328,6 +1336,8 @@ Classes
       hashes declared in the wheel's RECORD. Raise a
       :class:`DistlibException` if a size or digest mismatch is detected.
 
+      .. versionadded:: 0.1.8
+
     .. method:: update(modifier, dest_dir=None, **kwargs)
 
       Allows a user-defined callable access to the contents of a wheel. The
@@ -1345,6 +1355,8 @@ Classes
       (hence effectively modifying it in-place). The passed ``path_map`` will
       contain all of the wheel's entries other than the ``RECORD`` entry (which
       will be recreated if a new wheel is built).
+
+      .. versionadded:: 0.1.8
 
    .. attribute:: name
 
@@ -1390,6 +1402,12 @@ Classes
 
       The wheel metadata (contents of the ``WHEEL`` metadata file) as a
       dictionary.
+
+   .. attribute:: exists
+
+      Whether the wheel file exists.
+
+      .. versionadded:: 0.1.8
 
 
 Functions

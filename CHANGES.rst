@@ -7,6 +7,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- index
+
+    - Added ``keystore`` keyword argument to signing and verification
+      APIs.
 
 0.1.8
 ~~~~~
