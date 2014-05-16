@@ -342,13 +342,23 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(expected[-1], actual[-1])
         self.assertEqual(set(expected[1:-1]), set(actual[1:-1]))
         actual = seq.strong_connections
-        expected = [
-            ('test',), ('upload_bdist',), ('install',), ('install_distinfo',),
-            ('install_data',), ('install_scripts',), ('install_lib',),
-            ('install_headers',), ('build',), ('build_scripts',),
-            ('build_py',), ('build_ext',), ('build_clibs',), ('upload_sdist',),
-            ('sdist',), ('register',), ('check',)]
-        self.assertEqual(actual, expected)
+        expected = (
+            [
+                ('test',), ('upload_bdist',), ('install',),
+                ('install_distinfo',), ('install_data',), ('install_scripts',),
+                ('install_lib',), ('install_headers',), ('build',),
+                ('build_scripts',), ('build_py',), ('build_ext',),
+                ('build_clibs',), ('upload_sdist',), ('sdist',), ('register',),
+                ('check',)
+            ],
+            [
+                ('install',), ('install_distinfo',), ('install_data',),
+                ('install_scripts',), ('install_lib',), ('install_headers',),
+                ('test',), ('upload_bdist',), ('build',), ('build_scripts',),
+                ('build_py',), ('build_ext',), ('build_clibs',),
+                ('upload_sdist',), ('sdist',), ('register',), ('check',)
+            ])
+        self.assertIn(actual, expected)
 
     def test_sequencer_cycle(self):
         seq = Sequencer()
