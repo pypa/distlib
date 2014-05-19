@@ -2,10 +2,16 @@ Change log for ``distlib``
 --------------------------
 
 
-0.1.9 (future)
+0.2.0 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+
+0.1.9
+~~~~~
+
+Released: 2014-05-19
 
 - index
 
