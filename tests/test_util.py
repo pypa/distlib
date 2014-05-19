@@ -357,7 +357,16 @@ class UtilTestCase(unittest.TestCase):
                 ('test',), ('upload_bdist',), ('build',), ('build_scripts',),
                 ('build_py',), ('build_ext',), ('build_clibs',),
                 ('upload_sdist',), ('sdist',), ('register',), ('check',)
-            ])
+            ],
+            [
+                ('upload_sdist',), ('sdist',), ('install',),
+                ('install_distinfo',), ('install_data',), ('upload_bdist',),
+                ('register',), ('install_scripts',), ('install_lib',),
+                ('install_headers',), ('test',), ('build',),
+                ('build_scripts',), ('build_py',), ('build_ext',),
+                ('build_clibs',), ('check',)
+            ]
+        )
         self.assertIn(actual, expected)
 
     def test_sequencer_cycle(self):

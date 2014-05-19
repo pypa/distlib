@@ -12,6 +12,20 @@ Released: Not yet.
     - Added ``keystore`` keyword argument to signing and verification
       APIs.
 
+- scripts
+
+    - Issue #47: Updated binary launchers to fix double-quoting bug where
+      script executable paths have spaces.
+
+- docs
+
+    - Numerous documentation updates, not detailed further here.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
+
+
 0.1.8
 ~~~~~
 
