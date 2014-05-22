@@ -1,0 +1,4 @@
+#define IDI_ICON    101
+
+LANGUAGE 0, 0
+IDI_ICON      ICON     ".\\launcher.ico"
