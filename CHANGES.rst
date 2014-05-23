@@ -7,6 +7,9 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- compat
+
+    - Updated ``match_hostname`` to use the latest Python implementation.
 
 0.1.9
 ~~~~~
