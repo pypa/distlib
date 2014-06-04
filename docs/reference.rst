@@ -454,7 +454,7 @@ Classes
    .. method:: __init__(base=None)
 
       Initialise a cache instance with a specific directory which holds the
-      cache. If base is not specified, the value ``resource-cache` in the
+      cache. If base is not specified, the value ``resource-cache`` in the
       directory returned by :func:`~distlib.util.get_cache_base` is used.
 
    .. method:: get(resource)
@@ -556,15 +556,37 @@ Classes
 
       :type specification: str
       :param options: If specified, a dictionary of options used to control
-                      script creation. Currently, only the key ``gui`` is
-                      checked: this should be a ``bool`` which, if ``True``,
-                      indicates that the script is a windowed application.
-                      This distinction is only drawn on Windows if
-                      ``add_launchers`` is ``True``, and results in a windowed
-                      native launcher application if ``options['gui']`` is
-                      ``True`` (otherwise, the native executable launcher is a
-                      console application).
+                      script creation. Currently, the following keys are
+                      checked:
 
+                          ``gui``: This should be a ``bool`` which, if ``True``,
+                          indicates that the script is a windowed
+                          application. This distinction is only drawn
+                          on Windows if ``add_launchers`` is ``True``,
+                          and results in a windowed native launcher
+                          application if ``options['gui']`` is ``True``
+                          (otherwise, the native executable launcher
+                          is a console application).
+
+                          ``interpreter_args``: If specified, this should be
+                          a list of strings which are appended to the
+                          interpreter executable in the shebang line. If there
+                          are values with spaces, you will need to surround
+                          them with double quotes.
+
+                          .. note:: Linux does not handle passing arguments
+                             to interpreters particularly well -- multiple
+                             arguments are bundled up into one when passing to
+                             the interpreter -- see
+                             https://en.wikipedia.org/wiki/Shebang_line#Portability
+                             for more information. This may also affect other
+                             POSIX platforms -- consult the OS documentation
+                             for your system if necessary. On Windows, the
+                             ``distlib`` native executable launchers *do* parse
+                             multiple arguments and pass them to the
+                             interpreter.
+
+      :type options: dict
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
 

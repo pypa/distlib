@@ -198,7 +198,13 @@ class ScriptMaker(object):
             filenames.append(outname)
 
     def _make_script(self, entry, filenames, options=None):
-        shebang = self._get_shebang('utf-8', options=options)
+        post_interp = b''
+        if options:
+            args = options.get('interpreter_args', [])
+            if args:
+                args = ' %s' % ' '.join(args)
+                post_interp = args.encode('utf-8')
+        shebang = self._get_shebang('utf-8', post_interp, options=options)
         script = self._get_script_text(entry).encode('utf-8')
         name = entry.name
         scriptnames = set()

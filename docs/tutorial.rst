@@ -1143,11 +1143,21 @@ The string passed to make can take one of the following forms:
   as the return code from the script.
 
   You can pass an optional ``options`` dictionary to the :meth:`make` method.
-  This is meant to contain options which control script generation. The only
-  option currently in use is ``'gui'``, which indicates on Windows that a
-  Windows executable launcher (rather than a launcher which is a console
-  application) should be used. (This only applies if ``add_launchers`` is
-  true.)
+  This is meant to contain options which control script generation. There are
+  two options currently in use:
+
+  ``gui``: This Boolean value, if ``True``, indicates on Windows that a Windows
+  executable launcher (rather than a launcher which is a console application)
+  should be used. (This only applies if ``add_launchers`` is true.)
+
+  ``interpreter_args``: If provided, this should be a list of strings which
+  are added to the shebang line following the interpreter. If there are values
+  with spaces, you will need to surround them with double quotes.
+
+  .. note:: Use of this feature may affect portability, since POSIX does not
+    standardise how these arguments are passed to the interpreter (see
+    https://en.wikipedia.org/wiki/Shebang_line#Portability for more
+    information).
 
   For example, you can pass ``{'gui': True}`` to generate a windowed script.
 
@@ -1222,7 +1232,8 @@ You may need to specify a custom executable for shebang lines. To do this, set
 the :attr:`executable` attribute of a :class:`ScriptMaker` instance to the
 absolute Unicode path of the executable which you want to be written to the
 shebang lines of scripts. If not specified, the executable running the
-:class:`ScriptMaker` code is used.
+:class:`ScriptMaker` code is used. If the value has spaces, you should
+surround it with double quotes.
 
 
 Generating variants of a script

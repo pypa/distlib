@@ -220,5 +220,19 @@ class ScriptTestCase(unittest.TestCase):
         for f in files:
             self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
 
+    def test_interpreter_args(self):
+        executable = fsencode(get_executable())
+        options = {
+            'interpreter_args': ['-E', '"foo bar"', 'baz frobozz']
+        }
+        self.maker.variants = set([''])
+        files = self.maker.make('foo = bar:baz', options=options)
+        self.assertEqual(len(files), 1)
+        with open(files[0], 'rb') as f:
+            shebang_line = f.readline()
+        self.assertIn(executable, shebang_line)
+        self.assertIn(b' -E "foo bar" baz frobozz', shebang_line)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
