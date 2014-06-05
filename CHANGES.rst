@@ -11,6 +11,28 @@ Released: Not yet.
 
     - Updated ``match_hostname`` to use the latest Python implementation.
 
+- locators
+
+    - Issue #48: Fixed the problem of adding a tuple containing a set
+      (unhashable) to a set, by wrapping with frozenset().
+
+- scripts
+
+    - Updated (inluding launchers) to support providing arguments to
+      interpreters in shebang lines.
+
+    - The launcher sources are now included in the repository and the
+      source distribution (they are to be found in the PC directory).
+
+- docs
+
+    - Numerous documentation updates, not detailed further here.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
+
+
 0.1.9
 ~~~~~
 
