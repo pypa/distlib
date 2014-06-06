@@ -323,12 +323,17 @@ class WheelTestCase(unittest.TestCase):
         for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
             paths[key] = os.path.join(dstdir, key)
         maker = ScriptMaker(None, None)
+        maker.variants = set([''])
         maker.executable = 'mypython'
         w.install(paths, maker)
-        p = os.path.join(paths['scripts'], 'dummy.py')
-        with open(p) as f:
-            line = f.readline().strip()
-        self.assertEqual(line, '#!mypython -E')
+        # On Windows there will be an exe file, and on POSIX a text file.
+        # The test is structured to not care.
+        p = paths['scripts']
+        # there should be just one file in the directory - dummy.py/dummy.exe
+        p = os.path.join(p, os.listdir(p)[0])
+        with open(p, 'rb') as f:
+            data = f.read()
+        self.assertIn(b'#!mypython -E', data)
 
     def test_verify(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
