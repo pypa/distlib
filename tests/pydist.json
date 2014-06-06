@@ -1,6 +1,5 @@
 {
   "description": "Longer description",
-  "license": "PSF",
   "summary": "Short description",
   "build_requires": [],
   "metadata_version": "2.0",
@@ -8,10 +7,32 @@
   "provides": [
     "foobar (0.1)"
   ],
-  "keywords": [
-    "foo",
-    "bar"
-  ],
+  "extensions": {
+    "python.details": {
+      "license": "PSF",
+      "keywords": [
+        "foo",
+        "bar"
+      ],
+      "classifiers": [
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Python Software Foundation License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.4",
+        "Programming Language :: Python :: 2.5",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: System :: Systems Administration",
+        "Topic :: Utilities"
+      ]
+    }
+  },
   "meta_requires": [
     {
       "requires": ["bar (1.0)"]
@@ -50,23 +71,6 @@
       "requires": ["nose-udp"],
       "extra": "udp"
     }
-  ],
-  "classifiers": [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: Python Software Foundation License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.4",
-    "Programming Language :: Python :: 2.5",
-    "Programming Language :: Python :: 2.6",
-    "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.2",
-    "Programming Language :: Python :: 3.3",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: System :: Systems Administration",
-    "Topic :: Utilities"
   ],
   "name": "foobar"
 }

@@ -196,7 +196,7 @@ def read_exports(stream):
     stream = StringIO(data)
     try:
         data = json.load(stream)
-        result = data['exports']
+        result = data['extensions']['python.exports']['exports']
         for group, entries in result.items():
             for k, v in entries.items():
                 s = '%s = %s' % (k, v)

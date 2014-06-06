@@ -741,7 +741,27 @@ class Metadata(object):
                     result = self._legacy.get(lk)
             else:
                 value = None if maker is None else maker()
-                result = self._data.get(key, value)
+                if key not in ('commands', 'exports', 'modules', 'namespaces',
+                               'classifiers'):
+                    result = self._data.get(key, value)
+                else:
+                    # special cases for PEP 459
+                    sentinel = object()
+                    result = sentinel
+                    d = self._data.get('extensions')
+                    if d:
+                        if key == 'commands':
+                            result = d.get('python.commands', value)
+                        elif key == 'classifiers':
+                            d = d.get('python.details')
+                            if d:
+                                result = d.get(key, value)
+                        else:
+                            d = d.get('python.exports')
+                            if d:
+                                result = d.get(key, value)
+                    if result is sentinel:
+                        result = value
         elif key not in common:
             result = object.__getattribute__(self, key)
         elif self._legacy:
@@ -770,8 +790,20 @@ class Metadata(object):
                 if lk is None:
                     raise NotImplementedError
                 self._legacy[lk] = value
-            else:
+            elif key not in ('commands', 'exports', 'modules', 'namespaces',
+                             'classifiers'):
                 self._data[key] = value
+            else:
+                # special cases for PEP 459
+                d = self._data.setdefault('extensions', {})
+                if key == 'commands':
+                    d['python.commands'] = value
+                elif key == 'classifiers':
+                    d = d.setdefault('python.details', {})
+                    d[key] = value
+                else:
+                    d = d.setdefault('python.exports', {})
+                    d[key] = value
         elif key not in common:
             object.__setattr__(self, key, value)
         else:

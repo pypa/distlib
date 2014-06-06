@@ -2,21 +2,25 @@
   "run_requires": [
     {
       "requires": [
-        "towel-stuff (0.1)", 
+        "towel-stuff (0.1)",
         "nut"
       ]
     }
-  ], 
-  "generator": "distlib (0.1.3.dev0)", 
-  "license": "BSD", 
-  "description": "Chocolate with a longer kick!", 
-  "summary": "Chocolate with a kick!", 
-  "metadata_version": "2.0", 
-  "version": "2.0.0.9", 
+  ],
+  "generator": "distlib (0.1.3.dev0)",
+  "extensions": {
+    "python.details": {
+      "keywords": [],
+      "license": "BSD"
+    }
+  },
+  "description": "Chocolate with a longer kick!",
+  "summary": "Chocolate with a kick!",
+  "metadata_version": "2.0",
+  "version": "2.0.0.9",
   "provides": [
-    "truffles (1.0)", 
+    "truffles (1.0)",
     "choxie (2.0.0.9)"
-  ], 
-  "keywords": [], 
+  ],
   "name": "choxie"
 }

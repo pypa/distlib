@@ -598,7 +598,9 @@ class Wheel(object):
                         try:
                             with zf.open(metadata_name) as bwf:
                                 wf = wrapper(bwf)
-                                commands = json.load(wf).get('commands')
+                                commands = json.load(wf).get('extensions')
+                                if commands:
+                                    commands = commands.get('python.commands')
                         except Exception:
                             logger.warning('Unable to read JSON metadata, so '
                                            'cannot generate scripts')
