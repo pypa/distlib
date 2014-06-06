@@ -24,6 +24,11 @@ Released: Not yet.
     - The launcher sources are now included in the repository and the
       source distribution (they are to be found in the PC directory).
 
+- wheel
+
+    - Updated build() code to respect interpreter arguments in prebuilt
+      scripts.
+
 - docs
 
     - Numerous documentation updates, not detailed further here.
