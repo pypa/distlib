@@ -1,0 +1,2 @@
+#!python -mzippy.activate
+pass
