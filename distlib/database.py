@@ -925,9 +925,9 @@ class EggInfoDistribution(BaseInstalledDistribution):
                     requires = None
         elif path.endswith('.egg-info'):
             if os.path.isdir(path):
-                path = os.path.join(path, 'PKG-INFO')
                 req_path = os.path.join(path, 'requires.txt')
                 requires = parse_requires_path(req_path)
+                path = os.path.join(path, 'PKG-INFO')
             metadata = Metadata(path=path, scheme='legacy')
         else:
             raise DistlibException('path must end with .egg-info or .egg, '
