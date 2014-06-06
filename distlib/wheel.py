@@ -85,6 +85,8 @@ NAME_VERSION_RE = re.compile(r'''
 ''', re.IGNORECASE | re.VERBOSE)
 
 SHEBANG_RE = re.compile(br'\s*#![^\r\n]*')
+SHEBANG_DETAIL_RE = re.compile(br'(\s*#!("[^"]+"|[\w/\\:.]+))\s+(.*)$')
+SHEBANG_PYTHON = b'#!python'
 
 if os.sep == '/':
     to_posix = lambda o: o
@@ -251,7 +253,16 @@ class Wheel(object):
     def process_shebang(self, data):
         m = SHEBANG_RE.match(data)
         if m:
-            data = b'#!python' + data[m.end():]
+            end = m.end()
+            shebang, data_after_shebang = data[:end], data[end:]
+            # Preserve any arguments after the interpreter
+            m = SHEBANG_DETAIL_RE.match(shebang)
+            if m:
+                args = b' ' + m.groups()[-1]
+            else:
+                args = b''
+            shebang = SHEBANG_PYTHON + args
+            data = shebang + data_after_shebang
         else:
             cr = data.find(b'\r')
             lf = data.find(b'\n')
@@ -262,7 +273,7 @@ class Wheel(object):
                     term = b'\r\n'
                 else:
                     term = b'\r'
-            data = b'#!python' + term + data
+            data = SHEBANG_PYTHON + term + data
         return data
 
     def get_hash(self, data, hash_kind=None):

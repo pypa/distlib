@@ -314,6 +314,22 @@ class WheelTestCase(unittest.TestCase):
         self.assertFalse(hasattr(warner, 'wheel_version'))
         self.assertFalse(hasattr(warner, 'file_version'))
 
+    def test_custom_executable(self):
+        fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
+        dstdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, dstdir)
+        w = Wheel(fn)
+        paths = {'prefix': dstdir}
+        for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
+            paths[key] = os.path.join(dstdir, key)
+        maker = ScriptMaker(None, None)
+        maker.executable = 'mypython'
+        w.install(paths, maker)
+        p = os.path.join(paths['scripts'], 'dummy.py')
+        with open(p) as f:
+            line = f.readline().strip()
+        self.assertEqual(line, '#!mypython -E')
+
     def test_verify(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)

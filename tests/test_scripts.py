@@ -235,11 +235,11 @@ class ScriptTestCase(unittest.TestCase):
 
     def test_args_on_copy(self):
         self.maker.variants = set([''])
+        self.maker.executable = 'mypython'
         files = self.maker.make('script5.py')
         with open(files[0]) as f:
             actual = f.readline().strip()
-        expected = '#!%s -mzippy.activate' % sys.executable
-        self.assertEqual(actual, expected)
+        self.assertEqual(actual, '#!mypython -mzippy.activate')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
