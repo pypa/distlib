@@ -85,8 +85,9 @@ NAME_VERSION_RE = re.compile(r'''
 ''', re.IGNORECASE | re.VERBOSE)
 
 SHEBANG_RE = re.compile(br'\s*#![^\r\n]*')
-SHEBANG_DETAIL_RE = re.compile(br'(\s*#!("[^"]+"|[\w/\\:.]+))\s+(.*)$')
+SHEBANG_DETAIL_RE = re.compile(br'^(\s*#!("[^"]+"|\S+))\s+(.*)$')
 SHEBANG_PYTHON = b'#!python'
+SHEBANG_PYTHONW = b'#!pythonw'
 
 if os.sep == '/':
     to_posix = lambda o: o
@@ -256,12 +257,16 @@ class Wheel(object):
             end = m.end()
             shebang, data_after_shebang = data[:end], data[end:]
             # Preserve any arguments after the interpreter
+            if b'pythonw' in shebang.lower():
+                shebang_python = SHEBANG_PYTHONW
+            else:
+                shebang_python = SHEBANG_PYTHON
             m = SHEBANG_DETAIL_RE.match(shebang)
             if m:
                 args = b' ' + m.groups()[-1]
             else:
                 args = b''
-            shebang = SHEBANG_PYTHON + args
+            shebang = shebang_python + args
             data = shebang + data_after_shebang
         else:
             cr = data.find(b'\r')
