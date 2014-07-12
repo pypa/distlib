@@ -129,7 +129,12 @@ class ResourceFinder(object):
         return os.path.realpath(path)
 
     def _make_path(self, resource_name):
-        parts = resource_name.split('/')
+        # like os.path._get_sep:
+        if isinstance(resource_name, bytes):
+            sep = b'/'
+        else:
+            sep = '/'
+        parts = resource_name.split(sep)
         parts.insert(0, self.base)
         result = os.path.join(*parts)
         return self._adjust_path(result)
