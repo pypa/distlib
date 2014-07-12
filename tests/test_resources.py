@@ -178,10 +178,8 @@ class FileResourceTestCase(unittest.TestCase):
         self.assertTrue(r)
         self.assertEqual(r.resources, set(['nested_resource.bin']))
 
-    @unittest.skipIf(sys.version_info[0] != 2, 
-        'Avoid implicit bytes->Unicode coercion in Py2 only.')
+    @unittest.skipIf(sys.version_info[0] != 2, 'This test on Python 2 only')
     def test_bytes_path(self):
-        if sys.version_info[0] == 3: return
         f = finder('foofoo')
         for path in 'foo/b\xe7r', b'foo/b\xe7r':
             self.assertEqual(type(f._make_path(path)), type(path))

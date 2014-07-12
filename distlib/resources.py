@@ -129,8 +129,9 @@ class ResourceFinder(object):
         return os.path.realpath(path)
 
     def _make_path(self, resource_name):
-        # like os.path._get_sep:
-        if isinstance(resource_name, bytes):
+        # Issue #50: need to preserve type of path on Python 2.x
+        # like os.path._get_sep
+        if isinstance(resource_name, bytes):    # should only happen on 2.x
             sep = b'/'
         else:
             sep = '/'
