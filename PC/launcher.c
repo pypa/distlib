@@ -408,7 +408,7 @@ find_executable_and_args(char * line, char ** argp)
 	assert(*p != '"', "Terminating quote without starting quote for executable in shebang line.");
 	/* Now we can skip the whitespace, having checked that it's there. */
 	while(*p && isspace(*p))
-		++p;
+        *p++ = '\0';
 	*argp = p;
 	return line;
 }
