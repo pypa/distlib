@@ -24,6 +24,8 @@ Released: Not yet.
     - The launcher sources are now included in the repository and the
       source distribution (they are to be found in the PC directory).
 
+    - Added frames support in IronPython (patch by Pawel Jasinski).
+
 - wheel
 
     - Updated build() code to respect interpreter arguments in prebuilt
