@@ -380,37 +380,37 @@ run_child(char * cmdline)
 
 static char *
 find_exe(char * line) {
-	char * p;
+    char * p;
 
-	while ((p = StrStrIA(line, ".exe")) != NULL) {
-		char c = p[4];
+    while ((p = StrStrIA(line, ".exe")) != NULL) {
+        char c = p[4];
 
-		if ((c == '\0') || (c == '"') || isspace(c))
-			break;
-		line = &p[4];
-	}
-	return p;
+        if ((c == '\0') || (c == '"') || isspace(c))
+            break;
+        line = &p[4];
+    }
+    return p;
 }
 
 static char *
 find_executable_and_args(char * line, char ** argp)
 {
-	char * p = find_exe(line);
+    char * p = find_exe(line);
 
-	assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line.");
-	p += 4;
-	if (*line == '"') {
-		assert(*p == '"', "Expected terminating double-quote for executable in shebang line.");
-		*p++ = '\0';
-		++line;
-	}
-	/* p points just past the executable. It must either be a NUL or whitespace. */
-	assert(*p != '"', "Terminating quote without starting quote for executable in shebang line.");
-	/* Now we can skip the whitespace, having checked that it's there. */
-	while(*p && isspace(*p))
+    assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line.");
+    p += 4;
+    if (*line == '"') {
+        assert(*p == '"', "Expected terminating double-quote for executable in shebang line.");
         *p++ = '\0';
-	*argp = p;
-	return line;
+        ++line;
+    }
+    /* p points just past the executable. It must either be a NUL or whitespace. */
+    assert(*p != '"', "Terminating quote without starting quote for executable in shebang line.");
+    /* Now we can skip the whitespace, having checked that it's there. */
+    while(*p && isspace(*p))
+        *p++ = '\0';    /* Ensure parameters are not included in executable */
+    *argp = p;
+    return line;
 }
 
 static int
@@ -474,18 +474,18 @@ process(int argc, char * argv[])
     ++cp;
     while (*cp && isspace(*cp))
         ++cp;
-	p = NULL;
-	cp = find_executable_and_args(cp, &p);
-	assert(cp != NULL, "Expected to find executable in shebang line");
-	assert(p != NULL, "Expected to find arguments (even if empty) in shebang line");
-	 /* 3 spaces + 4 quotes + NUL */
+    p = NULL;
+    cp = find_executable_and_args(cp, &p);
+    assert(cp != NULL, "Expected to find executable in shebang line");
+    assert(p != NULL, "Expected to find arguments (even if empty) in shebang line");
+     /* 3 spaces + 4 quotes + NUL */
     len = strlen(cp) + strlen(p) + 8 + strlen(psp) + strlen(cmdline);
     cmdp = calloc(len, sizeof(char));
     assert(cmdp != NULL, "Expected to be able to allocate command line memory");
     _snprintf_s(cmdp, len, len, "\"%s\" %s \"%s\" %s", cp, p, psp, cmdline);
     run_child(cmdp);  /* never actually returns */
     free(cmdp);
-	return 0;
+    return 0;
 }
 
 #if defined(_CONSOLE)
