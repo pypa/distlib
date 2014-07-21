@@ -26,6 +26,8 @@ Released: Not yet.
 
     - Added frames support in IronPython (patch by Pawel Jasinski).
 
+    - Issue #51: encode shebang executable using utf-8 rather than fsencode.
+
 - wheel
 
     - Updated build() code to respect interpreter arguments in prebuilt
