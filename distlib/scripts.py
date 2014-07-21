@@ -11,7 +11,7 @@ import re
 import struct
 import sys
 
-from .compat import sysconfig, fsencode, detect_encoding, ZipFile
+from .compat import sysconfig, detect_encoding, ZipFile
 from .resources import finder
 from .util import (FileOperator, get_export_entry, convert_path,
                    get_executable, in_venv)
@@ -113,7 +113,9 @@ class ScriptMaker(object):
         # cater for executable paths with spaces (not uncommon on Windows)
         if enquote and ' ' in executable:
             executable = '"%s"' % executable
-        executable = fsencode(executable)
+        # Issue #51: don't use fsencode, since we later try to
+        # check that the shebang is decodable using utf-8.
+        executable = executable.encode('utf-8')
         # in case of IronPython, play safe and enable frames support
         if (sys.platform == 'cli' and '-X:Frames' not in post_interp
             and '-X:FullFrames' not in post_interp):
