@@ -828,11 +828,11 @@ class Wheel(object):
                 v = NormalizedVersion(version)
                 i = version.find('-')
                 if i < 0:
-                    updated = '%s-1' % version
+                    updated = '%s+1' % version
                 else:
                     parts = [int(s) for s in version[i + 1:].split('.')]
                     parts[-1] += 1
-                    updated = '%s-%s' % (version[:i],
+                    updated = '%s+%s' % (version[:i],
                                          '.'.join(str(i) for i in parts))
             except UnsupportedVersionError:
                 logger.debug('Cannot update non-compliant (PEP-440) '

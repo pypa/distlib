@@ -363,7 +363,7 @@ class WheelTestCase(unittest.TestCase):
     def wheel_modifier_ver(self, path_map):
         mdpath = path_map['dummy-0.1.dist-info/pydist.json']
         md = Metadata(path=mdpath)
-        md.version = '0.1-123'
+        md.version = '0.1+123'
         md.write(path=mdpath)
         return True
 
@@ -386,7 +386,7 @@ class WheelTestCase(unittest.TestCase):
         w.verify()
         md = w.metadata
         self.assertEqual(md.run_requires, [{'requires': ['numpy']}])
-        self.assertEquals(md.version, '0.1-1')
+        self.assertEquals(md.version, '0.1+1')
 
         modified = w.update(self.wheel_modifier_ver)
         self.assertTrue(modified)
@@ -395,7 +395,7 @@ class WheelTestCase(unittest.TestCase):
         w.verify()
         md = w.metadata
         self.assertEqual(md.run_requires, [{'requires': ['numpy']}])
-        self.assertEquals(md.version, '0.1-123')
+        self.assertEquals(md.version, '0.1+123')
 
     def test_info(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')

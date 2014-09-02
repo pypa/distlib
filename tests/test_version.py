@@ -31,7 +31,7 @@ class VersionTestCase(unittest.TestCase):
                 #(NV('1.2.0.0.0', drop_trailing_zeros=True), '1.2'),
                 (NV('1.0.dev345'), '1.0.dev345'),
                 (NV('1.0.post456.dev623'), '1.0.post456.dev623'),
-                (NV('1.2.3-1.2'), '1.2.3-1.2'),
+                (NV('1.2.3+1.2'), '1.2.3+1.2'),
                )
 
     def test_repr(self):
@@ -168,7 +168,7 @@ class VersionTestCase(unittest.TestCase):
         self.assertEqual(suggest('1.0c2'), '1.0c2')
         self.assertEqual(suggest('walla walla washington'), None)
         self.assertEqual(suggest('2.4c1'), '2.4c1')
-        self.assertEqual(suggest('v1.0'), '1.0')
+        self.assertEqual(suggest('v1.0'), 'v1.0')
 
         # from setuptools
         self.assertEqual(suggest('0.4a1.r10'), '0.4a1.post10')
@@ -269,9 +269,9 @@ class VersionTestCase(unittest.TestCase):
         self.assertEqual('Foo Bar', NM('Foo Bar (1.1)').name)
 
     def test_matcher_local(self):
-        self.assertTrue(NM('Foo (>=2.5-1.2)').match('2.6.0-1.3'))
-        self.assertFalse(NM('Foo (>=2.6-1.4)').match('2.6.0-1.3'))
-        self.assertTrue(NM('Foo (>=2.6)').match('2.6-1.3'))
+        self.assertTrue(NM('Foo (>=2.5+1.2)').match('2.6.0+1.3'))
+        self.assertFalse(NM('Foo (>=2.6+1.4)').match('2.6.0+1.3'))
+        self.assertTrue(NM('Foo (>=2.6)').match('2.6+1.3'))
 
     def test_schemes(self):
         cases = (
@@ -307,12 +307,12 @@ class VersionTestCase(unittest.TestCase):
             '1.0rc1',
             '1.0.post345.dev456',
             '1.1.dev1',
-            '1.1.dev1-1.2',
+            '1.1.dev1+1.2',
         )
         final_releases = (
             '1.0',
             '1.0.post345',
-            '1.0.post345-2.3',
+            '1.0.post345+2.3',
         )
         for s in pre_releases:
             self.assertTrue(NV(s).is_prerelease)

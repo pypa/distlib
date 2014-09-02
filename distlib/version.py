@@ -181,25 +181,29 @@ class Matcher(object):
         return self._string
 
 
-PEP426_VERSION_RE = re.compile(r'^(\d+(\.\d+)*)((a|b|c|rc)(\d+))?'
+PEP440_VERSION_RE = re.compile(r'^v?(\d+!)?(\d+(\.\d+)*)((a|b|c|rc)(\d+))?'
                                r'(\.(post)(\d+))?(\.(dev)(\d+))?'
-                               r'(-(\d+(\.\d+)?))?$')
+                               r'(\+(\d+(\.\d+)?))?$')
 
 
-def _pep426_key(s):
+def _pep_440_key(s):
     s = s.strip()
-    m = PEP426_VERSION_RE.match(s)
+    m = PEP440_VERSION_RE.match(s)
     if not m:
         raise UnsupportedVersionError('Not a valid version: %s' % s)
     groups = m.groups()
-    nums = tuple(int(v) for v in groups[0].split('.'))
+    nums = tuple(int(v) for v in groups[1].split('.'))
     while len(nums) > 1 and nums[-1] == 0:
         nums = nums[:-1]
 
-    pre = groups[3:5]
-    post = groups[6:8]
-    dev = groups[9:11]
-    local = groups[12]
+    if not groups[0]:
+        epoch = 0
+    else:
+        epoch = int(groups[0])
+    pre = groups[4:6]
+    post = groups[7:9]
+    dev = groups[10:12]
+    local = groups[13]
     if pre == (None, None):
         pre = ()
     else:
@@ -230,10 +234,10 @@ def _pep426_key(s):
         dev = ('final',)
 
     #print('%s -> %s' % (s, m.groups()))
-    return nums, pre, post, dev, local
+    return epoch, nums, pre, post, dev, local
 
 
-_normalized_key = _pep426_key
+_normalized_key = _pep_440_key
 
 
 class NormalizedVersion(Version):
@@ -260,9 +264,9 @@ class NormalizedVersion(Version):
         # clause, since that's needed to ensure that X.Y == X.Y.0 == X.Y.0.0
         # However, PEP 440 prefix matching needs it: for example,
         # (~= 1.4.5.0) matches differently to (~= 1.4.5.0.0).
-        m = PEP426_VERSION_RE.match(s)      # must succeed
+        m = PEP440_VERSION_RE.match(s)      # must succeed
         groups = m.groups()
-        self._release_clause = tuple(int(v) for v in groups[0].split('.'))
+        self._release_clause = tuple(int(v) for v in groups[1].split('.'))
         return result
 
     PREREL_TAGS = set(['a', 'b', 'c', 'rc', 'dev'])

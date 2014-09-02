@@ -20,7 +20,7 @@ from . import DistlibException, __version__
 from .compat import StringIO, string_types, text_type
 from .markers import interpret
 from .util import extract_by_key, get_extras
-from .version import get_scheme, PEP426_VERSION_RE
+from .version import get_scheme, PEP440_VERSION_RE
 
 logger = logging.getLogger(__name__)
 
@@ -630,7 +630,7 @@ class Metadata(object):
 
     NAME_MATCHER = re.compile('^[0-9A-Z]([0-9A-Z_.-]*[0-9A-Z])?$', re.I)
 
-    VERSION_MATCHER = PEP426_VERSION_RE
+    VERSION_MATCHER = PEP440_VERSION_RE
 
     SUMMARY_MATCHER = re.compile('.{1,2047}')
 
