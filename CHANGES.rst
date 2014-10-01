@@ -28,6 +28,10 @@ Released: Not yet.
 
     - Issue #51: encode shebang executable using utf-8 rather than fsencode.
 
+- version
+
+    - Updated to reflect changes to versioning proposed in PEP 440.
+
 - wheel
 
     - Updated build() code to respect interpreter arguments in prebuilt
