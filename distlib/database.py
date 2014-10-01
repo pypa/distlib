@@ -334,6 +334,8 @@ class Distribution(object):
         self.digest = None
         self.extras = None      # additional features requested
         self.context = None     # environment marker overrides
+        self.download_urls = set()
+        self.digests = {}
 
     @property
     def source_url(self):

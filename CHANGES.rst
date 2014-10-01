@@ -11,10 +11,17 @@ Released: Not yet.
 
     - Updated ``match_hostname`` to use the latest Python implementation.
 
+- database
+
+    - Added `download_urls` and `digests` attributes to ``Distribution``.
+
 - locators
 
     - Issue #48: Fixed the problem of adding a tuple containing a set
       (unhashable) to a set, by wrapping with frozenset().
+
+    - Issue #55: Return multiple download URLs for distributions, if
+      available.
 
 - scripts
 

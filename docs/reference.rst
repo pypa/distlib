@@ -102,15 +102,31 @@ Classes
       The metadata for the distribution. This is a
       :class:`distlib.metadata.Metadata` instance.
 
-   .. attribute:: source_url
+   .. attribute:: download_url
 
-      The download URL for the source distribution.
+      The download URL for the distribution. If there are multiple
+      URLs, this will be one of the values in :attr:`download_urls`.
+
+   .. attribute:: download_urls
+
+      A set of known download URLs for the distribution.
+
+      .. versionadded:: 0.2.0
+         The ``download_urls`` attribute was added.
 
    .. attribute:: digest
 
       The digest for the source distribution. This is either ``None`` or a
       2-tuple consisting of the hashing algorithm and the digest using that
       algorithm, e.g. ``('sha256', '01234...')``.
+
+   .. attribute:: digests
+
+      A dictionary mapping download URLs to digests, if and when digests are
+      available.
+
+      .. versionadded:: 0.2.0
+         The ``digests`` attribute was added.
 
    .. attribute:: locator
 
@@ -619,6 +635,7 @@ Classes
    .. method:: __init__(scheme='default')
 
       Initialise an instance of the locator.
+
       :param scheme: The version scheme to use.
       :type scheme: str
 
@@ -845,8 +862,8 @@ Functions
    constraints). If a potentially downloadable distribution (i.e. one with
    a download URL) is not found, ``None`` is returned -- otherwise, an
    instance of :class:`~distlib.database.Distribution` is returned. The
-   returned instance will have, at a minimum, ``name``, ``version`` and
-   ``download_url``.
+   returned instance will have, at a minimum, ``name``, ``version``,
+   ``download_url`` and ``download_urls``.
 
    :param requirement: The name and optional version constraints of the
                        distribution to locate, e.g. ``'Flask'`` or

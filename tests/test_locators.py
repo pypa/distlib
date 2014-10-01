@@ -93,10 +93,11 @@ class LocatorTestCase(unittest.TestCase):
         NAME = '\u2603'
         locator = SimpleScrapingLocator('https://pypi.python.org/simple/')
         result = locator.get_project(NAME)
-        self.assertFalse(result)
+        expected = {'urls': {}, 'digests': {}}
+        self.assertEqual(result, expected)
         locator = PyPIJSONLocator('https://pypi.python.org/pypi/')
         result = locator.get_project(NAME)
-        self.assertFalse(result)
+        self.assertEqual(result, expected)
 
     def test_dir(self):
         d = os.path.join(HERE, 'fake_archives')
@@ -132,7 +133,7 @@ class LocatorTestCase(unittest.TestCase):
 
         for name in ('flask', 'Flask'):
             result = locator.get_project(name)
-            self.assertEqual(result, {})
+            self.assertEqual(result, {'urls': {}, 'digests': {}})
         names = locator.get_distribution_names()
         expected = set(['coverage'])
         self.assertEqual(names, expected)
@@ -150,7 +151,11 @@ class LocatorTestCase(unittest.TestCase):
                 d = locator.locate(name, True)
                 r = locator.get_project(name)
                 self.assertIsNotNone(d)
-                self.assertEqual(r, { d.version: d })
+                expected = {
+                    d.version: d,
+                    'urls': {d.version: set([d.source_url])}
+                }
+                self.assertEqual(r, expected)
             d = locator.locate('nonexistent')
             r = locator.get_project('nonexistent')
             self.assertIsNone(d)
@@ -170,7 +175,7 @@ class LocatorTestCase(unittest.TestCase):
                             'subsubdir', 'Flask-0.9.tar.gz')
         exp2 = 'https://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz'
         result = locator.get_project('flask')
-        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result), 3)
         self.assertIn('0.9', result)
         dist = result['0.9']
         self.assertEqual(dist.name, 'Flask')
@@ -182,7 +187,7 @@ class LocatorTestCase(unittest.TestCase):
         locator.merge = True
         locator._cache.clear()
         result = locator.get_project('flask')
-        self.assertGreater(len(result), 1)
+        self.assertGreater(len(result), 3)
         self.assertIn('0.9', result)
         dist = result['0.9']
         self.assertEqual(dist.name, 'Flask')
@@ -313,6 +318,154 @@ class LocatorTestCase(unittest.TestCase):
         self.assertIsNotNone(dist)
         self.assertTrue(dist.matches_requirement(r))
         self.assertEqual(dist.extras, ['doc', 'test'])
+
+    def test_all(self):
+        d = default_locator.get_project('setuptools')
+        self.assertTrue('urls' in d)
+        d = d['urls']
+        expected = set([
+            'setuptools-0.6b1.zip',
+            'setuptools-0.6b2.zip',
+            'setuptools-0.6b3.zip',
+            'setuptools-0.6b4.zip',
+            'setuptools-0.6c10.tar.gz',
+            'setuptools-0.6c11.tar.gz',
+            #'setuptools-0.6c12dev-r88997.tar.gz',
+            #'setuptools-0.6c12dev-r88998.tar.gz',
+            #'setuptools-0.6c12dev-r89000.tar.gz',
+            'setuptools-0.6c1.zip',
+            'setuptools-0.6c2.zip',
+            'setuptools-0.6c3.tar.gz',
+            'setuptools-0.6c4.tar.gz',
+            'setuptools-0.6c5.tar.gz',
+            'setuptools-0.6c6.tar.gz',
+            'setuptools-0.6c7.tar.gz',
+            'setuptools-0.6c8.tar.gz',
+            'setuptools-0.6c9.tar.gz',
+            'setuptools-0.7.2.tar.gz',
+            'setuptools-0.7.3.tar.gz',
+            'setuptools-0.7.4.tar.gz',
+            'setuptools-0.7.5.tar.gz',
+            'setuptools-0.7.6.tar.gz',
+            'setuptools-0.7.7.tar.gz',
+            'setuptools-0.7.8.tar.gz',
+            'setuptools-0.8.tar.gz',
+            'setuptools-0.9.1.tar.gz',
+            'setuptools-0.9.2.tar.gz',
+            'setuptools-0.9.3.tar.gz',
+            'setuptools-0.9.4.tar.gz',
+            'setuptools-0.9.5.tar.gz',
+            'setuptools-0.9.6.tar.gz',
+            'setuptools-0.9.7.tar.gz',
+            'setuptools-0.9.8.tar.gz',
+            'setuptools-0.9.tar.gz',
+            'setuptools-1.0.tar.gz',
+            'setuptools-1.1.1.tar.gz',
+            'setuptools-1.1.2.tar.gz',
+            'setuptools-1.1.3.tar.gz',
+            'setuptools-1.1.4.tar.gz',
+            'setuptools-1.1.5.tar.gz',
+            'setuptools-1.1.6.tar.gz',
+            'setuptools-1.1.7.tar.gz',
+            'setuptools-1.1.tar.gz',
+            'setuptools-1.2.tar.gz',
+            'setuptools-1.3.1.tar.gz',
+            'setuptools-1.3.2.tar.gz',
+            'setuptools-1.3.tar.gz',
+            'setuptools-1.4.1.tar.gz',
+            'setuptools-1.4.2.tar.gz',
+            'setuptools-1.4.tar.gz',
+            'setuptools-2.0.1.tar.gz',
+            'setuptools-2.0.2.tar.gz',
+            'setuptools-2.0.tar.gz',
+            'setuptools-2.1.1.tar.gz',
+            'setuptools-2.1.2.tar.gz',
+            'setuptools-2.1.tar.gz',
+            'setuptools-2.2.tar.gz',
+            'setuptools-3.0.1.tar.gz',
+            'setuptools-3.0.1.zip',
+            'setuptools-3.0.2.tar.gz',
+            'setuptools-3.0.2.zip',
+            'setuptools-3.0.tar.gz',
+            'setuptools-3.0.zip',
+            'setuptools-3.1.tar.gz',
+            'setuptools-3.1.zip',
+            'setuptools-3.2.tar.gz',
+            'setuptools-3.2.zip',
+            'setuptools-3.3.tar.gz',
+            'setuptools-3.3.zip',
+            'setuptools-3.4.1.tar.gz',
+            'setuptools-3.4.1.zip',
+            'setuptools-3.4.2.tar.gz',
+            'setuptools-3.4.2.zip',
+            'setuptools-3.4.3.tar.gz',
+            'setuptools-3.4.3.zip',
+            'setuptools-3.4.4.tar.gz',
+            'setuptools-3.4.4.zip',
+            'setuptools-3.4.tar.gz',
+            'setuptools-3.4.zip',
+            'setuptools-3.5.1.tar.gz',
+            'setuptools-3.5.1.zip',
+            'setuptools-3.5.2.tar.gz',
+            'setuptools-3.5.2.zip',
+            'setuptools-3.5.tar.gz',
+            'setuptools-3.5.zip',
+            'setuptools-3.6.tar.gz',
+            'setuptools-3.6.zip',
+            'setuptools-3.7.1.tar.gz',
+            'setuptools-3.7.1.zip',
+            'setuptools-3.7.tar.gz',
+            'setuptools-3.7.zip',
+            'setuptools-3.8.1.tar.gz',
+            'setuptools-3.8.1.zip',
+            'setuptools-3.8.tar.gz',
+            'setuptools-3.8.zip',
+            'setuptools-4.0.1.tar.gz',
+            'setuptools-4.0.1.zip',
+            'setuptools-4.0.tar.gz',
+            'setuptools-4.0.zip',
+            'setuptools-5.0.1.tar.gz',
+            'setuptools-5.0.1.zip',
+            'setuptools-5.0.2.tar.gz',
+            'setuptools-5.0.2.zip',
+            'setuptools-5.0.tar.gz',
+            'setuptools-5.0.zip',
+            'setuptools-5.1.tar.gz',
+            'setuptools-5.1.zip',
+            'setuptools-5.2.tar.gz',
+            'setuptools-5.2.zip',
+            'setuptools-5.3.tar.gz',
+            'setuptools-5.3.zip',
+            'setuptools-5.4.1.tar.gz',
+            'setuptools-5.4.1.zip',
+            'setuptools-5.4.2.tar.gz',
+            'setuptools-5.4.2.zip',
+            'setuptools-5.4.tar.gz',
+            'setuptools-5.4.zip',
+            'setuptools-5.5.1.tar.gz',
+            'setuptools-5.5.1.zip',
+            'setuptools-5.5.tar.gz',
+            'setuptools-5.5.zip',
+            'setuptools-5.6.tar.gz',
+            'setuptools-5.6.zip',
+            'setuptools-5.7.tar.gz',
+            'setuptools-5.7.zip',
+            'setuptools-5.8.tar.gz',
+            'setuptools-5.8.zip',
+            'setuptools-6.0.1.tar.gz',
+            'setuptools-6.0.1.zip',
+            'setuptools-6.0.2.tar.gz',
+            'setuptools-6.0.2.zip',
+            'setuptools-6.0.tar.gz',
+            'setuptools-6.0.zip',
+        ])
+        actual = set()
+        for k, v in d.items():
+            for url in v:
+                _, _, path, _, _, _ = urlparse(url)
+                filename = path.rsplit('/', 1)[-1]
+                actual.add(filename)
+        self.assertEqual(actual & expected, expected)
 
 if __name__ == '__main__':  # pragma: no cover
     import logging
