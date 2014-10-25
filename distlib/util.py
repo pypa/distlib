@@ -154,12 +154,16 @@ def in_venv():
 
 
 def get_executable():
-    if sys.platform == 'darwin' and ('__PYVENV_LAUNCHER__'
-                                     in os.environ):
-        result =  os.environ['__PYVENV_LAUNCHER__']
-    else:
-        result = sys.executable
-    return result
+# The __PYVENV_LAUNCHER__ dance is apparently no longer needed, as
+# changes to the stub launcher mean that sys.executable always points
+# to the stub on OS X
+#    if sys.platform == 'darwin' and ('__PYVENV_LAUNCHER__'
+#                                     in os.environ):
+#        result =  os.environ['__PYVENV_LAUNCHER__']
+#    else:
+#        result = sys.executable
+#    return result
+    return sys.executable
 
 
 def proceed(prompt, allowed_chars, error_prompt=None, default=None):
