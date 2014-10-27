@@ -183,7 +183,7 @@ class Matcher(object):
 
 PEP440_VERSION_RE = re.compile(r'^v?(\d+!)?(\d+(\.\d+)*)((a|b|c|rc)(\d+))?'
                                r'(\.(post)(\d+))?(\.(dev)(\d+))?'
-                               r'(\+(\d+(\.\d+)?))?$')
+                               r'(\+([a-zA-Z\d]+(\.[a-zA-Z\d]+)?))?$')
 
 
 def _pep_440_key(s):
@@ -219,7 +219,17 @@ def _pep_440_key(s):
     if local is None:
         local = ()
     else:
-        local = tuple([int(s) for s in local.split('.')])
+        parts = []
+        for part in local.split('.'):
+            # to ensure that numeric compares as > lexicographic, avoid
+            # comparing them directly, but encode a tuple which ensures
+            # correct sorting
+            if part.isdigit():
+                part = (1, int(part))
+            else:
+                part = (0, part)
+            parts.append(part)
+        local = tuple(parts)
     if not pre:
         # either before pre-release, or final release and after
         if not post and dev:
@@ -303,7 +313,7 @@ class NormalizedMatcher(Matcher):
 
     def _adjust_local(self, version, constraint, prefix):
         if prefix:
-            strip_local = '-' not in constraint and version._parts[-1]
+            strip_local = '+' not in constraint and version._parts[-1]
         else:
             # both constraint and version are
             # NormalizedVersion instances.
@@ -311,7 +321,7 @@ class NormalizedMatcher(Matcher):
             # ensure the version doesn't, either.
             strip_local = not constraint._parts[-1] and version._parts[-1]
         if strip_local:
-            s = version._string.split('-', 1)[0]
+            s = version._string.split('+', 1)[0]
             version = self.version_class(s)
         return version, constraint
 
@@ -361,6 +371,8 @@ class NormalizedMatcher(Matcher):
             return True
         if version < constraint:
             return False
+#        if not prefix:
+#            return True
         release_clause = constraint._release_clause
         if len(release_clause) > 1:
             release_clause = release_clause[:-1]

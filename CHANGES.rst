@@ -35,6 +35,11 @@ Released: Not yet.
 
     - Issue #51: encode shebang executable using utf-8 rather than fsencode.
 
+- util
+
+    - Removed reference to __PYVENV_LAUNCHER__ when determining executable
+      for scripts (relevant only on OS X).
+
 - version
 
     - Updated to reflect changes to versioning proposed in PEP 440.
