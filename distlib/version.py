@@ -79,7 +79,7 @@ class Matcher(object):
     version_class = None
 
     dist_re = re.compile(r"^(\w[\s\w'.-]*)(\((.*)\))?")
-    comp_re = re.compile(r'^(<=|>=|<|>|!=|==|~=)?\s*([^\s,]+)$')
+    comp_re = re.compile(r'^(<=|>=|<|>|!=|={2,3}|~=)?\s*([^\s,]+)$')
     num_re = re.compile(r'^\d+(\.\d+)*$')
 
     # value is either a callable or the name of a method
@@ -89,6 +89,7 @@ class Matcher(object):
         '<=': lambda v, c, p: v == c or v < c,
         '>=': lambda v, c, p: v == c or v > c,
         '==': lambda v, c, p: v == c,
+        '===': lambda v, c, p: v == c,
         # by default, compatible => >=.
         '~=': lambda v, c, p: v == c or v > c,
         '!=': lambda v, c, p: v != c,
@@ -155,7 +156,7 @@ class Matcher(object):
     @property
     def exact_version(self):
         result = None
-        if len(self._parts) == 1 and self._parts[0][0] == '==':
+        if len(self._parts) == 1 and self._parts[0][0] in ('==', '==='):
             result = self._parts[0][1]
         return result
 
@@ -308,6 +309,7 @@ class NormalizedMatcher(Matcher):
         '<=': '_match_le',
         '>=': '_match_ge',
         '==': '_match_eq',
+        '===': '_match_arbitrary',
         '!=': '_match_ne',
     }
 
@@ -356,6 +358,9 @@ class NormalizedMatcher(Matcher):
         else:
             result = _match_prefix(version, constraint)
         return result
+
+    def _match_arbitrary(self, version, constraint, prefix):
+        return str(version) == str(constraint)
 
     def _match_ne(self, version, constraint, prefix):
         version, constraint = self._adjust_local(version, constraint, prefix)

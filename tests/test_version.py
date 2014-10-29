@@ -255,6 +255,7 @@ class VersionTestCase(unittest.TestCase):
             ('Dummy (>1.0)', False),
             ('Dummy (>=1.0)', False),
             ('Dummy (==1.0)', True),
+            ('Dummy (===1.0)', True),
             ('Dummy (!=1.0)', False),
         )
 
