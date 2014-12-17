@@ -275,6 +275,7 @@ class PackageIndexTestCase(unittest.TestCase):
         self.addCleanup(os.remove, fn)
         with open(os.path.join(HERE, 'testsrc', 'README.txt'), 'rb') as f:
             data = f.read()
+        self.index.ssl_verifier = HTTPSHandler(certfile)
         self.index.download_file(url, fn)   # no digest
         with open(fn, 'rb') as f:
             self.assertEqual(data, f.read())
