@@ -227,13 +227,13 @@ class ManifestTestCase(unittest.TestCase):
         actual = [r.getMessage() for r in h.buffer]
         expected = [
             "no files found matching 'nonexistent'",
-            "no previously-included files found matching 'nonexistent'",
+            #"no previously-included files found matching 'nonexistent'",
             "no files found matching 'nonexistent' anywhere in distribution",
-            "no previously-included files matching 'nonexistent' found "
-                "anywhere in distribution",
+            #"no previously-included files matching 'nonexistent' found "
+            #    "anywhere in distribution",
             "no files found matching 'nonexistent' under directory 'subdir'",
-            "no previously-included files matching 'nonexistent' found under "
-                "directory 'subdir'",
+            #"no previously-included files matching 'nonexistent' found under "
+            #    "directory 'subdir'",
             "no directories found matching 'nonexistent'",
             "no previously-included directories found matching 'nonexistent'",
         ]

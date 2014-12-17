@@ -2,10 +2,15 @@ Change log for ``distlib``
 --------------------------
 
 
-0.2.0 (future)
+0.2.1 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+0.2.0 (future)
+~~~~~~~~~~~~~~
+
+Released: 2014-12-17
 
 - compat
 
@@ -22,6 +27,18 @@ Released: Not yet.
 
     - Issue #55: Return multiple download URLs for distributions, if
       available.
+
+- manifest
+
+    - Issue #57: Remove unhelpful warnings about pattern matches.
+
+- metadata
+
+    - Updated to reflect changes to PEP 426.
+
+- resources
+
+    - Issue #50: The type of the path needs to be preserved on 2.x.
 
 - scripts
 
@@ -40,6 +57,8 @@ Released: Not yet.
     - Removed reference to __PYVENV_LAUNCHER__ when determining executable
       for scripts (relevant only on OS X).
 
+    - Updated to support changes to PEP 426.
+
 - version
 
     - Updated to reflect changes to versioning proposed in PEP 440.
@@ -48,6 +67,8 @@ Released: Not yet.
 
     - Updated build() code to respect interpreter arguments in prebuilt
       scripts.
+
+    - Updated to support changes to PEP 426 / PEP 440.
 
 - docs
 

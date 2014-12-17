@@ -7,5 +7,5 @@ MANIFEST$
 distlib-vcsid|cover
 tests/passwords
 tests/pypi-server-standalone.py
-(dist|htmlcov|build)/
+(dist|htmlcov|build|.tox)/
 _testdist-0.1/
