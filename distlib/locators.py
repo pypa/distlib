@@ -332,7 +332,7 @@ class Locator(object):
         self.matcher = matcher = scheme.matcher(r.requirement)
         logger.debug('matcher: %s (%s)', matcher, type(matcher).__name__)
         versions = self.get_project(r.name)
-        if versions:
+        if len(versions) > 2:   # urls and digests keys are present
             # sometimes, versions are invalid
             slist = []
             vcls = matcher.version_class
@@ -885,11 +885,12 @@ class DistPathLocator(Locator):
     def _get_project(self, name):
         dist = self.distpath.get_distribution(name)
         if dist is None:
-            result = {}
+            result = {'urls': {}, 'digests': {}}
         else:
             result = {
                 dist.version: dist,
-                'urls': {dist.version: set([dist.source_url])}
+                'urls': {dist.version: set([dist.source_url])},
+                'digests': {dist.version: set([None])}
             }
         return result
 

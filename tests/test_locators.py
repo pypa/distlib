@@ -11,7 +11,8 @@ import sys
 from compat import unittest
 
 from distlib.compat import url2pathname, urlparse, urljoin
-from distlib.database import DistributionPath, make_graph, make_dist
+from distlib.database import (Distribution, DistributionPath, make_graph,
+                              make_dist)
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
                               DistPathLocator, AggregatingLocator,
@@ -149,17 +150,18 @@ class LocatorTestCase(unittest.TestCase):
                      'banana', 'cheese')
             for name in cases:
                 d = locator.locate(name, True)
-                r = locator.get_project(name)
                 self.assertIsNotNone(d)
+                r = locator.get_project(name)
                 expected = {
                     d.version: d,
-                    'urls': {d.version: set([d.source_url])}
+                    'urls': {d.version: set([d.source_url])},
+                    'digests': {d.version: set([None])}
                 }
                 self.assertEqual(r, expected)
             d = locator.locate('nonexistent')
-            r = locator.get_project('nonexistent')
             self.assertIsNone(d)
-            self.assertFalse(r)
+            r = locator.get_project('nonexistent')
+            self.assertTrue(len(r) == 2)
 
         finally:
             sys.path.pop(0)
@@ -466,6 +468,11 @@ class LocatorTestCase(unittest.TestCase):
                 filename = path.rsplit('/', 1)[-1]
                 actual.add(filename)
         self.assertEqual(actual & expected, expected)
+
+    def test_nonexistent(self):
+        # See Issue #58
+        d = locate('foobarbazbishboshboo')
+        self.assertTrue(d is None or isinstance(d, Distribution))
 
 if __name__ == '__main__':  # pragma: no cover
     import logging
