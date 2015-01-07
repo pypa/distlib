@@ -7,5 +7,11 @@ python:
     - "3.4"
     - "pypy"
 before_install: "mkdir -p $HOME/.distlib && sudo chown -R travis:travis $HOME/.distlib || true"
+install:
+    - pip install coveralls
 before_script: "whoami && ls -ld $HOME/.distlib"
-script: "PYTHONHASHSEED=0 python setup.py test"
+script:
+    - "PYTHONHASHSEED=0 python setup.py test"
+    - "PYTHONHASHSEED=0 coverage run setup.py test"
+after_success: coveralls
+
