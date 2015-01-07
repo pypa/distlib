@@ -290,11 +290,12 @@ class PackageIndexTestCase(unittest.TestCase):
         self.assertRaises(DistlibException, self.index.download_file, url, fn,
                           digest[:-1] + '8')
 
-        def test_search(self):
-            result = self.index.search({'name': 'tatterdema'})
-            self.assertEqual(len(result), 1)
-            result = self.index.search({'name': 'ragamuff'})
-            self.assertEqual(len(result), 0)
+    def test_search(self):
+        self.index = PackageIndex()
+        result = self.index.search({'name': 'tatterdema'})
+        self.assertEqual(len(result), 1)
+        result = self.index.search({'name': 'ragamuff'})
+        self.assertEqual(len(result), 0)
 
 
 if __name__ == '__main__':  # pragma: no cover
