@@ -56,8 +56,8 @@ class LocatorTestCase(unittest.TestCase):
     def test_json(self):
         locator = PyPIJSONLocator(PYPI_RPC_HOST)
         result = locator.get_project('sarge')
-        LATEST_SARGE_VERSION = '0.1.3'
-        LATEST_SARGE_MD5 = '5fa790cc26a97c66be735629b0e6671c'
+        LATEST_SARGE_VERSION = '0.1.4'
+        LATEST_SARGE_MD5 = '285013875aa908ef1417055d3e74a00a'
         self.assertIn(LATEST_SARGE_VERSION, result)
         dist = result[LATEST_SARGE_VERSION]
         self.assertEqual(dist.name, 'sarge')
