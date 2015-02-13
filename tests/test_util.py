@@ -259,7 +259,7 @@ class UtilTestCase(unittest.TestCase):
             seq.add(pred, succ)
 
         # Note: these tests are sensitive to dictionary ordering
-        # but work under Python 2.6, 2.7, 3.2, 3.3, 3.4
+        # but work under Python 2.6, 2.7, 3.2, 3.3, 3.4 and PyPy 2.5
         cases = (
             ('check', ['check']),
             ('register', ['check', 'register']),
@@ -365,6 +365,14 @@ class UtilTestCase(unittest.TestCase):
                 ('install_headers',), ('test',), ('build',),
                 ('build_scripts',), ('build_py',), ('build_ext',),
                 ('build_clibs',), ('check',)
+            ],
+            # Next case added for PyPy
+            [
+                ('upload_sdist',), ('sdist',), ('upload_bdist',), ('register',),
+                ('test',), ('install',), ('install_distinfo',),
+                ('install_data',), ('install_scripts',), ('install_lib',),
+                ('install_headers',), ('build',), ('build_scripts',),
+                ('build_py',), ('build_ext',), ('build_clibs',), ('check',)
             ]
         )
         self.assertIn(actual, expected)
