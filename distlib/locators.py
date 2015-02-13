@@ -337,6 +337,8 @@ class Locator(object):
             slist = []
             vcls = matcher.version_class
             for k in versions:
+                if k in ('urls', 'digests'):
+                    continue
                 try:
                     if not matcher.match(k):
                         logger.debug('%s did not match %r', matcher, k)
