@@ -227,6 +227,8 @@ class LocatorTestCase(unittest.TestCase):
         self.assertFalse(cycle)
         names = [d.name for d in slist]
         expected = set([
+            ('setuptools_scm', 'hgtools', 'py', 'pytest-runner', 'pytest', 'irc'),
+            ('setuptools_scm', 'hgtools', 'py', 'pytest', 'pytest-runner', 'irc'),
             ('hgtools', 'setuptools_scm', 'py', 'pytest', 'pytest-runner', 'irc'),
             ('py', 'hgtools', 'setuptools_scm', 'pytest', 'pytest-runner', 'irc'),
             ('hgtools', 'setuptools_scm', 'py', 'pytest-runner', 'pytest', 'irc'),
