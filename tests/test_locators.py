@@ -213,24 +213,24 @@ class LocatorTestCase(unittest.TestCase):
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
-                                  'pytest-runner'])
+                                  'pytest-runner', 'setuptools_scm'])
         dists, problems = finder.find('irc (== 5.0.1)',
                                       meta_extras=[':test:'])
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
                                   'py', 'pytest',
-                                  'pytest-runner'])
+                                  'pytest-runner', 'setuptools_scm'])
 
         g = make_graph(dists)
         slist, cycle = g.topological_sort()
         self.assertFalse(cycle)
         names = [d.name for d in slist]
         expected = set([
-            ('hgtools', 'py', 'pytest', 'pytest-runner', 'irc'),
-            ('py', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
-            ('hgtools', 'py', 'pytest-runner', 'pytest', 'irc'),
-            ('py', 'hgtools', 'pytest-runner', 'pytest', 'irc')
+            ('hgtools', 'setuptools_scm', 'py', 'pytest', 'pytest-runner', 'irc'),
+            ('py', 'hgtools', 'setuptools_scm', 'pytest', 'pytest-runner', 'irc'),
+            ('hgtools', 'setuptools_scm', 'py', 'pytest-runner', 'pytest', 'irc'),
+            ('py', 'hgtools', 'setuptools_scm', 'pytest-runner', 'pytest', 'irc')
         ])
         self.assertIn(tuple(names), expected)
 
