@@ -4,6 +4,7 @@ omit =
     /home/vinay/.virtualenvs/*
     /home/vsajip/.virtualenvs/*
     /home/travis/virtualenv/*
+    /opt/python/*
     /Users/administrator/projects/venv*
     distlib/_backport/*
     distlib/pypi/*

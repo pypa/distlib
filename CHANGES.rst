@@ -7,6 +7,11 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- resource
+
+    - Added resource iterator functionality.
+
+
 0.2.0
 ~~~~~
 

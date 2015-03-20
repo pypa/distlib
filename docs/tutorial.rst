@@ -62,6 +62,7 @@ This is a slightly modified version of Ralf Schmitt's `pypiserver
 to the ``tests`` folder of the ``distlib`` distribution.
 
 If the server script is not available, the tests which use it will be skipped.
+Naturally, this will also affect the coverage statistics.
 
 PYPI availability
 ^^^^^^^^^^^^^^^^^
