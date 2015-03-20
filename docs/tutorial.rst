@@ -6,7 +6,6 @@ Tutorial
 .. index::
    single: Tutorial
 
-This is the place to start your practical exploration of ``distlib``.
 
 Installation
 ------------
@@ -47,9 +46,10 @@ Coverage results are available at:
 .. index::
    single: Coverage status; distlib
 
-http://www.red-dove.com/distlib/coverage/
+https://coveralls.io/r/vsajip/distlib
 
-These are updated as and when time permits.
+Note that the actual coverage is higher than that shown, because coverage
+under Windows is not included in the above coverage figures.
 
 Note that the index tests are configured, by default, to use a local test
 server, though they can be configured to run against PyPI itself. This local
