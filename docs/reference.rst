@@ -425,6 +425,23 @@ Classes
       :returns: A :class:`Resource` instance, or ``None`` if a resource
                 with that name wasn't found.
 
+   .. method:: iterator(resource_name)
+
+      Return a generator which walks through the resources available through
+      ``resource_name``.
+
+      :param resource_name: A fully qualified resource name, with
+                            hierarchical components separated by '/'.
+                            You can use '' to mean the 'root' resource.
+                            If the resource name refers to a non-container
+                            resource, only that resource is returned.
+                            Otherwise, the named resource is returned, followed
+                            by its children, recursively. If there is no
+                            resource named ``resource_name``, ``None`` is
+                            returned.
+
+      :returns: A generator to iterate over resources, or ``None``.
+
    .. method:: is_container(resource)
 
       Return whether a resource is a container of other resources.
@@ -456,6 +473,7 @@ Classes
       :param resource: The resource for which the size is wanted.
       :type resource: a :class:`Resource` instance
       :returns: The size of the resource in bytes.
+
 
 .. class:: ZipResourceFinder
 

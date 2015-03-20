@@ -108,6 +108,34 @@ class ZipResourceTestCase(unittest.TestCase):
         self.assertIsNotNone(r)
         self.assertTrue(r.is_container)
 
+    def test_iterator(self):
+        f = finder('foo')
+        iterator = f.iterator('')
+        actual = set([(r.name, r.is_container) for r in iterator])
+        expected = set([
+                        ('', True),
+                        ('foo_resource.bin', False),
+                        ('bar/bar_resource.bin', False),
+                        ('bar/baz.py', False),
+                        ('__init__.py', False),
+                        ('bar', True),
+                        ('bar/__init__.py', False)
+                       ])
+        self.assertEqual(actual, expected)
+        iterator = f.iterator('bar')
+        actual = set([(r.name, r.is_container) for r in iterator])
+        expected = set([
+                        ('bar/baz.py', False),
+                        ('bar', True),
+                        ('bar/bar_resource.bin', False),
+                        ('bar/__init__.py', False)
+                       ])
+        self.assertEqual(actual, expected)
+        iterator = f.iterator('bar/bar_resource.bin')
+        actual = set([(r.name, r.is_container) for r in iterator])
+        self.assertEqual(actual, set([('bar/bar_resource.bin', False)]))
+
+
 class FileResourceTestCase(unittest.TestCase):
     def setUp(self):
         sys.path.insert(0, HERE)
@@ -183,6 +211,35 @@ class FileResourceTestCase(unittest.TestCase):
         f = finder('foofoo')
         for path in 'foo/b\xe7r', b'foo/b\xe7r':
             self.assertEqual(type(f._make_path(path)), type(path))
+
+    def test_iterator(self):
+        f = finder('foofoo')
+        iterator = f.iterator('')
+        actual = set([(r.name, r.is_container) for r in iterator])
+        expected = set([('', True),
+                        ('nested/nested_resource.bin', False),
+                        ('bar', True),
+                        ('__init__.py', False),
+                        ('nested', True),
+                        ('bar/bar_resource.bin', False),
+                        ('bar/__init__.py', False),
+                        ('bar/baz.py', False),
+                        ('foo_resource.bin', False),
+                       ])
+        self.assertEqual(actual, expected)
+        iterator = f.iterator('bar')
+        actual = set([(r.name, r.is_container) for r in iterator])
+        expected = set([
+                        ('bar/baz.py', False),
+                        ('bar', True),
+                        ('bar/bar_resource.bin', False),
+                        ('bar/__init__.py', False)
+                       ])
+        self.assertEqual(actual, expected)
+        iterator = f.iterator('bar/bar_resource.bin')
+        actual = set([(r.name, r.is_container) for r in iterator])
+        self.assertEqual(actual, set([('bar/bar_resource.bin', False)]))
+
 
 class CacheTestCase(unittest.TestCase):
     def test_base(self):

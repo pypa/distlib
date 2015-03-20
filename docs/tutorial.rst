@@ -1081,6 +1081,45 @@ You can access its resources as follows::
 
 and so on.
 
+
+Iterating over resources
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can iterate over resources as shown in the following example::
+
+    >>> from distlib.resources import finder
+    >>> f = finder('foofoo')
+    >>> iterator = f.iterator('')
+    >>> for r in iterator: print('%-20s %s' % (r.name, r.is_container))
+    ...
+                         True
+    foo_resource.bin     False
+    __init__.py          False
+    bar                  True
+    bar/bar_resource.bin False
+    bar/baz.py           False
+    bar/__init__.py      False
+    nested               True
+    nested/nested_resource.bin False
+
+It works with zipped resources, too::
+
+    >>> import sys
+    >>> sys.path.append('foo.zip')
+    >>> from distlib.resources import finder
+    >>> f = finder('foo')
+    >>> iterator = f.iterator('')
+    >>> for r in iterator: print('%-20s %s' % (r.name, r.is_container))
+    ...
+                         True
+    foo_resource.bin     False
+    __init__.py          False
+    bar                  True
+    bar/bar_resource.bin False
+    bar/baz.py           False
+    bar/__init__.py      False
+
+
 Using the scripts API
 ^^^^^^^^^^^^^^^^^^^^^
 

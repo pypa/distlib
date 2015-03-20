@@ -178,6 +178,26 @@ class ResourceFinder(object):
 
     _is_directory = staticmethod(os.path.isdir)
 
+    def iterator(self, resource_name):
+        resource = self.find(resource_name)
+        if resource is not None:
+            todo = [resource]
+            while todo:
+                resource = todo.pop(0)
+                yield resource
+                if resource.is_container:
+                    rname = resource.name
+                    for name in resource.resources:
+                        if not rname:
+                            new_name = name
+                        else:
+                            new_name = '/'.join([rname, name])
+                        child = self.find(new_name)
+                        if child.is_container:
+                            todo.append(child)
+                        else:
+                            yield child
+
 
 class ZipResourceFinder(ResourceFinder):
     """
