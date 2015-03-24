@@ -108,7 +108,7 @@ assert(BOOL condition, char * format, ... )
     }
 }
 
-static char script_path[MAX_PATH];
+static wchar_t script_path[MAX_PATH];
 
 #if defined(APPENDED_ARCHIVE)
 
@@ -134,7 +134,7 @@ find_pattern(char *buffer, size_t bufsize, char * pattern, size_t patsize)
     char * result = NULL;
     char * p;
     char * bp = buffer;
-    long n;
+    size_t n;
 
     while ((n = bufsize - (bp - buffer) - patsize) >= 0) {
         p = (char *) memchr(bp, pattern[0], n);
@@ -157,15 +157,15 @@ find_shebang(char * buffer, size_t bufsize)
     char * p;
     size_t read;
     long pos;
-    long file_size;
-    long end_cdr_offset = -1;
+    __int64 file_size;
+    __int64 end_cdr_offset = -1;
     ENDCDR end_cdr;
 
-    rc = fopen_s(&fp, script_path, "rb");
+    rc = _wfopen_s(&fp, script_path, L"rb");
     assert(rc == 0, "Failed to open executable");
     fseek(fp, 0, SEEK_END);
     file_size = ftell(fp);
-    pos = file_size - bufsize;
+    pos = (long) (file_size - bufsize);
     if (pos < 0)
         pos = 0;
     fseek(fp, pos, SEEK_SET);
@@ -183,7 +183,7 @@ find_shebang(char * buffer, size_t bufsize)
         char * big_buffer = malloc(LARGE_BUFSIZE);
         int n = (int) LARGE_BUFSIZE;
 
-        pos = file_size - n;
+        pos = (long) (file_size - n);
 
         if (pos < 0)
             pos = 0;
@@ -202,7 +202,7 @@ find_shebang(char * buffer, size_t bufsize)
      * # or ! chars except at the beginning, and fits into bufsize (which
      * should be MAX_PATH).
      */
-    pos = end_cdr_offset - bufsize;
+    pos = (long) (end_cdr_offset - bufsize);
     if (pos < 0)
         pos = 0;
     fseek(fp, pos, SEEK_SET);
@@ -262,29 +262,29 @@ static COMMAND * find_on_path(wchar_t * name)
 
 #endif
 
-static char *
-skip_ws(char *p)
+static wchar_t *
+skip_ws(wchar_t *p)
 {
-    while (*p && isspace(*p))
+    while (*p && iswspace(*p))
         ++p;
     return p;
 }
 
-static char *
-skip_me(char * p)
+static wchar_t *
+skip_me(wchar_t * p)
 {
-    char * result;
-    char terminator;
+    wchar_t * result;
+    wchar_t terminator;
 
-    if (*p != '\"')
-        terminator = ' ';
+    if (*p != L'\"')
+        terminator = L' ';
     else {
         terminator = *p++;
         ++p;
     }
-    result = strchr(p, terminator);
+    result = wcschr(p, terminator);
     if (result == NULL) /* perhaps nothing more on the command line */
-        result = "";
+        result = L"";
     else
         result = skip_ws(++result);
     return result;
@@ -339,13 +339,13 @@ control_key_handler(DWORD type)
 }
 
 static void
-run_child(char * cmdline)
+run_child(wchar_t * cmdline)
 {
     HANDLE job;
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
     DWORD rc;
     BOOL ok;
-    STARTUPINFO si;
+    STARTUPINFOW si;
     PROCESS_INFORMATION pi;
 
     job = CreateJobObject(NULL, NULL);
@@ -367,7 +367,7 @@ run_child(char * cmdline)
     assert(ok, "stderr duplication failed");
     si.dwFlags = STARTF_USESTDHANDLES;
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) control_key_handler, TRUE);
-    ok = CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+    ok = CreateProcessW(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
     assert(ok, "Unable to create process using '%s'", cmdline);
     pid = pi.dwProcessId;
     AssignProcessToJobObject(job, pi.hProcess);
@@ -378,37 +378,37 @@ run_child(char * cmdline)
     ExitProcess(rc);
 }
 
-static char *
-find_exe(char * line) {
-	char * p;
+static wchar_t *
+find_exe(wchar_t * line) {
+	wchar_t * p;
 
-	while ((p = StrStrIA(line, ".exe")) != NULL) {
-		char c = p[4];
+	while ((p = StrStrIW(line, L".exe")) != NULL) {
+		wchar_t c = p[4];
 
-		if ((c == '\0') || (c == '"') || isspace(c))
+		if ((c == L'\0') || (c == L'"') || iswspace(c))
 			break;
 		line = &p[4];
 	}
 	return p;
 }
 
-static char *
-find_executable_and_args(char * line, char ** argp)
+static wchar_t *
+find_executable_and_args(wchar_t * line, wchar_t ** argp)
 {
-	char * p = find_exe(line);
+	wchar_t * p = find_exe(line);
 
 	assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line.");
 	p += 4;
-	if (*line == '"') {
-		assert(*p == '"', "Expected terminating double-quote for executable in shebang line.");
-		*p++ = '\0';
+	if (*line == L'"') {
+		assert(*p == L'"', "Expected terminating double-quote for executable in shebang line.");
+		*p++ = L'\0';
 		++line;
 	}
 	/* p points just past the executable. It must either be a NUL or whitespace. */
-	assert(*p != '"', "Terminating quote without starting quote for executable in shebang line.");
+	assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line.");
 	/* Now we can skip the whitespace, having checked that it's there. */
-	while(*p && isspace(*p))
-		*p++ = '\0';    /* Ensure args are not included in executable */
+	while(*p && iswspace(*p))
+		++p;
 	*argp = p;
 	return line;
 }
@@ -416,34 +416,38 @@ find_executable_and_args(char * line, char ** argp)
 static int
 process(int argc, char * argv[])
 {
-    char * cmdline = skip_me(GetCommandLine());
-    char * psp;
-    size_t len = GetModuleFileName(NULL, script_path, MAX_PATH);
+    wchar_t * cmdline = skip_me(GetCommandLineW());
+    wchar_t * psp;
+    size_t len = GetModuleFileNameW(NULL, script_path, MAX_PATH);
     FILE *fp = NULL;
     char buffer[MAX_PATH];
+	wchar_t wbuffer[MAX_PATH];
     char *cp;
-    char * cmdp;
+	wchar_t * wcp;
+    wchar_t * cmdp;
     char * p;
+	wchar_t * wp;
+	int n;
 #if !defined(APPENDED_ARCHIVE)
     errno_t rc;
 #endif
 
-    if (script_path[0] != '\"')
+    if (script_path[0] != L'\"')
         psp = script_path;
     else {
         psp = &script_path[1];
         len -= 2;
     }
-    psp[len] = '\0';
+    psp[len] = L'\0';
 
 #if !defined(APPENDED_ARCHIVE)
     /* Replace the .exe with -script.py(w) */
-    p = strstr(psp, ".exe");
+    p = wcsstr(psp, L".exe");
     assert(p != NULL, "Failed to find \".exe\" in executable name");
 
     len = MAX_PATH - (p - script_path);
     assert(len > sizeof(suffix), "Failed to append \"%s\" suffix", suffix);
-    strncpy_s(p, len, suffix, sizeof(suffix));
+    wcsncpy_s(p, len, suffix, sizeof(suffix));
 #endif
 #if defined(APPENDED_ARCHIVE)
     /* Initialise signature dynamically so that it doesn't appear in
@@ -463,26 +467,30 @@ process(int argc, char * argv[])
     cp = find_terminator(p, MAX_PATH);
     assert(cp != NULL, "Expected to find terminator in shebang line");
     *cp = '\0';
-    cp = p;
-    while (*cp && isspace(*cp))
-        ++cp;
-    assert(*cp == '#', "Expected to find \'#\' at start of shebang line");
-    ++cp;
-    while (*cp && isspace(*cp))
-        ++cp;
-    assert(*cp == '!', "Expected to find \'!\' following \'#\' in shebang line");
-    ++cp;
-    while (*cp && isspace(*cp))
-        ++cp;
-	p = NULL;
-	cp = find_executable_and_args(cp, &p);
-	assert(cp != NULL, "Expected to find executable in shebang line");
-	assert(p != NULL, "Expected to find arguments (even if empty) in shebang line");
+	// Decode as UTF-8
+	n = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, p, (int) (cp - p), wbuffer, MAX_PATH);
+	assert(n != 0, "Expected to decode shebang line using UTF-8");
+	wbuffer[n] = L'\0';
+	wcp = wbuffer;
+    while (*wcp && iswspace(*wcp))
+        ++wcp;
+    assert(*wcp == L'#', "Expected to find \'#\' at start of shebang line");
+    ++wcp;
+    while (*wcp && iswspace(*wcp))
+        ++wcp;
+    assert(*wcp == L'!', "Expected to find \'!\' following \'#\' in shebang line");
+    ++wcp;
+    while (*wcp && iswspace(*wcp))
+        ++wcp;
+	wp = NULL;
+	wcp = find_executable_and_args(wcp, &wp);
+	assert(wcp != NULL, "Expected to find executable in shebang line");
+	assert(wp != NULL, "Expected to find arguments (even if empty) in shebang line");
 	 /* 3 spaces + 4 quotes + NUL */
-    len = strlen(cp) + strlen(p) + 8 + strlen(psp) + strlen(cmdline);
-    cmdp = calloc(len, sizeof(char));
+    len = wcslen(wcp) + wcslen(wp) + 8 + wcslen(psp) + wcslen(cmdline);
+    cmdp = (wchar_t *) calloc(len, sizeof(wchar_t));
     assert(cmdp != NULL, "Expected to be able to allocate command line memory");
-    _snprintf_s(cmdp, len, len, "\"%s\" %s \"%s\" %s", cp, p, psp, cmdline);
+    _snwprintf_s(cmdp, len, len, L"\"%s\" %s \"%s\" %s", wcp, wp, psp, cmdline);
     run_child(cmdp);  /* never actually returns */
     free(cmdp);
 	return 0;
