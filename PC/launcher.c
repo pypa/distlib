@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2014 Vinay Sajip. All rights reserved.
+ * Copyright (C) 2011-2015 Vinay Sajip. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,11 +39,11 @@
 
 #if !defined(APPENDED_ARCHIVE)
 
-static char suffix[] = {
+static wchar_t suffix[] = {
 #if defined(_CONSOLE)
-    "-script.py"
+    L"-script.py"
 #else
-    "-script.pyw"
+    L"-script.pyw"
 #endif
 };
 
@@ -380,37 +380,37 @@ run_child(wchar_t * cmdline)
 
 static wchar_t *
 find_exe(wchar_t * line) {
-	wchar_t * p;
+    wchar_t * p;
 
-	while ((p = StrStrIW(line, L".exe")) != NULL) {
-		wchar_t c = p[4];
+    while ((p = StrStrIW(line, L".exe")) != NULL) {
+        wchar_t c = p[4];
 
-		if ((c == L'\0') || (c == L'"') || iswspace(c))
-			break;
-		line = &p[4];
-	}
-	return p;
+        if ((c == L'\0') || (c == L'"') || iswspace(c))
+            break;
+        line = &p[4];
+    }
+    return p;
 }
 
 static wchar_t *
 find_executable_and_args(wchar_t * line, wchar_t ** argp)
 {
-	wchar_t * p = find_exe(line);
+    wchar_t * p = find_exe(line);
 
-	assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line.");
-	p += 4;
-	if (*line == L'"') {
-		assert(*p == L'"', "Expected terminating double-quote for executable in shebang line.");
-		*p++ = L'\0';
-		++line;
-	}
-	/* p points just past the executable. It must either be a NUL or whitespace. */
-	assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line.");
-	/* Now we can skip the whitespace, having checked that it's there. */
-	while(*p && iswspace(*p))
-		++p;
-	*argp = p;
-	return line;
+    assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line.");
+    p += 4;
+    if (*line == L'"') {
+        assert(*p == L'"', "Expected terminating double-quote for executable in shebang line.");
+        *p++ = L'\0';
+        ++line;
+    }
+    /* p points just past the executable. It must either be a NUL or whitespace. */
+    assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line.");
+    /* Now we can skip the whitespace, having checked that it's there. */
+    while(*p && iswspace(*p))
+        ++p;
+    *argp = p;
+    return line;
 }
 
 static int
@@ -421,13 +421,13 @@ process(int argc, char * argv[])
     size_t len = GetModuleFileNameW(NULL, script_path, MAX_PATH);
     FILE *fp = NULL;
     char buffer[MAX_PATH];
-	wchar_t wbuffer[MAX_PATH];
+    wchar_t wbuffer[MAX_PATH];
     char *cp;
-	wchar_t * wcp;
+    wchar_t * wcp;
     wchar_t * cmdp;
     char * p;
-	wchar_t * wp;
-	int n;
+    wchar_t * wp;
+    int n;
 #if !defined(APPENDED_ARCHIVE)
     errno_t rc;
 #endif
@@ -442,12 +442,12 @@ process(int argc, char * argv[])
 
 #if !defined(APPENDED_ARCHIVE)
     /* Replace the .exe with -script.py(w) */
-    p = wcsstr(psp, L".exe");
-    assert(p != NULL, "Failed to find \".exe\" in executable name");
+    wp = wcsstr(psp, L".exe");
+    assert(wp != NULL, "Failed to find \".exe\" in executable name");
 
-    len = MAX_PATH - (p - script_path);
+    len = MAX_PATH - (wp - script_path);
     assert(len > sizeof(suffix), "Failed to append \"%s\" suffix", suffix);
-    wcsncpy_s(p, len, suffix, sizeof(suffix));
+    wcsncpy_s(wp, len, suffix, sizeof(suffix));
 #endif
 #if defined(APPENDED_ARCHIVE)
     /* Initialise signature dynamically so that it doesn't appear in
@@ -458,7 +458,7 @@ process(int argc, char * argv[])
     p = find_shebang(buffer, MAX_PATH);
     assert(p != NULL, "Failed to find shebang");
 #else
-    rc = fopen_s(&fp, psp, "rb");
+    rc = _wfopen_s(&fp, psp, L"rb");
     assert(rc == 0, "Failed to open script file \"%s\"", psp);
     fread(buffer, sizeof(char), MAX_PATH, fp);
     fclose(fp);
@@ -467,11 +467,11 @@ process(int argc, char * argv[])
     cp = find_terminator(p, MAX_PATH);
     assert(cp != NULL, "Expected to find terminator in shebang line");
     *cp = '\0';
-	// Decode as UTF-8
-	n = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, p, (int) (cp - p), wbuffer, MAX_PATH);
-	assert(n != 0, "Expected to decode shebang line using UTF-8");
-	wbuffer[n] = L'\0';
-	wcp = wbuffer;
+    // Decode as UTF-8
+    n = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, p, (int) (cp - p), wbuffer, MAX_PATH);
+    assert(n != 0, "Expected to decode shebang line using UTF-8");
+    wbuffer[n] = L'\0';
+    wcp = wbuffer;
     while (*wcp && iswspace(*wcp))
         ++wcp;
     assert(*wcp == L'#', "Expected to find \'#\' at start of shebang line");
@@ -482,18 +482,18 @@ process(int argc, char * argv[])
     ++wcp;
     while (*wcp && iswspace(*wcp))
         ++wcp;
-	wp = NULL;
-	wcp = find_executable_and_args(wcp, &wp);
-	assert(wcp != NULL, "Expected to find executable in shebang line");
-	assert(wp != NULL, "Expected to find arguments (even if empty) in shebang line");
-	 /* 3 spaces + 4 quotes + NUL */
+    wp = NULL;
+    wcp = find_executable_and_args(wcp, &wp);
+    assert(wcp != NULL, "Expected to find executable in shebang line");
+    assert(wp != NULL, "Expected to find arguments (even if empty) in shebang line");
+     /* 3 spaces + 4 quotes + NUL */
     len = wcslen(wcp) + wcslen(wp) + 8 + wcslen(psp) + wcslen(cmdline);
     cmdp = (wchar_t *) calloc(len, sizeof(wchar_t));
     assert(cmdp != NULL, "Expected to be able to allocate command line memory");
     _snwprintf_s(cmdp, len, len, L"\"%s\" %s \"%s\" %s", wcp, wp, psp, cmdline);
     run_child(cmdp);  /* never actually returns */
     free(cmdp);
-	return 0;
+    return 0;
 }
 
 #if defined(_CONSOLE)
