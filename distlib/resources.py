@@ -120,6 +120,12 @@ class ResourceFinder(object):
     """
     Resource finder for file system resources.
     """
+
+    if sys.platform.startswith('java'):
+        skipped_extensions = ('.pyc', '.pyo', '.class')
+    else:
+        skipped_extensions = ('.pyc', '.pyo')
+
     def __init__(self, module):
         self.module = module
         self.loader = getattr(module, '__loader__', None)
@@ -170,7 +176,8 @@ class ResourceFinder(object):
 
     def get_resources(self, resource):
         def allowed(f):
-            return f != '__pycache__' and not f.endswith(('.pyc', '.pyo'))
+            return (f != '__pycache__' and not
+                    f.endswith(self.skipped_extensions))
         return set([f for f in os.listdir(resource.path) if allowed(f)])
 
     def is_container(self, resource):
