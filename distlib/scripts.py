@@ -92,7 +92,7 @@ class ScriptMaker(object):
             executable = os.path.join(dn, fn)
         return executable
 
-    if sys.platform.startswith('java'):
+    if sys.platform.startswith('java'):  # pragma: no cover
         def _is_shell(self, executable):
             """
             Determine if the specified executable is a script
@@ -135,7 +135,7 @@ class ScriptMaker(object):
         if options:
             executable = self._get_alternate_executable(executable, options)
 
-        if sys.platform.startswith('java'):
+        if sys.platform.startswith('java'):  # pragma: no cover
             executable = self._fix_jython_executable(executable)
         # If the user didn't specify an executable, it may be necessary to
         # cater for executable paths with spaces (not uncommon on Windows)
