@@ -7,9 +7,26 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- locators
+
+    - Issue #58: Return a Distribution instance or None from ``locate()``.
+
+    - Issue #59: Skipped special keys when looking for versions.
+
 - resource
 
     - Added resource iterator functionality.
+
+- scripts
+
+    - Issue #71: Updated launchers to decode shebangs using UTF-8. This allows
+      non-ASCII pathnames to be correctly handled.
+
+    - Changed ScriptMaker to work better under Jython.
+
+- util
+
+    - Changed the mode setting method to work better under Jython.
 
 
 0.2.0
