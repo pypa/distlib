@@ -434,6 +434,21 @@ class PyPIJSONLocator(Locator):
         """
         raise NotImplementedError('Not available from this locator')
 
+    def _filter_urls(self, urls):
+        """
+        Filter out incompatible wheels
+        """
+        result = []
+        for info in urls:
+            fn = info['filename']
+            if not fn.endswith('.whl'):
+                result.append(info)
+                continue
+            wheel = Wheel(fn)
+            if is_compatible(wheel, self.wheel_tags):
+                result.append(info)
+        return result
+
     def _get_project(self, name):
         result = {'urls': {}, 'digests': {}}
         url = urljoin(self.base_url, '%s/json' % quote(name))
@@ -449,7 +464,7 @@ class PyPIJSONLocator(Locator):
             md.keywords = data.get('keywords', [])
             md.summary = data.get('summary')
             dist = Distribution(md)
-            urls = d['urls']
+            urls = self._filter_urls(d['urls'])
             if urls:
                 info = urls[0]
                 md.source_url = info['url']
