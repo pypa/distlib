@@ -150,7 +150,7 @@ class ScriptTestCase(unittest.TestCase):
         wlauncher = self.maker._get_launcher('w')
         tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
-        executable = os.apth.normcase(sys.executable).encode('utf-8')
+        executable = os.path.normcase(sys.executable).encode('utf-8')
         wexecutable = executable.replace(b'python.exe', b'pythonw.exe')
         files = self.maker.make('script4.py')
         self.assertEqual(len(files), 1)
