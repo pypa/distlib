@@ -108,6 +108,13 @@ class WheelTestCase(unittest.TestCase):
               ['linux_x86_64'])),
             ('test-1.0-1st-py2.py3-none-win32.whl',
              ('test', '1.0', '1st', ['py2', 'py3'], ['none'], ['win32'])),
+            ('Pillow-2.8.1-cp27-none-macosx_10_6_intel.'
+             'macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.'
+             'macosx_10_10_x86_64.whl',
+             ('Pillow', '2.8.1', '', ['cp27'], ['none'],
+              ['macosx_10_6_intel', 'macosx_10_9_intel',
+               'macosx_10_9_x86_64', 'macosx_10_10_intel',
+               'macosx_10_10_x86_64'])),
         )
 
         for name, values in cases:
@@ -497,4 +504,7 @@ class WheelTestCase(unittest.TestCase):
         self.do_build_and_install('Babel == 0.9.6')
 
 if __name__ == '__main__':  # pragma: no cover
+    import logging
+    logging.basicConfig(level=logging.DEBUG, filename='test_wheel.log',
+                        filemode='w', format='%(message)s')
     unittest.main()
