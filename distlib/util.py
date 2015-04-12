@@ -163,7 +163,7 @@ def get_executable():
 #    else:
 #        result = sys.executable
 #    return result
-    return sys.executable
+    return os.path.normcase(sys.executable)
 
 
 def proceed(prompt, allowed_chars, error_prompt=None, default=None):
