@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013-2014 Vinay Sajip.
+# Copyright (C) 2013-2015 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -137,6 +137,8 @@ class ScriptMaker(object):
 
         if sys.platform.startswith('java'):  # pragma: no cover
             executable = self._fix_jython_executable(executable)
+        # Normalise case for Windows
+        executable = os.path.normcase(executable)
         # If the user didn't specify an executable, it may be necessary to
         # cater for executable paths with spaces (not uncommon on Windows)
         if enquote and ' ' in executable:
