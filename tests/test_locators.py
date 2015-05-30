@@ -62,11 +62,10 @@ class LocatorTestCase(unittest.TestCase):
         dist = result[LATEST_SARGE_VERSION]
         self.assertEqual(dist.name, 'sarge')
         self.assertEqual(dist.version, LATEST_SARGE_VERSION)
-        self.assertEqual(dist.source_url,
-                         'https://pypi.python.org/packages/source/s/sarge/'
-                         'sarge-%s.tar.gz' % LATEST_SARGE_VERSION)
-        self.assertEqual(dist.digest,
-                         ('md5', LATEST_SARGE_MD5))
+        url = ('https://pypi.python.org/packages/source/s/sarge/'
+               'sarge-%s.tar.gz' % LATEST_SARGE_VERSION)
+        self.assertIn(url, dist.download_urls)
+        self.assertEqual(dist.digests[url],('md5', LATEST_SARGE_MD5))
         self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
     @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')

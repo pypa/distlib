@@ -13,6 +13,9 @@ Released: Not yet.
 
     - Issue #59: Skipped special keys when looking for versions.
 
+    - Improved behaviour of PyPIJSONLocator to be analogous to that of other
+      locators.
+
 - resource
 
     - Added resource iterator functionality.
@@ -22,11 +25,27 @@ Released: Not yet.
     - Issue #71: Updated launchers to decode shebangs using UTF-8. This allows
       non-ASCII pathnames to be correctly handled.
 
+    - Ensured that the executable written to shebangs is normcased.
+
     - Changed ScriptMaker to work better under Jython.
 
 - util
 
     - Changed the mode setting method to work better under Jython.
+
+    - Changed get_executable() to return a normcased value.
+
+- wheel
+
+    - Handled multiple-architecture wheel filenames correctly.
+
+- docs
+
+    - Numerous documentation updates, not detailed further here.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
 
 
 0.2.0
