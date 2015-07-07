@@ -2,10 +2,16 @@ Change log for ``distlib``
 --------------------------
 
 
-0.2.1 (future)
+0.2.2 (future)
 ~~~~~~~~~~~~~~
 
-Released: Not yet.
+Released: not yet.
+
+
+0.2.1
+~~~~~
+
+Released: 2015-07-07
 
 - locators
 
