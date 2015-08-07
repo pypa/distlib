@@ -228,11 +228,12 @@ class LocatorTestCase(unittest.TestCase):
         expected = set([
             ('setuptools_scm', 'hgtools', 'py', 'pytest-runner', 'pytest', 'irc'),
             ('setuptools_scm', 'hgtools', 'py', 'pytest', 'pytest-runner', 'irc'),
+            ('setuptools_scm', 'py', 'hgtools', 'pytest-runner', 'pytest', 'irc'),
             ('hgtools', 'setuptools_scm', 'py', 'pytest', 'pytest-runner', 'irc'),
             ('py', 'hgtools', 'setuptools_scm', 'pytest', 'pytest-runner', 'irc'),
             ('hgtools', 'setuptools_scm', 'py', 'pytest-runner', 'pytest', 'irc'),
             ('py', 'hgtools', 'setuptools_scm', 'pytest-runner', 'pytest', 'irc'),
-            ('py', 'setuptools_scm', 'hgtools', 'pytest', 'pytest-runner', 'irc')
+            ('py', 'setuptools_scm', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
         ])
         self.assertIn(tuple(names), expected)
 
