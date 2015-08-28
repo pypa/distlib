@@ -4,8 +4,8 @@
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 """
-Implementation of a flexible versioning scheme providing support for PEP-386,
-distribute-compatible and semantic versioning.
+Implementation of a flexible versioning scheme providing support for PEP-440,
+setuptools-compatible and semantic versioning.
 """
 
 import logging
