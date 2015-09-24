@@ -7,6 +7,10 @@ Change log for ``distlib``
 
 Released: not yet.
 
+- util
+
+    - Issue #77: Made the internal URL used for extended metadata fetches
+      configurable via a module attribute.
 
 0.2.1
 ~~~~~

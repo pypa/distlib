@@ -28,8 +28,8 @@ import time
 
 from . import DistlibException
 from .compat import (string_types, text_type, shutil, raw_input, StringIO,
-                     cache_from_source, urlopen, httplib, xmlrpclib, splittype,
-                     HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
+                     cache_from_source, urlopen, urljoin, httplib, xmlrpclib,
+                     splittype, HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
                      BaseConfigurator, valid_ident, Container, configparser,
                      URLError, match_hostname, CertificateError, ZipFile)
 
@@ -758,16 +758,17 @@ def _get_external_data(url):
         logger.exception('Failed to get external data for %s: %s', url, e)
     return result
 
+_external_data_base_url = 'https://www.red-dove.com/pypi/projects/'
 
 def get_project_data(name):
-    url = ('https://www.red-dove.com/pypi/projects/'
-           '%s/%s/project.json' % (name[0].upper(), name))
+    url = '%s/%s/project.json' % (name[0].upper(), name)
+    url = urljoin(_external_data_base_url, url)
     result = _get_external_data(url)
     return result
 
 def get_package_data(name, version):
-    url = ('https://www.red-dove.com/pypi/projects/'
-           '%s/%s/package-%s.json' % (name[0].upper(), name, version))
+    url = '%s/%s/package-%s.json' % (name[0].upper(), name, version)
+    url = urljoin(_external_data_base_url, url)
     return _get_external_data(url)
 
 
