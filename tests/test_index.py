@@ -190,6 +190,9 @@ class PackageIndexTestCase(unittest.TestCase):
 
     def test_upload_documentation(self):
         "Test upload of documentation"
+        raise unittest.SkipTest('Skipped, as pythonhosted.org is being '
+                                'de-emphasised and this functionality may '
+                                'no longer be available')
         self.check_pypi_server_available()
         self.check_testdist_available()
         d = os.path.join(HERE, self.testdir)
