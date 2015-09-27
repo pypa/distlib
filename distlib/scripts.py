@@ -86,7 +86,7 @@ class ScriptMaker(object):
         self._fileop = fileop or FileOperator(dry_run)
 
     def _get_alternate_executable(self, executable, options):
-        if options.get('gui', False) and os.name == 'nt':
+        if options.get('gui', False) and os.name == 'nt':  # pragma: no cover
             dn, fn = os.path.split(executable)
             fn = fn.replace('python', 'pythonw')
             executable = os.path.join(dn, fn)
@@ -124,10 +124,10 @@ class ScriptMaker(object):
             enquote = False     # assume this will be taken care of
         elif not sysconfig.is_python_build():
             executable = get_executable()
-        elif in_venv():
+        elif in_venv():  # pragma: no cover
             executable = os.path.join(sysconfig.get_path('scripts'),
                             'python%s' % sysconfig.get_config_var('EXE'))
-        else:
+        else:  # pragma: no cover
             executable = os.path.join(
                 sysconfig.get_config_var('BINDIR'),
                'python%s%s' % (sysconfig.get_config_var('VERSION'),
@@ -148,7 +148,7 @@ class ScriptMaker(object):
         executable = executable.encode('utf-8')
         # in case of IronPython, play safe and enable frames support
         if (sys.platform == 'cli' and '-X:Frames' not in post_interp
-            and '-X:FullFrames' not in post_interp):
+            and '-X:FullFrames' not in post_interp):  # pragma: no cover
             post_interp += b' -X:Frames'
         shebang = b'#!' + executable + post_interp + b'\n'
         # Python parser starts to read a script using UTF-8 until
@@ -158,7 +158,7 @@ class ScriptMaker(object):
         # UTF-8.
         try:
             shebang.decode('utf-8')
-        except UnicodeDecodeError:
+        except UnicodeDecodeError:  # pragma: no cover
             raise ValueError(
                 'The shebang (%r) is not decodable from utf-8' % shebang)
         # If the script is encoded to a custom encoding (use a
@@ -167,7 +167,7 @@ class ScriptMaker(object):
         if encoding != 'utf-8':
             try:
                 shebang.decode(encoding)
-            except UnicodeDecodeError:
+            except UnicodeDecodeError:  # pragma: no cover
                 raise ValueError(
                     'The shebang (%r) is not decodable '
                     'from the script encoding (%r)' % (shebang, encoding))
@@ -188,7 +188,7 @@ class ScriptMaker(object):
         linesep = os.linesep.encode('utf-8')
         if not use_launcher:
             script_bytes = shebang + linesep + script_bytes
-        else:
+        else:  # pragma: no cover
             if ext == 'py':
                 launcher = self._get_launcher('t')
             else:
@@ -200,7 +200,7 @@ class ScriptMaker(object):
             script_bytes = launcher + shebang + linesep + zip_data
         for name in names:
             outname = os.path.join(self.target_dir, name)
-            if use_launcher:
+            if use_launcher:  # pragma: no cover
                 n, e = os.path.splitext(outname)
                 if e.startswith('.py'):
                     outname = n
@@ -223,7 +223,7 @@ class ScriptMaker(object):
                     except Exception:
                         pass    # still in use - ignore error
             else:
-                if os.name == 'nt' and not outname.endswith('.' + ext):
+                if os.name == 'nt' and not outname.endswith('.' + ext):  # pragma: no cover
                     outname = '%s.%s' % (outname, ext)
                 if os.path.exists(outname) and not self.clobber:
                     logger.warning('Skipping existing file %s', outname)
@@ -269,7 +269,7 @@ class ScriptMaker(object):
         # script.
         try:
             f = open(script, 'rb')
-        except IOError:
+        except IOError:  # pragma: no cover
             if not self.dry_run:
                 raise
             f = None
@@ -277,7 +277,7 @@ class ScriptMaker(object):
             encoding, lines = detect_encoding(f.readline)
             f.seek(0)
             first_line = f.readline()
-            if not first_line:
+            if not first_line:  # pragma: no cover
                 logger.warning('%s: %s is an empty file (skipping)',
                                self.get_command_name(),  script)
                 return
@@ -299,7 +299,7 @@ class ScriptMaker(object):
                         self.target_dir)
             if not self._fileop.dry_run:
                 shebang = self._get_shebang(encoding, post_interp)
-                if b'pythonw' in first_line:
+                if b'pythonw' in first_line:  # pragma: no cover
                     ext = 'pyw'
                 else:
                     ext = 'py'
@@ -316,7 +316,7 @@ class ScriptMaker(object):
     def dry_run(self, value):
         self._fileop.dry_run = value
 
-    if os.name == 'nt':
+    if os.name == 'nt':  # pragma: no cover
         # Executable launcher support.
         # Launchers are from https://bitbucket.org/vinay.sajip/simple_launcher/
 
