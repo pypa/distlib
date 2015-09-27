@@ -1,0 +1,29 @@
+{
+  "source": {
+    "modules": [
+      "testdist"
+    ]
+  },
+  "version": "1",
+  "index-metadata": {
+    "metadata_version": "2.0",
+    "name": "test_testdist",
+    "version": "0.1",
+    "summary": "A test project for distlib",
+    "description": "This distribution is a test for distlib.",
+    "extensions": {
+      "python.details": {
+        "license": "Copyright (C) 2013 by Test User."
+      },
+      "python.project": {
+        "contacts": [
+            {"name": "Test User", "email": "test.user@testusers.org",
+             "role": "author" }
+        ],
+        "project_urls": {
+          "Home": "http://pypi.python.org/pypi/test_testdist/"
+        }
+      }
+    }
+  }
+}
