@@ -97,7 +97,7 @@ class ScriptTestCase(unittest.TestCase):
                 for f in files:
                     d, f = os.path.split(f)
                     actual.add(f)
-                if os.name == 'nt':
+                if os.name == 'nt':  # pragma: no cover
                     if gui:
                         ext = 'pyw'
                     else:
@@ -112,7 +112,7 @@ class ScriptTestCase(unittest.TestCase):
                     with open(fn, 'r') as f:
                         text = f.read()
                     self.assertIn("_resolve('foo', '%s')" % name, text)
-                    if options and options['gui'] and os.name == 'nt':
+                    if options and options['gui'] and os.name == 'nt':  # pragma: no cover
                         first_line, rest = text.split('\n', 1)
                         self.assertIn('pythonw', first_line)
 
@@ -127,7 +127,7 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(files, saved_files)
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
-    def test_launchers(self):
+    def test_launchers(self):  # pragma: no cover
         tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
@@ -146,7 +146,7 @@ class ScriptTestCase(unittest.TestCase):
             self.assertTrue(data.startswith(tlauncher))
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
-    def test_windows(self):
+    def test_windows(self):  # pragma: no cover
         wlauncher = self.maker._get_launcher('w')
         tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
@@ -189,7 +189,7 @@ class ScriptTestCase(unittest.TestCase):
         specs = ('foo.py', 'bar = foo:main')
         files = self.maker.make_multiple(specs)
         self.assertEqual(len(specs), len(files))
-        if os.name == 'nt':
+        if os.name == 'nt':  # pragma: no cover
             bar = 'bar.py'
         else:
             bar = 'bar'
