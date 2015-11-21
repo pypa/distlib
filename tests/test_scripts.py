@@ -248,5 +248,18 @@ class ScriptTestCase(unittest.TestCase):
         expected = '#!%s -mzippy.activate' % get_executable()
         self.assertEqual(actual, expected)
 
+    def test_enquote_executable(self):
+        for executable, expected in (
+                ('/no/spaces', '/no/spaces'),
+                ('/i have/space', '"/i have/space"'),
+                ('"/space prequoted"', '"/space prequoted"'),
+                ('/usr/bin/env nospaces', '/usr/bin/env nospaces'),
+                ('/usr/bin/env with spaces', '/usr/bin/env "with spaces"'),
+                ('/usr/bin/env "pre spaced"', '/usr/bin/env "pre spaced"')
+                ):
+            self.assertEqual(ScriptMaker._enquote_executable(executable),
+                             expected)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

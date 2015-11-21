@@ -141,8 +141,8 @@ class ScriptMaker(object):
         executable = os.path.normcase(executable)
         # If the user didn't specify an executable, it may be necessary to
         # cater for executable paths with spaces (not uncommon on Windows)
-        if enquote and ' ' in executable:
-            executable = '"%s"' % executable
+        if enquote:
+            executable = self._enquote_executable(executable)
         # Issue #51: don't use fsencode, since we later try to
         # check that the shebang is decodable using utf-8.
         executable = executable.encode('utf-8')
@@ -172,6 +172,22 @@ class ScriptMaker(object):
                     'The shebang (%r) is not decodable '
                     'from the script encoding (%r)' % (shebang, encoding))
         return shebang
+
+    @staticmethod
+    def _enquote_executable(executable):
+        if ' ' in executable:
+            # make sure we quote only the executable in case of env
+            # for example /usr/bin/env "/dir with spaces/bin/jython"
+            # instead of "/usr/bin/env /dir with spaces/bin/jython"
+            # otherwise whole
+            if executable.startswith('/usr/bin/env '):
+                env, _executable = executable.split(' ', 1)
+                if ' ' in _executable and not _executable.startswith('"'):
+                    executable = '%s "%s"' % (env, _executable)
+            else:
+                if not executable.startswith('"'):
+                    executable = '"%s"' % executable
+        return executable
 
     def _get_script_text(self, entry):
         return self.script_template % dict(module=entry.prefix,
