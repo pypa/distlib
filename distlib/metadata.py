@@ -548,7 +548,7 @@ class LegacyMetadata(object):
             ('description', 'Description'),
             ('keywords', 'Keywords'),
             ('platform', 'Platform'),
-            ('classifier', 'Classifier'),
+            ('classifiers', 'Classifier'),
             ('download_url', 'Download-URL'),
         )
 
