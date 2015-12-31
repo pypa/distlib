@@ -586,16 +586,16 @@ class TestDatabase(LoggingCatcher,
 
         # See issue #78. Test reading an entry_points.txt with leading spaces
 
-        TEST_EXPORTS = """
+        TEST_EXPORTS = b"""
         [paste.server_runner]
         main = waitress:serve_paste
         [console_scripts]
         waitress-serve = waitress.runner:run
         """
-        with io.StringIO(TEST_EXPORTS) as f:
+        with io.BytesIO(TEST_EXPORTS) as f:
             exports = read_exports(f)
         self.assertEqual(set(exports.keys()),
-                         {'paste.server_runner', 'console_scripts'})
+                         set(['paste.server_runner', 'console_scripts']))
 
     def test_exports_iteration(self):
         d = DistributionPath()
