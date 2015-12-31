@@ -475,12 +475,12 @@ class WheelTestCase(unittest.TestCase):
             parts.append('u')
         self.assertEqual(''.join(parts), ABI)
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_pure(self):
         self.do_build_and_install('sarge == 0.1')
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipIf(hasattr(sys, 'pypy_version_info'), 'The test distribution'
                                                ' does not build on PyPy')
     @unittest.skipIf(sys.platform != 'linux2', 'The test distribution only '
@@ -489,14 +489,14 @@ class WheelTestCase(unittest.TestCase):
     def test_build_and_install_plat(self):
         self.do_build_and_install('hiredis == 0.1.1')
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
                                                '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_data(self):
         self.do_build_and_install('Werkzeug == 0.4')
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
                                                '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')

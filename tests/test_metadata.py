@@ -368,7 +368,8 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         metadata['description'] = desc
         metadata.write_file(out)
 
-        folded_desc = desc.replace('\n', '\n' + (7 * ' ') + '|')
+        # folded_desc = desc.replace('\n', '\n' + (7 * ' ') + '|')
+        folded_desc = desc.replace('\n', '\n' + (8 * ' '))
         self.assertIn(folded_desc, out.getvalue())
 
     def test_project_url(self):

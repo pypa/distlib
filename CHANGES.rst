@@ -7,10 +7,34 @@ Change log for ``distlib``
 
 Released: not yet.
 
+- locators
+
+    - Updated default PyPI URL to https://pypi.python.org/pypi
+
+- metadata
+
+    - Updated to use different formatting for description field for V1.1
+      metadata.
+
+    - Corrected "classifier" to "classifiers" in the mapping for V1.0
+      metadata.
+
 - util
 
     - Issue #77: Made the internal URL used for extended metadata fetches
       configurable via a module attribute.
+
+- docs
+
+    - Numerous documentation updates, not detailed further here.
+
+- tests
+
+    - renamed environment variable SKIP_SLOW to SKIP_ONLINE in tests and
+      applied to some more tests.
+
+    - Numerous other test refinements, not detailed further here.
+
 
 0.2.1
 ~~~~~

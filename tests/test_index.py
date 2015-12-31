@@ -293,6 +293,7 @@ class PackageIndexTestCase(unittest.TestCase):
         self.assertRaises(DistlibException, self.index.download_file, url, fn,
                           digest[:-1] + '8')
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_search(self):
         self.index = PackageIndex()
         result = self.index.search({'name': 'tatterdema'})

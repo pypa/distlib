@@ -28,7 +28,7 @@ PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.python.org/simple/
 
 class LocatorTestCase(unittest.TestCase):
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_xmlrpc(self):
         locator = PyPIRPCLocator(PYPI_RPC_HOST)
         try:
@@ -52,7 +52,7 @@ class LocatorTestCase(unittest.TestCase):
             raise unittest.SkipTest('PyPI XML-RPC not available')
         self.assertGreater(len(names), 25000)
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_json(self):
         locator = PyPIJSONLocator(PYPI_RPC_HOST)
         result = locator.get_project('sarge')
@@ -68,7 +68,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dist.digests[url],('md5', LATEST_SARGE_MD5))
         self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_scraper(self):
         locator = SimpleScrapingLocator('https://pypi.python.org/simple/')
         for name in ('sarge', 'Sarge'):
@@ -87,7 +87,7 @@ class LocatorTestCase(unittest.TestCase):
         names = locator.get_distribution_names()
         self.assertGreater(len(names), 25000)
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_unicode_project_name(self):
         # Just checking to see that no exceptions are raised.
         NAME = '\u2603'
@@ -165,7 +165,7 @@ class LocatorTestCase(unittest.TestCase):
         finally:
             sys.path.pop(0)
 
-    @unittest.skipIf('SKIP_SLOW' in os.environ, 'Skipping slow test')
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
@@ -201,6 +201,7 @@ class LocatorTestCase(unittest.TestCase):
         n2 = loc2.get_distribution_names()
         self.assertEqual(locator.get_distribution_names(), n1 | n2)
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_dependency_finder(self):
         locator = AggregatingLocator(
             JSONLocator(),
@@ -218,7 +219,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc',
-                                  'py', 'pytest',
+                                  'pytest',
                                   'pytest-runner', 'setuptools_scm'])
 
         g = make_graph(dists)
@@ -234,6 +235,7 @@ class LocatorTestCase(unittest.TestCase):
             ('hgtools', 'setuptools_scm', 'py', 'pytest-runner', 'pytest', 'irc'),
             ('py', 'hgtools', 'setuptools_scm', 'pytest-runner', 'pytest', 'irc'),
             ('py', 'setuptools_scm', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
+            ('pytest', 'setuptools_scm', 'hgtools', 'pytest-runner', 'irc'),
         ])
         self.assertIn(tuple(names), expected)
 
@@ -266,6 +268,7 @@ class LocatorTestCase(unittest.TestCase):
         actual = sorted([d.name_and_version for d in dists])
         self.assertTrue(actual[0].startswith('Jinja2 ('))
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_get_all_dist_names(self):
         for url in (None, PYPI_RPC_HOST):
             try:
@@ -281,6 +284,7 @@ class LocatorTestCase(unittest.TestCase):
         for url1, url2 in cases:
             self.assertEqual(default_locator.prefer_url(url1, url2), url1)
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_prereleases(self):
         locator = AggregatingLocator(
             JSONLocator(),
@@ -309,6 +313,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertEqual(dists, set([actual[0], dist]))
         self.assertFalse(problems)
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_dist_reqts(self):
         r = 'config (<=0.3.5)'
         dist = default_locator.locate(r)
@@ -317,6 +322,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertTrue(dist.matches_requirement(r))
         self.assertFalse(dist.matches_requirement('config (0.3.6)'))
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_dist_reqts_extras(self):
         r = 'config[doc,test](<=0.3.5)'
         dist = default_locator.locate(r)
@@ -324,6 +330,7 @@ class LocatorTestCase(unittest.TestCase):
         self.assertTrue(dist.matches_requirement(r))
         self.assertEqual(dist.extras, ['doc', 'test'])
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_all(self):
         d = default_locator.get_project('setuptools')
         self.assertTrue('urls' in d)
@@ -461,7 +468,7 @@ class LocatorTestCase(unittest.TestCase):
             'setuptools-6.0.1.zip',
             'setuptools-6.0.2.tar.gz',
             'setuptools-6.0.2.zip',
-            'setuptools-6.0.tar.gz',
+            # 'setuptools-6.0.tar.gz',
             'setuptools-6.0.zip',
         ])
         actual = set()
@@ -472,6 +479,7 @@ class LocatorTestCase(unittest.TestCase):
                 actual.add(filename)
         self.assertEqual(actual & expected, expected)
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_nonexistent(self):
         # See Issue #58
         d = locate('foobarbazbishboshboo')

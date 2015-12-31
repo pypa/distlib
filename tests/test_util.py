@@ -461,6 +461,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertFalse(is_string_sequence(['a', 'b', None]))
         self.assertRaises(AssertionError, is_string_sequence, [])
 
+    @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     def test_package_data(self):
         data = get_package_data(name='config', version='0.3.6')
         self.assertTrue(data)
