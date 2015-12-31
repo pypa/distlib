@@ -137,8 +137,8 @@ class DistributionPath(object):
                     if not pydist:
                         continue
 
-                    metadata = Metadata(fileobj=pydist.as_stream(),
-                                        scheme='legacy')
+                    with contextlib.closing(pydist.as_stream()) as stream:
+                        metadata = Metadata(fileobj=stream, scheme='legacy')
                     logger.debug('Found %s', r.path)
                     seen.add(r.path)
                     yield new_dist_class(r.path, metadata=metadata,
