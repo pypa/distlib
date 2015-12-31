@@ -3,8 +3,10 @@
 # Copyright (C) 2012-2013 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
+from __future__ import unicode_literals
 
 import base64
+import io
 import os
 import hashlib
 import logging
@@ -581,6 +583,19 @@ class TestDatabase(LoggingCatcher,
         self.check_entry(e, 'real', 'cgi', 'print_directory', [])
         import cgi
         self.assertIs(e.value, cgi.print_directory)
+
+        # See issue #78. Test reading an entry_points.txt with leading spaces
+
+        TEST_EXPORTS = """
+        [paste.server_runner]
+        main = waitress:serve_paste
+        [console_scripts]
+        waitress-serve = waitress.runner:run
+        """
+        with io.StringIO(TEST_EXPORTS) as f:
+            exports = read_exports(f)
+        self.assertEqual(set(exports.keys()),
+                         {'paste.server_runner', 'console_scripts'})
 
     def test_exports_iteration(self):
         d = DistributionPath()

@@ -20,6 +20,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import textwrap
+
 try:
     import threading
 except ImportError:
@@ -199,8 +201,8 @@ def read_exports(stream):
     data = stream.read()
     stream = StringIO(data)
     try:
-        data = json.load(stream)
-        result = data['extensions']['python.exports']['exports']
+        jdata = json.load(stream)
+        result = jdata['extensions']['python.exports']['exports']
         for group, entries in result.items():
             for k, v in entries.items():
                 s = '%s = %s' % (k, v)
@@ -210,11 +212,22 @@ def read_exports(stream):
         return result
     except Exception:
         stream.seek(0, 0)
+
+    def read_stream(cp, stream):
+        if hasattr(cp, 'read_file'):
+            cp.read_file(stream)
+        else:
+            cp.readfp(stream)
+
     cp = configparser.ConfigParser()
-    if hasattr(cp, 'read_file'):
-        cp.read_file(stream)
-    else:
-        cp.readfp(stream)
+    try:
+        read_stream(cp, stream)
+    except configparser.MissingSectionHeaderError:
+        stream.close()
+        data = textwrap.dedent(data)
+        stream = StringIO(data)
+        read_stream(cp, stream)
+
     result = {}
     for key in cp.sections():
         result[key] = entries = {}
