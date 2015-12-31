@@ -473,7 +473,11 @@ class WheelTestCase(unittest.TestCase):
             parts.append('m')
         if sysconfig.get_config_var('Py_UNICODE_SIZE') == 4:
             parts.append('u')
-        self.assertEqual(''.join(parts), ABI)
+        if sys.version_info[:2] < (3, 5):
+            abi = ABI
+        else:
+            abi = ABI.split('-')[0]
+        self.assertEqual(''.join(parts), abi)
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
