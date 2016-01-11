@@ -218,7 +218,7 @@ class LocatorTestCase(unittest.TestCase):
                                       meta_extras=[':test:'])
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
-        self.assertEqual(actual, ['hgtools', 'irc',
+        self.assertEqual(actual, ['hgtools', 'irc', 'py',
                                   'pytest',
                                   'pytest-runner', 'setuptools_scm'])
 
@@ -237,6 +237,9 @@ class LocatorTestCase(unittest.TestCase):
             ('py', 'setuptools_scm', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
             ('pytest', 'setuptools_scm', 'hgtools', 'pytest-runner', 'irc'),
             ('hgtools', 'setuptools_scm', 'pytest', 'pytest-runner', 'irc'),
+            ('py', 'setuptools_scm', 'hgtools', 'pytest-runner', 'pytest', 'irc'),
+            ('py', 'setuptools_scm', 'pytest', 'pytest-runner', 'hgtools', 'irc'),
+            ('py', 'setuptools_scm', 'pytest-runner', 'pytest', 'hgtools', 'irc'),
         ])
         self.assertIn(tuple(names), expected)
 
