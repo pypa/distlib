@@ -76,8 +76,9 @@ class ScriptTestCase(unittest.TestCase):
         self.assertIn(maker.executable, actual)
 
     def test_multiple(self):
+        import pdb; pdb.set_trace()
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
-                 'shell.sh')
+                 'shell.sh', 'uwsgi_part')
         files = self.maker.make_multiple(specs)
         self.assertEqual(len(specs), len(files))
         expected = set(specs)
