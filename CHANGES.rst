@@ -19,10 +19,17 @@ Released: not yet.
     - Corrected "classifier" to "classifiers" in the mapping for V1.0
       metadata.
 
+- scripts
+
+    - Improved support for Jython when quoting executables in output scripts.
+
 - util
 
     - Issue #77: Made the internal URL used for extended metadata fetches
       configurable via a module attribute.
+
+    - Issue #78: Improved entry point parsing to handle leading spaces in
+      ini-format files.
 
 - docs
 
