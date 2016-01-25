@@ -20,7 +20,7 @@ import zipimport
 from . import DistlibException, resources
 from .compat import StringIO
 from .version import get_scheme, UnsupportedVersionError
-from .metadata import Metadata, METADATA_FILENAME
+from .metadata import Metadata, METADATA_FILENAME, WHEEL_METADATA_FILENAME
 from .util import (parse_requirement, cached_property, parse_name_and_version,
                    read_exports, write_exports, CSVReader, CSVWriter)
 
@@ -132,9 +132,13 @@ class DistributionPath(object):
                 if not r or r.path in seen:
                     continue
                 if self._include_dist and entry.endswith(DISTINFO_EXT):
-                    metadata_path = posixpath.join(entry, METADATA_FILENAME)
-                    pydist = finder.find(metadata_path)
-                    if not pydist:
+                    possible_filenames = [METADATA_FILENAME, WHEEL_METADATA_FILENAME]
+                    for metadata_filename in possible_filenames:
+                        metadata_path = posixpath.join(entry, metadata_filename)
+                        pydist = finder.find(metadata_path)
+                        if pydist:
+                            break
+                    else:
                         continue
 
                     with contextlib.closing(pydist.as_stream()) as stream:
@@ -532,6 +536,9 @@ class InstalledDistribution(BaseInstalledDistribution):
             metadata = env._cache.path[path].metadata
         elif metadata is None:
             r = finder.find(METADATA_FILENAME)
+            # Temporary - for Wheel 0.23 support
+            if r is None:
+                r = finder.find(WHEEL_METADATA_FILENAME)
             # Temporary - for legacy support
             if r is None:
                 r = finder.find('METADATA')

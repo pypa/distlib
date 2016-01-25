@@ -624,6 +624,7 @@ class LegacyMetadata(object):
 
 
 METADATA_FILENAME = 'pydist.json'
+WHEEL_METADATA_FILENAME = 'metadata.json'
 
 
 class Metadata(object):
