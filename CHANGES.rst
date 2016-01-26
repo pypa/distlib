@@ -7,6 +7,12 @@ Change log for ``distlib``
 
 Released: not yet.
 
+- database
+
+    - Added support for detecting distributions installed by wheel versions
+      >= 0.23 (which use metadata.json rather than pydist.json). Thanks to
+      Te-jé Rodgers for the patch.
+
 - locators
 
     - Updated default PyPI URL to https://pypi.python.org/pypi
