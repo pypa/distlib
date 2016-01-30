@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013 Vinay Sajip.
+# Copyright (C) 2016 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -43,7 +43,7 @@ distutils.core.setup(
     long_description = ('Low-level components of distutils2/packaging, '
                         'augmented with higher-level APIs for making '
                         'packaging easier.'),
-    license='PSF',
+    license='Python license',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
