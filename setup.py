@@ -43,12 +43,12 @@ distutils.core.setup(
     long_description = ('Low-level components of distutils2/packaging, '
                         'augmented with higher-level APIs for making '
                         'packaging easier.'),
-    license='BSD',
+    license='PSF',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: Python Software Foundation License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
@@ -58,6 +58,7 @@ distutils.core.setup(
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Software Development',
     ],
     platforms='any',
