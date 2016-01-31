@@ -760,8 +760,9 @@ def _get_external_data(url):
         # using a custom redirect handler.
         resp = urlopen(url)
         headers = resp.info()
-        if headers.get('Content-Type') != 'application/json':
-            logger.debug('Unexpected response for JSON request')
+        ct = headers.get('Content-Type')
+        if not ct.startswith('application/json'):
+            logger.debug('Unexpected response for JSON request: %s', ct)
         else:
             reader = codecs.getreader('utf-8')(resp)
             #data = reader.read().decode('utf-8')
