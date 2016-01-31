@@ -15,9 +15,9 @@ Released: 2016-01-30
 
 - database
 
-    - Added support for detecting distributions installed by wheel versions
-      >= 0.23 (which use metadata.json rather than pydist.json). Thanks to
-      Te-jé Rodgers for the patch.
+    - Issue #81: Added support for detecting distributions installed by wheel
+      versions >= 0.23 (which use metadata.json rather than pydist.json).
+      Thanks to Te-jé Rodgers for the patch.
 
 - locators
 
