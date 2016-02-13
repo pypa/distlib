@@ -553,11 +553,10 @@ class ExportEntry(object):
     __hash__ = object.__hash__
 
 
-ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.])+)
+ENTRY_RE = re.compile(r'''(?P<name>(\w|[-.+])+)
                       \s*=\s*(?P<callable>(\w+)([:\.]\w+)*)
                       \s*(\[\s*(?P<flags>\w+(=\w+)?(,\s*\w+(=\w+)?)*)\s*\])?
                       ''', re.VERBOSE)
-
 
 def get_export_entry(specification):
     m = ENTRY_RE.search(specification)

@@ -65,6 +65,8 @@ class UtilTestCase(unittest.TestCase):
         self.check_entry(get_export_entry('foo=foo.bar:main[x]'),
                          'foo', 'foo.bar', 'main', ['x'])
         self.check_entry(get_export_entry('foo=abc'), 'foo', 'abc', None, [])
+        self.check_entry(get_export_entry('smc++ = smcpp.frontend:console'), 'smc++',
+                                          'smcpp.frontend', 'console', [])
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x:y')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x ]')
