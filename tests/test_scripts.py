@@ -4,6 +4,8 @@
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
+from __future__ import unicode_literals
+
 import os
 import shutil
 import subprocess
@@ -58,21 +60,22 @@ class ScriptTestCase(unittest.TestCase):
         dstdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, dstdir)
         maker = ScriptMaker(srcdir, dstdir, add_launchers=False)
-        maker.executable = 'this_should_appear_in_the_shebang_line'
-        #let's create the script to be copied. It has a vanilla shebang line.
+        maker.executable = 'this_should_appear_in_the_shebang_line(中文)'
+        # let's create the script to be copied. It has a vanilla shebang line,
+        # with some Unicode in it.
         fn = os.path.join(srcdir, 'copied')
         with open(fn, 'w') as f:
             f.write(COPIED_SCRIPT)
         # Let's ask the maker to copy the script, and see what the shebang is
         # in the copy.
         filenames = maker.make('copied')
-        with open(filenames[0], 'r') as f:
-            actual = f.readline()
+        with open(filenames[0], 'rb') as f:
+            actual = f.readline().decode('utf-8')
         self.assertIn(maker.executable, actual)
         # Now let's make a script from a callable
         filenames = maker.make(MADE_SCRIPT)
-        with open(filenames[0], 'r') as f:
-            actual = f.readline()
+        with open(filenames[0], 'rb') as f:
+            actual = f.readline().decode('utf-8')
         self.assertIn(maker.executable, actual)
 
     def test_multiple(self):
