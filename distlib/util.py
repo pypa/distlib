@@ -33,7 +33,8 @@ from .compat import (string_types, text_type, shutil, raw_input, StringIO,
                      cache_from_source, urlopen, urljoin, httplib, xmlrpclib,
                      splittype, HTTPHandler, HTTPSHandler as BaseHTTPSHandler,
                      BaseConfigurator, valid_ident, Container, configparser,
-                     URLError, match_hostname, CertificateError, ZipFile)
+                     URLError, match_hostname, CertificateError, ZipFile,
+                     fsdecode)
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +166,10 @@ def get_executable():
 #    else:
 #        result = sys.executable
 #    return result
-    return os.path.normcase(sys.executable)
+    result = os.path.normcase(sys.executable)
+    if not isinstance(result, text_type):
+        result = fsdecode(result)
+    return result
 
 
 def proceed(prompt, allowed_chars, error_prompt=None, default=None):

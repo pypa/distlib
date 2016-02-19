@@ -7,6 +7,22 @@ Change log for ``distlib``
 
 Released: not yet.
 
+- util
+
+    - Changed get_executable to return Unicode rather than bytes.
+
+    - Fixed #84: Allow + character in output script names.
+
+    - Relaxed too-stringent test looking for application/json in headers.
+
+- wheel
+
+    - sorted the entries in RECORD before writing to file.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
+
 
 0.2.2
 ~~~~~
