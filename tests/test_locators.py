@@ -62,9 +62,9 @@ class LocatorTestCase(unittest.TestCase):
         dist = result[LATEST_SARGE_VERSION]
         self.assertEqual(dist.name, 'sarge')
         self.assertEqual(dist.version, LATEST_SARGE_VERSION)
-        url = ('https://pypi.python.org/packages/source/s/sarge/'
-               'sarge-%s.tar.gz' % LATEST_SARGE_VERSION)
-        self.assertIn(url, dist.download_urls)
+        path = '/sarge-%s.tar.gz' % LATEST_SARGE_VERSION
+        for url in dist.download_urls:
+            self.assertTrue(url.endswith(path))
         self.assertEqual(dist.digests[url],('md5', LATEST_SARGE_MD5))
         self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
@@ -77,9 +77,7 @@ class LocatorTestCase(unittest.TestCase):
             dist = result['0.1']
             self.assertEqual(dist.name, 'sarge')
             self.assertEqual(dist.version, '0.1')
-            self.assertEqual(dist.source_url,
-                             'https://pypi.python.org/packages/source/s/sarge/'
-                             'sarge-0.1.tar.gz')
+            self.assertTrue(dist.source_url.endswith('/sarge-0.1.tar.gz'))
             self.assertEqual(dist.digest,
                              ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'))
         return
@@ -174,7 +172,7 @@ class LocatorTestCase(unittest.TestCase):
         locator = AggregatingLocator(loc1, loc2)
         exp1 = os.path.join(HERE, 'fake_archives', 'subdir',
                             'subsubdir', 'Flask-0.9.tar.gz')
-        exp2 = 'https://pypi.python.org/packages/source/F/Flask/Flask-0.9.tar.gz'
+        exp2 = '/Flask-0.9.tar.gz'
         result = locator.get_project('flask')
         self.assertEqual(len(result), 3)
         self.assertIn('0.9', result)
@@ -193,7 +191,7 @@ class LocatorTestCase(unittest.TestCase):
         dist = result['0.9']
         self.assertEqual(dist.name, 'Flask')
         self.assertEqual(dist.version, '0.9')
-        self.assertEqual(dist.source_url, exp2)
+        self.assertTrue(dist.source_url.endswith(exp2))
         return
         # The following code is slow because it has
         # to get all the dist names by scraping :-(
