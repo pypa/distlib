@@ -27,7 +27,7 @@ from .database import Distribution, DistributionPath, make_dist
 from .metadata import Metadata
 from .util import (cached_property, parse_credentials, ensure_slash,
                    split_filename, get_project_data, parse_requirement,
-                   parse_name_and_version, ServerProxy)
+                   parse_name_and_version, ServerProxy, normalize_name)
 from .version import get_scheme, UnsupportedVersionError
 from .wheel import Wheel, is_compatible
 
@@ -210,14 +210,7 @@ class Locator(object):
         "filename" and "url"; otherwise, None is returned.
         """
         def same_project(name1, name2):
-            name1, name2 = name1.lower(), name2.lower()
-            if name1 == name2:
-                result = True
-            else:
-                # distribute replaces '-' by '_' in project names, so it
-                # can tell where the version starts in a filename.
-                result = name1.replace('_', '-') == name2.replace('_', '-')
-            return result
+            return normalize_name(name1) == normalize_name(name2)
 
         result = None
         scheme, netloc, path, params, query, frag = urlparse(url)
