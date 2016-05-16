@@ -9,7 +9,10 @@ import logging
 import logging.handlers
 import shutil
 import socket
-import ssl
+try:
+    import ssl
+except ImportError:
+    ssl = None
 import sys
 import tempfile
 try:

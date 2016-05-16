@@ -10,6 +10,10 @@ import logging
 import os
 import shutil
 import socket
+try:
+    import ssl
+except ImportError:
+    ssl = None
 import subprocess
 import sys
 import tempfile
@@ -19,13 +23,17 @@ except ImportError:
     import dummy_threading as threading
 
 from compat import unittest, Request
-from support import HTTPSServerThread
+if ssl:
+    from support import HTTPSServerThread
 
 from distlib import DistlibException
 from distlib.compat import urlopen, HTTPError, URLError
 from distlib.index import PackageIndex
 from distlib.metadata import Metadata, MetadataMissingError, METADATA_FILENAME
-from distlib.util import zip_dir, HTTPSHandler
+from distlib.util import zip_dir
+
+if ssl:
+    from distlib.util import HTTPSHandler
 
 logger = logging.getLogger(__name__)
 
@@ -248,52 +256,54 @@ class PackageIndexTestCase(unittest.TestCase):
         finally:
             os.remove(PYPIRC)
 
-    def make_https_server(self, certfile):
-        server = HTTPSServerThread(certfile)
-        flag = threading.Event()
-        server.start(flag)
-        flag.wait()
-        def cleanup():
-            server.stop()
-            server.join()
-        self.addCleanup(cleanup)
-        return server
+    if ssl:
+        def make_https_server(self, certfile):
+            server = HTTPSServerThread(certfile)
+            flag = threading.Event()
+            server.start(flag)
+            flag.wait()
+            def cleanup():
+                server.stop()
+                server.join()
+            self.addCleanup(cleanup)
+            return server
 
-    def test_ssl_verification(self):
-        certfile = os.path.join(HERE, 'keycert.pem')
-        server = self.make_https_server(certfile)
-        url = 'https://localhost:%d/' % server.port
-        req = Request(url)
-        self.index.ssl_verifier = HTTPSHandler(certfile)
-        response = self.index.send_request(req)
-        self.assertEqual(response.code, 200)
+        def test_ssl_verification(self):
+            certfile = os.path.join(HERE, 'keycert.pem')
+            server = self.make_https_server(certfile)
+            url = 'https://localhost:%d/' % server.port
+            req = Request(url)
+            self.index.ssl_verifier = HTTPSHandler(certfile)
+            response = self.index.send_request(req)
+            self.assertEqual(response.code, 200)
 
-    def test_download(self):
-        digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt
-        certfile = os.path.join(HERE, 'keycert.pem')
-        server = self.make_https_server(certfile)
-        url = 'https://localhost:%d/README.txt' % server.port
-        fd, fn = tempfile.mkstemp()
-        os.close(fd)
-        self.addCleanup(os.remove, fn)
-        with open(os.path.join(HERE, 'testsrc', 'README.txt'), 'rb') as f:
-            data = f.read()
-        self.index.ssl_verifier = HTTPSHandler(certfile)
-        self.index.download_file(url, fn)   # no digest
-        with open(fn, 'rb') as f:
-            self.assertEqual(data, f.read())
-        self.index.download_file(url, fn, digest)
-        with open(fn, 'rb') as f:
-            self.assertEqual(data, f.read())
-        reporthook = lambda *args: None
-        self.index.download_file(url, fn, ('md5', digest), reporthook)
-        with open(fn, 'rb') as f:
-            self.assertEqual(data, f.read())
-        # bad digest
-        self.assertRaises(DistlibException, self.index.download_file, url, fn,
-                          digest[:-1] + '8')
+        def test_download(self):
+            digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt
+            certfile = os.path.join(HERE, 'keycert.pem')
+            server = self.make_https_server(certfile)
+            url = 'https://localhost:%d/README.txt' % server.port
+            fd, fn = tempfile.mkstemp()
+            os.close(fd)
+            self.addCleanup(os.remove, fn)
+            with open(os.path.join(HERE, 'testsrc', 'README.txt'), 'rb') as f:
+                data = f.read()
+            self.index.ssl_verifier = HTTPSHandler(certfile)
+            self.index.download_file(url, fn)   # no digest
+            with open(fn, 'rb') as f:
+                self.assertEqual(data, f.read())
+            self.index.download_file(url, fn, digest)
+            with open(fn, 'rb') as f:
+                self.assertEqual(data, f.read())
+            reporthook = lambda *args: None
+            self.index.download_file(url, fn, ('md5', digest), reporthook)
+            with open(fn, 'rb') as f:
+                self.assertEqual(data, f.read())
+            # bad digest
+            self.assertRaises(DistlibException, self.index.download_file, url, fn,
+                              digest[:-1] + '8')
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
+    @unittest.skipUnless(ssl, 'SSL required for this test.')
     def test_search(self):
         self.index = PackageIndex()
         result = self.index.search({'name': 'tatterdema'})

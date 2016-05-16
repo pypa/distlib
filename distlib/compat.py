@@ -10,6 +10,11 @@ import os
 import re
 import sys
 
+try:
+    import ssl
+except ImportError:
+    ssl = None
+
 if sys.version_info[0] < 3:  # pragma: no cover
     from StringIO import StringIO
     string_types = basestring,
@@ -30,8 +35,10 @@ if sys.version_info[0] < 3:  # pragma: no cover
     import urllib2
     from urllib2 import (Request, urlopen, URLError, HTTPError,
                          HTTPBasicAuthHandler, HTTPPasswordMgr,
-                         HTTPSHandler, HTTPHandler, HTTPRedirectHandler,
+                         HTTPHandler, HTTPRedirectHandler,
                          build_opener)
+    if ssl:
+        from urllib2 import HTTPSHandler
     import httplib
     import xmlrpclib
     import Queue as queue
@@ -66,8 +73,10 @@ else:  # pragma: no cover
     from urllib.request import (urlopen, urlretrieve, Request, url2pathname,
                                 pathname2url,
                                 HTTPBasicAuthHandler, HTTPPasswordMgr,
-                                HTTPSHandler, HTTPHandler, HTTPRedirectHandler,
+                                HTTPHandler, HTTPRedirectHandler,
                                 build_opener)
+    if ssl:
+        from urllib.request import HTTPSHandler
     from urllib.error import HTTPError, URLError, ContentTooShortError
     import http.client as httplib
     import urllib.request as urllib2
