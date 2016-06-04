@@ -7,6 +7,21 @@ Change log for ``distlib``
 
 Released: not yet.
 
+- compat
+
+    - Updated to not fail on import if SSL is unavailable.
+
+- util
+
+    - Updated to not fail on import if SSL is unavailable.
+
+- tests
+
+    - Updated to skip certain tests if SSL is unavailable.
+
+    - Numerous other test refinements, not detailed further here.
+
+
 0.2.3
 ~~~~~
 
