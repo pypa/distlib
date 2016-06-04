@@ -406,6 +406,9 @@ find_executable_and_args(wchar_t * line, wchar_t ** argp)
     }
     /* p points just past the executable. It must either be a NUL or whitespace. */
     assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line.");
+    /* if p is whitespace, make it NUL to truncate 'line', and advance */
+    if (*p && iswspace(*p))
+        *p++ = L'\0';
     /* Now we can skip the whitespace, having checked that it's there. */
     while(*p && iswspace(*p))
         ++p;

@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
 
 from compat import unittest
 
@@ -149,6 +150,53 @@ class ScriptTestCase(unittest.TestCase):
             self.assertTrue(data.startswith(tlauncher))
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
+    def test_launcher_run(self):
+        self.maker.add_launchers = True
+        files = self.maker.make('script6.py')
+        self.assertEqual(len(files), 1)
+        p = subprocess.Popen([files[0], 'Test Argument'],
+                             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+        stdout, stderr = p.communicate('input'.encode('ascii'))
+        actual = stdout.decode('ascii').replace('\r\n', '\n')
+        expected = textwrap.dedent("""
+            script6.exe
+            ['Test Argument']
+            'input'
+            non-optimized
+            """).lstrip()
+        self.assertEqual(actual, expected)
+
+    @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
+    def test_launcher_run_with_interpreter_args(self):
+        srcdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, srcdir)
+        dstdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, dstdir)
+        maker = ScriptMaker(srcdir, dstdir, add_launchers=True)
+
+        # add '-O' option to shebang to run in optimized mode
+        with open(os.path.join(HERE, 'scripts', 'script6.py'), 'r') as src:
+            with open(os.path.join(srcdir, 'script6-optimized.py'), 'w') as dst:
+                shebang = src.readline().rstrip()
+                dst.write(shebang + " -O\n")
+                dst.write(src.read())
+
+        files = maker.make('script6-optimized.py')
+        self.assertEqual(len(files), 1)
+        p = subprocess.Popen([files[0], 'Test Argument'],
+                             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+        stdout, stderr = p.communicate('input'.encode('ascii'))
+        actual = stdout.decode('ascii').replace('\r\n', '\n')
+        expected = textwrap.dedent("""
+            script6-optimized.exe
+            ['Test Argument']
+            'input'
+            """).lstrip()  # 'non-optimized' is not printed this time
+        self.assertEqual(actual, expected)
+
+    @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_windows(self):  # pragma: no cover
         wlauncher = self.maker._get_launcher('w')
         tlauncher = self.maker._get_launcher('t')
@@ -185,6 +233,23 @@ class ScriptTestCase(unittest.TestCase):
                 data = f.read()
             self.assertTrue(data.startswith(tlauncher))
             self.assertIn(executable, data)
+
+    @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
+    def test_windows_run(self):
+        self.maker.add_launchers = True
+        files = self.maker.make('script7.pyw')
+        self.assertEqual(len(files), 1)
+
+        test_output = os.path.join(self.maker.target_dir, 'test_output.txt')
+        p = subprocess.Popen([files[0], test_output, 'Test Argument'],
+                             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+        stdout, stderr = p.communicate()
+        self.assertFalse(stdout)
+        self.assertFalse(stderr)
+        with open(test_output, 'rb') as f:
+            actual = f.read().decode('ascii')
+        self.assertEqual(actual, 'Test Argument')
 
     def test_dry_run(self):
         self.maker.dry_run = True
