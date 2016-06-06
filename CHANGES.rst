@@ -11,9 +11,16 @@ Released: not yet.
 
     - Updated to not fail on import if SSL is unavailable.
 
+- locators
+
+    - Changed project name comparisons to follow PEP 503. Thanks to Steven
+      Arcangeli for the patch.
+
 - util
 
     - Updated to not fail on import if SSL is unavailable.
+
+    - Added normalize_name fpr project name comparisons using PEP 503.
 
 - tests
 
