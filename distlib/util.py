@@ -1601,3 +1601,9 @@ class SubprocessMixin(object):
         elif self.verbose:
             sys.stderr.write('done.\n')
         return p
+
+
+def normalize_name(name):
+    """Normalize a python package name a la PEP 503"""
+    # https://www.python.org/dev/peps/pep-0503/#normalized-names
+    return re.sub(r"[-_.]+", "-", name).lower()
