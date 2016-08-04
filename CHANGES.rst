@@ -16,6 +16,8 @@ Released: not yet.
     - Changed project name comparisons to follow PEP 503. Thanks to Steven
       Arcangeli for the patch.
 
+    - Added errors queue to Locator.
+
 - util
 
     - Updated to not fail on import if SSL is unavailable.

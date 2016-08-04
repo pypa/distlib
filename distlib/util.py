@@ -568,8 +568,8 @@ def get_export_entry(specification):
     if not m:
         result = None
         if '[' in specification or ']' in specification:
-            raise DistlibException('Invalid specification '
-                                   '%r' % specification)
+            raise DistlibException("Invalid specification "
+                                   "'%s'" % specification)
     else:
         d = m.groupdict()
         name = d['name']
@@ -579,14 +579,14 @@ def get_export_entry(specification):
             prefix, suffix = path, None
         else:
             if colons != 1:
-                raise DistlibException('Invalid specification '
-                                       '%r' % specification)
+                raise DistlibException("Invalid specification "
+                                       "'%s'" % specification)
             prefix, suffix = path.split(':')
         flags = d['flags']
         if flags is None:
             if '[' in specification or ']' in specification:
-                raise DistlibException('Invalid specification '
-                                       '%r' % specification)
+                raise DistlibException("Invalid specification "
+                                       "'%s'" % specification)
             flags = []
         else:
             flags = [f.strip() for f in flags.split(',')]

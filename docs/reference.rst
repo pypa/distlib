@@ -724,6 +724,15 @@ Classes
       :returns: A matching instance of :class:`~distlib.database.Distribution`,
                 or ``None``.
 
+   .. method:: get_errors()
+
+      This returns a (possibly empty) list of error messages relating to a
+      recent :meth:`~distlib.locators.Locator.get_project` or
+      :meth:`~distlib.locators.Locator.locate` call. Fetching the errors
+      clears the error list.
+
+      .. versionadded:: 0.2.4
+
 .. class:: DirectoryLocator(Locator)
 
    This locator scans the file system under a base directory, looking for

@@ -21,7 +21,7 @@ import zlib
 from . import DistlibException
 from .compat import (urljoin, urlparse, urlunparse, url2pathname, pathname2url,
                      queue, quote, unescape, string_types, build_opener,
-                     HTTPRedirectHandler as BaseRedirectHandler,
+                     HTTPRedirectHandler as BaseRedirectHandler, text_type,
                      Request, HTTPError, URLError)
 from .database import Distribution, DistributionPath, make_dist
 from .metadata import Metadata
@@ -113,6 +113,28 @@ class Locator(object):
         # is set from the requirement passed to locate(). See issue #18 for
         # why this can be useful to know.
         self.matcher = None
+        self.errors = queue.Queue()
+
+    def get_errors(self):
+        """
+        Return any errors which have occurred.
+        """
+        result = []
+        while not self.errors.empty():
+            try:
+                e = self.errors.get(False)
+                result.append(e)
+            except self.errors.Empty:
+                continue
+            self.errors.task_done()
+        return result
+
+    def clear_errors(self):
+        """
+        Clear any errors which may have been logged.
+        """
+        # Just get the errors and throw them away
+        self.get_errors()
 
     def clear_cache(self):
         self._cache.clear()
@@ -155,6 +177,7 @@ class Locator(object):
         elif name in self._cache:
             result = self._cache[name]
         else:
+            self.clear_errors()
             result = self._get_project(name)
             self._cache[name] = result
         return result
@@ -482,6 +505,7 @@ class PyPIJSONLocator(Locator):
 #                    result['urls'].setdefault(md.version, set()).add(url)
 #                    result['digests'][url] = self._get_digest(info)
         except Exception as e:
+            self.errors.put(text_type(e))
             logger.exception('JSON fetch failed: %s', e)
         return result
 
@@ -707,6 +731,8 @@ class SimpleScrapingLocator(Locator):
                                 self._should_queue(link, url, rel)):
                                 logger.debug('Queueing %s from %s', link, url)
                                 self._to_fetch.put(link)
+            except Exception as e:
+                self.errors.put(text_type(e))
             finally:
                 # always do this, to avoid hangs :-)
                 self._to_fetch.task_done()
