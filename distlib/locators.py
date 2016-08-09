@@ -120,7 +120,7 @@ class Locator(object):
         Return any errors which have occurred.
         """
         result = []
-        while not self.errors.empty():
+        while not self.errors.empty():  # pragma: no cover
             try:
                 e = self.errors.get(False)
                 result.append(e)
@@ -266,7 +266,7 @@ class Locator(object):
                             'python-version': ', '.join(
                                 ['.'.join(list(v[2:])) for v in wheel.pyver]),
                         }
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.warning('invalid path for wheel: %s', path)
         elif path.endswith(self.downloadable_extensions):
             path = filename = posixpath.basename(path)
@@ -731,7 +731,7 @@ class SimpleScrapingLocator(Locator):
                                 self._should_queue(link, url, rel)):
                                 logger.debug('Queueing %s from %s', link, url)
                                 self._to_fetch.put(link)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 self.errors.put(text_type(e))
             finally:
                 # always do this, to avoid hangs :-)

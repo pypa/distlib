@@ -17,7 +17,7 @@ import shutil
 import socket
 try:
     import ssl
-except ImportError:
+except ImportError:  # pragma: no cover
     ssl = None
 import subprocess
 import sys
@@ -27,7 +27,7 @@ import textwrap
 
 try:
     import threading
-except ImportError:
+except ImportError:  # pragma: no cover
     import dummy_threading as threading
 import time
 
@@ -541,7 +541,7 @@ class ExportEntry(object):
     def value(self):
         return resolve(self.prefix, self.suffix)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return '<ExportEntry %s = %s:%s %s>' % (self.name, self.prefix,
                                                 self.suffix, self.flags)
 
@@ -805,7 +805,7 @@ class Cache(object):
         """
         # we use 'isdir' instead of 'exists', because we want to
         # fail if there's a file with that name
-        if not os.path.isdir(base):
+        if not os.path.isdir(base):  # pragma: no cover
             os.makedirs(base)
         if (os.stat(base).st_mode & 0o77) != 0:
             logger.warning('Directory \'%s\' is not private', base)
@@ -941,12 +941,12 @@ class Sequencer(object):
         try:
             preds = self._preds[succ]
             succs = self._succs[pred]
-        except KeyError:
+        except KeyError:  # pragma: no cover
             raise ValueError('%r not a successor of anything' % succ)
         try:
             preds.remove(pred)
             succs.remove(succ)
-        except KeyError:
+        except KeyError:  # pragma: no cover
             raise ValueError('%r not a successor of %r' % (succ, pred))
 
     def is_step(self, step):
@@ -1072,7 +1072,7 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
         elif archive_filename.endswith('.tar'):
             format = 'tar'
             mode = 'r'
-        else:
+        else:  # pragma: no cover
             raise ValueError('Unknown format for %r' % archive_filename)
     try:
         if format == 'zip':
@@ -1288,7 +1288,7 @@ if ssl:
                                             cert_reqs=cert_reqs,
                                             ssl_version=ssl.PROTOCOL_SSLv23,
                                             ca_certs=self.ca_certs)
-            else:
+            else:  # pragma: no cover
                 context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
                 context.options |= ssl.OP_NO_SSLv2
                 if self.cert_file:
@@ -1304,7 +1304,7 @@ if ssl:
                 try:
                     match_hostname(self.sock.getpeercert(), self.host)
                     logger.debug('Host verified: %s', self.host)
-                except CertificateError:
+                except CertificateError:  # pragma: no cover
                     self.sock.shutdown(socket.SHUT_RDWR)
                     self.sock.close()
                     raise

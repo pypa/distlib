@@ -30,7 +30,8 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
                           EventMixin, Sequencer, unarchive, Progress,
                           iglob, RICH_GLOB, parse_requirement, get_extras,
                           Configurator, read_exports, write_exports,
-                          FileOperator, is_string_sequence, get_package_data)
+                          FileOperator, is_string_sequence, get_package_data,
+                          convert_path)
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -156,6 +157,15 @@ class UtilTestCase(unittest.TestCase):
                                         'pytest_dist'),
                          ('pytest_xdist', '0.1_myfork', None))
 
+    def test_convert_path(self):
+        CP = convert_path
+        if os.sep == '/':
+            d = os.path.dirname(__file__)
+            self.assertEqual(CP(d), d)
+        else:
+            self.assertEqual(CP(''), '')
+            self.assertRaises(ValueError, CP, '/foo')
+            self.assertRaises(ValueError, CP, 'foo/')
 
     def test_events(self):
         collected = []
