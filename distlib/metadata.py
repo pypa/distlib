@@ -766,6 +766,8 @@ class Metadata(object):
                                 result = d.get(key, value)
                         else:
                             d = d.get('python.exports')
+                            if not d:
+                                d = self._data.get('python.exports')
                             if d:
                                 result = d.get(key, value)
                     if result is sentinel:
