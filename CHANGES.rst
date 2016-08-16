@@ -181,7 +181,7 @@ Released: 2014-12-17
 
 - scripts
 
-    - Updated (inluding launchers) to support providing arguments to
+    - Updated (including launchers) to support providing arguments to
       interpreters in shebang lines.
 
     - The launcher sources are now included in the repository and the
