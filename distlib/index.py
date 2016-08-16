@@ -74,7 +74,7 @@ class PackageIndex(object):
     def read_configuration(self):
         """
         Read the PyPI access configuration as supported by distutils, getting
-        PyPI to do the acutal work. This populates ``username``, ``password``,
+        PyPI to do the actual work. This populates ``username``, ``password``,
         ``realm`` and ``url`` attributes from the configuration.
         """
         # get distutils to do the work
