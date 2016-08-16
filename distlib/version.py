@@ -137,7 +137,7 @@ class Matcher(object):
         Check if the provided version matches the constraints.
 
         :param version: The version to match against this instance.
-        :type version: Strring or :class:`Version` instance.
+        :type version: String or :class:`Version` instance.
         """
         if isinstance(version, string_types):
             version = self.version_class(version)
