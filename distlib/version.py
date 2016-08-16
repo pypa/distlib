@@ -494,7 +494,7 @@ def _suggest_normalized_version(s):
     rs = re.sub(r"dev$", r"dev0", rs)
 
     # if we have something like "b-2" or "a.2" at the end of the
-    # version, that is pobably beta, alpha, etc
+    # version, that is probably beta, alpha, etc
     # let's remove the dash or dot
     rs = re.sub(r"([abc]|rc)[\-\.](\d+)$", r"\1\2", rs)
 
