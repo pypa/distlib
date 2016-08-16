@@ -918,7 +918,7 @@ the project releases registered on PyPI).
 The ``wheel`` API
 -----------------
 
-This section describes the design of the ``wheel`` API which failitates
+This section describes the design of the ``wheel`` API which facilitates
 building and installing from *wheels*, the new binary distribution format for
 Python described in :pep:`427`.
 
