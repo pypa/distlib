@@ -265,7 +265,7 @@ class NormalizedVersion(Version):
         TODO: fill this out
 
     Bad:
-        1           # mininum two numbers
+        1           # minimum two numbers
         1.2a        # release level must have a release serial
         1.2.3b
     """
