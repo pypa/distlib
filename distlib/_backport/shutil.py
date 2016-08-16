@@ -56,7 +56,7 @@ class ReadError(EnvironmentError):
 
 class RegistryError(Exception):
     """Raised when a registry operation with the archiving
-    and unpacking registeries fails"""
+    and unpacking registries fails"""
 
 
 try:
