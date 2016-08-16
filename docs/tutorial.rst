@@ -491,7 +491,7 @@ Signing a distribution
 
 To sign a distribution, you will typically need GnuPG. The default
 implementation looks for ``gpg`` or ``gpg2`` on the path, but if not available
-there, you can can explicitly specify an absbolute path indicating where the
+there, you can can explicitly specify an absolute path indicating where the
 signing program is to be found::
 
     >>> index.gpg = '/path/to/gpg'
