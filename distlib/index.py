@@ -276,7 +276,7 @@ class PackageIndex(object):
         sha256_digest = hashlib.sha256(file_data).hexdigest()
         d.update({
             ':action': 'file_upload',
-            'protcol_version': '1',
+            'protocol_version': '1',
             'filetype': filetype,
             'pyversion': pyversion,
             'md5_digest': md5_digest,
