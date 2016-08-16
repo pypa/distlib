@@ -50,7 +50,7 @@ module distribution being built/packaged/distributed/installed.
    |                    | current maintainer, if         |                                                             |
    |                    | different from the author      |                                                             |
    +--------------------+--------------------------------+-------------------------------------------------------------+
-   | *home_page*        | A URL for the proejct          | a string                                                    |
+   | *home_page*        | A URL for the project          | a string                                                    |
    |                    | (homepage)                     |                                                             |
    +--------------------+--------------------------------+-------------------------------------------------------------+
    | *download_url*     | A URL to download the project  | a string                                                    |
