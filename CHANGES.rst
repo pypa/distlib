@@ -617,7 +617,7 @@ Released: 2013-03-22
 
 - util
 
-    - Made get_cache_base more useful by parametrising the suffix to use.
+    - Made get_cache_base more useful by parameterising the suffix to use.
 
     - Fixed a bug when reading CSV streams from .zip files under 3.x.
 
