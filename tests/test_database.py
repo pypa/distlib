@@ -702,7 +702,7 @@ class DataFilesTestCase(GlobTestCaseBase):
                 'you/kill/pandabear.guy': None}
         self.assertRulesMatch(rules, spec)
 
-    def test_final_exemple_glob(self):
+    def test_final_example_glob(self):
         rules = [
             ('mailman/database/schemas/', '*', '{appdata}/schemas'),
             ('', os.path.join('**', '*.tpl'), '{appdata}/templates'),

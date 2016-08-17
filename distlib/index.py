@@ -74,7 +74,7 @@ class PackageIndex(object):
     def read_configuration(self):
         """
         Read the PyPI access configuration as supported by distutils, getting
-        PyPI to do the acutal work. This populates ``username``, ``password``,
+        PyPI to do the actual work. This populates ``username``, ``password``,
         ``realm`` and ``url`` attributes from the configuration.
         """
         # get distutils to do the work
@@ -276,7 +276,7 @@ class PackageIndex(object):
         sha256_digest = hashlib.sha256(file_data).hexdigest()
         d.update({
             ':action': 'file_upload',
-            'protcol_version': '1',
+            'protocol_version': '1',
             'filetype': filetype,
             'pyversion': pyversion,
             'md5_digest': md5_digest,

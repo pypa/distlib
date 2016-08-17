@@ -181,7 +181,7 @@ Released: 2014-12-17
 
 - scripts
 
-    - Updated (inluding launchers) to support providing arguments to
+    - Updated (including launchers) to support providing arguments to
       interpreters in shebang lines.
 
     - The launcher sources are now included in the repository and the
@@ -617,7 +617,7 @@ Released: 2013-03-22
 
 - util
 
-    - Made get_cache_base more useful by parametrising the suffix to use.
+    - Made get_cache_base more useful by parameterising the suffix to use.
 
     - Fixed a bug when reading CSV streams from .zip files under 3.x.
 
