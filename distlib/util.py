@@ -35,7 +35,8 @@ from . import DistlibException
 from .compat import (string_types, text_type, shutil, raw_input, StringIO,
                      cache_from_source, urlopen, urljoin, httplib, xmlrpclib,
                      splittype, HTTPHandler, BaseConfigurator, valid_ident,
-                     Container, configparser, URLError, ZipFile, fsdecode)
+                     Container, configparser, URLError, ZipFile, fsdecode,
+                     unquote)
 
 logger = logging.getLogger(__name__)
 
@@ -697,6 +698,7 @@ def split_filename(filename, project_name=None):
     """
     result = None
     pyver = None
+    filename = unquote(filename).replace(' ', '-')
     m = PYTHON_VERSION.search(filename)
     if m:
         pyver = m.group(1)
@@ -1606,4 +1608,4 @@ class SubprocessMixin(object):
 def normalize_name(name):
     """Normalize a python package name a la PEP 503"""
     # https://www.python.org/dev/peps/pep-0503/#normalized-names
-    return re.sub(r"[-_.]+", "-", name).lower()
+    return re.sub('[-_.]+', '-', name).lower()
