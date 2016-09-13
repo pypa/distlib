@@ -1,11 +1,11 @@
 \.(py[co]|log|zip|coverage)$
 tests/run/
+tests/keys/random_seed
 docs/_build/
-.idea/
 .dict-validwords
 MANIFEST$
 distlib-vcsid|cover
 tests/passwords
 tests/pypi-server-standalone.py
-(dist|htmlcov|build|.tox)/
+(dist|htmlcov|build|.tox|.idea)/
 _testdist-0.1/
