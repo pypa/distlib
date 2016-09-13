@@ -289,6 +289,7 @@ _finder_registry = {
 }
 
 try:
+    # In Python 3.6, _frozen_importlib -> _frozen_importlib_external
     try:
         import _frozen_importlib_external as _fi
     except ImportError:
