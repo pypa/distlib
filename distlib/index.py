@@ -51,7 +51,9 @@ class PackageIndex(object):
         self.gpg_home = None
         self.rpc_proxy = None
         with open(os.devnull, 'w') as sink:
-            for s in ('gpg2', 'gpg'):
+            # Use gpg by default rather than gpg2, as gpg2 insists on
+            # prompting for passwords
+            for s in ('gpg', 'gpg2'):
                 try:
                     rc = subprocess.check_call([s, '--version'], stdout=sink,
                                                stderr=sink)

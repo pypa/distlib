@@ -11,6 +11,12 @@ Released: not yet.
 
     - Updated to not fail on import if SSL is unavailable.
 
+- index
+
+    - Switch from using gpg in preference to gpg2 for signing. This is
+      to avoid gpg2's behaviour of prompting for passwords, which interferes
+      with the tests on some machines.
+
 - locators
 
     - Changed project name comparisons to follow PEP 503. Thanks to Steven
