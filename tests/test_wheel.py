@@ -347,7 +347,8 @@ class WheelTestCase(unittest.TestCase):
             else:
                 expected = executable.encode('utf-8')
             expected = b'#!' + expected + b' -E'
-            self.assertIn(expected, data)
+            if not sysconfig.is_python_build():
+                self.assertIn(expected, data)
 
     def test_verify(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')

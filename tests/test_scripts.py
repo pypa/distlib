@@ -298,7 +298,8 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(len(files), 1)
         with open(files[0], 'rb') as f:
             shebang_line = f.readline()
-        self.assertIn(executable, shebang_line)
+        if not sysconfig.is_python_build():
+            self.assertIn(executable, shebang_line)
         self.assertIn(b' -E "foo bar" baz frobozz', shebang_line)
 
     def test_args_on_copy(self):
@@ -308,13 +309,14 @@ class ScriptTestCase(unittest.TestCase):
         with open(files[0]) as f:
             actual = f.readline().strip()
         self.assertEqual(actual, '#!mypython -mzippy.activate')
-        self.maker.executable = None
-        os.remove(files[0])
-        files = self.maker.make('script5.py')
-        with open(files[0]) as f:
-            actual = f.readline().strip()
-        expected = '#!%s -mzippy.activate' % get_executable()
-        self.assertEqual(actual, expected)
+        if not sysconfig.is_python_build():
+            self.maker.executable = None
+            os.remove(files[0])
+            files = self.maker.make('script5.py')
+            with open(files[0]) as f:
+                actual = f.readline().strip()
+            expected = '#!%s -mzippy.activate' % get_executable()
+            self.assertEqual(actual, expected)
 
     def test_enquote_executable(self):
         for executable, expected in (
