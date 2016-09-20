@@ -389,6 +389,14 @@ class UtilTestCase(unittest.TestCase):
                 ('install_data',), ('install_scripts',), ('install_lib',),
                 ('install_headers',), ('build',), ('build_scripts',),
                 ('build_py',), ('build_ext',), ('build_clibs',), ('check',)
+            ],
+            # Next case added for Python 3.6
+            [
+                ('upload_sdist',), ('sdist',), ('upload_bdist',), ('register',),
+                ('install',), ('install_distinfo',), ('install_data',),
+                ('install_scripts',), ('install_lib',), ('install_headers',),
+                ('test',), ('build',), ('build_scripts',), ('build_py',),
+                ('build_ext',), ('build_clibs',), ('check',)
             ]
         )
         self.assertIn(actual, expected)
