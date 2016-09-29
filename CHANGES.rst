@@ -24,6 +24,19 @@ Released: not yet.
 
     - Added errors queue to Locator.
 
+- manifest
+
+    - Changed match logic to work under Python 3.6, due to differences in
+      how fnmatch.translate behaves.
+
+- resources
+
+    - Updated finder registry logic to reflect changes in Python 3.6.
+
+- scripts
+
+    - Fixed regular expression in generated script boilerplate.
+
 - util
 
     - Updated to not fail on import if SSL is unavailable.
