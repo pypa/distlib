@@ -124,6 +124,7 @@ class ManifestTestCase(unittest.TestCase):
             os.path.join('subdir', 'lose', 'lose.txt'),
             ])
         self.assertEqual(actual, expected)
+
     def test_global_include(self):
         mf = self.manifest
         mf.process_directive('global-include *.txt')
