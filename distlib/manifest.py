@@ -29,7 +29,7 @@ _COMMENTED_LINE = re.compile('#.*?(?=\n)|\n(?=$)', re.M | re.S)
 
 #
 # Due to the different results returned by fnmatch.translate, we need
-# to do slightly different processing for Python 2.7 ... this needed
+# to do slightly different processing for Python 2.7 and 3.2 ... this needed
 # to be brought in for Python 3.6 onwards.
 #
 _PYTHON_VERSION = sys.version_info[:2]
@@ -329,12 +329,13 @@ class Manifest(object):
             else:
                 return pattern
 
-        # ditch start and end characters
-        start, _, end = self._glob_to_re('_').partition('_')
+        if _PYTHON_VERSION > (3, 2):
+            # ditch start and end characters
+            start, _, end = self._glob_to_re('_').partition('_')
 
         if pattern:
             pattern_re = self._glob_to_re(pattern)
-            if _PYTHON_VERSION > (2, 7):
+            if _PYTHON_VERSION > (3, 2):
                 assert pattern_re.startswith(start) and pattern_re.endswith(end)
         else:
             pattern_re = ''
@@ -342,7 +343,7 @@ class Manifest(object):
         base = re.escape(os.path.join(self.base, ''))
         if prefix is not None:
             # ditch end of pattern character
-            if _PYTHON_VERSION <= (2, 7):
+            if _PYTHON_VERSION <= (3, 2):
                 empty_pattern = self._glob_to_re('')
                 prefix_re = self._glob_to_re(prefix)[:-len(empty_pattern)]
             else:
@@ -352,7 +353,7 @@ class Manifest(object):
             sep = os.sep
             if os.sep == '\\':
                 sep = r'\\'
-            if _PYTHON_VERSION <= (2, 7):
+            if _PYTHON_VERSION <= (3, 2):
                 pattern_re = '^' + base + sep.join((prefix_re,
                                                     '.*' + pattern_re))
             else:
@@ -361,7 +362,7 @@ class Manifest(object):
                                                   pattern_re, end)
         else:  # no prefix -- respect anchor flag
             if anchor:
-                if _PYTHON_VERSION <= (2, 7):
+                if _PYTHON_VERSION <= (3, 2):
                     pattern_re = '^' + base + pattern_re
                 else:
                     pattern_re = r'%s%s%s' % (start, base, pattern_re[len(start):])
