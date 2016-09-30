@@ -2,10 +2,16 @@ Change log for ``distlib``
 --------------------------
 
 
-0.2.4 (future)
+0.2.5 (future)
 ~~~~~~~~~~~~~~
 
 Released: not yet.
+
+
+0.2.4
+~~~~~
+
+Released: 2016-09-30
 
 - compat
 
