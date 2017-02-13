@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016 Vinay Sajip.
+# Copyright (C) 2017 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -36,8 +36,8 @@ distutils.core.setup(
     version=distlib.__version__,
     author='Vinay Sajip',
     author_email='vinay_sajip@red-dove.com',
-    url='https://bitbucket.org/vinay.sajip/distlib',
-    download_url=('https://bitbucket.org/vinay.sajip/distlib/downloads/'
+    url='https://bitbucket.org/pypa/distlib',
+    download_url=('https://bitbucket.org/pypa/distlib/downloads/'
                   'distlib-' + distlib.__version__ + '.zip'),
     description='Distribution utilities',
     long_description = ('Low-level components of distutils2/packaging, '
@@ -59,6 +59,7 @@ distutils.core.setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Software Development',
     ],
     platforms='any',
