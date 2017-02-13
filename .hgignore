@@ -1,7 +1,7 @@
 \.(py[co]|log|zip|coverage)$
 tests/run/
 tests/keys/random_seed
-docs/_build/
+docs/(_build|themes)/
 .dict-validwords
 MANIFEST$
 distlib-vcsid|cover
