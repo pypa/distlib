@@ -499,7 +499,7 @@ class WheelTestCase(unittest.TestCase):
                                                '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_data(self):
-        self.do_build_and_install('Werkzeug == 0.4')
+        self.do_build_and_install('Werkzeug == 0.11')
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
