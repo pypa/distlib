@@ -273,7 +273,7 @@ class LocatorTestCase(unittest.TestCase):
         # Now test with extra in dependency
         locator.clear_cache()
         dummy = make_dist('dummy', '0.1')
-        dummy.metadata.run_requires = [{'requires': ['Jinja2 [i18n]']}]
+        dummy.metadata.run_requires = [{'requires': ['Jinja2 [i18n] (<2.8)']}]
         dists, problems = finder.find(dummy)
         self.assertFalse(problems)
         actual = sorted([d.name_and_version for d in dists])
