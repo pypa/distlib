@@ -7,6 +7,7 @@ python:
     - "3.3"
     - "3.4"
     - "3.5"
+    - "3.6"
     - "pypy"
 before_install: "mkdir -p $HOME/.distlib && sudo chown -R travis:travis $HOME/.distlib || true"
 install:
