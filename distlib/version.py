@@ -400,7 +400,7 @@ _REPLACEMENTS = (
 
 _SUFFIX_REPLACEMENTS = (
     (re.compile('^[:~._+-]+'), ''),                   # remove leading puncts
-    (re.compile('[,*")([\]]'), ''),                   # remove unwanted chars
+    (re.compile('[,*")([\\]]'), ''),                  # remove unwanted chars
     (re.compile('[~:+_ -]'), '.'),                    # replace illegal chars
     (re.compile('[.]{2,}'), '.'),                   # multiple runs of '.'
     (re.compile(r'\.$'), ''),                       # trailing '.'
@@ -628,7 +628,7 @@ class LegacyMatcher(Matcher):
     _operators = dict(Matcher._operators)
     _operators['~='] = '_match_compatible'
 
-    numeric_re = re.compile('^(\d+(\.\d+)*)')
+    numeric_re = re.compile(r'^(\d+(\.\d+)*)')
 
     def _match_compatible(self, version, constraint, prefix):
         if version < constraint:
