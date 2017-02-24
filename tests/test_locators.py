@@ -37,25 +37,28 @@ class LocatorTestCase(unittest.TestCase):
     def test_xmlrpc(self):
         locator = PyPIRPCLocator(PYPI_RPC_HOST)
         try:
-            result = locator.get_project('sarge')
-        except Exception:     # pragma: no cover
-            raise unittest.SkipTest('PyPI XML-RPC not available')
-        self.assertIn('0.1', result)
-        dist = result['0.1']
-        self.assertEqual(dist.name, 'sarge')
-        self.assertEqual(dist.version, '0.1')
-        possible = ('https://pypi.python.org/packages/source/s/sarge/'
-                    'sarge-0.1.tar.gz',
-                    'http://pypi.python.org/packages/source/s/sarge/'
-                    'sarge-0.1.tar.gz')
-        self.assertIn(dist.source_url, possible)
-        self.assertEqual(dist.digest,
-                         ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'))
-        try:
-            names = locator.get_distribution_names()
-        except Exception:   # pragma: no cover
-            raise unittest.SkipTest('PyPI XML-RPC not available')
-        self.assertGreater(len(names), 25000)
+            try:
+                result = locator.get_project('sarge')
+            except Exception:     # pragma: no cover
+                raise unittest.SkipTest('PyPI XML-RPC not available')
+            self.assertIn('0.1', result)
+            dist = result['0.1']
+            self.assertEqual(dist.name, 'sarge')
+            self.assertEqual(dist.version, '0.1')
+            possible = ('https://pypi.python.org/packages/source/s/sarge/'
+                        'sarge-0.1.tar.gz',
+                        'http://pypi.python.org/packages/source/s/sarge/'
+                        'sarge-0.1.tar.gz')
+            self.assertIn(dist.source_url, possible)
+            self.assertEqual(dist.digest,
+                             ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'))
+            try:
+                names = locator.get_distribution_names()
+            except Exception:   # pragma: no cover
+                raise unittest.SkipTest('PyPI XML-RPC not available')
+            self.assertGreater(len(names), 25000)
+        finally:
+            locator.client('close')()
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
