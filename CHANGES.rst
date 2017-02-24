@@ -47,7 +47,7 @@ Released: 2016-09-30
 
     - Updated to not fail on import if SSL is unavailable.
 
-    - Added normalize_name fpr project name comparisons using PEP 503.
+    - Added normalize_name for project name comparisons using PEP 503.
 
 - tests
 
