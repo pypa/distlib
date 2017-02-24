@@ -64,13 +64,13 @@ RELOP = '([<>=!~]=)|[<>]'
 BARE_CONSTRAINTS = ('(' + RELOP + r')?\s*(' + VERSPEC + ')(' + COMMA + '(' +
                     RELOP + r')\s*(' + VERSPEC + '))*')
 
-DIRECT_REF = '(from\s+(?P<diref>.*))'
+DIRECT_REF = r'(from\s+(?P<diref>.*))'
 
 #
 # Either the bare constraints or the bare constraints in parentheses
 #
 CONSTRAINTS = (r'\(\s*(?P<c1>' + BARE_CONSTRAINTS + '|' + DIRECT_REF +
-               r')\s*\)|(?P<c2>' + BARE_CONSTRAINTS + '\s*)')
+               r')\s*\)|(?P<c2>' + BARE_CONSTRAINTS + r'\s*)')
 
 EXTRA_LIST = EXTRA_IDENT + '(' + COMMA + EXTRA_IDENT + ')*'
 EXTRAS = r'\[\s*(?P<ex>' + EXTRA_LIST + r')?\s*\]'

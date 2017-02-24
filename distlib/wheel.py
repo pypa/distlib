@@ -925,7 +925,7 @@ def compatible_tags():
 
     arches = [ARCH]
     if sys.platform == 'darwin':
-        m = re.match('(\w+)_(\d+)_(\d+)_(\w+)$', ARCH)
+        m = re.match(r'(\w+)_(\d+)_(\d+)_(\w+)$', ARCH)
         if m:
             name, major, minor, arch = m.groups()
             minor = int(minor)

@@ -76,7 +76,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x ]')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x []')
-        self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [\]')
+        self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [\\]')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [a=]')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [a,]')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [a,,b]')
