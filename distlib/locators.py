@@ -194,10 +194,11 @@ class Locator(object):
         basename = posixpath.basename(t.path)
         compatible = True
         is_wheel = basename.endswith('.whl')
+        is_downloadable = basename.endswith(self.downloadable_extensions)
         if is_wheel:
             compatible = is_compatible(Wheel(basename), self.wheel_tags)
         return (t.scheme != 'https', 'pypi.python.org' in t.netloc,
-                is_wheel, compatible, basename)
+                is_downloadable, is_wheel, compatible, basename)
 
     def prefer_url(self, url1, url2):
         """
