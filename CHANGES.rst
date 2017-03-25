@@ -7,6 +7,38 @@ Change log for ``distlib``
 
 Released: not yet.
 
+- general
+
+    - Changed regular expressions to be compatible with 3.6 as regards escape
+      sequences. Thanks to Ville Skyttä for the patch.
+
+    - closed some resource leaks related to XML-RPC proxies.
+
+    - Removed Python 2.6 from the support list.
+
+- locators
+
+    - Made downloadability a factor in scoring URLs for preferences.
+
+- markers
+
+    - Replaced the implementation with code which parses requirements in
+      accordance with PEP 508 and evaluates marker expressions according to
+      PEP 508.
+
+- util
+
+    - Changed _csv_open to use utf-8 across all platforms on Python 3.x. Thanks
+      to Alastair McCormack for the patch.
+
+- wheel
+
+    - Changed to look for metadata in metadata.json as well as pydist.json.
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
+
 
 0.2.4
 ~~~~~
