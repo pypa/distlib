@@ -37,33 +37,39 @@ def _is_literal(o):
     return o[0] in '\'"'
 
 class RequirementParser(object):
+    """
+    This class is used to parse requirements and also to evaluate markers.
+    """
 
     def parse(self, req):
+        """
+        Parse a requirement passed in as a string. Return a dictionary
+        whose elements contain the various parts of the requirement.
+        """
         m = IDENTIFIER.match(req)
         if not m:
             raise SyntaxError('name expected: %s' % req)
         distname = m.groups()[0]
         req = req[m.end():]
         extras = markexpr = versions = uri = None
-        if req:
-            if req[0] == '[':
-                i = req.find(']', 1)
-                if i < 0:
-                    raise SyntaxError('unterminated extra: %s' % req)
-                s = req[1:i]
-                req = req[i + 1:].lstrip()
-                extras = []
-                while s:
-                    m = IDENTIFIER.match(s)
-                    if not m:
-                        raise SyntaxError('malformed extra: %s' % s)
-                    extras.append(m.groups()[0])
-                    s = s[m.end():]
-                    if not s:
-                        break
-                    if s[0] != ',':
-                        raise SyntaxError('comma expected in extras: %s' % s)
-                    s = s[1:].lstrip()
+        if req and req[0] == '[':
+            i = req.find(']', 1)
+            if i < 0:
+                raise SyntaxError('unterminated extra: %s' % req)
+            s = req[1:i]
+            req = req[i + 1:].lstrip()
+            extras = []
+            while s:
+                m = IDENTIFIER.match(s)
+                if not m:
+                    raise SyntaxError('malformed extra: %s' % s)
+                extras.append(m.groups()[0])
+                s = s[m.end():]
+                if not s:
+                    break
+                if s[0] != ',':
+                    raise SyntaxError('comma expected in extras: %s' % s)
+                s = s[1:].lstrip()
         if req:
             if req[0] == '@':
                 # it's a URI
@@ -204,9 +210,8 @@ class RequirementParser(object):
             result['marker'] = markexpr
         if uri:
             result['uri'] = uri
-        if req:
-            if req[0] != '#':
-                raise SyntaxError('Unexpected trailing data: %s' % req)
+        if req and req[0] != '#':
+            raise SyntaxError('Unexpected trailing data: %s' % req)
         return result
 
     operations = {
@@ -223,6 +228,10 @@ class RequirementParser(object):
     }
 
     def evaluate(self, expr, context):
+        """
+        Evaluate a marker expression returned by the :meth:`parse`
+        method in the specified context.
+        """
         if isinstance(expr, string_types):
             if expr[0] in '\'"':
                 result = expr[1:-1]
