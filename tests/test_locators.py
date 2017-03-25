@@ -259,7 +259,15 @@ class LocatorTestCase(unittest.TestCase):
             ('setuptools_scm', 'py', 'setuptools', 'pytest-runner', 'pytest',
              'hgtools', 'irc'),
             ('py', 'setuptools', 'setuptools_scm', 'pytest-runner', 'hgtools',
-             'pytest', 'irc')
+             'pytest', 'irc'),
+            ('setuptools_scm', 'setuptools', 'py', 'pytest', 'pytest-runner',
+             'hgtools', 'irc'),
+            ('py', 'setuptools_scm', 'setuptools', 'pytest-runner', 'hgtools',
+             'pytest', 'irc'),
+            ('setuptools', 'py', 'setuptools_scm', 'hgtools', 'pytest-runner',
+             'pytest', 'irc'),
+            ('setuptools', 'py', 'setuptools_scm', 'pytest', 'pytest-runner',
+             'hgtools', 'irc'),
         ])
         self.assertIn(tuple(names), expected)
 
