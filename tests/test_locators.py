@@ -230,32 +230,36 @@ class LocatorTestCase(unittest.TestCase):
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
         self.assertEqual(actual, ['hgtools', 'irc', 'py',
-                                  'pytest',
-                                  'pytest-runner', 'setuptools_scm'])
+                                  'pytest', 'pytest-runner', 'setuptools',
+                                  'setuptools_scm'])
 
         g = make_graph(dists)
         slist, cycle = g.topological_sort()
         self.assertFalse(cycle)
         names = [d.name for d in slist]
         expected = set([
-            ('setuptools_scm', 'hgtools', 'py', 'pytest-runner', 'pytest', 'irc'),
-            ('setuptools_scm', 'hgtools', 'py', 'pytest', 'pytest-runner', 'irc'),
-            ('setuptools_scm', 'py', 'hgtools', 'pytest-runner', 'pytest', 'irc'),
-            ('hgtools', 'setuptools_scm', 'py', 'pytest', 'pytest-runner', 'irc'),
-            ('py', 'hgtools', 'setuptools_scm', 'pytest', 'pytest-runner', 'irc'),
-            ('hgtools', 'setuptools_scm', 'py', 'pytest-runner', 'pytest', 'irc'),
-            ('py', 'hgtools', 'setuptools_scm', 'pytest-runner', 'pytest', 'irc'),
-            ('py', 'setuptools_scm', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
-            ('pytest', 'setuptools_scm', 'hgtools', 'pytest-runner', 'irc'),
-            ('hgtools', 'setuptools_scm', 'pytest', 'pytest-runner', 'irc'),
-            ('py', 'setuptools_scm', 'hgtools', 'pytest-runner', 'pytest', 'irc'),
-            ('py', 'setuptools_scm', 'pytest', 'pytest-runner', 'hgtools', 'irc'),
-            ('py', 'setuptools_scm', 'pytest-runner', 'pytest', 'hgtools', 'irc'),
-            ('py', 'setuptools_scm', 'pytest', 'hgtools', 'pytest-runner', 'irc'),
-            ('setuptools_scm', 'py', 'pytest', 'hgtools', 'pytest-runner', 'irc'),
-            ('setuptools_scm', 'py', 'pytest-runner', 'hgtools', 'pytest', 'irc'),
-            ('py', 'setuptools_scm', 'pytest-runner', 'hgtools', 'pytest', 'irc'),
-            ('setuptools_scm', 'py', 'pytest', 'pytest-runner', 'hgtools', 'irc'),
+            # ('setuptools_scm', 'hgtools', 'py', 'pytest-runner', 'pytest', 'irc'),
+            # ('setuptools_scm', 'hgtools', 'py', 'pytest', 'pytest-runner', 'irc'),
+            # ('setuptools_scm', 'py', 'hgtools', 'pytest-runner', 'pytest', 'irc'),
+            # ('hgtools', 'setuptools_scm', 'py', 'pytest', 'pytest-runner', 'irc'),
+            # ('py', 'hgtools', 'setuptools_scm', 'pytest', 'pytest-runner', 'irc'),
+            # ('hgtools', 'setuptools_scm', 'py', 'pytest-runner', 'pytest', 'irc'),
+            # ('py', 'hgtools', 'setuptools_scm', 'pytest-runner', 'pytest', 'irc'),
+            # ('py', 'setuptools_scm', 'hgtools', 'pytest', 'pytest-runner', 'irc'),
+            # ('pytest', 'setuptools_scm', 'hgtools', 'pytest-runner', 'irc'),
+            # ('hgtools', 'setuptools_scm', 'pytest', 'pytest-runner', 'irc'),
+            # ('py', 'setuptools_scm', 'hgtools', 'pytest-runner', 'pytest', 'irc'),
+            # ('py', 'setuptools_scm', 'pytest', 'pytest-runner', 'hgtools', 'irc'),
+            # ('py', 'setuptools_scm', 'pytest-runner', 'pytest', 'hgtools', 'irc'),
+            # ('py', 'setuptools_scm', 'pytest', 'hgtools', 'pytest-runner', 'irc'),
+            # ('setuptools_scm', 'py', 'pytest', 'hgtools', 'pytest-runner', 'irc'),
+            # ('setuptools_scm', 'py', 'pytest-runner', 'hgtools', 'pytest', 'irc'),
+            # ('py', 'setuptools_scm', 'pytest-runner', 'hgtools', 'pytest', 'irc'),
+            # ('setuptools_scm', 'py', 'pytest', 'pytest-runner', 'hgtools', 'irc'),
+            ('setuptools_scm', 'py', 'setuptools', 'pytest-runner', 'pytest',
+             'hgtools', 'irc'),
+            ('py', 'setuptools', 'setuptools_scm', 'pytest-runner', 'hgtools',
+             'pytest', 'irc')
         ])
         self.assertIn(tuple(names), expected)
 
