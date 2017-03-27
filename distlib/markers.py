@@ -34,11 +34,13 @@ class Evaluator(object):
 
     operations = {
         '==': lambda x, y: x == y,
+        '===': lambda x, y: x == y,
+        '~=': lambda x, y: x == y or x > y,
         '!=': lambda x, y: x != y,
         '<':  lambda x, y: x < y,
-        '<=':  lambda x, y: x <= y,
+        '<=':  lambda x, y: x == y or x < y,
         '>':  lambda x, y: x > y,
-        '>=':  lambda x, y: x >= y,
+        '>=':  lambda x, y: x == y or x > y,
         'and': lambda x, y: x and y,
         'or': lambda x, y: x or y,
         'in': lambda x, y: x in y,
