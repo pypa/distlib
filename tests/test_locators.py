@@ -350,12 +350,12 @@ class LocatorTestCase(unittest.TestCase):
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     def test_dist_reqts(self):
-        r = 'config (<=0.3.5)'
+        r = 'config <=0.3.5'
         dist = default_locator.locate(r)
         self.assertIsNotNone(dist)
         self.assertIsNone(dist.extras)
         self.assertTrue(dist.matches_requirement(r))
-        self.assertFalse(dist.matches_requirement('config (0.3.6)'))
+        self.assertFalse(dist.matches_requirement('config == 0.3.6'))
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
