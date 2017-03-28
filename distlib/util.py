@@ -216,10 +216,24 @@ def parse_requirement(req):
                     raise SyntaxError('unterminated parenthesis: %s' % req)
                 s = req[1:i]
                 req = req[i + 1:].lstrip()
-                versions, _ = get_versions(s)
+                # As a special diversion from PEP 508, allow a version number
+                # a.b.c in parentheses as a synonym for ~= a.b.c (because this
+                # is allowed in earlier PEPs)
+                if COMPARE_OP.match(s):
+                    versions, _ = get_versions(s)
+                else:
+                    m = VERSION_IDENTIFIER.match(s)
+                    if not m:
+                        raise SyntaxError('invalid constraint: %s' % s)
+                    v = m.groups()[0]
+                    s = s[m.end():].lstrip()
+                    if s:
+                        raise SyntaxError('invalid constraint: %s' % s)
+                    versions = [('~=', v)]
+
     if req:
         if req[0] != ';':
-            raise SyntaxError('invalid marker: %s' % req)
+            raise SyntaxError('invalid requirement: %s' % req)
         req = req[1:].lstrip()
 
         mark_expr, req = parse_marker(req)

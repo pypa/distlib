@@ -870,6 +870,7 @@ class DepGraphTestCase(LoggingCatcher,
         self.checkLists(graph.missing.get(cheese, []), [])
 
     def test_dependent_dists(self):
+        # import pdb; pdb.set_trace()
         dists = self.get_dists(self.DISTROS_DIST)
 
         choxie, grammar, towel = dists

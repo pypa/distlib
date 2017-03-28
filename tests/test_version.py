@@ -267,8 +267,10 @@ class VersionTestCase(unittest.TestCase):
         # Test that names are parsed the right way
 
         self.assertEqual('Hey', NM('Hey (<1.1)').name)
+        self.assertEqual('9Hey', NM('9Hey (1.1)').name)
         self.assertEqual('Foo-Bar', NM('Foo-Bar (1.1)').name)
-        self.assertEqual('Foo Bar', NM('Foo Bar (1.1)').name)
+        self.assertEqual('Foo_Bar', NM('Foo_Bar (1.1)').name)
+        self.assertEqual('Foo.Bar', NM('Foo.Bar (1.1)').name)
 
     def test_matcher_local(self):
         self.assertTrue(NM('Foo (>=2.5+1.2)').match('2.6.0+1.3'))
@@ -440,7 +442,7 @@ class VersionTestCase(unittest.TestCase):
             self.assertRaises(ValueError, NM, s)
         for v in ('', '1.*.*'):
             s = 'foo (== %s)' % v
-            self.assertRaises(ValueError, NM, s)
+            self.assertRaises((SyntaxError, ValueError), NM, s)
 
 
 class LegacyVersionTestCase(unittest.TestCase):
