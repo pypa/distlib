@@ -49,109 +49,119 @@ COMPARE_OP = re.compile(r'^(<=?|>=?|={2,3}|[~!]=)\s*')
 MARKER_OP = re.compile(r'^((<=?)|(>=?)|={2,3}|[~!]=|in|not\s+in)\s*')
 OR = re.compile(r'^or\b\s*')
 AND = re.compile(r'^and\b\s*')
-NONSPACE = re.compile(r'(\S+)\s*')
+NON_SPACE = re.compile(r'(\S+)\s*')
 STRING_CHUNK = re.compile(r'([\s\w\.{}()*+#:;,/?!~`@$%^&=|<>\[\]-]+)')
 
-def parse_marker(req):
-    def marker_var(req):
+
+def parse_marker(marker_string):
+    """
+    Parse a marker string and return a dictionary containing a marker expression.
+
+    The dictionary will contain keys "op", "lhs" and "rhs" for non-terminals in
+    the expression grammar, or strings. A string contained in quotes is to be
+    interpreted as a literal string, and a string not contained in quotes is a
+    variable (such as os_name).
+    """
+    def marker_var(remaining):
         # either identifier, or literal string
-        m = IDENTIFIER.match(req)
+        m = IDENTIFIER.match(remaining)
         if m:
             result = m.groups()[0]
-            req = req[m.end():]
-        elif not req:
+            remaining = remaining[m.end():]
+        elif not remaining:
             raise SyntaxError('unexpected end of input')
         else:
-            q = req[0]
+            q = remaining[0]
             if q not in '\'"':
-                raise SyntaxError('invalid expression: %s' % req)
+                raise SyntaxError('invalid expression: %s' % remaining)
             oq = '\'"'.replace(q, '')
-            req = req[1:]
+            remaining = remaining[1:]
             parts = [q]
-            while req:
+            while remaining:
                 # either a string chunk, or oq, or q to terminate
-                if req[0] == q:
+                if remaining[0] == q:
                     break
-                elif req[0] == oq:
+                elif remaining[0] == oq:
                     parts.append(oq)
-                    req = req[1:]
+                    remaining = remaining[1:]
                 else:
-                    m = STRING_CHUNK.match(req)
+                    m = STRING_CHUNK.match(remaining)
                     if not m:
-                        raise SyntaxError('error in string literal: %s' % req)
+                        raise SyntaxError('error in string literal: %s' % remaining)
                     parts.append(m.groups()[0])
-                    req = req[m.end():]
+                    remaining = remaining[m.end():]
             else:
                 s = ''.join(parts)
                 raise SyntaxError('unterminated string: %s' % s)
             parts.append(q)
             result = ''.join(parts)
-            req = req[1:].lstrip() # skip past closing quote
-        return result, req
+            remaining = remaining[1:].lstrip() # skip past closing quote
+        return result, remaining
 
-    def marker_expr(req):
-        if req and req[0] == '(':
-            result, req = marker(req[1:].lstrip())
-            if req[0] != ')':
-                raise SyntaxError('unterminated parenthesis: %s' % req)
-            req = req[1:].lstrip()
+    def marker_expr(remaining):
+        if remaining and remaining[0] == '(':
+            result, remaining = marker(remaining[1:].lstrip())
+            if remaining[0] != ')':
+                raise SyntaxError('unterminated parenthesis: %s' % remaining)
+            remaining = remaining[1:].lstrip()
         else:
-            lhs, req = marker_var(req)
-            while req:
-                m = MARKER_OP.match(req)
+            lhs, remaining = marker_var(remaining)
+            while remaining:
+                m = MARKER_OP.match(remaining)
                 if not m:
                     break
                 op = m.groups()[0]
-                req = req[m.end():]
-                rhs, req = marker_var(req)
+                remaining = remaining[m.end():]
+                rhs, remaining = marker_var(remaining)
                 lhs = {'op': op, 'lhs': lhs, 'rhs': rhs}
             result = lhs
-        return result, req
+        return result, remaining
 
-    def marker_and(req):
-        lhs, req = marker_expr(req)
-        while req:
-            m = AND.match(req)
+    def marker_and(remaining):
+        lhs, remaining = marker_expr(remaining)
+        while remaining:
+            m = AND.match(remaining)
             if not m:
                 break
-            req = req[m.end():]
-            rhs, req = marker_expr(req)
+            remaining = remaining[m.end():]
+            rhs, remaining = marker_expr(remaining)
             lhs = {'op': 'and', 'lhs': lhs, 'rhs': rhs}
-        return lhs, req
+        return lhs, remaining
 
-    def marker(req):
-        lhs, req = marker_and(req)
-        while req:
-            m = OR.match(req)
+    def marker(remaining):
+        lhs, remaining = marker_and(remaining)
+        while remaining:
+            m = OR.match(remaining)
             if not m:
                 break
-            req = req[m.end():]
-            rhs, req = marker_and(req)
+            remaining = remaining[m.end():]
+            rhs, remaining = marker_and(remaining)
             lhs = {'op': 'or', 'lhs': lhs, 'rhs': rhs}
-        return lhs, req
+        return lhs, remaining
 
-    return marker(req)
+    return marker(marker_string)
+
 
 def parse_requirement(req):
     """
-    Parse a requirement passed in as a string. Return a dictionary
-    whose elements contain the various parts of the requirement.
+    Parse a requirement passed in as a string. Return a Container
+    whose attributes contain the various parts of the requirement.
     """
-    req = req.strip()
-    if not req or req.startswith('#'):
+    remaining = req.strip()
+    if not remaining or remaining.startswith('#'):
         return None
-    m = IDENTIFIER.match(req)
+    m = IDENTIFIER.match(remaining)
     if not m:
-        raise SyntaxError('name expected: %s' % req)
+        raise SyntaxError('name expected: %s' % remaining)
     distname = m.groups()[0]
-    req = req[m.end():]
+    remaining = remaining[m.end():]
     extras = mark_expr = versions = uri = None
-    if req and req[0] == '[':
-        i = req.find(']', 1)
+    if remaining and remaining[0] == '[':
+        i = remaining.find(']', 1)
         if i < 0:
-            raise SyntaxError('unterminated extra: %s' % req)
-        s = req[1:i]
-        req = req[i + 1:].lstrip()
+            raise SyntaxError('unterminated extra: %s' % remaining)
+        s = remaining[1:i]
+        remaining = remaining[i + 1:].lstrip()
         extras = []
         while s:
             m = IDENTIFIER.match(s)
@@ -166,13 +176,13 @@ def parse_requirement(req):
             s = s[1:].lstrip()
         if not extras:
             extras = None
-    if req:
-        if req[0] == '@':
+    if remaining:
+        if remaining[0] == '@':
             # it's a URI
-            req = req[1:].lstrip()
-            m = NONSPACE.match(req)
+            remaining = remaining[1:].lstrip()
+            m = NON_SPACE.match(remaining)
             if not m:
-                raise SyntaxError('invalid URI: %s' % req)
+                raise SyntaxError('invalid URI: %s' % remaining)
             uri = m.groups()[0]
             t = urlparse(uri)
             # there are issues with Python and URL parsing, so this test
@@ -181,41 +191,41 @@ def parse_requirement(req):
             # exceptions for malformed URLs
             if not (t.scheme and t.netloc):
                 raise SyntaxError('Invalid URL: %s' % uri)
-            req = req[m.end():].lstrip()
+            remaining = remaining[m.end():].lstrip()
         else:
 
-            def get_versions(req):
-                m = COMPARE_OP.match(req)
+            def get_versions(ver_remaining):
+                m = COMPARE_OP.match(ver_remaining)
                 versions = None
                 if m:
                     versions = []
                     while True:
                         op = m.groups()[0]
-                        req = req[m.end():]
-                        m = VERSION_IDENTIFIER.match(req)
+                        ver_remaining = ver_remaining[m.end():]
+                        m = VERSION_IDENTIFIER.match(ver_remaining)
                         if not m:
-                            raise SyntaxError('invalid version: %s' % req)
+                            raise SyntaxError('invalid version: %s' % ver_remaining)
                         v = m.groups()[0]
                         versions.append((op, v))
-                        req = req[m.end():]
-                        if not req or req[0] != ',':
+                        ver_remaining = ver_remaining[m.end():]
+                        if not ver_remaining or ver_remaining[0] != ',':
                             break
-                        req = req[1:].lstrip()
-                        m = COMPARE_OP.match(req)
+                        ver_remaining = ver_remaining[1:].lstrip()
+                        m = COMPARE_OP.match(ver_remaining)
                         if not m:
-                            raise SyntaxError('invalid constraint: %s' % req)
+                            raise SyntaxError('invalid constraint: %s' % ver_remaining)
                     if not versions:
                         versions = None
-                return versions, req
+                return versions, ver_remaining
 
-            if req[0] != '(':
-                versions, req = get_versions(req)
+            if remaining[0] != '(':
+                versions, remaining = get_versions(remaining)
             else:
-                i = req.find(')', 1)
+                i = remaining.find(')', 1)
                 if i < 0:
-                    raise SyntaxError('unterminated parenthesis: %s' % req)
-                s = req[1:i]
-                req = req[i + 1:].lstrip()
+                    raise SyntaxError('unterminated parenthesis: %s' % remaining)
+                s = remaining[1:i]
+                remaining = remaining[i + 1:].lstrip()
                 # As a special diversion from PEP 508, allow a version number
                 # a.b.c in parentheses as a synonym for ~= a.b.c (because this
                 # is allowed in earlier PEPs)
@@ -231,15 +241,15 @@ def parse_requirement(req):
                         raise SyntaxError('invalid constraint: %s' % s)
                     versions = [('~=', v)]
 
-    if req:
-        if req[0] != ';':
-            raise SyntaxError('invalid requirement: %s' % req)
-        req = req[1:].lstrip()
+    if remaining:
+        if remaining[0] != ';':
+            raise SyntaxError('invalid requirement: %s' % remaining)
+        remaining = remaining[1:].lstrip()
 
-        mark_expr, req = parse_marker(req)
+        mark_expr, remaining = parse_marker(remaining)
 
-    if req and req[0] != '#':
-        raise SyntaxError('unexpected trailing data: %s' % req)
+    if remaining and remaining[0] != '#':
+        raise SyntaxError('unexpected trailing data: %s' % remaining)
 
     if not versions:
         rs = distname
@@ -252,13 +262,12 @@ def parse_requirement(req):
 def get_resources_dests(resources_root, rules):
     """Find destinations for resources files"""
 
-    def get_rel_path(base, path):
+    def get_rel_path(root, path):
         # normalizes and returns a lstripped-/-separated path
-        base = base.replace(os.path.sep, '/')
+        root = root.replace(os.path.sep, '/')
         path = path.replace(os.path.sep, '/')
-        assert path.startswith(base)
-        return path[len(base):].lstrip('/')
-
+        assert path.startswith(root)
+        return path[len(root):].lstrip('/')
 
     destinations = {}
     for base, suffix, dest in rules:
@@ -1689,11 +1698,11 @@ class Configurator(BaseConfigurator):
             result = json.load(f)
         return result
 
-#
-# Mixin for running subprocesses and capturing their output
-#
 
 class SubprocessMixin(object):
+    """
+    Mixin for running subprocesses and capturing their output
+    """
     def __init__(self, verbose=False, progress=None):
         self.verbose = verbose
         self.progress = progress

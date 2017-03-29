@@ -35,6 +35,11 @@ Released: not yet.
 
     - Changed to look for metadata in metadata.json as well as pydist.json.
 
+- version
+
+    - Updated requirement parsing in version matchers to use the new
+      PEP 508-compliant code.
+
 - tests
 
     - Numerous test refinements, not detailed further here.
