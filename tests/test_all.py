@@ -21,7 +21,8 @@ def main():
     if '-v' in sys.argv:
         verbosity = 2
     loader = unittest.TestLoader()
-    runner = unittest.TextTestRunner(verbosity=verbosity, failfast=True)
+    failfast = 'FAILFAST' in os.environ
+    runner = unittest.TextTestRunner(verbosity=verbosity, failfast=failfast)
     results = runner.run(loader.loadTestsFromModule(distlib_tests))
     return not results.wasSuccessful()
 

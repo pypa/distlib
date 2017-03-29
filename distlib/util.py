@@ -254,7 +254,7 @@ def parse_requirement(req):
     if not versions:
         rs = distname
     else:
-        rs = '%s (%s)' % (distname, ', '.join(['%s %s' % con for con in versions]))
+        rs = '%s %s' % (distname, ', '.join(['%s %s' % con for con in versions]))
     return Container(name=distname, extras=extras, constraints=versions,
                      marker=mark_expr, url=uri, requirement=rs)
 
