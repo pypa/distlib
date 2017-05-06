@@ -92,6 +92,8 @@ class Matcher(object):
         '!=': lambda v, c, p: v != c,
     }
 
+    # this is a method only to support alternative implementations
+    # via overriding
     def parse_requirement(self, s):
         return parse_requirement(s)
 

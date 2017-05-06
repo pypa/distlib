@@ -10,7 +10,6 @@ import codecs
 import json
 import os
 import sys
-import codecs
 from textwrap import dedent
 
 from compat import unittest
@@ -143,7 +142,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         tmp_dir = self.mkdtemp()
         my_file = os.path.join(tmp_dir, 'f')
 
-        metadata = LegacyMetadata(mapping={'author': 'Mister Café',
+        metadata = LegacyMetadata(mapping={
                                      'name': 'my.project',
                                      'author': 'Café Junior',
                                      'summary': 'Café torréfié',

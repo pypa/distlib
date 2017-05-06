@@ -195,6 +195,10 @@ def parse_requirement(req):
         else:
 
             def get_versions(ver_remaining):
+                """
+                Return a list of operator, version tuples if any are
+                specified, else None.
+                """
                 m = COMPARE_OP.match(ver_remaining)
                 versions = None
                 if m:
