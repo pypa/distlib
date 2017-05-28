@@ -101,7 +101,10 @@ class ScriptTestCase(unittest.TestCase):
         # Python 3.3 cannot create a venv in an existing directory
         if venv and sys.version_info[:2] >= (3, 4):
             if sys.platform == 'darwin':
-                dlen = 512
+                # Supposedly 512, but various symlinks mean that temp folder
+                # names get larger than you'd expect ... might vary on different
+                # OS versions, too
+                dlen = 220
             else:
                 dlen = 127
             dstdir = tempfile.mkdtemp(suffix='cataaaaaa' + 'a' * dlen)
@@ -117,7 +120,8 @@ class ScriptTestCase(unittest.TestCase):
             stdout, stderr = p.communicate()
             self.assertEqual(p.returncode, 0)
             self.assertEqual(stderr, b'')
-            self.assertEqual(stdout.strip(), maker.executable.encode('utf-8'))
+            expected = os.path.realpath(maker.executable)  # symlinks on OS X
+            self.assertEqual(stdout.strip(), expected.encode('utf-8'))
 
     def test_multiple(self):
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
