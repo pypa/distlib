@@ -1,6 +1,6 @@
 os:
     - linux
-    - osx
+#    - osx removed as there are problems with Travis installing Python
 language: python
 sudo: false
 python:
