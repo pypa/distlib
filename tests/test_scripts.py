@@ -12,6 +12,10 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+try:
+    import venv
+except ImportError:
+    venv = None
 
 from compat import unittest
 
@@ -78,6 +82,37 @@ class ScriptTestCase(unittest.TestCase):
         with open(filenames[0], 'rb') as f:
             actual = f.readline().decode('utf-8')
         self.assertIn(maker.executable, actual)
+
+
+    @unittest.skipIf(os.name != 'posix', 'Test only appropriate for '
+                     'POSIX systems')
+    def test_custom_shebang(self):
+        # Construct an executable with a space in it
+        self.maker.executable = 'an executable with spaces'
+        filenames = self.maker.make('script1.py')
+        with open(filenames[0], 'rb') as f:
+            first_line = f.readline()
+            second_line = f.readline()
+            third_line = f.readline()
+        self.assertEqual(first_line, b'#!/bin/sh\n')
+        self.assertEqual(second_line, b"'''exec' an executable with "
+                                      b'spaces "$0" "$@"\n')
+        self.assertEqual(third_line, b"' '''\n")
+        if venv:
+            dstdir = tempfile.mkdtemp(suffix='cataaa' + 'a'*127)
+            self.addCleanup(shutil.rmtree, dstdir)
+            bindir = os.path.join(dstdir, 'bin')
+            maker = ScriptMaker(self.maker.source_dir, bindir,
+                                add_launchers=False)
+            venv.create(dstdir)
+            maker.executable = os.path.join(bindir, 'python')
+            filenames = maker.make('script8.py')
+            p = subprocess.Popen(filenames[0], shell=True,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            self.assertEqual(p.returncode, 0)
+            self.assertEqual(stderr, b'')
+            self.assertEqual(stdout.strip(), maker.executable.encode('utf-8'))
 
     def test_multiple(self):
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
