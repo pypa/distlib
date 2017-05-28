@@ -100,7 +100,11 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(third_line, b"' '''\n")
         # Python 3.3 cannot create a venv in an existing directory
         if venv and sys.version_info[:2] >= (3, 4):
-            dstdir = tempfile.mkdtemp(suffix='cataaa' + 'a'*127)
+            if sys.platform == 'darwin':
+                dlen = 512
+            else:
+                dlen = 127
+            dstdir = tempfile.mkdtemp(suffix='cataaaaaa' + 'a' * dlen)
             self.addCleanup(shutil.rmtree, dstdir)
             bindir = os.path.join(dstdir, 'bin')
             maker = ScriptMaker(self.maker.source_dir, bindir,
