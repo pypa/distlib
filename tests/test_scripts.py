@@ -98,7 +98,8 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(second_line, b"'''exec' an executable with "
                                       b'spaces "$0" "$@"\n')
         self.assertEqual(third_line, b"' '''\n")
-        if venv:
+        # Python 3.3 cannot create a venv in an existing directory
+        if venv and sys.version_info[:2] >= (3, 4):
             dstdir = tempfile.mkdtemp(suffix='cataaa' + 'a'*127)
             self.addCleanup(shutil.rmtree, dstdir)
             bindir = os.path.join(dstdir, 'bin')
