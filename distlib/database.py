@@ -265,6 +265,7 @@ class DistributionPath(object):
                                       (name, version))
 
         for dist in self.get_distributions():
+            assert hasattr(dist, 'provides'), 'No "provides": %s' % dist
             provided = dist.provides
 
             for p in provided:
