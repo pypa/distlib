@@ -265,19 +265,23 @@ class DistributionPath(object):
                                       (name, version))
 
         for dist in self.get_distributions():
-            assert hasattr(dist, 'provides'), 'No "provides": %s' % dist
-            provided = dist.provides
+            # We hit a problem on Travis where enum34 was installed and doesn't
+            # have a provides attribute ...
+            if not hasattr(dist, 'provides'):
+                logger.debug('No "provides": %s', dist)
+            else:
+                provided = dist.provides
 
-            for p in provided:
-                p_name, p_ver = parse_name_and_version(p)
-                if matcher is None:
-                    if p_name == name:
-                        yield dist
-                        break
-                else:
-                    if p_name == name and matcher.match(p_ver):
-                        yield dist
-                        break
+                for p in provided:
+                    p_name, p_ver = parse_name_and_version(p)
+                    if matcher is None:
+                        if p_name == name:
+                            yield dist
+                            break
+                    else:
+                        if p_name == name and matcher.match(p_ver):
+                            yield dist
+                            break
 
     def get_file_path(self, name, relative_path):
         """
