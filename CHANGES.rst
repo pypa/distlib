@@ -7,13 +7,23 @@ Change log for ``distlib``
 
 - database
 
-    - Fixed a crash in EggInfoDistribution.list_distinfo_files() which was
-      caused by trying to open a non-existent file.
+    - Fixed #97: Eliminated a crash in EggInfoDistribution.list_distinfo_files()
+      which was caused by trying to open a non-existent file.
 
 - locators
 
     - Fixed #96: SimpleScrapingLocator no longer fails prematurely when scraping
       links due to invalid versions.
+
+- scripts
+
+    - Improved the shebangs written into installed scripts when the interpreter
+      path is very long or contains spaces (to cater for a limitation in shebang
+      line parsing on Linux)
+
+- tests
+
+    - Numerous test refinements, not detailed further here.
 
 
 0.2.5
