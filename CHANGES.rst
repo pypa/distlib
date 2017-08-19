@@ -5,6 +5,16 @@ Change log for ``distlib``
 0.2.6 (future)
 ~~~~~~~~~~~~~~
 
+- database
+
+    - Fixed a crash in EggInfoDistribution.list_distinfo_files() which was
+      caused by trying to open a non-existent file.
+
+- locators
+
+    - Fixed #96: SimpleScrapingLocator no longer fails prematurely when scraping
+      links due to invalid versions.
+
 
 0.2.5
 ~~~~~
