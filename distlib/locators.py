@@ -24,7 +24,7 @@ from .compat import (urljoin, urlparse, urlunparse, url2pathname, pathname2url,
                      HTTPRedirectHandler as BaseRedirectHandler, text_type,
                      Request, HTTPError, URLError)
 from .database import Distribution, DistributionPath, make_dist
-from .metadata import Metadata
+from .metadata import Metadata, MetadataInvalidError
 from .util import (cached_property, parse_credentials, ensure_slash,
                    split_filename, get_project_data, parse_requirement,
                    parse_name_and_version, ServerProxy, normalize_name)
@@ -272,7 +272,9 @@ class Locator(object):
                         }
             except Exception as e:  # pragma: no cover
                 logger.warning('invalid path for wheel: %s', path)
-        elif path.endswith(self.downloadable_extensions):
+        elif not path.endswith(self.downloadable_extensions):
+            logger.debug('Not downloadable: %s', path)
+        else:  # downloadable extension
             path = filename = posixpath.basename(path)
             for ext in self.downloadable_extensions:
                 if path.endswith(ext):
@@ -730,11 +732,14 @@ class SimpleScrapingLocator(Locator):
                         continue
                     for link, rel in page.links:
                         if link not in self._seen:
-                            self._seen.add(link)
-                            if (not self._process_download(link) and
-                                self._should_queue(link, url, rel)):
-                                logger.debug('Queueing %s from %s', link, url)
-                                self._to_fetch.put(link)
+                            try:
+                                self._seen.add(link)
+                                if (not self._process_download(link) and
+                                    self._should_queue(link, url, rel)):
+                                    logger.debug('Queueing %s from %s', link, url)
+                                    self._to_fetch.put(link)
+                            except MetadataInvalidError:  # e.g. invalid versions
+                                pass
             except Exception as e:  # pragma: no cover
                 self.errors.put(text_type(e))
             finally:
