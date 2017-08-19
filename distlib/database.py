@@ -1025,20 +1025,21 @@ class EggInfoDistribution(BaseInstalledDistribution):
         :returns: iterator of paths
         """
         record_path = os.path.join(self.path, 'installed-files.txt')
-        skip = True
-        with codecs.open(record_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line == './':
-                    skip = False
-                    continue
-                if not skip:
-                    p = os.path.normpath(os.path.join(self.path, line))
-                    if p.startswith(self.path):
-                        if absolute:
-                            yield p
-                        else:
-                            yield line
+        if os.path.exists(record_path):
+            skip = True
+            with codecs.open(record_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line == './':
+                        skip = False
+                        continue
+                    if not skip:
+                        p = os.path.normpath(os.path.join(self.path, line))
+                        if p.startswith(self.path):
+                            if absolute:
+                                yield p
+                            else:
+                                yield line
 
     def __eq__(self, other):
         return (isinstance(other, EggInfoDistribution) and
