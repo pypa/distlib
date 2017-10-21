@@ -329,7 +329,13 @@ try:
     fsencode = os.fsencode
     fsdecode = os.fsdecode
 except AttributeError:  # pragma: no cover
-    _fsencoding = sys.getfilesystemencoding()
+    # Issue #99: on some systems (e.g. containerised),
+    # sys.getfilesystemencoding() returns None, and we need a real value,
+    # so fall back to utf-8. From the CPython 2.7 docs relating to Unix and
+    # sys.getfilesystemencoding(): the return value is "the user’s preference
+    # according to the result of nl_langinfo(CODESET), or None if the
+    # nl_langinfo(CODESET) failed."
+    _fsencoding = sys.getfilesystemencoding() or 'utf-8'
     if _fsencoding == 'mbcs':
         _fserrors = 'strict'
     else:
