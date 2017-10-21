@@ -5,6 +5,10 @@ Change log for ``distlib``
 0.2.6 (future)
 ~~~~~~~~~~~~~~
 
+- compat
+
+    - Updated to handle a case where sys.getfilesystemencoding() returns None.
+
 - database
 
     - Fixed #97: Eliminated a crash in EggInfoDistribution.list_distinfo_files()
