@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2015 Vinay Sajip. All rights reserved.
+ * Copyright (C) 2011-2016 Vinay Sajip. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
 #pragma comment (lib, "Shlwapi.lib")
 
 #define APPENDED_ARCHIVE
+#define USE_ENVIRONMENT
 
 #define MSGSIZE 1024
 
@@ -222,34 +223,38 @@ find_shebang(char * buffer, size_t bufsize)
 
 #endif
 
-#if 0
-static COMMAND * find_on_path(wchar_t * name)
+#if defined(USE_ENVIRONMENT)
+/*
+ * Where to place any executable found on the path. Should be OK to use a
+ * static as there's only one of these per invocation of this executable.
+ */
+static wchar_t path_executable[MSGSIZE];
+
+static BOOL find_on_path(wchar_t * name)
 {
     wchar_t * pathext;
     size_t    varsize;
     wchar_t * context = NULL;
     wchar_t * extension;
-    COMMAND * result = NULL;
     DWORD     len;
     errno_t   rc;
+    BOOL found = FALSE;
 
-    wcscpy_s(path_command.key, MAX_PATH, name);
     if (wcschr(name, L'.') != NULL) {
         /* assume it has an extension. */
-        len = SearchPathW(NULL, name, NULL, MSGSIZE, path_command.value, NULL);
-        if (len) {
-            result = &path_command;
-        }
+        if (SearchPathW(NULL, name, NULL, MSGSIZE, path_executable, NULL))
+            found = TRUE;
     }
     else {
         /* No extension - search using registered extensions. */
         rc = _wdupenv_s(&pathext, &varsize, L"PATHEXT");
+        _wcslwr_s(pathext, varsize);
         if (rc == 0) {
             extension = wcstok_s(pathext, L";", &context);
             while (extension) {
-                len = SearchPathW(NULL, name, extension, MSGSIZE, path_command.value, NULL);
+                len = SearchPathW(NULL, name, extension, MSGSIZE, path_executable, NULL);
                 if (len) {
-                    result = &path_command;
+                    found = TRUE;
                     break;
                 }
                 extension = wcstok_s(NULL, L";", &context);
@@ -257,7 +262,18 @@ static COMMAND * find_on_path(wchar_t * name)
             free(pathext);
         }
     }
-    return result;
+    return found;
+}
+
+/*
+ * Find an executable in the environment. For now, we just look in the path,
+ * but potentially we could expand this to look in the registry, etc.
+ */
+static wchar_t *
+find_environment_executable(wchar_t * line) {
+    BOOL found = find_on_path(line);
+
+    return found ? path_executable : NULL;
 }
 
 #endif
@@ -368,7 +384,7 @@ run_child(wchar_t * cmdline)
     si.dwFlags = STARTF_USESTDHANDLES;
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) control_key_handler, TRUE);
     ok = CreateProcessW(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
-    assert(ok, "Unable to create process using '%s'", cmdline);
+    assert(ok, "Unable to create process using '%S'", cmdline);
     pid = pi.dwProcessId;
     AssignProcessToJobObject(job, pi.hProcess);
     CloseHandle(pi.hThread);
@@ -379,7 +395,7 @@ run_child(wchar_t * cmdline)
 }
 
 static wchar_t *
-find_exe(wchar_t * line) {
+find_exe_extension(wchar_t * line) {
     wchar_t * p;
 
     while ((p = StrStrIW(line, L".exe")) != NULL) {
@@ -395,17 +411,49 @@ find_exe(wchar_t * line) {
 static wchar_t *
 find_executable_and_args(wchar_t * line, wchar_t ** argp)
 {
-    wchar_t * p = find_exe(line);
+    wchar_t * p = find_exe_extension(line);
+#if defined(USE_ENVIRONMENT)
+    wchar_t * q;
+    int n;
+#endif
+    wchar_t * result;
 
-    assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line.");
-    p += 4;
+#if !defined(USE_ENVIRONMENT)
+    assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line: %S", line);
+    p += 4; /* skip past the '.exe' */
+    result = line;
+#else
+    if (p != NULL) {
+        p += 4; /* skip past the '.exe' */
+        result = line;
+    }
+    else {
+        n = _wcsnicmp(line, L"/usr/bin/env", 12);
+        assert(n == 0, "Expected to find a command ending in '.exe' in shebang line: %S", line);
+        p = line + 12; /* past the '/usr/bin/env' */
+        assert(*p && iswspace(*p), "Expected to find whitespace after '/usr/bin/env': %S", line);
+        do {
+            ++p;
+        } while (*p && iswspace(*p));
+        /* Now, p points to what comes after /usr/bin/env and any following whitespace. */
+        q = p;
+        /* Skip past executable name and NUL-terminate it. */
+        while (*q && !iswspace(*q))
+            ++q;
+        if (iswspace(*q))
+            *q++ = L'\0';
+        result = find_environment_executable(p);
+        assert(result != NULL, "Unable to find executable in environment: %S", line);
+        p = q; /* point past name of executable in shebang */
+    }
+#endif
     if (*line == L'"') {
-        assert(*p == L'"', "Expected terminating double-quote for executable in shebang line.");
+        assert(*p == L'"', "Expected terminating double-quote for executable in shebang line: %S", line);
         *p++ = L'\0';
         ++line;
     }
     /* p points just past the executable. It must either be a NUL or whitespace. */
-    assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line.");
+    assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line: %S", line);
     /* if p is whitespace, make it NUL to truncate 'line', and advance */
     if (*p && iswspace(*p))
         *p++ = L'\0';
@@ -413,7 +461,7 @@ find_executable_and_args(wchar_t * line, wchar_t ** argp)
     while(*p && iswspace(*p))
         ++p;
     *argp = p;
-    return line;
+    return result;
 }
 
 static int
@@ -449,7 +497,7 @@ process(int argc, char * argv[])
     assert(wp != NULL, "Failed to find \".exe\" in executable name");
 
     len = MAX_PATH - (wp - script_path);
-    assert(len > sizeof(suffix), "Failed to append \"%s\" suffix", suffix);
+    assert(len > sizeof(suffix), "Failed to append \"%S\" suffix", suffix);
     wcsncpy_s(wp, len, suffix, sizeof(suffix));
 #endif
 #if defined(APPENDED_ARCHIVE)
@@ -462,7 +510,7 @@ process(int argc, char * argv[])
     assert(p != NULL, "Failed to find shebang");
 #else
     rc = _wfopen_s(&fp, psp, L"rb");
-    assert(rc == 0, "Failed to open script file \"%s\"", psp);
+    assert(rc == 0, "Failed to open script file '%S'", psp);
     fread(buffer, sizeof(char), MAX_PATH, fp);
     fclose(fp);
     p = buffer;
@@ -493,7 +541,7 @@ process(int argc, char * argv[])
     len = wcslen(wcp) + wcslen(wp) + 8 + wcslen(psp) + wcslen(cmdline);
     cmdp = (wchar_t *) calloc(len, sizeof(wchar_t));
     assert(cmdp != NULL, "Expected to be able to allocate command line memory");
-    _snwprintf_s(cmdp, len, len, L"\"%s\" %s \"%s\" %s", wcp, wp, psp, cmdline);
+    _snwprintf_s(cmdp, len, len, L"\"%S\" %S \"%S\" %S", wcp, wp, psp, cmdline);
     run_child(cmdp);  /* never actually returns */
     free(cmdp);
     return 0;
@@ -513,4 +561,5 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 {
     return process(__argc, __argv);
 }
+
 #endif
