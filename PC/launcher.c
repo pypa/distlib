@@ -384,7 +384,7 @@ run_child(wchar_t * cmdline)
     si.dwFlags = STARTF_USESTDHANDLES;
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) control_key_handler, TRUE);
     ok = CreateProcessW(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
-    assert(ok, "Unable to create process using '%S'", cmdline);
+    assert(ok, "Unable to create process using '%ls'", cmdline);
     pid = pi.dwProcessId;
     AssignProcessToJobObject(job, pi.hProcess);
     CloseHandle(pi.hThread);
@@ -419,7 +419,7 @@ find_executable_and_args(wchar_t * line, wchar_t ** argp)
     wchar_t * result;
 
 #if !defined(USE_ENVIRONMENT)
-    assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line: %S", line);
+    assert(p != NULL, "Expected to find a command ending in '.exe' in shebang line: %ls", line);
     p += 4; /* skip past the '.exe' */
     result = line;
 #else
@@ -429,9 +429,9 @@ find_executable_and_args(wchar_t * line, wchar_t ** argp)
     }
     else {
         n = _wcsnicmp(line, L"/usr/bin/env", 12);
-        assert(n == 0, "Expected to find a command ending in '.exe' in shebang line: %S", line);
+        assert(n == 0, "Expected to find a command ending in '.exe' in shebang line: %ls", line);
         p = line + 12; /* past the '/usr/bin/env' */
-        assert(*p && iswspace(*p), "Expected to find whitespace after '/usr/bin/env': %S", line);
+        assert(*p && iswspace(*p), "Expected to find whitespace after '/usr/bin/env': %ls", line);
         do {
             ++p;
         } while (*p && iswspace(*p));
@@ -443,17 +443,17 @@ find_executable_and_args(wchar_t * line, wchar_t ** argp)
         if (iswspace(*q))
             *q++ = L'\0';
         result = find_environment_executable(p);
-        assert(result != NULL, "Unable to find executable in environment: %S", line);
+        assert(result != NULL, "Unable to find executable in environment: %ls", line);
         p = q; /* point past name of executable in shebang */
     }
 #endif
     if (*line == L'"') {
-        assert(*p == L'"', "Expected terminating double-quote for executable in shebang line: %S", line);
+        assert(*p == L'"', "Expected terminating double-quote for executable in shebang line: %ls", line);
         *p++ = L'\0';
         ++line;
     }
     /* p points just past the executable. It must either be a NUL or whitespace. */
-    assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line: %S", line);
+    assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line: %ls", line);
     /* if p is whitespace, make it NUL to truncate 'line', and advance */
     if (*p && iswspace(*p))
         *p++ = L'\0';
@@ -497,7 +497,7 @@ process(int argc, char * argv[])
     assert(wp != NULL, "Failed to find \".exe\" in executable name");
 
     len = MAX_PATH - (wp - script_path);
-    assert(len > sizeof(suffix), "Failed to append \"%S\" suffix", suffix);
+    assert(len > sizeof(suffix), "Failed to append \"%ls\" suffix", suffix);
     wcsncpy_s(wp, len, suffix, sizeof(suffix));
 #endif
 #if defined(APPENDED_ARCHIVE)
@@ -510,7 +510,7 @@ process(int argc, char * argv[])
     assert(p != NULL, "Failed to find shebang");
 #else
     rc = _wfopen_s(&fp, psp, L"rb");
-    assert(rc == 0, "Failed to open script file '%S'", psp);
+    assert(rc == 0, "Failed to open script file '%ls'", psp);
     fread(buffer, sizeof(char), MAX_PATH, fp);
     fclose(fp);
     p = buffer;
@@ -541,7 +541,7 @@ process(int argc, char * argv[])
     len = wcslen(wcp) + wcslen(wp) + 8 + wcslen(psp) + wcslen(cmdline);
     cmdp = (wchar_t *) calloc(len, sizeof(wchar_t));
     assert(cmdp != NULL, "Expected to be able to allocate command line memory");
-    _snwprintf_s(cmdp, len, len, L"\"%S\" %S \"%S\" %S", wcp, wp, psp, cmdline);
+    _snwprintf_s(cmdp, len, len, L"\"%ls\" %ls \"%ls\" %ls", wcp, wp, psp, cmdline);
     run_child(cmdp);  /* never actually returns */
     free(cmdp);
     return 0;
