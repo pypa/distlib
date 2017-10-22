@@ -25,6 +25,8 @@ Change log for ``distlib``
       path is very long or contains spaces (to cater for a limitation in shebang
       line parsing on Linux)
 
+    - Updated launcher binaries.
+
 - tests
 
     - Numerous test refinements, not detailed further here.
