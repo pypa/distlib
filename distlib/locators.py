@@ -69,7 +69,7 @@ class RedirectHandler(BaseRedirectHandler):
             if key in headers:
                 newurl = headers[key]
                 break
-        if newurl is None:
+        if newurl is None:  # pragma: no cover
             return
         urlparts = urlparse(newurl)
         if urlparts.scheme == '':
@@ -175,7 +175,7 @@ class Locator(object):
 
         This calls _get_project to do all the work, and just implements a caching layer on top.
         """
-        if self._cache is None:
+        if self._cache is None:  # pragma: no cover
             result = self._get_project(name)
         elif name in self._cache:
             result = self._cache[name]
@@ -241,7 +241,7 @@ class Locator(object):
 
         result = None
         scheme, netloc, path, params, query, frag = urlparse(url)
-        if frag.lower().startswith('egg='):
+        if frag.lower().startswith('egg='):  # pragma: no cover
             logger.debug('%s: version hint in fragment: %r',
                          project_name, frag)
         m = HASHER_HASH.match(frag)
@@ -250,7 +250,7 @@ class Locator(object):
         else:
             algo, digest = None, None
         origpath = path
-        if path and path[-1] == '/':
+        if path and path[-1] == '/':  # pragma: no cover
             path = path[:-1]
         if path.endswith('.whl'):
             try:
@@ -272,7 +272,7 @@ class Locator(object):
                         }
             except Exception as e:  # pragma: no cover
                 logger.warning('invalid path for wheel: %s', path)
-        elif not path.endswith(self.downloadable_extensions):
+        elif not path.endswith(self.downloadable_extensions):  # pragma: no cover
             logger.debug('Not downloadable: %s', path)
         else:  # downloadable extension
             path = filename = posixpath.basename(path)
@@ -280,7 +280,7 @@ class Locator(object):
                 if path.endswith(ext):
                     path = path[:-len(ext)]
                     t = self.split_filename(path, project_name)
-                    if not t:
+                    if not t:  # pragma: no cover
                         logger.debug('No match for project/version: %s', path)
                     else:
                         name, version, pyver = t
@@ -293,7 +293,7 @@ class Locator(object):
                                                    params, query, '')),
                                 #'packagetype': 'sdist',
                             }
-                            if pyver:
+                            if pyver:  # pragma: no cover
                                 result['python-version'] = pyver
                     break
         if result and algo:
@@ -354,7 +354,7 @@ class Locator(object):
         """
         result = None
         r = parse_requirement(requirement)
-        if r is None:
+        if r is None:  # pragma: no cover
             raise DistlibException('Not a valid requirement: %r' % requirement)
         scheme = get_scheme(self.scheme)
         self.matcher = matcher = scheme.matcher(r.requirement)
@@ -392,7 +392,7 @@ class Locator(object):
             d = {}
             sd = versions.get('digests', {})
             for url in result.download_urls:
-                if url in sd:
+                if url in sd:  # pragma: no cover
                     d[url] = sd[url]
             result.digests = d
         self.matcher = None

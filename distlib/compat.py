@@ -12,7 +12,7 @@ import sys
 
 try:
     import ssl
-except ImportError:
+except ImportError:  # pragma: no cover
     ssl = None
 
 if sys.version_info[0] < 3:  # pragma: no cover
@@ -272,7 +272,7 @@ from zipfile import ZipFile as BaseZipFile
 
 if hasattr(BaseZipFile, '__enter__'):  # pragma: no cover
     ZipFile = BaseZipFile
-else:
+else:  # pragma: no cover
     from zipfile import ZipExtFile as BaseZipExtFile
 
     class ZipExtFile(BaseZipExtFile):
