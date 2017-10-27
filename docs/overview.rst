@@ -129,15 +129,19 @@ all versions are tested on all platforms, but are expected to work correctly).
 Project status
 --------------
 
-The project has reached alpha status in its development: there is a test
-suite and it has been exercised on Windows, Ubuntu and Mac OS X. To work with
-the project, you can `download a release from PyPI
+The project has reached a mature status in its development: there is a test
+suite and it has been exercised on Windows, Ubuntu and Mac OS X. The project is
+used by well-known projects such as `pip <https://pypi.python.org/pypi/pip>`_ and
+`caniusepython3 <https://pypi.python.org/pypi/caniusepython3>`_.
+
+
+To work with the project, you can `download a release from PyPI
 <https://pypi.python.org/pypi/distlib/>`_, or clone the source repository or
 download a tarball from it.
 
 Coverage results are available at:
 
-http://www.red-dove.com/distlib/coverage/
+https://coveralls.io/github/vsajip/distlib/
 
 Continuous integration test results are available at:
 

@@ -7,7 +7,8 @@ Change log for ``distlib``
 
 - compat
 
-    - Updated to handle a case where sys.getfilesystemencoding() returns None.
+    - Fixed #99: Updated to handle a case where sys.getfilesystemencoding()
+      returns None.
 
 - database
 
