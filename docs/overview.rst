@@ -122,8 +122,8 @@ Distlib currently offers the following features:
 Python version and platform compatibility
 -----------------------------------------
 
-Distlib is intended to be used on any Python version >= 2.6 and is tested on
-Python versions 2.6, 2.7, 3.1, 3.2, and 3.3 on Linux, Windows, and Mac OS X (not
+Distlib is intended to be used on any Python version >= 2.7 and is tested on
+Python versions 2.7 and 3.3-3.6 on Linux, Windows, and Mac OS X (not
 all versions are tested on all platforms, but are expected to work correctly).
 
 Project status
