@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Distlib'
-copyright = u'2012-2016, The Python Software Foundation'
+copyright = u'2012-2017, The Python Software Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
