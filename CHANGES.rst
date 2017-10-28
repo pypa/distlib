@@ -15,10 +15,17 @@ Change log for ``distlib``
     - Fixed #97: Eliminated a crash in EggInfoDistribution.list_distinfo_files()
       which was caused by trying to open a non-existent file.
 
+    - Handled a case where an installed distribution didn't have 'Provides:'
+      metadata.
+
 - locators
 
     - Fixed #96: SimpleScrapingLocator no longer fails prematurely when scraping
       links due to invalid versions.
+
+- markers
+
+    - Improved error messages issued when interpreting markers
 
 - scripts
 
