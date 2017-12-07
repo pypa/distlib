@@ -319,6 +319,12 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         metadata._fields['Metadata-Version'] = '1.618'
         self.assertRaises(MetadataUnrecognizedVersionError, metadata.keys)
 
+        # add a test for 1.3
+        metadata = LegacyMetadata()
+        metadata['Description-Content-Type'] = 'text/markdown; charset=UTF-8; variant=CommonMark'
+        metadata.set_metadata_version()
+        self.assertEqual(metadata['Metadata-Version'], '1.3')
+
     def test_version(self):
         LegacyMetadata(mapping={'author': 'xxx',
                           'name': 'xxx',
