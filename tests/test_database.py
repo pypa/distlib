@@ -636,6 +636,13 @@ class TestDatabase(LoggingCatcher,
             expected.remove(t)
         self.assertFalse(expected)   # nothing left
 
+    def test_modules(self):
+        dp = DistributionPath(include_egg=True)
+        dist = dp.get_distribution('banana')
+        self.assertIsInstance(dist, EggInfoDistribution)
+        self.assertEqual(dist.modules, ['banana', 'cavendish'])
+
+
 class DataFilesTestCase(GlobTestCaseBase):
 
     def assertRulesMatch(self, rules, spec):

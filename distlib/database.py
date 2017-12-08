@@ -534,6 +534,7 @@ class InstalledDistribution(BaseInstalledDistribution):
     hasher = 'sha256'
 
     def __init__(self, path, metadata=None, env=None):
+        self.modules = []
         self.finder = finder = resources.finder_for_path(path)
         if finder is None:
             import pdb; pdb.set_trace ()
@@ -922,11 +923,14 @@ class EggInfoDistribution(BaseInstalledDistribution):
                 pass
             return reqs
 
+        tl_path = tl_data = None
         if path.endswith('.egg'):
             if os.path.isdir(path):
-                meta_path = os.path.join(path, 'EGG-INFO', 'PKG-INFO')
+                p = os.path.join(path, 'EGG-INFO')
+                meta_path = os.path.join(p, 'PKG-INFO')
                 metadata = Metadata(path=meta_path, scheme='legacy')
-                req_path = os.path.join(path, 'EGG-INFO', 'requires.txt')
+                req_path = os.path.join(p, 'requires.txt')
+                tl_path = os.path.join(p, 'top_level.txt')
                 requires = parse_requires_path(req_path)
             else:
                 # FIXME handle the case where zipfile is not available
@@ -936,6 +940,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
                 metadata = Metadata(fileobj=fileobj, scheme='legacy')
                 try:
                     data = zipf.get_data('EGG-INFO/requires.txt')
+                    tl_data = zipf.get_data('EGG-INFO/top_level.txt').decode('utf-8')
                     requires = parse_requires_data(data.decode('utf-8'))
                 except IOError:
                     requires = None
@@ -944,6 +949,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
                 req_path = os.path.join(path, 'requires.txt')
                 requires = parse_requires_path(req_path)
                 path = os.path.join(path, 'PKG-INFO')
+                tl_path = os.path.join(path, 'top_level.txt')
             metadata = Metadata(path=path, scheme='legacy')
         else:
             raise DistlibException('path must end with .egg-info or .egg, '
@@ -951,6 +957,16 @@ class EggInfoDistribution(BaseInstalledDistribution):
 
         if requires:
             metadata.add_requirements(requires)
+        # look for top-level modules in top_level.txt, if present
+        if tl_data is None:
+            if tl_path is not None and os.path.exists(tl_path):
+                with open(tl_path, 'rb') as f:
+                    tl_data = f.read().decode('utf-8')
+        if not tl_data:
+            tl_data = []
+        else:
+            tl_data = tl_data.splitlines()
+        self.modules = tl_data
         return metadata
 
     def __repr__(self):
