@@ -537,7 +537,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         self.modules = []
         self.finder = finder = resources.finder_for_path(path)
         if finder is None:
-            import pdb; pdb.set_trace ()
+            raise ValueError('finder unavailable for %s' % path)
         if env and env._cache_enabled and path in env._cache.path:
             metadata = env._cache.path[path].metadata
         elif metadata is None:
@@ -559,11 +559,13 @@ class InstalledDistribution(BaseInstalledDistribution):
         if env and env._cache_enabled:
             env._cache.add(self)
 
-        try:
-            r = finder.find('REQUESTED')
-        except AttributeError:
-            import pdb; pdb.set_trace ()
+        r = finder.find('REQUESTED')
         self.requested = r is not None
+        p  = os.path.join(path, 'top_level.txt')
+        if os.path.exists(p):
+            with open(p, 'rb') as f:
+                data = f.read()
+            self.modules = data.splitlines()
 
     def __repr__(self):
         return '<InstalledDistribution %r %s at %r>' % (
