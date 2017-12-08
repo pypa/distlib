@@ -7,6 +7,16 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- database
+
+    - Addressed #102: InstalledDistributions now have a modules attribute which
+      is a list of top-level modules as read from top_level.txt, if that is in
+      the distribution info.
+
+- metadata
+
+    - Added support for PEP 566 / Metadata 1.3.
+
 
 0.2.6
 ~~~~~
