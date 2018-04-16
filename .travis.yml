@@ -5,7 +5,7 @@ language: python
 sudo: false
 python:
 #    - "2.6" removed as now too old to support
-    - "2.7"
+#    - "2.7" removed temporarily as coveralls installation fails on Travis :-(
 #    - "3.2" removed because Coveralls/coverage 4.0 fails on 3.2
     - "3.3"
     - "3.4"
