@@ -14,11 +14,11 @@ python:
 #    - "pypy" removed temporarily as coveralls isn't fully compatible on Travis ...
 #             RuntimeError: cryptography 1.9 is not compatible with PyPy < 5.3. Please upgrade PyPy to use this library.
 before_install: "mkdir -p $HOME/.distlib && sudo chown -R travis:travis $HOME/.distlib || true"
-install:
-    - if [[ $TRAVIS_PYTHON_VERSION > 2.7 ]]; then pip install coveralls; fi
+# install:
+    # - pip install coveralls
 before_script: "whoami && ls -ld $HOME/.distlib"
 script:
     - PYTHONHASHSEED=0 python setup.py test
-    - if [[ $TRAVIS_PYTHON_VERSION > 2.7 ]]; then PYTHONHASHSEED=0 coverage run setup.py testd; fi
+    # - if [[ $TRAVIS_PYTHON_VERSION > 2.7 ]]; then PYTHONHASHSEED=0 coverage run setup.py testd; fi
 after_success: coveralls
 
