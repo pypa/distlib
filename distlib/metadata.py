@@ -150,8 +150,9 @@ def _best_version(fields):
             possible_versions.remove('1.3')
             logger.debug('Removed 1.3 due to %s', key)
         if key not in _566_FIELDS and '2.1' in possible_versions:
-            possible_versions.remove('2.1')
-            logger.debug('Removed 2.1 due to %s', key)
+            if key != 'Description':  # In 2.1, description allowed after headers
+                possible_versions.remove('2.1')
+                logger.debug('Removed 2.1 due to %s', key)
         if key not in _426_FIELDS and '2.0' in possible_versions:
             possible_versions.remove('2.0')
             logger.debug('Removed 2.0 due to %s', key)
