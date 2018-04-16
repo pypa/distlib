@@ -25,6 +25,10 @@ Released: 2018-04-16
       is a list of top-level modules as read from top_level.txt, if that is in
       the distribution info.
 
+- locators
+
+    - Fixed #103: Thanks to Saulius Žemaitaitis for the patch.
+
 - metadata
 
     - Added support for PEP 566 / Metadata 1.3.
