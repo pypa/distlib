@@ -17,6 +17,11 @@ Released: Not yet.
 
     - Added support for PEP 566 / Metadata 1.3.
 
+- scripts
+
+    - Fixed #104 by updating launcher binaries. Thanks to Atsushi Odagiri for
+      the diagnosis and fix.
+
 
 0.2.6
 ~~~~~

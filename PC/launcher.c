@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2017 Vinay Sajip. All rights reserved.
+ * Copyright (C) 2011-2018 Vinay Sajip. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,13 +54,13 @@ static int pid = 0;
 
 #if !defined(_CONSOLE)
 
-typedef int (__stdcall *MSGBOXWAPI)(IN HWND hWnd, 
-        IN LPCSTR lpText, IN LPCSTR lpCaption, 
+typedef int (__stdcall *MSGBOXWAPI)(IN HWND hWnd,
+        IN LPCSTR lpText, IN LPCSTR lpCaption,
         IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
 
 #define MB_TIMEDOUT 32000
 
-int MessageBoxTimeoutA(HWND hWnd, LPCSTR lpText, 
+int MessageBoxTimeoutA(HWND hWnd, LPCSTR lpText,
     LPCSTR lpCaption, UINT uType, WORD wLanguageId, DWORD dwMilliseconds)
 {
     static MSGBOXWAPI MsgBoxTOA = NULL;
@@ -68,11 +68,11 @@ int MessageBoxTimeoutA(HWND hWnd, LPCSTR lpText,
 
     if (!MsgBoxTOA) {
         if (hUser)
-            MsgBoxTOA = (MSGBOXWAPI)GetProcAddress(hUser, 
+            MsgBoxTOA = (MSGBOXWAPI)GetProcAddress(hUser,
                                       "MessageBoxTimeoutA");
         else {
             /*
-             * stuff happened, add code to handle it here 
+             * stuff happened, add code to handle it here
              * (possibly just call MessageBox())
              */
         }
@@ -451,6 +451,7 @@ find_executable_and_args(wchar_t * line, wchar_t ** argp)
         assert(*p == L'"', "Expected terminating double-quote for executable in shebang line: %ls", line);
         *p++ = L'\0';
         ++line;
+        ++result;  /* See https://bitbucket.org/pypa/distlib/issues/104 */
     }
     /* p points just past the executable. It must either be a NUL or whitespace. */
     assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line: %ls", line);
