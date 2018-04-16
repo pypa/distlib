@@ -66,7 +66,7 @@ class LocatorTestCase(unittest.TestCase):
         locator = PyPIJSONLocator(PYPI_RPC_HOST)
         result = locator.get_project('sarge')
         LATEST_SARGE_VERSION = '0.1.4'
-        LATEST_SARGE_MD5 = '285013875aa908ef1417055d3e74a00a'
+        LATEST_SARGE_SHA256 = '59f93216723ddd9062d17cbbb90ed9e69267b84825cf0bde0b7f8d934c424823'
         self.assertIn(LATEST_SARGE_VERSION, result)
         dist = result[LATEST_SARGE_VERSION]
         self.assertEqual(dist.name, 'sarge')
@@ -74,7 +74,7 @@ class LocatorTestCase(unittest.TestCase):
         path = '/sarge-%s.tar.gz' % LATEST_SARGE_VERSION
         for url in dist.download_urls:
             self.assertTrue(url.endswith(path))
-        self.assertEqual(dist.digests[url],('md5', LATEST_SARGE_MD5))
+        self.assertEqual(dist.digests[url],('sha256', LATEST_SARGE_SHA256))
         self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
