@@ -66,7 +66,10 @@ class LocatorTestCase(unittest.TestCase):
         locator = PyPIJSONLocator(PYPI_RPC_HOST)
         result = locator.get_project('sarge')
         LATEST_SARGE_VERSION = '0.1.4'
-        LATEST_SARGE_SHA256 = '59f93216723ddd9062d17cbbb90ed9e69267b84825cf0bde0b7f8d934c424823'
+        LATEST_SARGE_HASHES = (
+            ('md5', '285013875aa908ef1417055d3e74a00a'),
+            ('sha256', '59f93216723ddd9062d17cbbb90ed9e69267b84825cf0bde0b7f8d934c424823'),
+        )
         self.assertIn(LATEST_SARGE_VERSION, result)
         dist = result[LATEST_SARGE_VERSION]
         self.assertEqual(dist.name, 'sarge')
@@ -74,7 +77,7 @@ class LocatorTestCase(unittest.TestCase):
         path = '/sarge-%s.tar.gz' % LATEST_SARGE_VERSION
         for url in dist.download_urls:
             self.assertTrue(url.endswith(path))
-        self.assertEqual(dist.digests[url],('sha256', LATEST_SARGE_SHA256))
+        self.assertIn(dist.digests[url], LATEST_SARGE_HASHES)
         self.assertRaises(NotImplementedError, locator.get_distribution_names)
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
@@ -88,8 +91,11 @@ class LocatorTestCase(unittest.TestCase):
             self.assertEqual(dist.name, 'sarge')
             self.assertEqual(dist.version, '0.1')
             self.assertTrue(dist.source_url.endswith('/sarge-0.1.tar.gz'))
-            self.assertEqual(dist.digest,
-                             ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'))
+            SARGE_HASHES = (
+                ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'),
+                ('sha256', 'ec2ec0b1c9ed9a77f9b4322c16e4954c93aa00d974a1af931b18eb751e377dfe'),
+            )
+            self.assertIn(dist.digest, SARGE_HASHES)
         return
         # The following is too slow
         names = locator.get_distribution_names()
