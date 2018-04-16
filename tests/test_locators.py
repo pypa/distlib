@@ -319,7 +319,7 @@ class LocatorTestCase(unittest.TestCase):
             self.assertGreater(len(all_dists), 0)
 
     def test_url_preference(self):
-        cases = (('http://netloc/path', 'https://netloc/path'),
+        cases = (('https://netloc/path', 'http://netloc/path'),
                  ('http://pypi.python.org/path', 'http://netloc/path'),
                  ('http://netloc/B', 'http://netloc/A'))
         for url1, url2 in cases:
