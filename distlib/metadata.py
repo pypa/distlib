@@ -91,7 +91,7 @@ _426_FIELDS = ('Metadata-Version', 'Name', 'Version', 'Platform',
 _426_MARKERS = ('Private-Version', 'Provides-Extra', 'Obsoleted-By',
                 'Setup-Requires-Dist', 'Extension')
 
-_566_FIELDS = ('Description-Content-Type',)
+_566_FIELDS = _426_FIELDS + ('Description-Content-Type',)
 
 _566_MARKERS = ('Description-Content-Type',)
 
