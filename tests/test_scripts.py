@@ -246,7 +246,10 @@ class ScriptTestCase(unittest.TestCase):
         tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
         executable = os.path.normcase(sys.executable).encode('utf-8')
-        wexecutable = executable.replace(b'python.exe', b'pythonw.exe')
+        if b'python3.exe' in executable:
+            wexecutable = executable.replace(b'python3.exe', b'pythonw3.exe')
+        else:
+            wexecutable = executable.replace(b'python.exe', b'pythonw.exe')
         files = self.maker.make('script4.py')
         self.assertEqual(len(files), 1)
         filenames = set([os.path.basename(f) for f in files])
