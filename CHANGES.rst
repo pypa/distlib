@@ -2,10 +2,22 @@ Change log for ``distlib``
 --------------------------
 
 
-0.2.7 (future)
+0.2.8 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+
+
+0.2.7
+~~~~~
+
+Released: 2018-04-16
+
+- compat
+
+    - Fixed #105: cache_from_source is now imported from importlib.util where
+      available.
 
 - database
 
@@ -19,7 +31,7 @@ Released: Not yet.
 
 - scripts
 
-    - Fixed #104 by updating launcher binaries. Thanks to Atsushi Odagiri for
+    - Fixed #104: Updated launcher binaries. Thanks to Atsushi Odagiri for
       the diagnosis and fix.
 
 
