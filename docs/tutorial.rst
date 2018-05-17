@@ -34,6 +34,11 @@ in the top-level directory of the package. You can of course also run
 ``python setup.py install`` to install the package (perhaps invoking with
 ``sudo`` if you need to install to a protected location).
 
+If running the tests under Python >= 3.2.3, remember to first set the environment
+variable ``PYTHONHASHSEED=0`` to disable hash randomisation, which is needed for
+the tests. (The enviroment variable also needs to be set if running Python 2.x
+with ``-R``. which is only available in Python 2.6.8 and later.)
+
 .. index::
    single: Continuous integration status; distlib
 

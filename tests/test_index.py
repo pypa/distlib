@@ -306,7 +306,7 @@ class PackageIndexTestCase(unittest.TestCase):
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     def test_search(self):
         self.index = PackageIndex()
-        result = self.index.search({'name': 'tatterdema'})
+        result = self.index.search({'name': 'tatterdemalion'})
         self.assertEqual(len(result), 1)
         result = self.index.search({'name': 'ragamuff'})
         self.assertEqual(len(result), 0)
