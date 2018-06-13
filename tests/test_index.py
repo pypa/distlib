@@ -309,7 +309,11 @@ class PackageIndexTestCase(unittest.TestCase):
         result = self.index.search({'name': 'tatterdemalion'})
         self.assertEqual(len(result), 1)
         result = self.index.search({'name': 'ragamuff'})
-        self.assertEqual(len(result), 0)
+        if result:
+            msg = 'got an unexpected result: %s' % result
+        else:
+            msg = None
+        self.assertEqual(len(result), 0, msg)
 
 
 if __name__ == '__main__':  # pragma: no cover
