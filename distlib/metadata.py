@@ -377,8 +377,8 @@ class LegacyMetadata(object):
                 value = msg[field]
                 if value is not None and value != 'UNKNOWN':
                     self.set(field, value)
-        logger.debug('Attempting to set metadata for %s', self)
-        self.set_metadata_version()
+        # logger.debug('Attempting to set metadata for %s', self)
+        # self.set_metadata_version()
 
     def write(self, filepath, skip_unknown=False):
         """Write the metadata fields to filepath."""

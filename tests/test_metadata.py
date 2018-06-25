@@ -302,7 +302,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
 
         PKG_INFO = os.path.join(HERE, 'SETUPTOOLS-PKG-INFO')
         metadata = LegacyMetadata(PKG_INFO)
-        self.assertEqual(metadata['Metadata-Version'], '1.1')
+        self.assertEqual(metadata['Metadata-Version'], '1.0')
 
         PKG_INFO = os.path.join(HERE, 'SETUPTOOLS-PKG-INFO2')
         metadata = LegacyMetadata(PKG_INFO)
