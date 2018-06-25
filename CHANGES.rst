@@ -7,6 +7,16 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- database
+
+    - Fixed #108: Updated metadata scan to look for the METADATA file as well
+      as the JSON formats.
+
+- metadata
+
+    - Fixed #107: Updated documentation on testing to include information on
+      setting PYTHONHASHSEED.
+
 
 
 0.2.7
