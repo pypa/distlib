@@ -17,6 +17,10 @@ Released: Not yet.
     - Fixed #107: Updated documentation on testing to include information on
       setting PYTHONHASHSEED.
 
+- util
+
+    - Fixed #109: Removed existing files (which might have been symlinks) before
+      overwriting.
 
 
 0.2.7

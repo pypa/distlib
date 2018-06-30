@@ -552,13 +552,7 @@ class FileOperator(object):
         self.record_as_written(path)
 
     def write_text_file(self, path, data, encoding):
-        self.ensure_dir(os.path.dirname(path))
-        if not self.dry_run:
-            if os.path.exists(path):
-                os.remove(path)
-            with open(path, 'wb') as f:
-                f.write(data.encode(encoding))
-        self.record_as_written(path)
+        self.write_binary_file(path, data.encode(encoding))
 
     def set_mode(self, bits, mask, files):
         if os.name == 'posix' or (os.name == 'java' and os._name == 'posix'):
