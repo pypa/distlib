@@ -17,6 +17,12 @@ Released: Not yet.
     - Fixed #107: Updated documentation on testing to include information on
       setting PYTHONHASHSEED.
 
+- scripts
+
+    - Fixed #111: Avoided unnecessary newlines in script preambles, which caused
+      problems with detecting encoding declarations. Thanks to Wim Glenn for the
+      report and patch.
+
 - util
 
     - Fixed #109: Removed existing files (which might have been symlinks) before
