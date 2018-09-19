@@ -6,6 +6,7 @@
 #
 from __future__ import unicode_literals
 import os
+import posixpath
 try:
     import ssl
 except ImportError:
@@ -96,6 +97,19 @@ class LocatorTestCase(unittest.TestCase):
                 ('sha256', 'ec2ec0b1c9ed9a77f9b4322c16e4954c93aa00d974a1af931b18eb751e377dfe'),
             )
             self.assertIn(dist.digest, SARGE_HASHES)
+        # Test to check issue #112 fix.
+        locator.wheel_tags = [('cp27', 'cp27m', 'win_amd64'),
+                              ('cp35', 'cp35m', 'win32')]
+        result = locator.get_project('simplejson')
+        urls = result['urls'].get('3.16.0')
+        self.assertTrue(urls)
+        self.assertEqual(3, len(urls))
+        expected = set(['simplejson-3.16.0-cp27-cp27m-win_amd64.whl',
+                        'simplejson-3.16.0-cp35-cp35m-win32.whl',
+                        'simplejson-3.16.0.tar.gz'])
+        for u in urls:
+            p = posixpath.split(urlparse(u).path)[-1]
+            self.assertIn(p, expected)
         return
         # The following is too slow
         names = locator.get_distribution_names()
