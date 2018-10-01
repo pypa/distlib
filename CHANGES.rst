@@ -2,15 +2,26 @@ Change log for ``distlib``
 --------------------------
 
 
-0.2.8 (future)
+0.2.9 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+
+0.2.8
+~~~~~
+
+Released: 2018-10-01
 
 - database
 
     - Fixed #108: Updated metadata scan to look for the METADATA file as well
       as the JSON formats.
+
+- locators
+
+    - Fixed #112: Handled wheel tags and platform-dependent downloads correctly
+      in SimpleScrapingLocator.
 
 - metadata
 
