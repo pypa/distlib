@@ -121,7 +121,8 @@ class ScriptTestCase(unittest.TestCase):
             self.assertEqual(p.returncode, 0)
             self.assertEqual(stderr, b'')
             expected = os.path.realpath(maker.executable)  # symlinks on OS X
-            self.assertEqual(stdout.strip(), expected.encode('utf-8'))
+            actual = os.path.realpath(stdout.strip())
+            self.assertEqual(actual, expected.encode('utf-8'))
 
     def test_multiple(self):
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
@@ -324,6 +325,8 @@ class ScriptTestCase(unittest.TestCase):
 
     @unittest.skipUnless(os.name == 'posix', 'Test only valid for POSIX')
     def test_mode(self):
+        # save test runner's original umask and ensure default 022
+        saved_umask = os.umask(0o022)
         self.maker.set_mode = False
         files = self.maker.make('foo = foo:main')
         self.assertEqual(len(files), 2)
@@ -334,6 +337,8 @@ class ScriptTestCase(unittest.TestCase):
         self.assertEqual(len(files), 2)
         for f in files:
             self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
+        # restore the test runner's original umask
+        os.umask(saved_umask)
 
     def test_interpreter_args(self):
         executable = fsencode(get_executable())
