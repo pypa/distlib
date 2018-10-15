@@ -327,18 +327,20 @@ class ScriptTestCase(unittest.TestCase):
     def test_mode(self):
         # save test runner's original umask and ensure default 022
         saved_umask = os.umask(0o022)
-        self.maker.set_mode = False
-        files = self.maker.make('foo = foo:main')
-        self.assertEqual(len(files), 2)
-        for f in files:
-            self.assertIn(os.stat(f).st_mode & 0o7777, (0o644, 0o664))
-        self.maker.set_mode = True
-        files = self.maker.make('bar = bar:main')
-        self.assertEqual(len(files), 2)
-        for f in files:
-            self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
-        # restore the test runner's original umask
-        os.umask(saved_umask)
+        try:
+            self.maker.set_mode = False
+            files = self.maker.make('foo = foo:main')
+            self.assertEqual(len(files), 2)
+            for f in files:
+                self.assertIn(os.stat(f).st_mode & 0o7777, (0o644, 0o664))
+            self.maker.set_mode = True
+            files = self.maker.make('bar = bar:main')
+            self.assertEqual(len(files), 2)
+            for f in files:
+                self.assertIn(os.stat(f).st_mode & 0o7777, (0o755, 0o775))
+        finally:
+            # restore the test runner's original umask
+            os.umask(saved_umask)
 
     def test_interpreter_args(self):
         executable = fsencode(get_executable())
