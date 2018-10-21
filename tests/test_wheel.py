@@ -354,6 +354,10 @@ class WheelTestCase(unittest.TestCase):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)
         w.verify()
+        # see issue 115
+        fn = os.path.join(HERE, 'valid_wheel-0.0.1-py3-none-any.whl')
+        w = Wheel(fn)
+        w.verify()
         fn = os.path.join(HERE, 'bad_wheels', 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)
         self.assertRaises(DistlibException, w.verify)

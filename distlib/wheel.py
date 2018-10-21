@@ -786,7 +786,11 @@ class Wheel(object):
                     u_arcname = arcname
                 else:
                     u_arcname = arcname.decode('utf-8')
-                if '..' in u_arcname:
+                # See issue #115: some wheels have .. in their entries, but
+                # in the filename ... e.g. __main__..py ! So the check is
+                # updated to look for .. in the directory portions
+                p = u_arcname.split('/')
+                if '..' in p:
                     raise DistlibException('invalid entry in '
                                            'wheel: %r' % u_arcname)
 

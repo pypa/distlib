@@ -7,6 +7,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- wheel
+
+    - Fixed #115: Relaxed check for '..' in wheel archive entries by not
+      checking filename parts, only directory segments.
 
 0.2.8
 ~~~~~
