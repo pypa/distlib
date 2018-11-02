@@ -111,12 +111,18 @@ class UtilTestCase(unittest.TestCase):
                         'c-----Users--User--Some-File.zip.cache')
 
     def test_parse_credentials(self):
-        self.assertEqual(parse_credentials('example.com', ),
-                         (None, None, 'example.com'))
-        self.assertEqual(parse_credentials('user@example.com', ),
-                         ('user', None, 'example.com'))
-        self.assertEqual(parse_credentials('user:pwd@example.com', ),
-                         ('user', 'pwd', 'example.com'))
+        cases = (
+            ('example.com', (None, None, 'example.com')),
+            ('user@example.com',  ('user', None, 'example.com')),
+            ('user:pwd@example.com', ('user', 'pwd', 'example.com')),
+            ('user:@example.com', ('user', '', 'example.com')),
+            ('user:pass@word@example.com', ('user', 'pass@word', 'example.com')),
+            ('user:pass:word@example.com', ('user', 'pass:word', 'example.com')),
+            ('user%3Aname:%23%5E%40@example.com', ('user:name', '#^@', 'example.com')),
+        )
+
+        for s, expected in cases:
+            self.assertEqual(parse_credentials(s), expected)
 
     def test_ensure_slash(self):
         self.assertEqual(ensure_slash(''), '/')

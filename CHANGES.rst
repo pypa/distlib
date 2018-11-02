@@ -7,10 +7,15 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- util
+
+    - Fixed #116: Corrected parsing of credentials from URLs.
+
 - wheel
 
     - Fixed #115: Relaxed check for '..' in wheel archive entries by not
       checking filename parts, only directory segments.
+
 
 0.2.8
 ~~~~~
