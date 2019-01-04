@@ -47,19 +47,16 @@ Classes representing installed distributions
 
       .. TODO
 
-   .. method:: list_distinfo_files(local=False)
+   .. method:: list_distinfo_files()
 
       Return an iterator over all files located in the :file:`.dist-info`
-      directory.  If *local* is ``True``, each returned path is transformed into
-      a local absolute path, otherwise the raw value found in the :file:`RECORD`
-      file is returned.
+      directory.  Each returned path is transformed into a local absolute path.
 
-   .. method::  list_installed_files(local=False)
+   .. method::  list_installed_files()
 
       Iterate over the files installed with the distribution and registered in
       the :file:`RECORD` file and yield a tuple ``(path, md5, size)`` for each
-      line.  If *local* is ``True``, the returned path is transformed into a
-      local absolute path, otherwise the raw value is returned.
+      line.  Each returned path is transformed into a local absolute path.
 
       A local absolute path is an absolute path in which occurrences of ``'/'``
       have been replaced by :data:`os.sep`.
@@ -94,7 +91,7 @@ Classes representing installed distributions
    Instantiate with the *path* to an egg file or directory. Instances can be
    compared and sorted. Other available methods are:
 
-   .. method:: list_installed_files(local=False)
+   .. method:: list_installed_files()
 
    Available attributes:
 
