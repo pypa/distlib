@@ -11,7 +11,8 @@ python:
     - "3.4"
     - "3.5"
     - "3.6"
-    - "pypy"
+    - "pypy2.7-6.0"
+    - "pypy3.5-6.0"
 #             pypy was removed temporarily as coveralls isn't always fully compatible on Travis ...
 #             RuntimeError: cryptography 1.9 is not compatible with PyPy < 5.3. Please upgrade PyPy to use this library.
 before_install: "mkdir -p $HOME/.distlib && sudo chown -R travis:travis $HOME/.distlib || true"

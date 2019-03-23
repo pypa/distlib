@@ -24,6 +24,14 @@ Released: Not yet.
     - Fixed #115: Relaxed check for '..' in wheel archive entries by not
       checking filename parts, only directory segments.
 
+- docs
+
+    - Updated default PyPI URL to https://pypi.org/pypi
+
+- tests
+
+    - Updated default PyPI URL to https://pypi.org/pypi
+
 
 0.2.8
 ~~~~~
