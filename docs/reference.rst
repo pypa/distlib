@@ -153,23 +153,16 @@ Classes
 
    Methods:
 
-   .. method:: list_installed_files(local=False)
+   .. method:: list_installed_files()
 
       Returns an iterator over all of the individual files installed as part of
       the distribution, including metadata files. The iterator returns tuples
       of the form (path, hash, size). The list of files is written by the
       installer to the ``RECORD`` metadata file.
 
-      :param local: If ``True``, the paths returned are local absolute paths
-                    (i.e. with platform-specific directory separators as
-                    indicated by ``os.sep``); otherwise, they are the values
-                    stored in the ``RECORD`` metadata file.
-
-   .. method:: list_distinfo_files(local=False)
+   .. method:: list_distinfo_files()
 
       Similar to :meth:`list_installed_files`, but only returns metadata files.
-
-      :param local: As for :meth:`list_installed_files`.
 
    .. method:: check_installed_files()
 
@@ -244,14 +237,10 @@ Classes
 
    Methods:
 
-   .. method:: list_installed_files(local=False)
+   .. method:: list_installed_files()
 
       Returns a list all of the individual files installed as part of
       the distribution.
-
-      :param local: If ``True``, the paths returned are local absolute paths
-                    (i.e. with platform-specific directory separators as
-                    indicated by ``os.sep``).
 
 .. class:: DependencyGraph
 
