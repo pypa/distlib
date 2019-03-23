@@ -306,13 +306,13 @@ Here is a basic example::
     >>> from distlib.locators import locate
     >>> flask = locate('flask')
     >>> flask
-    <Distribution Flask (0.10.1) [https://pypi.python.org/packages/source/F/Flask/Flask-0.10.1.tar.gz]>
+    <Distribution Flask (0.10.1) [https://pypi.org/packages/source/F/Flask/Flask-0.10.1.tar.gz]>
     >>> dependencies = [locate(r) for r in flask.run_requires]
     >>> from pprint import pprint
     >>> pprint(dependencies)
-    [<Distribution Werkzeug (0.9.1) [https://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.9.1.tar.gz]>,
-     <Distribution Jinja2 (2.7) [https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.7.tar.gz]>,
-     <Distribution itsdangerous (0.21) [https://pypi.python.org/packages/source/i/itsdangerous/itsdangerous-0.21.tar.gz]>]
+    [<Distribution Werkzeug (0.9.1) [https://pypi.org/packages/source/W/Werkzeug/Werkzeug-0.9.1.tar.gz]>,
+     <Distribution Jinja2 (2.7) [https://pypi.org/packages/source/J/Jinja2/Jinja2-2.7.tar.gz]>,
+     <Distribution itsdangerous (0.21) [https://pypi.org/packages/source/i/itsdangerous/itsdangerous-0.21.tar.gz]>]
     >>>
 
 The values in the ``run_requires`` property are just strings. Here's another example,
@@ -322,11 +322,11 @@ showing a little more detail::
     >>> authy.run_requires
     set(['httplib2 (>= 0.7, < 0.8)', 'simplejson'])
     >>> authy
-    <Distribution authy (1.0.0) [http://pypi.python.org/packages/source/a/authy/authy-1.0.0.tar.gz]>
+    <Distribution authy (1.0.0) [http://pypi.org/packages/source/a/authy/authy-1.0.0.tar.gz]>
     >>> deps = [locate(r) for r in authy.run_requires]
     >>> pprint(deps)
-    [<Distribution httplib2 (0.7.7) [http://pypi.python.org/packages/source/h/httplib2/httplib2-0.7.7.zip]>,
-     <Distribution simplejson (3.3.0) [http://pypi.python.org/packages/source/s/simplejson/simplejson-3.3.0.tar.gz]>]
+    [<Distribution httplib2 (0.7.7) [http://pypi.org/packages/source/h/httplib2/httplib2-0.7.7.zip]>,
+     <Distribution simplejson (3.3.0) [http://pypi.org/packages/source/s/simplejson/simplejson-3.3.0.tar.gz]>]
     >>>
 
 Note that the constraints on the dependencies were honoured by :func:`locate`.
@@ -446,7 +446,7 @@ repository (which can be omitted if you want to use PyPI itself)::
     >>> from distlib.index import PackageIndex
     >>> index = PackageIndex()
     >>> index.url
-    'http://pypi.python.org/pypi'
+    'http://pypi.org/pypi'
 
 To use a local test server, you might do this::
 
@@ -1840,7 +1840,7 @@ build wheels::
             prog = os.path.join(d, next(files))
         cmd = [prog, 'install',
                '--no-deps', '--quiet',
-               '--index-url', 'http://pypi.python.org/simple/',
+               '--index-url', 'http://pypi.org/simple/',
                '--timeout', '3', '--default-timeout', '3',
                purelib, platlib, headers, scripts, data, distname]
         result = {
@@ -1919,7 +1919,7 @@ build wheels::
                 return 1
             if options.deps:
                 # collect all the requirements, including dependencies
-                u = 'http://pypi.python.org/simple/'
+                u = 'http://pypi.org/simple/'
                 locator = AggregatingLocator(JSONLocator(),
                                              SimpleScrapingLocator(u, timeout=3.0),
                                              scheme='legacy')

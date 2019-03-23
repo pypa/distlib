@@ -68,7 +68,7 @@ def install_dist(distname, workdir):
     scripts = pfx + '--install-scripts=%s/scripts' % workdir
     data = pfx + '--install-data=%s/data' % workdir
     cmd = ['pip', 'install',
-           '--index-url', 'https://pypi.python.org/simple/',
+           '--index-url', 'https://pypi.org/simple/',
            '--timeout', '3', '--default-timeout', '3',
            purelib, platlib, headers, scripts, data, distname]
     result = {

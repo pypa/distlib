@@ -21,7 +21,7 @@
              "role": "author" }
         ],
         "project_urls": {
-          "Home": "http://pypi.python.org/pypi/test_testdist/"
+          "Home": "http://pypi.org/pypi/test_testdist/"
         }
       }
     }

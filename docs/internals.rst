@@ -19,7 +19,7 @@ People who use distributions need to locate, download and install them.
 Distributions can be found in a number of places, such as:
 
 * An Internet index such as `The Python Packages Index (PyPI)
-  <http://pypi.python.org>`_, or a mirror thereof.
+  <http://pypi.org>`_, or a mirror thereof.
 * Other Internet resources, such as the developer's website, or a source
   code repository such as GitHub, BitBucket, Google Code or similar.
 * File systems, whether local to one computer or shared between several.

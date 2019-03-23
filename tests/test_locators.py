@@ -29,7 +29,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 PYPI_RPC_HOST = 'http://python.org/pypi'
 
-PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.python.org/simple/')
+PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.org/simple/')
 
 class LocatorTestCase(unittest.TestCase):
 
@@ -46,9 +46,9 @@ class LocatorTestCase(unittest.TestCase):
             dist = result['0.1']
             self.assertEqual(dist.name, 'sarge')
             self.assertEqual(dist.version, '0.1')
-            possible = ('https://pypi.python.org/packages/source/s/sarge/'
+            possible = ('https://pypi.org/packages/source/s/sarge/'
                         'sarge-0.1.tar.gz',
-                        'http://pypi.python.org/packages/source/s/sarge/'
+                        'http://pypi.org/packages/source/s/sarge/'
                         'sarge-0.1.tar.gz')
             self.assertIn(dist.source_url, possible)
             self.assertEqual(dist.digest,
@@ -84,7 +84,7 @@ class LocatorTestCase(unittest.TestCase):
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     def test_scraper(self):
-        locator = SimpleScrapingLocator('https://pypi.python.org/simple/')
+        locator = SimpleScrapingLocator('https://pypi.org/simple/')
         for name in ('sarge', 'Sarge'):
             result = locator.get_project(name)
             self.assertIn('0.1', result)
@@ -120,11 +120,11 @@ class LocatorTestCase(unittest.TestCase):
     def test_unicode_project_name(self):
         # Just checking to see that no exceptions are raised.
         NAME = '\u2603'
-        locator = SimpleScrapingLocator('https://pypi.python.org/simple/')
+        locator = SimpleScrapingLocator('https://pypi.org/simple/')
         result = locator.get_project(NAME)
         expected = {'urls': {}, 'digests': {}}
         self.assertEqual(result, expected)
-        locator = PyPIJSONLocator('https://pypi.python.org/pypi/')
+        locator = PyPIJSONLocator('https://pypi.org/pypi/')
         result = locator.get_project(NAME)
         self.assertEqual(result, expected)
 
@@ -199,7 +199,7 @@ class LocatorTestCase(unittest.TestCase):
     def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
-        loc2 = SimpleScrapingLocator('https://pypi.python.org/simple/',
+        loc2 = SimpleScrapingLocator('https://pypi.org/simple/',
                                      timeout=5.0)
         locator = AggregatingLocator(loc1, loc2)
         exp1 = os.path.join(HERE, 'fake_archives', 'subdir',
@@ -236,7 +236,7 @@ class LocatorTestCase(unittest.TestCase):
     def test_dependency_finder(self):
         locator = AggregatingLocator(
             JSONLocator(),
-            SimpleScrapingLocator('https://pypi.python.org/simple/',
+            SimpleScrapingLocator('https://pypi.org/simple/',
                                   timeout=3.0),
             scheme='legacy')
         finder = DependencyFinder(locator)
@@ -334,7 +334,7 @@ class LocatorTestCase(unittest.TestCase):
 
     def test_url_preference(self):
         cases = (('https://netloc/path', 'http://netloc/path'),
-                 ('http://pypi.python.org/path', 'http://netloc/path'),
+                 ('http://pypi.org/path', 'http://netloc/path'),
                  ('http://netloc/B', 'http://netloc/A'))
         for url1, url2 in cases:
             self.assertEqual(default_locator.prefer_url(url1, url2), url1)
@@ -344,7 +344,7 @@ class LocatorTestCase(unittest.TestCase):
     def test_prereleases(self):
         locator = AggregatingLocator(
             JSONLocator(),
-            SimpleScrapingLocator('https://pypi.python.org/simple/',
+            SimpleScrapingLocator('https://pypi.org/simple/',
                                   timeout=3.0),
             scheme='legacy')
         REQT = 'SQLAlchemy (>0.5.8, < 0.6)'

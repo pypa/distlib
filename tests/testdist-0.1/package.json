@@ -10,7 +10,7 @@
     "name": "{username}_testdist",
     "license": "Copyright (C) 2013 by Test User.",
     "author": "Test User",
-    "home-page": "http://pypi.python.org/pypi/{username}_testdist/",
+    "home-page": "http://pypi.org/pypi/{username}_testdist/",
     "summary": "A test project for distlib",
     "version": "0.1",
     "maintainer-email": "test.user@testusers.org",

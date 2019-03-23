@@ -925,7 +925,7 @@ Classes
    arguments.
 
    :param url: The root URL for the index. If not specified, the URL for PyPI
-               is used ('http://pypi.python.org/pypi').
+               is used ('http://pypi.org/pypi').
    :param mirror_host: The DNS name for a host which can be used to
                        determine available mirror hosts for the index. If not
                        specified, the value 'last.pypi.python.org' is used.

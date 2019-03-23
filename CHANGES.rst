@@ -7,6 +7,14 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- index
+
+    - Updated default PyPI URL to https://pypi.org/pypi
+
+- locators
+
+    - Updated default PyPI URL to https://pypi.org/pypi
+
 - util
 
     - Fixed #116: Corrected parsing of credentials from URLs.

@@ -196,7 +196,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
     def test_check_version(self):
         metadata = LegacyMetadata()
         metadata['Name'] = 'vimpdb'
-        metadata['Home-page'] = 'http://pypi.python.org'
+        metadata['Home-page'] = 'http://pypi.org'
         metadata['Author'] = 'Monty Python'
         missing, warnings = metadata.check()
         self.assertEqual(missing, ['Version'])
@@ -204,14 +204,14 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
     def test_check_version_strict(self):
         metadata = LegacyMetadata()
         metadata['Name'] = 'vimpdb'
-        metadata['Home-page'] = 'http://pypi.python.org'
+        metadata['Home-page'] = 'http://pypi.org'
         metadata['Author'] = 'Monty Python'
         self.assertRaises(MetadataMissingError, metadata.check, strict=True)
 
     def test_check_name(self):
         metadata = LegacyMetadata()
         metadata['Version'] = '1.0'
-        metadata['Home-page'] = 'http://pypi.python.org'
+        metadata['Home-page'] = 'http://pypi.org'
         metadata['Author'] = 'Monty Python'
         missing, warnings = metadata.check()
         self.assertEqual(missing, ['Name'])
@@ -219,7 +219,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
     def test_check_name_strict(self):
         metadata = LegacyMetadata()
         metadata['Version'] = '1.0'
-        metadata['Home-page'] = 'http://pypi.python.org'
+        metadata['Home-page'] = 'http://pypi.org'
         metadata['Author'] = 'Monty Python'
         self.assertRaises(MetadataMissingError, metadata.check, strict=True)
 
@@ -227,7 +227,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         metadata = LegacyMetadata()
         metadata['Version'] = '1.0'
         metadata['Name'] = 'vimpdb'
-        metadata['Home-page'] = 'http://pypi.python.org'
+        metadata['Home-page'] = 'http://pypi.org'
         missing, warnings = metadata.check()
         self.assertEqual(missing, ['Author'])
 
@@ -243,7 +243,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         metadata = LegacyMetadata()
         metadata['Version'] = 'rr'
         metadata['Name'] = 'vimpdb'
-        metadata['Home-page'] = 'http://pypi.python.org'
+        metadata['Home-page'] = 'http://pypi.org'
         metadata['Author'] = 'Monty Python'
         metadata['Requires-dist'] = ['Foo (a)']
         metadata['Obsoletes-dist'] = ['Foo (a)']

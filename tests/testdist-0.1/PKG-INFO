@@ -4,7 +4,7 @@ Version: 0.1
 Summary: A test project for distlib
 Description: This distribution is a test for distlib.
 Keywords:
-Home-page: http://pypi.python.org/pypi/{username}_testdist/
+Home-page: http://pypi.org/pypi/{username}_testdist/
 Author: Test User
 Author-email: test.user@testusers.org
 Maintainer: Test User
