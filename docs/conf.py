@@ -91,13 +91,18 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = os.environ.get('DISTLIB_DOC_THEME', 'default')
+html_theme = os.environ.get('DOCS_THEME', 'default')
+
+THEME_OPTIONS = {
+  'pydoc': {'collapsiblesidebar': True},
+  'sizzle': {'globaltoc_depth': 2},
+}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-if html_theme in ('pydoc',):
-    html_theme_options = {'collapsiblesidebar': True}
+if html_theme in THEME_OPTIONS:
+    html_theme_options = THEME_OPTIONS[html_theme]
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['themes']
@@ -121,7 +126,7 @@ html_theme_path = ['themes']
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
