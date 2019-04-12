@@ -95,7 +95,7 @@ html_theme = os.environ.get('DOCS_THEME', 'default')
 
 THEME_OPTIONS = {
   'pydoc': {'collapsiblesidebar': True},
-  'sizzle': {'globaltoc_depth': 2},
+  'sizzle': {'globaltoc_depth': 5},
 }
 
 # Theme options are theme-specific and customize the look and feel of a theme
