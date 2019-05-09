@@ -3,6 +3,7 @@ tests/run/
 tests/keys/random_seed
 docs/(_build|themes)/
 .dict-validwords
+watcher.conf
 MANIFEST$
 distlib-vcsid|cover
 tests/passwords
