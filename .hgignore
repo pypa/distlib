@@ -7,6 +7,7 @@ watcher.conf
 MANIFEST$
 distlib-vcsid|cover
 tests/passwords
+tests/keys/
 tests/pypi-server-standalone.py
 (dist|htmlcov|build|.tox|.idea)/
 _testdist-0.1/

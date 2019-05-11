@@ -433,6 +433,22 @@ class Wheel(object):
         self.build_zip(pathname, archive_paths)
         return pathname
 
+    def skip_entry(self, arcname):
+        """
+        Determine whether an archive entry should be skipped when verifying
+        or installing.
+        """
+        # The signature file won't be in RECORD,
+        # and we  don't currently don't do anything with it
+        # We also skip directories, as they won't be in RECORD
+        # either. See:
+        #
+        # https://github.com/pypa/wheel/issues/294
+        # https://github.com/pypa/wheel/issues/287
+        # https://github.com/pypa/wheel/pull/289
+        #
+        return arcname.endswith(('/', '/RECORD.jws'))
+
     def install(self, paths, maker, **kwargs):
         """
         Install a wheel to the specified paths. If kwarg ``warner`` is
@@ -514,9 +530,7 @@ class Wheel(object):
                         u_arcname = arcname
                     else:
                         u_arcname = arcname.decode('utf-8')
-                    # The signature file won't be in RECORD,
-                    # and we  don't currently don't do anything with it
-                    if u_arcname.endswith('/RECORD.jws'):
+                    if self.skip_entry(u_arcname):
                         continue
                     row = records[u_arcname]
                     if row[2] and str(zinfo.file_size) != row[2]:
@@ -794,9 +808,7 @@ class Wheel(object):
                     raise DistlibException('invalid entry in '
                                            'wheel: %r' % u_arcname)
 
-                # The signature file won't be in RECORD,
-                # and we  don't currently don't do anything with it
-                if u_arcname.endswith('/RECORD.jws'):
+                if self.skip_entry(u_arcname):
                     continue
                 row = records[u_arcname]
                 if row[2] and str(zinfo.file_size) != row[2]:

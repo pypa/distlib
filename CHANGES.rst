@@ -24,6 +24,9 @@ Released: Not yet.
     - Fixed #115: Relaxed check for '..' in wheel archive entries by not
       checking filename parts, only directory segments.
 
+    - Skip entries in archive entries ending with '/' (directories) when
+      verifying or installing.
+
 - docs
 
     - Updated default PyPI URL to https://pypi.org/pypi
