@@ -2,18 +2,28 @@ Change log for ``distlib``
 --------------------------
 
 
-0.2.9 (future)
+0.3.0 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
 
+
+0.2.9 (future)
+~~~~~~~~~~~~~~
+
+Released: 2019-05-13
+
 - index
 
-    - Updated default PyPI URL to https://pypi.org/pypi
+    - Updated default PyPI URL to https://pypi.org/pypi.
 
 - locators
 
-    - Updated default PyPI URL to https://pypi.org/pypi
+    - Updated default PyPI URL to https://pypi.org/pypi.
+
+- metadata
+
+    - Fixed #106: Added 'Provides' to the 2.1 metadata markers.
 
 - scripts
 
@@ -33,11 +43,19 @@ Released: Not yet.
 
 - docs
 
-    - Updated default PyPI URL to https://pypi.org/pypi
+    - Updated default PyPI URL to https://pypi.org/pypi.
+
+    - Commented out Disqus comment section.
+
+    - Changed theme configuration.
+
+    - Updated some out-of-date argument lists.
 
 - tests
 
-    - Updated default PyPI URL to https://pypi.org/pypi
+    - Updated default PyPI URL to https://pypi.org/pypi.
+
+    - Preserved umask on POSIX across a test.
 
 
 0.2.8
