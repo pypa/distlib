@@ -486,6 +486,8 @@ class WheelTestCase(unittest.TestCase):
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
+    @unittest.skipIf(sys.version_info[:2] >= (3, 7), 'The test distribution is not '
+                                               '3.7+ compatible')
     def test_build_and_install_pure(self):
         self.do_build_and_install('sarge == 0.1')
 
