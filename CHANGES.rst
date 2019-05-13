@@ -15,6 +15,10 @@ Released: Not yet.
 
     - Updated default PyPI URL to https://pypi.org/pypi
 
+- scripts
+
+    - Fixed #33, #34: Simplified script template.
+
 - util
 
     - Fixed #116: Corrected parsing of credentials from URLs.
