@@ -29,6 +29,8 @@ Released: 2019-05-14
 
     - Fixed #33, #34: Simplified script template.
 
+    - Updated Windows launchers.
+
 - util
 
     - Fixed #116: Corrected parsing of credentials from URLs.
