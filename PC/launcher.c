@@ -35,6 +35,7 @@
 
 #define APPENDED_ARCHIVE
 #define USE_ENVIRONMENT
+#define SUPPORT_RELATIVE_PATH
 
 #define MSGSIZE 1024
 
@@ -47,6 +48,13 @@ static wchar_t suffix[] = {
     L"-script.pyw"
 #endif
 };
+
+#endif
+
+#if defined(SUPPORT_RELATIVE_PATH)
+
+#define RELATIVE_PREFIX L"<launcher_dir>\\"
+#define RELATIVE_PREFIX_LENGTH 15
 
 #endif
 
@@ -198,24 +206,42 @@ find_shebang(char * buffer, size_t bufsize)
     }
     end_cdr_offset -= end_cdr.cdsize + end_cdr.cdoffset;
     /*
-     * end_cdr_offset should now be pointing to the start of the archive,
-     * i.e. just after the shebang. We'll assume the shebang line has no
-     * # or ! chars except at the beginning, and fits into bufsize (which
-     * should be MAX_PATH).
+     * end_cdr_offset should now be pointing to the start of the archive.
+     * However, the "start of the archive" is a little ill-defined, as
+     * not all means of prepending data to a zipfile handle the central
+     * directory offset the same way (simple file content appends leave
+     * it alone, obviously, but the stdlib zipapp and zipfile modules
+     * reflect the prepended data in the offset).
+     * We consider two possibilities here:
+     * 1. end_cdr_offset points to the start of the shebang (zipapp)
+     * 2. end_cdr_offset points to the end of the shebang (data copy)
+     * We'll assume the shebang line has no # or ! chars except at the
+     * beginning, and fits into bufsize (which should be MAX_PATH).
      */
-    pos = (long) (end_cdr_offset - bufsize);
-    if (pos < 0)
-        pos = 0;
-    fseek(fp, pos, SEEK_SET);
+
+    /* Check for case 1 - we are at the start of the shebang */
+    fseek(fp, end_cdr_offset, SEEK_SET);
     read = fread(buffer, sizeof(char), bufsize, fp);
     assert(read > 0, "Unable to read from file");
-    p = &buffer[read - 1];
-    while (p >= buffer) {
-        if (memcmp(p, "#!", 2) == 0) {
-            result = p;
-            break;
+    if (memcmp(buffer, "#!", 2) == 0) {
+        result = buffer;
+    }
+    else {
+        /* We are not at the start, so check backward bufsize bytes */
+        pos = (long) (end_cdr_offset - bufsize);
+        if (pos < 0)
+            pos = 0;
+        fseek(fp, pos, SEEK_SET);
+        read = fread(buffer, sizeof(char), bufsize, fp);
+        assert(read > 0, "Unable to read from file");
+        p = &buffer[read - 1];
+        while (p >= buffer) {
+            if (memcmp(p, "#!", 2) == 0) {
+                result = p;
+                break;
+            }
+            --p;
         }
-        --p;
     }
     fclose(fp);
     return result;
@@ -454,7 +480,13 @@ find_executable_and_args(wchar_t * line, wchar_t ** argp)
         ++result;  /* See https://bitbucket.org/pypa/distlib/issues/104 */
     }
     /* p points just past the executable. It must either be a NUL or whitespace. */
+#if !defined(SUPPORT_RELATIVE_PATH)
     assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line: %ls", line);
+#else
+    if (_wcsnicmp(line, RELATIVE_PREFIX, RELATIVE_PREFIX_LENGTH) && (line[RELATIVE_PREFIX_LENGTH] != L'\"')) {
+        assert(*p != L'"', "Terminating quote without starting quote for executable in shebang line: %ls", line);
+    }
+#endif
     /* if p is whitespace, make it NUL to truncate 'line', and advance */
     if (*p && iswspace(*p))
         *p++ = L'\0';
@@ -474,6 +506,12 @@ process(int argc, char * argv[])
     FILE *fp = NULL;
     char buffer[MAX_PATH];
     wchar_t wbuffer[MAX_PATH];
+#if defined(SUPPORT_RELATIVE_PATH)
+    wchar_t dbuffer[MAX_PATH];
+    wchar_t pbuffer[MAX_PATH];
+    wchar_t * qp;
+    int prefix_offset;
+#endif
     char *cp;
     wchar_t * wcp;
     wchar_t * cmdp;
@@ -538,6 +576,27 @@ process(int argc, char * argv[])
     wcp = find_executable_and_args(wcp, &wp);
     assert(wcp != NULL, "Expected to find executable in shebang line");
     assert(wp != NULL, "Expected to find arguments (even if empty) in shebang line");
+#if defined(SUPPORT_RELATIVE_PATH)
+    /*
+       If the executable starts with the relative prefix, resolve the following path
+       relative to the launcher's directory.
+     */
+    prefix_offset = RELATIVE_PREFIX_LENGTH;
+    if (!_wcsnicmp(RELATIVE_PREFIX, wcp, prefix_offset)) {
+        wcscpy_s(dbuffer, MAX_PATH, script_path);
+        PathRemoveFileSpecW(dbuffer);
+        if (wcp[prefix_offset] == L'\"') {
+            prefix_offset++;
+            qp = wcschr(&wcp[prefix_offset], L'\"');
+            assert(qp != NULL, "Expected terminating double-quote for executable in shebang line: %ls", wcp);
+            *qp = L'\0';
+        }
+        // The following call appears to canonicalize the path, so no need to
+        // worry about doing that
+        PathCombineW(pbuffer, dbuffer, &wcp[prefix_offset]);
+        wcp = pbuffer;
+    }
+#endif
      /* 3 spaces + 4 quotes + NUL */
     len = wcslen(wcp) + wcslen(wp) + 8 + wcslen(psp) + wcslen(cmdline);
     cmdp = (wchar_t *) calloc(len, sizeof(wchar_t));
