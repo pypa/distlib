@@ -8,8 +8,8 @@ Change log for ``distlib``
 Released: Not yet.
 
 
-0.2.9 (future)
-~~~~~~~~~~~~~~
+0.2.9
+~~~~~
 
 Released: 2019-05-14
 
