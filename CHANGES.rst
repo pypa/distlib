@@ -11,7 +11,7 @@ Released: Not yet.
 0.2.9 (future)
 ~~~~~~~~~~~~~~
 
-Released: 2019-05-13
+Released: 2019-05-14
 
 - index
 
@@ -23,7 +23,7 @@ Released: 2019-05-13
 
 - metadata
 
-    - Fixed #106: Added 'Provides' to the 2.1 metadata markers.
+    - Relaxed metadata format checks to ignore 'Provides'.
 
 - scripts
 
