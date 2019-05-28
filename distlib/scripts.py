@@ -367,8 +367,12 @@ class ScriptMaker(object):
             # Issue 31: don't hardcode an absolute package name, but
             # determine it relative to the current package
             distlib_package = __name__.rsplit('.', 1)[0]
-            result = finder(distlib_package).find(name).bytes
-            return result
+            resource = finder(distlib_package).find(name)
+            if not resource:
+                msg = ('Unable to find resource %s in package %s' % (name,
+                       distlib_package))
+                raise ValueError(msg)
+            return resource.bytes
 
     # Public API follows
 
