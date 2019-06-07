@@ -1,0 +1,12 @@
+version: 1.0.{build}
+environment:
+  PYTHONHASHSEED: 0
+  matrix:
+  - TOXENV: py27
+  - TOXENV: py35
+  - TOXENV: py36
+  - TOXENV: py37
+install:
+- cmd: pip install tox
+test_script:
+- cmd: tox
