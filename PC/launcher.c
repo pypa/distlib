@@ -62,8 +62,12 @@ static int pid = 0;
 
 #if !defined(_CONSOLE)
 
-typedef int (__stdcall *MSGBOXWAPI)(IN HWND hWnd,
+typedef int (__stdcall *MSGBOXWAPIA)(IN HWND hWnd,
         IN LPCSTR lpText, IN LPCSTR lpCaption,
+        IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
+
+typedef int (__stdcall *MSGBOXWAPIW)(IN HWND hWnd,
+        IN LPWSTR lpText, IN LPWSTR lpCaption,
         IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
 
 #define MB_TIMEDOUT 32000
@@ -71,12 +75,12 @@ typedef int (__stdcall *MSGBOXWAPI)(IN HWND hWnd,
 int MessageBoxTimeoutA(HWND hWnd, LPCSTR lpText,
     LPCSTR lpCaption, UINT uType, WORD wLanguageId, DWORD dwMilliseconds)
 {
-    static MSGBOXWAPI MsgBoxTOA = NULL;
+    static MSGBOXWAPIA MsgBoxTOA = NULL;
     HMODULE hUser = LoadLibraryA("user32.dll");
 
     if (!MsgBoxTOA) {
         if (hUser)
-            MsgBoxTOA = (MSGBOXWAPI)GetProcAddress(hUser,
+            MsgBoxTOA = (MSGBOXWAPIA)GetProcAddress(hUser,
                                       "MessageBoxTimeoutA");
         else {
             /*
@@ -94,7 +98,54 @@ int MessageBoxTimeoutA(HWND hWnd, LPCSTR lpText,
     return 0;
 }
 
+int MessageBoxTimeoutW(HWND hWnd, LPWSTR lpText,
+    LPWSTR lpCaption, UINT uType, WORD wLanguageId, DWORD dwMilliseconds)
+{
+    static MSGBOXWAPIW MsgBoxTOW = NULL;
+    HMODULE hUser = LoadLibraryA("user32.dll");
+
+    if (!MsgBoxTOW) {
+        if (hUser)
+            MsgBoxTOW = (MSGBOXWAPIW)GetProcAddress(hUser,
+                                      "MessageBoxTimeoutW");
+        else {
+            /*
+             * stuff happened, add code to handle it here
+             * (possibly just call MessageBox())
+             */
+        }
+    }
+
+    if (MsgBoxTOW)
+        return MsgBoxTOW(hWnd, lpText, lpCaption, uType, wLanguageId,
+                         dwMilliseconds);
+    if (hUser)
+        FreeLibrary(hUser);
+    return 0;
+}
+
 #endif
+
+static void
+wassert(BOOL condition, wchar_t * format, ... )
+{
+    if (!condition) {
+        va_list va;
+        wchar_t message[MSGSIZE];
+        int len;
+
+        va_start(va, format);
+        len = _vsnwprintf_s(message, MSGSIZE, MSGSIZE - 1, format, va);
+#if defined(_CONSOLE)
+        fwprintf(stderr, L"Fatal error in launcher: %s\n", message);
+#else
+        MessageBoxTimeoutW(NULL, message, L"Fatal Error in Launcher",
+                           MB_OK | MB_SETFOREGROUND | MB_ICONERROR,
+                           0, 3000);
+#endif
+        ExitProcess(1);
+    }
+}
 
 static void
 assert(BOOL condition, char * format, ... )
@@ -410,7 +461,14 @@ run_child(wchar_t * cmdline)
     si.dwFlags = STARTF_USESTDHANDLES;
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) control_key_handler, TRUE);
     ok = CreateProcessW(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
-    assert(ok, "Unable to create process using '%ls'", cmdline);
+    if (!ok) {
+        // Failed to create process. See if we can find out why.
+        DWORD err = GetLastError();
+        wchar_t emessage[MSGSIZE];
+        FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err,
+                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), emessage, MSGSIZE, NULL);
+        wassert(ok, L"Unable to create process using '%ls': %ls", cmdline, emessage);
+    }
     pid = pi.dwProcessId;
     AssignProcessToJobObject(job, pi.hProcess);
     CloseHandle(pi.hThread);
