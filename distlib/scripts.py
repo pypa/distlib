@@ -172,8 +172,16 @@ class ScriptMaker(object):
 
         if sys.platform.startswith('java'):  # pragma: no cover
             executable = self._fix_jython_executable(executable)
-        # Normalise case for Windows
-        executable = os.path.normcase(executable)
+
+        # Normalise case for Windows - COMMENTED OUT
+        # executable = os.path.normcase(executable)
+        # N.B. The normalising operation above has been commented out: See
+        # issue #124. Although paths in Windows are generally case-insensitive,
+        # they aren't always. For example, a path containing a ẞ (which is a
+        # LATIN CAPITAL LETTER SHARP S - U+1E9E) is normcased to ß (which is a
+        # LATIN SMALL LETTER SHARP S' - U+00DF). The two are not considered by
+        # Windows as equivalent in path names.
+
         # If the user didn't specify an executable, it may be necessary to
         # cater for executable paths with spaces (not uncommon on Windows)
         if enquote:
