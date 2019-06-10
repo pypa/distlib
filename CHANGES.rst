@@ -7,6 +7,15 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- scripts
+
+    - Fixed #123: Improved error message if a resource isn't found.
+
+    - Fixed #124: Stopped norm-casing the executable written into shebangs, as
+      it doesn't work for some non-ASCII paths.
+
+    - Fixed #125: Updated launchers with versions that correctly report errors
+      containing non-ASCII characters.
 
 0.2.9
 ~~~~~
