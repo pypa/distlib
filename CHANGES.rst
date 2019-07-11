@@ -7,6 +7,12 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- locators
+
+    - Updated Locator._get_digest to check PyPI JSON responses for a "digests"
+      dictionary before trying "algo_digest" keys. Thanks to Jeffery To for the
+      patch.
+
 - scripts
 
     - Fixed #123: Improved error message if a resource isn't found.
@@ -16,6 +22,7 @@ Released: Not yet.
 
     - Fixed #125: Updated launchers with versions that correctly report errors
       containing non-ASCII characters.
+
 
 0.2.9
 ~~~~~
