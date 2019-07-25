@@ -23,6 +23,10 @@ Released: Not yet.
     - Fixed #125: Updated launchers with versions that correctly report errors
       containing non-ASCII characters.
 
+- util
+
+    - Fixed #127: Allowed hyphens in flags in export specifications.
+
 
 0.2.9
 ~~~~~
