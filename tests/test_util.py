@@ -61,6 +61,9 @@ class UtilTestCase(unittest.TestCase):
                          'foo', 'foo.bar', 'main', [])
         self.check_entry(get_export_entry('foo=foo.bar:main [a]'),
                          'foo', 'foo.bar', 'main', ['a'])
+        # See issue #127 - allow hyphens
+        self.check_entry(get_export_entry('foo=foo.bar:main [with-foo]'),
+                         'foo', 'foo.bar', 'main', ['with-foo'])
         self.check_entry(get_export_entry('foo=foo.bar:main [ a ]'),
                          'foo', 'foo.bar', 'main', ['a'])
         self.check_entry(get_export_entry('foo=foo.bar:main [a=b, c=d,e, f=g]'),
