@@ -1438,7 +1438,8 @@ if ssl:
                                             ca_certs=self.ca_certs)
             else:  # pragma: no cover
                 context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-                context.options |= ssl.OP_NO_SSLv2
+                if hasattr(ssl, 'OP_NO_SSLv2'):
+                    context.options |= ssl.OP_NO_SSLv2
                 if self.cert_file:
                     context.load_cert_chain(self.cert_file, self.key_file)
                 kwargs = {}
