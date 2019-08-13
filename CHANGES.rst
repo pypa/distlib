@@ -7,6 +7,12 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- database
+
+    - Issue #102 (partial): modules attribute of InstalledDistribution was
+      incorrectly computed as a list of bytes, rather than a list of str. This
+      has now been corrected.
+
 - locators
 
     - Updated Locator._get_digest to check PyPI JSON responses for a "digests"
