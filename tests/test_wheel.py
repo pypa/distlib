@@ -474,7 +474,10 @@ class WheelTestCase(unittest.TestCase):
         parts = ['cp', pyver]
         if sysconfig.get_config_var('Py_DEBUG'):
             parts.append('d')
-        if sysconfig.get_config_var('WITH_PYMALLOC'):
+        # Starting with 3.8, the SOABI doesn't append m when WITH_PYMALLOC is
+        # defined (see bpo-36707)
+        if (sys.version_info[:2] < (3, 8) and
+            sysconfig.get_config_var('WITH_PYMALLOC')):
             parts.append('m')
         if sysconfig.get_config_var('Py_UNICODE_SIZE') == 4:
             parts.append('u')

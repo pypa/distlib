@@ -152,9 +152,12 @@ class ScriptTestCase(unittest.TestCase):
                     else:
                         ext = 'py'
                     expected = set(['foo.%s' % ext,
-                                    'foo-%s.%s' % (sys.version[:3], ext)])
+                                    'foo-%s.%s.%s' % (sys.version_info[0],
+                                                      sys.version_info[1],
+                                                      ext)])
                 else:
-                    expected = set(['foo', 'foo-%s' % sys.version[:3]])
+                    expected = set(['foo', 'foo-%s.%s' % (sys.version_info[0],
+                                    sys.version_info[1])])
                 self.assertEqual(actual, expected)
                 self.assertEqual(d, self.maker.target_dir)
                 for fn in files:
@@ -264,7 +267,7 @@ class ScriptTestCase(unittest.TestCase):
         files = self.maker.make('foo = foo:main', {'gui': True})
         self.assertEqual(len(files), 2)
         filenames = set([os.path.basename(f) for f in files])
-        specific = sys.version[:3]
+        specific = '%s.%s' % sys.version_info[:2]
         self.assertEqual(filenames, set(('foo.exe', 'foo-%s.exe' % specific)))
         for fn in files:
             with open(fn, 'rb') as f:
