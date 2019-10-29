@@ -2,10 +2,15 @@ Change log for ``distlib``
 --------------------------
 
 
-0.3.0 (future)
+0.3.1 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+0.3.0
+~~~~~
+
+Released: 2019-10-29
 
 - database
 
@@ -27,11 +32,20 @@ Released: Not yet.
       it doesn't work for some non-ASCII paths.
 
     - Fixed #125: Updated launchers with versions that correctly report errors
-      containing non-ASCII characters.
+      containing non-ASCII characters. The updated launchers now also support
+      relative paths (see http://bit.ly/2JxmOoi for more information).
+
+    - Changed Python version handling to accommodate versions like e.g. 3.10
+      (no longer assume a version X.Y where X and Y are single digits).
 
 - util
 
     - Fixed #127: Allowed hyphens in flags in export specifications.
+
+- wheel
+
+    - Changed Python version handling to accommodate versions like e.g. 3.10
+      (no longer assume a version X.Y where X and Y are single digits).
 
 
 0.2.9
