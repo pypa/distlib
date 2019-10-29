@@ -1264,6 +1264,12 @@ Attributes
    information.
 
 
+.. attribute:: COMPATIBLE_TAGS
+
+   A set of (``pyver``, ``abi``, ``arch``) tags which are compatible with this
+   Python implementation.
+
+
 Classes
 ^^^^^^^
 
@@ -1479,15 +1485,6 @@ Functions
                 it defaults to the set of tags which are compatible with this
                 Python implementation.
    :return: ``True`` if compatible, else ``False``.
-
-
-Attributes
-^^^^^^^^^^
-
-.. attribute:: COMPATIBLE_TAGS
-
-   A set of (``pyver``, ``abi``, ``arch``) tags which are compatible with this
-   Python implementation.
 
 
 Next steps
