@@ -619,7 +619,7 @@ class Wheel(object):
                                     for v in epdata[k].values():
                                         s = '%s:%s' % (v.prefix, v.suffix)
                                         if v.flags:
-                                            s += ' %s' % v.flags
+                                            s += ' [%s]' % ','.join(v.flags)
                                         d[v.name] = s
                         except Exception:
                             logger.warning('Unable to read legacy script '
