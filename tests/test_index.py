@@ -136,6 +136,7 @@ class PackageIndexTestCase(unittest.TestCase):
             with open(zip_name, 'wb') as f:
                 f.write(zip_data)
 
+    @unittest.skip('The PyPI API changed, so this test is temporarily skipped')
     def test_register(self):
         "Test registration"
         self.check_pypi_server_available()
@@ -171,6 +172,7 @@ class PackageIndexTestCase(unittest.TestCase):
             if e.getcode() != 404:
                 raise
 
+    @unittest.skip('The PyPI API changed, so this test is temporarily skipped')
     def test_upload(self):
         "Test upload"
         self.check_pypi_server_available()
