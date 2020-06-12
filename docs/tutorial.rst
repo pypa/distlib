@@ -1284,6 +1284,14 @@ the :func:`enquote_executable` function for this.
    The :func:`enquote_executable` function was an internal function
    :func:`_enquote_executable` in earlier versions.
 
+For relocatable .exe files under Windows, you can specify the location of the python
+executable relative to the script by putting *<launcher_dir>* as the beginning of the
+executable path.  Since windows places *python.exe* in the root install directory and
+the application scripts in the *Scripts* subdirectory, setting ``maker.executable =
+r"<launcher_dir>\..\python.exe"`` will allow you to move a python installation which is
+installed together with an application to a different path or a different machine and
+the .exe files will still run.
+
 
 Generating variants of a script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
