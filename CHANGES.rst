@@ -7,6 +7,23 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- scripts
+
+    - Fixed #134: Allowed specifying a different target Python version when generating
+      scripts.
+
+    - Fixed #135: Exposed the ``enquote_executable`` function previously implemented
+      as an internal function.
+
+    - Addressed #138: Improved metadata support for newer metadata versions. Thanks to
+      James Tocknell for the patch.
+
+- wheel
+
+    - Changed the output of flags in entry point definitions. Thanks to frostming (明希)
+      for the patch.
+
+
 0.3.0
 ~~~~~
 

@@ -535,6 +535,15 @@ Classes
       The attribute is defined at class level. You can override it at the
       instance level to customise your scripts.
 
+   .. attribute:: version_info
+
+      A two-tuple of the Python version to be used when generating scripts, where
+      version-specific variants such as `foo3` or `foo-3.8` are created. This defaults
+      to ``sys.version_info``. The provided tuple can have more elements, but only the
+      first two are used.
+
+      .. versionadded:: 0.3.1
+
    .. method:: __init__(source_directory, target_directory, add_launchers=True, dry_run=False)
 
       Initialise the instance with options that control its behaviour.
@@ -626,6 +635,19 @@ Classes
       :param options: As for the :meth:`make` method.
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
+
+Functions
+^^^^^^^^^
+
+.. function:: enquote_executable(path)
+
+   Cover an executable path in quotes. This only applies quotes if the passed path
+   contains any spaces. It's at least a little careful when doing the quoting - for
+   example, producing e.g. ``/usr/bin/env "/dir with spaces/bin/jython"`` instead of
+   ``"/usr/bin/env /dir with spaces/bin/jython"``
+
+   .. versionchanged:: 0.3.1
+      This was an internal function :func:`_enquote_executable` in earlier versions.
 
 The ``distlib.locators`` package
 --------------------------------

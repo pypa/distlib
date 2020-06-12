@@ -1273,12 +1273,16 @@ Specifying a custom executable for shebangs
 .. index::
    single: Scripts; specifying custom executables
 
-You may need to specify a custom executable for shebang lines. To do this, set
-the :attr:`executable` attribute of a :class:`ScriptMaker` instance to the
-absolute Unicode path of the executable which you want to be written to the
-shebang lines of scripts. If not specified, the executable running the
-:class:`ScriptMaker` code is used. If the value has spaces, you should
-surround it with double quotes.
+You may need to specify a custom executable for shebang lines. To do this, set the
+:attr:`executable` attribute of a :class:`ScriptMaker` instance to the absolute
+Unicode path of the executable which you want to be written to the shebang lines of
+scripts. If not specified, the executable running the :class:`ScriptMaker` code is
+used. If the value has spaces, you should surround it with double quotes. You can use
+the :func:`enquote_executable` function for this.
+
+.. versionchanged:: 0.3.1
+   The :func:`enquote_executable` function was an internal function
+   :func:`_enquote_executable` in earlier versions.
 
 
 Generating variants of a script
@@ -1298,9 +1302,11 @@ would be installed as ``foo``, ``foo3`` and ``foo-3.2`` when run under Python
 3.2.
 
 .. note:: If you need to generate variants for a different version of Python than the
-   one running the script, set the ``version_info`` attribute of the
+   one running the :class:`ScriptMaker` code, set the ``version_info`` attribute of the
    :class:`ScriptMaker` instance to a 2-tuple holding the major and minor version
    numbers of the target Python version.
+
+   .. versionadded:: 0.3.1
 
 Avoiding overwriting existing scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
