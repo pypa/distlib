@@ -48,7 +48,7 @@ if __name__ == '__main__':
 '''
 
 
-def _enquote_executable(executable):
+def enquote_executable(executable):
     if ' ' in executable:
         # make sure we quote only the executable in case of env
         # for example /usr/bin/env "/dir with spaces/bin/jython"
@@ -186,7 +186,7 @@ class ScriptMaker(object):
         # If the user didn't specify an executable, it may be necessary to
         # cater for executable paths with spaces (not uncommon on Windows)
         if enquote:
-            executable = _enquote_executable(executable)
+            executable = enquote_executable(executable)
         # Issue #51: don't use fsencode, since we later try to
         # check that the shebang is decodable using utf-8.
         executable = executable.encode('utf-8')

@@ -21,7 +21,7 @@ from compat import unittest
 
 from distlib import DistlibException
 from distlib.compat import fsencode, sysconfig
-from distlib.scripts import ScriptMaker, _enquote_executable
+from distlib.scripts import ScriptMaker, enquote_executable
 from distlib.util import get_executable
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -391,8 +391,7 @@ class ScriptTestCase(unittest.TestCase):
                 ('/usr/bin/env with spaces', '/usr/bin/env "with spaces"'),
                 ('/usr/bin/env "pre spaced"', '/usr/bin/env "pre spaced"')
                 ):
-            self.assertEqual(_enquote_executable(executable),
-                             expected)
+            self.assertEqual(enquote_executable(executable), expected)
 
 
 if __name__ == '__main__':  # pragma: no cover
