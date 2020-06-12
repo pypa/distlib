@@ -1297,6 +1297,11 @@ installed as ``foo`` and ``foo-3.2`` under Python 3.2. If the value of the
 would be installed as ``foo``, ``foo3`` and ``foo-3.2`` when run under Python
 3.2.
 
+.. note:: If you need to generate variants for a different version of Python than the
+   one running the script, set the ``version_info`` attribute of the
+   :class:`ScriptMaker` instance to a 2-tuple holding the major and minor version
+   numbers of the target Python version.
+
 Avoiding overwriting existing scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

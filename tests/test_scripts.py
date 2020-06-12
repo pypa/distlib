@@ -136,37 +136,44 @@ class ScriptTestCase(unittest.TestCase):
 
     def test_generation(self):
         self.maker.clobber = True
-        for name in ('main', 'other_main'):
-            for options in (None, {}, {'gui': False}, {'gui': True}):
-                gui = options and options.get('gui', False)
-                spec = 'foo = foo:' + name
-                files = self.maker.make(spec, options)
-                self.assertEqual(len(files), 2)
-                actual = set()
-                for f in files:
-                    d, f = os.path.split(f)
-                    actual.add(f)
-                if os.name == 'nt':  # pragma: no cover
-                    if gui:
-                        ext = 'pyw'
+
+        def do_test(maker, version_info):
+            for name in ('main', 'other_main'):
+                for options in (None, {}, {'gui': False}, {'gui': True}):
+                    gui = options and options.get('gui', False)
+                    spec = 'foo = foo:' + name
+                    files = maker.make(spec, options)
+                    self.assertEqual(len(files), 2)
+                    actual = set()
+                    for f in files:
+                        d, f = os.path.split(f)
+                        actual.add(f)
+                    if os.name == 'nt':  # pragma: no cover
+                        if gui:
+                            ext = 'pyw'
+                        else:
+                            ext = 'py'
+                        expected = set(['foo.%s' % ext,
+                                        'foo-%s.%s.%s' % (version_info[0],
+                                                          version_info[1],
+                                                          ext)])
                     else:
-                        ext = 'py'
-                    expected = set(['foo.%s' % ext,
-                                    'foo-%s.%s.%s' % (sys.version_info[0],
-                                                      sys.version_info[1],
-                                                      ext)])
-                else:
-                    expected = set(['foo', 'foo-%s.%s' % (sys.version_info[0],
-                                    sys.version_info[1])])
-                self.assertEqual(actual, expected)
-                self.assertEqual(d, self.maker.target_dir)
-                for fn in files:
-                    with open(fn, 'r') as f:
-                        text = f.read()
-                    # self.assertIn("_resolve('foo', '%s')" % name, text)
-                    if options and options['gui'] and os.name == 'nt':  # pragma: no cover
-                        first_line, rest = text.split('\n', 1)
-                        self.assertIn('pythonw', first_line)
+                        expected = set(['foo', 'foo-%s.%s' % (version_info[0],
+                                        version_info[1])])
+                    self.assertEqual(actual, expected)
+                    self.assertEqual(d, maker.target_dir)
+                    for fn in files:
+                        with open(fn, 'r') as f:
+                            text = f.read()
+                        # self.assertIn("_resolve('foo', '%s')" % name, text)
+                        if options and options['gui'] and os.name == 'nt':  # pragma: no cover
+                            first_line, rest = text.split('\n', 1)
+                            self.assertIn('pythonw', first_line)
+
+        do_test(self.maker, sys.version_info)
+        # See issue 134. Test for specifying the target Python version
+        self.maker.version_info = version_info = (4, 4)  # just any other Python version
+        do_test(self.maker, version_info)
 
     def test_clobber(self):
         files = self.maker.make('foo = foo:main')

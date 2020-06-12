@@ -88,6 +88,7 @@ class ScriptMaker(object):
 
         self._is_nt = os.name == 'nt' or (
             os.name == 'java' and os._name == 'nt')
+        self.version_info = sys.version_info
 
     def _get_alternate_executable(self, executable, options):
         if options.get('gui', False) and self._is_nt:  # pragma: no cover
@@ -293,10 +294,10 @@ class ScriptMaker(object):
         if '' in self.variants:
             scriptnames.add(name)
         if 'X' in self.variants:
-            scriptnames.add('%s%s' % (name, sys.version_info[0]))
+            scriptnames.add('%s%s' % (name, self.version_info[0]))
         if 'X.Y' in self.variants:
-            scriptnames.add('%s-%s.%s' % (name, sys.version_info[0],
-                            sys.version_info[1]))
+            scriptnames.add('%s-%s.%s' % (name, self.version_info[0],
+                                          self.version_info[1]))
         if options and options.get('gui', False):
             ext = 'pyw'
         else:
