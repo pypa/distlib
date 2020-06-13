@@ -22,7 +22,7 @@ from compat import unittest
 from distlib import DistlibException
 from distlib.compat import text_type, file_type, StringIO
 import distlib.database
-from distlib.metadata import Metadata, METADATA_FILENAME
+from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME
 from distlib.database import (InstalledDistribution, EggInfoDistribution,
                               BaseInstalledDistribution, EXPORTS_FILENAME,
                               DistributionPath, make_graph,
@@ -161,7 +161,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
     def setUp(self):
         def get_files(location):
-            for path in ('REQUESTED', 'INSTALLER', 'METADATA',
+            for path in ('REQUESTED', 'INSTALLER', LEGACY_METADATA_FILENAME,
                          METADATA_FILENAME, EXPORTS_FILENAME):
                 p = os.path.join(location + '.dist-info', path)
                 if os.path.exists(p):
