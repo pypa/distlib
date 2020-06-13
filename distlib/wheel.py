@@ -26,7 +26,8 @@ import zipfile
 from . import __version__, DistlibException
 from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import InstalledDistribution
-from .metadata import Metadata, METADATA_FILENAME, WHEEL_METADATA_FILENAME
+from .metadata import (Metadata, METADATA_FILENAME, WHEEL_METADATA_FILENAME,
+                       LEGACY_METADATA_FILENAME)
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter, Cache,
                    cached_property, get_cache_base, read_exports, tempdir)
 from .version import NormalizedVersion, UnsupportedVersionError
@@ -222,7 +223,8 @@ class Wheel(object):
             wv = wheel_metadata['Wheel-Version'].split('.', 1)
             file_version = tuple([int(i) for i in wv])
             if file_version < (1, 1):
-                fns = [WHEEL_METADATA_FILENAME, METADATA_FILENAME, 'METADATA']
+                fns = [WHEEL_METADATA_FILENAME, METADATA_FILENAME,
+                       LEGACY_METADATA_FILENAME]
             else:
                 fns = [WHEEL_METADATA_FILENAME, METADATA_FILENAME]
             result = None
@@ -324,6 +326,16 @@ class Wheel(object):
         archive_paths.append((ap, p))
 
     def build_zip(self, pathname, archive_paths):
+        sort_entries = True
+        if sort_entries:
+            def sorter(t):
+                ap = t[0]
+                n = ap.count('/')
+                if '.dist-info' in ap:
+                    n += 10000
+                return (n, ap)
+            archive_paths = sorted(archive_paths, key=sorter)
+
         with ZipFile(pathname, 'w', zipfile.ZIP_DEFLATED) as zf:
             for ap, p in archive_paths:
                 logger.debug('Wrote %s to %s in wheel', p, ap)
