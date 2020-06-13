@@ -946,10 +946,14 @@ class Metadata(object):
     LEGACY_MAPPING = {
         'name': 'Name',
         'version': 'Version',
-        'license': 'License',
+        ('extensions', 'python.details', 'license'): 'License',
         'summary': 'Summary',
         'description': 'Description',
-        'classifiers': 'Classifier',
+        ('extensions', 'python.project', 'project_urls', 'Home'): 'Home-page',
+        ('extensions', 'python.project', 'contacts', 0, 'name'): 'Author',
+        ('extensions', 'python.project', 'contacts', 0, 'email'): 'Author-email',
+        'source_url': 'Download-URL',
+        ('extensions', 'python.details', 'classifiers'): 'Classifier',
     }
 
     def _to_legacy(self):
@@ -977,16 +981,29 @@ class Metadata(object):
         assert self._data and not self._legacy
         result = LegacyMetadata()
         nmd = self._data
+        # import pdb; pdb.set_trace()
         for nk, ok in self.LEGACY_MAPPING.items():
-            if nk in nmd:
-                result[ok] = nmd[nk]
+            if not isinstance(nk, tuple):
+                if nk in nmd:
+                    result[ok] = nmd[nk]
+            else:
+                d = nmd
+                found = True
+                for k in nk:
+                    try:
+                        d = d[k]
+                    except (KeyError, IndexError):
+                        found = False
+                        break
+                if found:
+                    result[ok] = d
         r1 = process_entries(self.run_requires + self.meta_requires)
         r2 = process_entries(self.build_requires + self.dev_requires)
         if self.extras:
             result['Provides-Extra'] = sorted(self.extras)
         result['Requires-Dist'] = sorted(r1)
         result['Setup-Requires-Dist'] = sorted(r2)
-        # TODO: other fields such as contacts
+        # TODO: any other fields wanted
         return result
 
     def write(self, path=None, fileobj=None, legacy=False, skip_unknown=True):
