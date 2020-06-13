@@ -2,12 +2,13 @@
 tests/run/
 tests/keys/random_seed
 docs/(_build|themes)/
-.dict-validwords
-watcher.conf
+\.dict-validwords
+watcher\.conf
+package\.json
 MANIFEST$
 distlib-vcsid|cover
 tests/passwords
 tests/keys/
 tests/pypi-server-standalone.py
-(dist|htmlcov|build|.tox|.idea)/
+(dist|htmlcov|build|\.(tox|idea|egg-info))/
 _testdist-0.1/
