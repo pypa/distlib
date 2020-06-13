@@ -21,7 +21,7 @@ from distlib import DistlibException
 from distlib.compat import ZipFile, sysconfig, fsencode
 from distlib.database import DistributionPath, InstalledDistribution
 from distlib.manifest import Manifest
-from distlib.metadata import Metadata, METADATA_FILENAME
+from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME
 from distlib.scripts import ScriptMaker
 from distlib.util import get_executable
 from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS,
@@ -366,17 +366,17 @@ class WheelTestCase(unittest.TestCase):
         return False
 
     def wheel_modifier(self, path_map):
-        mdpath = path_map['dummy-0.1.dist-info/pydist.json']
+        mdpath = path_map['dummy-0.1.dist-info/%s' % LEGACY_METADATA_FILENAME]
         md = Metadata(path=mdpath)
         md.add_requirements(['numpy'])
-        md.write(path=mdpath)
+        md.write(path=mdpath, legacy=True)
         return True
 
     def wheel_modifier_ver(self, path_map):
-        mdpath = path_map['dummy-0.1.dist-info/pydist.json']
+        mdpath = path_map['dummy-0.1.dist-info/%s' % LEGACY_METADATA_FILENAME]
         md = Metadata(path=mdpath)
         md.version = '0.1+123'
-        md.write(path=mdpath)
+        md.write(path=mdpath, legacy=True)
         return True
 
     def test_update(self):
@@ -397,7 +397,7 @@ class WheelTestCase(unittest.TestCase):
         w = Wheel(dfn)
         w.verify()
         md = w.metadata
-        self.assertEqual(md.run_requires, [{'requires': ['numpy']}])
+        self.assertEqual(md.run_requires, ['numpy'])
         self.assertEquals(md.version, '0.1+1')
 
         modified = w.update(self.wheel_modifier_ver)
@@ -406,7 +406,7 @@ class WheelTestCase(unittest.TestCase):
         w = Wheel(dfn)
         w.verify()
         md = w.metadata
-        self.assertEqual(md.run_requires, [{'requires': ['numpy']}])
+        self.assertEqual(md.run_requires, ['numpy'])
         self.assertEquals(md.version, '0.1+123')
 
     def test_info(self):

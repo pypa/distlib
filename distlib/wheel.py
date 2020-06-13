@@ -882,7 +882,7 @@ class Wheel(object):
             if updated:
                 md = Metadata(path=path)
                 md.version = updated
-                legacy = not path.endswith(LEGACY_METADATA_FILENAME)
+                legacy = path.endswith(LEGACY_METADATA_FILENAME)
                 md.write(path=path, legacy=legacy)
                 logger.debug('Version updated from %r to %r', version,
                              updated)

@@ -17,7 +17,7 @@ from compat import unittest
 from distlib import __version__
 from distlib.compat import StringIO
 from distlib.metadata import (LegacyMetadata, Metadata, METADATA_FILENAME,
-                              PKG_INFO_PREFERRED_VERSION,
+                              LEGACY_METADATA_FILENAME, PKG_INFO_PREFERRED_VERSION,
                               MetadataConflictError, MetadataMissingError,
                               MetadataUnrecognizedVersionError,
                               MetadataInvalidError, _ATTR2FIELD)
@@ -505,7 +505,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
         # Initialise from legacy metadata
         fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
-                          'METADATA')
+                          LEGACY_METADATA_FILENAME)
         md = Metadata(path=fn)
         md.validate()
         self.assertIsNotNone(md._legacy)
@@ -534,7 +534,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(md.run_requires, [{ 'requires': ['foo (0.1.2)']}])
 
         fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
-                          'METADATA')
+                          LEGACY_METADATA_FILENAME)
         md = Metadata(path=fn)
         md.add_requirements(['foo (0.1.2)'])
         self.assertEqual(set(md.run_requires),
@@ -631,7 +631,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         dfn = self.temp_filename()
         # Read legacy, write new
         sfn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
-                           'METADATA')
+                           LEGACY_METADATA_FILENAME)
         md = Metadata(path=sfn)
         md.write(path=dfn)
         with codecs.open(dfn, 'r', 'utf-8') as f:

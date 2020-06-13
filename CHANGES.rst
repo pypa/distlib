@@ -23,6 +23,7 @@ Released: Not yet.
     - Changed the output of flags in entry point definitions. Thanks to frostming (明希)
       for the patch.
 
+    - Stopped writing JSON metadata. Only old-style metadata is written now.
 
 0.3.0
 ~~~~~
