@@ -63,6 +63,8 @@ def enquote_executable(executable):
                 executable = '"%s"' % executable
     return executable
 
+# Keep the old name around (for now), as there is at least one project using it!
+_enquote_executable = enquote_executable
 
 class ScriptMaker(object):
     """
