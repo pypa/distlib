@@ -222,11 +222,12 @@ class Wheel(object):
             wheel_metadata = self.get_wheel_metadata(zf)
             wv = wheel_metadata['Wheel-Version'].split('.', 1)
             file_version = tuple([int(i) for i in wv])
-            if file_version < (1, 1):
-                fns = [WHEEL_METADATA_FILENAME, METADATA_FILENAME,
-                       LEGACY_METADATA_FILENAME]
-            else:
-                fns = [WHEEL_METADATA_FILENAME, METADATA_FILENAME]
+            # if file_version < (1, 1):
+                # fns = [WHEEL_METADATA_FILENAME, METADATA_FILENAME,
+                       # LEGACY_METADATA_FILENAME]
+            # else:
+                # fns = [WHEEL_METADATA_FILENAME, METADATA_FILENAME]
+            fns = [WHEEL_METADATA_FILENAME, LEGACY_METADATA_FILENAME]
             result = None
             for fn in fns:
                 try:
@@ -301,10 +302,9 @@ class Wheel(object):
         return hash_kind, result
 
     def write_record(self, records, record_path, base):
-        records = list(records) # make a copy for sorting
+        records = list(records) # make a copy, as mutated
         p = to_posix(os.path.relpath(record_path, base))
         records.append((p, '', ''))
-        records.sort()
         with CSVWriter(record_path) as writer:
             for row in records:
                 writer.writerow(row)
@@ -490,7 +490,7 @@ class Wheel(object):
         data_dir = '%s.data' % name_ver
         info_dir = '%s.dist-info' % name_ver
 
-        metadata_name = posixpath.join(info_dir, METADATA_FILENAME)
+        metadata_name = posixpath.join(info_dir, LEGACY_METADATA_FILENAME)
         wheel_metadata_name = posixpath.join(info_dir, 'WHEEL')
         record_name = posixpath.join(info_dir, 'RECORD')
 
@@ -787,7 +787,7 @@ class Wheel(object):
         data_dir = '%s.data' % name_ver
         info_dir = '%s.dist-info' % name_ver
 
-        metadata_name = posixpath.join(info_dir, METADATA_FILENAME)
+        metadata_name = posixpath.join(info_dir, LEGACY_METADATA_FILENAME)
         wheel_metadata_name = posixpath.join(info_dir, 'WHEEL')
         record_name = posixpath.join(info_dir, 'RECORD')
 
@@ -856,7 +856,7 @@ class Wheel(object):
 
         def get_version(path_map, info_dir):
             version = path = None
-            key = '%s/%s' % (info_dir, METADATA_FILENAME)
+            key = '%s/%s' % (info_dir, LEGACY_METADATA_FILENAME)
             if key not in path_map:
                 key = '%s/PKG-INFO' % info_dir
             if key in path_map:
@@ -882,7 +882,7 @@ class Wheel(object):
             if updated:
                 md = Metadata(path=path)
                 md.version = updated
-                legacy = not path.endswith(METADATA_FILENAME)
+                legacy = not path.endswith(LEGACY_METADATA_FILENAME)
                 md.write(path=path, legacy=legacy)
                 logger.debug('Version updated from %r to %r', version,
                              updated)
