@@ -326,16 +326,6 @@ class Wheel(object):
         archive_paths.append((ap, p))
 
     def build_zip(self, pathname, archive_paths):
-        sort_entries = True
-        if sort_entries:
-            def sorter(t):
-                ap = t[0]
-                n = ap.count('/')
-                if '.dist-info' in ap:
-                    n += 10000
-                return (n, ap)
-            archive_paths = sorted(archive_paths, key=sorter)
-
         with ZipFile(pathname, 'w', zipfile.ZIP_DEFLATED) as zf:
             for ap, p in archive_paths:
                 logger.debug('Wrote %s to %s in wheel', p, ap)
@@ -436,6 +426,18 @@ class Wheel(object):
             f.write('\n'.join(wheel_metadata))
         ap = to_posix(os.path.join(info_dir, 'WHEEL'))
         archive_paths.append((ap, p))
+
+        # sort the entries by archive path. Not needed by any spec, but it
+        # keeps the archive listing and RECORD tidier than they would otherwise
+        # be. Use the number of path segments to keep directory entries together,
+        # and keep the dist-info stuff at the end.
+        def sorter(t):
+            ap = t[0]
+            n = ap.count('/')
+            if '.dist-info' in ap:
+                n += 10000
+            return (n, ap)
+        archive_paths = sorted(archive_paths, key=sorter)
 
         # Now, at last, RECORD.
         # Paths in here are archive paths - nothing else makes sense.
