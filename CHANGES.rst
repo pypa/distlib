@@ -2,12 +2,24 @@ Change log for ``distlib``
 --------------------------
 
 
-0.3.1 (future)
+0.3.2 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
 
+
+0.3.1
+~~~~~
+
+Released: 2020-06-27
+
+The repository has been migrated to Git. References to earlier changesets (commits) in
+issue comments, etc. will be invalid.
+
 - scripts
+
+    - Fixed #132: Added documentation to help with relative interpreter paths. Thanks
+      to Paul Kienzle for the patch.
 
     - Fixed #134: Allowed specifying a different target Python version when generating
       scripts.
