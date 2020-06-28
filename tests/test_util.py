@@ -587,10 +587,10 @@ def _eta_range(min_eta, max_eta, prefix='ETA '):
     msg = prefix + ': 00:00:%02d'
     return tuple([msg % v for v in range(min_eta, max_eta + 1)])
 
-# Of late, the speed tests keep failing on AppVeyor and Windows
-@unittest.skipIf(os.name == 'nt' and os.environ.get('APPVEYOR') == 'True',
-                 'Test disabled on AppVeyor and Windows due to AppVeyor performance')
 class ProgressTestCase(unittest.TestCase):
+    # Of late, the speed tests keep failing on AppVeyor and Windows
+    @unittest.skipIf(os.name == 'nt' and os.environ.get('APPVEYOR') == 'True',
+                     'Test disabled on AppVeyor and Windows due to AppVeyor performance')
     def test_basic(self):
 
         # These ranges may need tweaking to cater for especially slow
@@ -627,6 +627,9 @@ class ProgressTestCase(unittest.TestCase):
         self.assertIn(bar.ETA, e, p)
         self.assertIn(bar.speed, s)
 
+    # Of late, the speed tests keep failing on AppVeyor and Windows
+    @unittest.skipIf(os.name == 'nt' and os.environ.get('APPVEYOR') == 'True',
+                     'Test disabled on AppVeyor and Windows due to AppVeyor performance')
     def test_unknown(self):
         if os.name == 'nt':
             speed = _speed_range(17, 20)
