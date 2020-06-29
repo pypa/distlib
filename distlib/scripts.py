@@ -326,8 +326,7 @@ class ScriptMaker(object):
         else:
             first_line = f.readline()
             if not first_line:  # pragma: no cover
-                logger.warning('%s: %s is an empty file (skipping)',
-                               self.get_command_name(),  script)
+                logger.warning('%s is an empty file (skipping)', script)
                 return
 
             match = FIRST_LINE_RE.match(first_line.replace(b'\r\n', b'\n'))
