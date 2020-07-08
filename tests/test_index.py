@@ -36,6 +36,7 @@ if ssl:
     from distlib.util import HTTPSHandler
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -44,9 +45,11 @@ if 'HOME' in os.environ:
 else:
     PYPIRC = None
 
+TEST_SERVER_PORT = os.environ.get('TEST_PYPISERVER_PORT', '8086')
+
 class PackageIndexTestCase(unittest.TestCase):
     run_test_server = True
-    test_server_url = 'http://localhost:8080/'
+    test_server_url = 'http://localhost:%s/' % TEST_SERVER_PORT
 
     @classmethod
     def setUpClass(cls):
@@ -64,18 +67,41 @@ class PackageIndexTestCase(unittest.TestCase):
             pkgdir = os.path.join(HERE, 'packages')
             if not os.path.isdir(pkgdir):   # pragma: no cover
                 os.mkdir(pkgdir)
-            cls.sink = sink = open(os.devnull, 'w')
+            fd, cls.sinkfile = tempfile.mkstemp(suffix='.log', prefix='distlib-pypi-')
+            os.close(fd)
+            cls.sink = sink = open(cls.sinkfile, 'w')
             cmd = [sys.executable, 'pypi-server-standalone.py',
+                   '--interface', '127.0.0.1', '--port', TEST_SERVER_PORT,
                    '-P', 'passwords', 'packages']
             cls.server = subprocess.Popen(cmd, stdout=sink, stderr=sink,
                                           cwd=HERE)
             # wait for the server to start up
             response = None
+            tries = 20
+            count = 0
             while response is None:
                 try:
+                    count += 1
                     response = urlopen(cls.test_server_url)
+                    if response.getcode() != 200:
+                        response = None
+                        break
+                    # In case some other server is listening on the same port ...
+                    # need to check the actual response for pypiserver-specific content
+                    data = response.read()
+                    if b'Welcome to pypiserver!' not in data:
+                        response = None
+                        break
                 except URLError:
-                    pass
+                    if count < tries:
+                        pass
+                    else:
+                        break
+            if response is None or cls.server.poll() is not None:
+                logger.warning('PyPI test server could not be run')
+                cls.server = None
+                cls.sink.close()
+                os.remove(cls.sinkfile)
 
     @classmethod
     def tearDownClass(cls):
@@ -83,6 +109,7 @@ class PackageIndexTestCase(unittest.TestCase):
             if cls.server and cls.server.returncode is None:
                 cls.server.kill()
                 cls.sink.close()
+                os.remove(cls.sinkfile)
 
     def setUp(self):
         if not self.run_test_server:
