@@ -108,6 +108,7 @@ class PackageIndexTestCase(unittest.TestCase):
         if cls.run_test_server:
             if cls.server and cls.server.returncode is None:
                 cls.server.kill()
+                cls.server.wait()
                 cls.sink.close()
                 os.remove(cls.sinkfile)
 
