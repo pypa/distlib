@@ -7,6 +7,9 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- tests
+
+   - Fixed #139: Improved handling of errors related to the test PyPI server.
 
 0.3.1
 ~~~~~
