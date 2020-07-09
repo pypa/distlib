@@ -21,6 +21,7 @@ try:
     import threading
 except ImportError:
     import dummy_threading as threading
+import time
 
 from compat import unittest, Request
 if ssl:
@@ -78,10 +79,12 @@ class PackageIndexTestCase(unittest.TestCase):
             # wait for the server to start up
             response = None
             tries = 20
+            timeout = 0.5
             count = 0
             while response is None:
                 try:
                     count += 1
+                    time.sleep(timeout)
                     response = urlopen(cls.test_server_url)
                     if response.getcode() != 200:
                         response = None
