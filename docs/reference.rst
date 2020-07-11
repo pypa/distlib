@@ -506,6 +506,10 @@ Classes
 
    A class used to install scripts based on specifications.
 
+   .. cssclass:: class-members-heading
+
+   Attributes
+
    .. attribute:: source_dir
 
       The directory where script sources are to be found.
@@ -543,6 +547,23 @@ Classes
       first two are used.
 
       .. versionadded:: 0.3.1
+
+   .. attribute:: variant_separator
+
+      A string value placed between the root basename and the version information in a
+      variant-specific filename. This defaults to ``'-'``, which means that a script
+      with root basename ``foo`` and a variant ``X.Y`` will have a base filename of
+      ``foo-3.8`` for target Python version 3.8. If you wanted to write ``foo3.8``
+      instead of ``foo-3.8``, this attribute could be set to ``''``. If you need more
+      control over filename generation, you can subclass :class:`ScriptMaker` and
+      override the :meth:`get_script_filenames` method.
+
+      .. versionadded:: 0.3.2
+
+
+   .. cssclass:: class-members-heading
+
+   Methods
 
    .. method:: __init__(source_directory, target_directory, add_launchers=True, dry_run=False)
 
@@ -635,6 +656,20 @@ Classes
       :param options: As for the :meth:`make` method.
       :returns: A list of absolute pathnames of files installed (or which
                 would have been installed, but for ``dry_run`` being true).
+
+   .. method:: get_script_filenames(name)
+
+      Get the names of scripts to be written for the specified base name, based on
+      the ``variants`` and ``version_info`` for this instance. You can override this
+      if you need to customise the filenames to be written.
+
+      :param str name: the basename of the script to be written.
+      :returns: A set of filenames of files to be written as scripts, based on what
+                variants are specified. For example, if the name is ``foo`` and the
+                variants are ``{'X', 'X.Y'}`` and the ``version_info`` is ``(3, 8)``,
+                then the result would be ``{'foo3', 'foo-3.8'}``.
+
+      .. versionadded:: 0.3.2
 
 Functions
 ^^^^^^^^^

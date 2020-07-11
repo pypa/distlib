@@ -1,11 +1,23 @@
 Change log for ``distlib``
 --------------------------
 
-
 0.3.2 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+- scripts
+
+    - Made the generation of scripts more configurable:
+
+        - the ``variant_separator`` attribute can be set to determine the separator used
+          between a script basename and its X.Y variant. The default value is ``'-'``
+          and would result in a final script basename like ``'foo-X.Y'``, whereas
+          setting it to ``''`` would result in a final script basename like
+          ``'fooX.Y'``.
+
+        - You can also subclass and override the ``get_script_filenames()`` method to
+          provide a more customised set of file basenames.
 
 - tests
 

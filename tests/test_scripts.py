@@ -393,6 +393,34 @@ class ScriptTestCase(unittest.TestCase):
                 ):
             self.assertEqual(enquote_executable(executable), expected)
 
+    def test_variant_configuration(self):
+        spec = 'foo = foo:main'
+        files = self.maker.make(spec)
+        basenames = ('foo', 'foo-%s.%s' % self.maker.version_info[:2])
+        expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
+        self.assertEqual(expected, set(files))
+        self.maker.variant_separator = ''
+        self.maker.clobber = True
+        files = self.maker.make(spec)
+        basenames = ('foo', 'foo%s.%s' % self.maker.version_info[:2])
+        expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
+        self.assertEqual(expected, set(files))
+
+        class CustomMaker(ScriptMaker):
+            def get_script_filenames(self, name):
+                result = super(CustomMaker, self).get_script_filenames(name)
+                if 'X.Y' in self.variants:
+                    result.add('%s%s.%s' % ((name,) + self.version_info[:2]))
+                return result
+
+        maker = CustomMaker(self.maker.source_dir, self.maker.target_dir,
+                            add_launchers=False)
+        maker.clobber = True
+        files = maker.make(spec)
+        basenames = ('foo', 'foo%s.%s' % self.maker.version_info[:2],
+                     'foo-%s.%s' % self.maker.version_info[:2])
+        expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
+        self.assertEqual(expected, set(files))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
