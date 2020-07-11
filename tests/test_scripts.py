@@ -396,13 +396,19 @@ class ScriptTestCase(unittest.TestCase):
     def test_variant_configuration(self):
         spec = 'foo = foo:main'
         files = self.maker.make(spec)
-        basenames = ('foo', 'foo-%s.%s' % self.maker.version_info[:2])
+        if os.name == 'nt':
+            ext = '.py'
+        else:
+            ext = ''
+        basenames = ('foo%s' % ext,
+                     'foo-%s.%s%s' % (self.maker.version_info[:2] + (ext,)))
         expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
         self.assertEqual(expected, set(files))
         self.maker.variant_separator = ''
         self.maker.clobber = True
         files = self.maker.make(spec)
-        basenames = ('foo', 'foo%s.%s' % self.maker.version_info[:2])
+        basenames = ('foo%s' % ext,
+                     'foo%s.%s%s' % (self.maker.version_info[:2] + (ext,)))
         expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
         self.assertEqual(expected, set(files))
 
@@ -417,10 +423,17 @@ class ScriptTestCase(unittest.TestCase):
                             add_launchers=False)
         maker.clobber = True
         files = maker.make(spec)
-        basenames = ('foo', 'foo%s.%s' % self.maker.version_info[:2],
-                     'foo-%s.%s' % self.maker.version_info[:2])
+        basenames = ('foo%s' % ext,
+                     'foo%s.%s%s' % (self.maker.version_info[:2] + (ext,)),
+                     'foo-%s.%s%s' % (self.maker.version_info[:2] + (ext,)))
         expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
         self.assertEqual(expected, set(files))
+        if os.name == 'nt':
+            maker.add_launchers = True
+            files = maker.make(spec)
+            expected = set([e.replace('.py', '.exe') for e in expected])
+            self.assertEqual(expected, set(files))
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

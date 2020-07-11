@@ -19,6 +19,10 @@ Released: Not yet.
         - You can also subclass and override the ``get_script_filenames()`` method to
           provide a more customised set of file basenames.
 
+- wheel
+
+    - Dropped any trailing data when computing the Python tag.
+
 - tests
 
    - Fixed #139: Improved handling of errors related to the test PyPI server.
