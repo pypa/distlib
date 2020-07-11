@@ -55,7 +55,7 @@ ARCH = distutils.util.get_platform().replace('-', '_').replace('.', '_')
 
 ABI = sysconfig.get_config_var('SOABI')
 if ABI and ABI.startswith('cpython-'):
-    ABI = ABI.replace('cpython-', 'cp')
+    ABI = ABI.replace('cpython-', 'cp').split('-')[0]
 else:
     def _derive_abi():
         parts = ['cp', VER_SUFFIX]
