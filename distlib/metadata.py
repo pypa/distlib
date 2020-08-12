@@ -94,8 +94,9 @@ _426_MARKERS = ('Private-Version', 'Provides-Extra', 'Obsoleted-By',
 # See issue #106: Sometimes 'Requires' and 'Provides' occur wrongly in
 # the metadata. Include them in the tuple literal below to allow them
 # (for now).
+# Ditto for Obsoletes - see issue #140.
 _566_FIELDS = _426_FIELDS + ('Description-Content-Type',
-                             'Requires', 'Provides')
+                             'Requires', 'Provides', 'Obsoletes')
 
 _566_MARKERS = ('Description-Content-Type',)
 
