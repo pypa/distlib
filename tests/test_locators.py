@@ -306,8 +306,23 @@ class LocatorTestCase(unittest.TestCase):
             ('six', 'atomicwrites', 'setuptools', 'setuptools-scm', 'attrs',
              'importlib-metadata', 'more-itertools', 'wcwidth', 'colorama', 'pyparsing',
              'setuptools_scm', 'pluggy', 'packaging', 'hgtools', 'py', 'pytest-runner',
-             'pathlib2', 'irc', 'pytest')
-
+             'pathlib2', 'irc', 'pytest'),
+            ('wcwidth', 'setuptools_scm', 'more-itertools', 'six', 'setuptools',
+             'importlib-metadata', 'pyparsing', 'setuptools-scm', 'atomicwrites',
+             'colorama', 'attrs', 'pathlib2', 'packaging', 'pytest-runner', 'hgtools',
+             'py', 'pluggy', 'pytest', 'irc'),
+            ('atomicwrites', 'importlib-metadata', 'attrs', 'pyparsing', 'wcwidth',
+             'colorama', 'setuptools', 'more-itertools', 'six', 'setuptools_scm',
+             'setuptools-scm', 'pluggy', 'packaging', 'hgtools', 'pytest-runner',
+             'pathlib2', 'py', 'irc', 'pytest'),
+            ('atomicwrites', 'pyparsing', 'six', 'setuptools', 'importlib-metadata',
+             'more-itertools', 'attrs', 'setuptools_scm', 'setuptools-scm', 'wcwidth',
+             'colorama', 'py', 'pathlib2', 'pluggy', 'hgtools', 'pytest-runner',
+             'packaging', 'irc', 'pytest'),
+            ('atomicwrites', 'setuptools', 'importlib-metadata', 'more-itertools',
+             'attrs', 'pyparsing', 'wcwidth', 'colorama', 'six', 'setuptools_scm',
+             'setuptools-scm', 'pluggy', 'packaging', 'py', 'hgtools', 'pytest-runner',
+             'pathlib2', 'irc', 'pytest'),
         ])
         self.assertIn(tuple(names), expected)
 

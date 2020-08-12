@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import codecs
 import hashlib
+import io
 import os
 import re
 import shutil
@@ -38,6 +39,29 @@ except Exception:
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 EGG_INFO_RE = re.compile(r'(-py\d\.\d)?\.egg-info', re.I)
+
+def pip_version():
+    result = None
+    fd, fn = tempfile.mkstemp(prefix='distlib-test-', suffix='.txt')
+    try:
+        os.close(fd)
+        with open(fn, 'wb') as out:
+            subprocess.check_call(['pip', '--version'], stdout=out,
+                                   stderr=subprocess.STDOUT)
+        with io.open(fn, encoding='utf-8') as f:
+            data = f.read().split()
+        assert data[0] == 'pip'
+        parts = data[1].split('.')
+        result = []
+        for p in parts:
+            if p.isdigit():
+                result.append(int(p))
+            else:
+                result.append(p)
+        result = tuple(result)
+    finally:
+        os.remove(fn)
+    return result
 
 def convert_egg_info(libdir, prefix):
     files = os.listdir(libdir)
@@ -492,6 +516,8 @@ class WheelTestCase(unittest.TestCase):
     @unittest.skipIf(sys.version_info[:2] >= (3, 7), 'The test distribution is not '
                                                '3.7+ compatible')
     def test_build_and_install_pure(self):
+        if pip_version() >= (20, 2, 0):
+            raise unittest.SkipTest('Test not supported by pip version')
         self.do_build_and_install('sarge == 0.1')
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
@@ -501,6 +527,8 @@ class WheelTestCase(unittest.TestCase):
                                                'builds on Linux')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_plat(self):
+        if pip_version() >= (20, 2, 0):
+            raise unittest.SkipTest('Test not supported by pip version')
         self.do_build_and_install('hiredis == 0.1.1')
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
@@ -508,6 +536,8 @@ class WheelTestCase(unittest.TestCase):
                                                '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_data(self):
+        if pip_version() >= (20, 2, 0):
+            raise unittest.SkipTest('Test not supported by pip version')
         self.do_build_and_install('Werkzeug == 0.5')
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
@@ -515,6 +545,8 @@ class WheelTestCase(unittest.TestCase):
                                                '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_scripts(self):
+        if pip_version() >= (20, 2, 0):
+            raise unittest.SkipTest('Test not supported by pip version')
         self.do_build_and_install('Babel == 0.9.6')
 
 if __name__ == '__main__':  # pragma: no cover
