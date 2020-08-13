@@ -323,6 +323,10 @@ class LocatorTestCase(unittest.TestCase):
              'attrs', 'pyparsing', 'wcwidth', 'colorama', 'six', 'setuptools_scm',
              'setuptools-scm', 'pluggy', 'packaging', 'py', 'hgtools', 'pytest-runner',
              'pathlib2', 'irc', 'pytest'),
+            ('wcwidth', 'setuptools_scm', 'more-itertools', 'six', 'setuptools',
+             'importlib-metadata', 'pyparsing', 'setuptools-scm', 'atomicwrites',
+             'attrs', 'colorama', 'pathlib2', 'packaging', 'pytest-runner', 'hgtools',
+             'py', 'pluggy', 'pytest', 'irc'),
         ])
         self.assertIn(tuple(names), expected)
 

@@ -6,6 +6,11 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- metadata
+
+    - Fixed #140: allowed "Obsoletes" in more scenarios, to better handle faulty
+      metadata already on PyPI.
+
 - scripts
 
     - Made the generation of scripts more configurable:
@@ -18,6 +23,11 @@ Released: Not yet.
 
         - You can also subclass and override the ``get_script_filenames()`` method to
           provide a more customised set of file basenames.
+
+- util
+
+    - Fixed #140: allowed a trailing comma in constraints, to better handle faulty
+      metadata already on PyPI.
 
 - wheel
 
