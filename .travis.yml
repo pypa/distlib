@@ -12,6 +12,7 @@ python:
     - "3.5"
     - "3.6"
     - "3.7"
+    - "3.8"
     - "pypy"
 #             pypy was removed temporarily as coveralls isn't always fully compatible on Travis ...
 #             RuntimeError: cryptography 1.9 is not compatible with PyPy < 5.3. Please upgrade PyPy to use this library.
