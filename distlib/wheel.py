@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013-2017 Vinay Sajip.
+# Copyright (C) 2013-2020 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -938,6 +938,16 @@ class Wheel(object):
                     shutil.copyfile(newpath, pathname)
         return modified
 
+def _get_glibc_version():
+    import platform
+    ver = platform.libc_ver()
+    result = []
+    if ver[0] == 'glibc':
+        for s in ver[1].split('.'):
+            result.append(int(s) if s.isdigit() else 0)
+        result = tuple(result)
+    return result
+
 def compatible_tags():
     """
     Return (pyver, abi, arch) tuples compatible with this Python.
@@ -985,6 +995,24 @@ def compatible_tags():
     for abi in abis:
         for arch in arches:
             result.append((''.join((IMP_PREFIX, versions[0])), abi, arch))
+            # manylinux
+            if abi != 'none' and sys.platform.startswith('linux'):
+                arch = arch.replace('linux_', '')
+                import platform
+                parts = _get_glibc_version()
+                if len(parts) == 2:
+                    if parts >= (2, 5):
+                        result.append((''.join((IMP_PREFIX, versions[0])), abi,
+                                       'manylinux1_%s' % arch))
+                    if parts >= (2, 12):
+                        result.append((''.join((IMP_PREFIX, versions[0])), abi,
+                                       'manylinux2010_%s' % arch))
+                    if parts >= (2, 17):
+                        result.append((''.join((IMP_PREFIX, versions[0])), abi,
+                                       'manylinux2014_%s' % arch))
+                    result.append((''.join((IMP_PREFIX, versions[0])), abi,
+                                   'manylinux_%s_%s_%s' % (parts[0], parts[1],
+                                                           arch)))
 
     # where no ABI / arch dependency, but IMP_PREFIX dependency
     for i, version in enumerate(versions):
@@ -997,6 +1025,7 @@ def compatible_tags():
         result.append((''.join(('py', version)), 'none', 'any'))
         if i == 0:
             result.append((''.join(('py', version[0])), 'none', 'any'))
+
     return set(result)
 
 

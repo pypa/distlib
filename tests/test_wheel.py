@@ -26,7 +26,7 @@ from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENA
 from distlib.scripts import ScriptMaker
 from distlib.util import get_executable
 from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS,
-                           is_compatible)
+                           is_compatible, _get_glibc_version)
 
 try:
     with open(os.devnull, 'wb') as junk:
@@ -188,6 +188,22 @@ class WheelTestCase(unittest.TestCase):
         self.assertIn((PYVER[:-1], 'none', 'any'), tags)
         this_arch = filter(lambda o: o[-1] == ARCH, tags)
         self.assertTrue(this_arch)
+        if sys.platform.startswith('linux'):
+            arch = ARCH.replace('linux_', '')
+            parts = _get_glibc_version()
+            if len(parts) == 2:
+                self.assertTrue(filter(lambda o: o[-1] == 'manylinux_%s_%s_%s' %
+                                       (parts[0], parts[1], arch), tags))
+                if parts >= (2, 17):
+                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux2014_%s' %
+                                           arch, tags))
+                if parts >= (2, 12):
+                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux2010_%s' %
+                                           arch, tags))
+                if parts >= (2, 5):
+                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux1_%s' %
+                                           arch, tags))
+
 
     def test_is_compatible(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
