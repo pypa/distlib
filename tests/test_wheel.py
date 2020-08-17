@@ -210,6 +210,141 @@ class WheelTestCase(unittest.TestCase):
         if 'py27' <= PYVER < 'py32':
             self.assertTrue(is_compatible(fn))
             self.assertTrue(Wheel(fn).is_compatible())
+        # use actual wheel names from PyPI.
+        wheel_names = [
+            'simplejson-3.17.2-cp27-cp27m-macosx_10_13_x86_64.whl',
+            'simplejson-3.17.2-cp27-cp27m-manylinux1_i686.whl',
+            'simplejson-3.17.2-cp27-cp27m-manylinux1_x86_64.whl',
+            'simplejson-3.17.2-cp27-cp27m-manylinux2010_i686.whl',
+            'simplejson-3.17.2-cp27-cp27m-manylinux2010_x86_64.whl',
+            'simplejson-3.17.2-cp27-cp27mu-manylinux1_i686.whl',
+            'simplejson-3.17.2-cp27-cp27mu-manylinux1_x86_64.whl',
+            'simplejson-3.17.2-cp27-cp27mu-manylinux2010_i686.whl',
+            'simplejson-3.17.2-cp27-cp27mu-manylinux2010_x86_64.whl',
+            'simplejson-3.17.2-cp27-cp27m-win32.whl',
+            'simplejson-3.17.2-cp27-cp27m-win_amd64.whl',
+            'simplejson-3.17.2-cp33-cp33m-win32.whl',
+            'simplejson-3.17.2-cp33-cp33m-win_amd64.whl',
+            'simplejson-3.17.2-cp34-cp34m-win32.whl',
+            'simplejson-3.17.2-cp34-cp34m-win_amd64.whl',
+            'simplejson-3.17.2-cp35-cp35m-manylinux1_i686.whl',
+            'simplejson-3.17.2-cp35-cp35m-manylinux1_x86_64.whl',
+            'simplejson-3.17.2-cp35-cp35m-manylinux2010_i686.whl',
+            'simplejson-3.17.2-cp35-cp35m-manylinux2010_x86_64.whl',
+            'simplejson-3.17.2-cp35-cp35m-manylinux2014_aarch64.whl',
+            'simplejson-3.17.2-cp35-cp35m-win32.whl',
+            'simplejson-3.17.2-cp35-cp35m-win_amd64.whl',
+            'simplejson-3.17.2-cp36-cp36m-macosx_10_13_x86_64.whl',
+            'simplejson-3.17.2-cp36-cp36m-manylinux1_i686.whl',
+            'simplejson-3.17.2-cp36-cp36m-manylinux1_x86_64.whl',
+            'simplejson-3.17.2-cp36-cp36m-manylinux2010_i686.whl',
+            'simplejson-3.17.2-cp36-cp36m-manylinux2010_x86_64.whl',
+            'simplejson-3.17.2-cp36-cp36m-manylinux2014_aarch64.whl',
+            'simplejson-3.17.2-cp36-cp36m-win32.whl',
+            'simplejson-3.17.2-cp36-cp36m-win_amd64.whl',
+            'simplejson-3.17.2-cp37-cp37m-macosx_10_14_x86_64.whl',
+            'simplejson-3.17.2-cp37-cp37m-manylinux1_i686.whl',
+            'simplejson-3.17.2-cp37-cp37m-manylinux1_x86_64.whl',
+            'simplejson-3.17.2-cp37-cp37m-manylinux2010_i686.whl',
+            'simplejson-3.17.2-cp37-cp37m-manylinux2010_x86_64.whl',
+            'simplejson-3.17.2-cp37-cp37m-manylinux2014_aarch64.whl',
+            'simplejson-3.17.2-cp37-cp37m-win32.whl',
+            'simplejson-3.17.2-cp37-cp37m-win_amd64.whl',
+            'simplejson-3.17.2-cp38-cp38-macosx_10_14_x86_64.whl',
+            'simplejson-3.17.2-cp38-cp38-manylinux1_i686.whl',
+            'simplejson-3.17.2-cp38-cp38-manylinux1_x86_64.whl',
+            'simplejson-3.17.2-cp38-cp38-manylinux2010_i686.whl',
+            'simplejson-3.17.2-cp38-cp38-manylinux2010_x86_64.whl',
+            'simplejson-3.17.2-cp38-cp38-manylinux2014_aarch64.whl',
+
+            'Pillow-7.2.0-cp35-cp35m-macosx_10_10_intel.whl',
+            'Pillow-7.2.0-cp35-cp35m-manylinux1_i686.whl',
+            'Pillow-7.2.0-cp35-cp35m-manylinux1_x86_64.whl',
+            'Pillow-7.2.0-cp35-cp35m-manylinux2014_aarch64.whl',
+            'Pillow-7.2.0-cp35-cp35m-win32.whl',
+            'Pillow-7.2.0-cp35-cp35m-win_amd64.whl',
+            'Pillow-7.2.0-cp36-cp36m-macosx_10_10_x86_64.whl',
+            'Pillow-7.2.0-cp36-cp36m-manylinux1_i686.whl',
+            'Pillow-7.2.0-cp36-cp36m-manylinux1_x86_64.whl',
+            'Pillow-7.2.0-cp36-cp36m-manylinux2014_aarch64.whl',
+            'Pillow-7.2.0-cp36-cp36m-win32.whl',
+            'Pillow-7.2.0-cp36-cp36m-win_amd64.whl',
+            'Pillow-7.2.0-cp37-cp37m-macosx_10_10_x86_64.whl',
+            'Pillow-7.2.0-cp37-cp37m-manylinux1_i686.whl',
+            'Pillow-7.2.0-cp37-cp37m-manylinux1_x86_64.whl',
+            'Pillow-7.2.0-cp37-cp37m-manylinux2014_aarch64.whl',
+            'Pillow-7.2.0-cp37-cp37m-win32.whl',
+            'Pillow-7.2.0-cp37-cp37m-win_amd64.whl',
+            'Pillow-7.2.0-cp38-cp38-macosx_10_10_x86_64.whl',
+            'Pillow-7.2.0-cp38-cp38-manylinux1_i686.whl',
+            'Pillow-7.2.0-cp38-cp38-manylinux1_x86_64.whl',
+            'Pillow-7.2.0-cp38-cp38-manylinux2014_aarch64.whl',
+            'Pillow-7.2.0-cp38-cp38-win32.whl',
+            'Pillow-7.2.0-cp38-cp38-win_amd64.whl',
+            'Pillow-7.2.0-pp36-pypy36_pp73-macosx_10_10_x86_64.whl',
+            'Pillow-7.2.0-pp36-pypy36_pp73-manylinux2010_x86_64.whl',
+            'Pillow-7.2.0-pp36-pypy36_pp73-win32.whl',
+
+            'reportlab-3.5.47-cp27-cp27m-macosx_10_9_x86_64.whl',
+            'reportlab-3.5.47-cp27-cp27m-manylinux1_i686.whl',
+            'reportlab-3.5.47-cp27-cp27m-manylinux1_x86_64.whl',
+            'reportlab-3.5.47-cp27-cp27m-manylinux2010_i686.whl',
+            'reportlab-3.5.47-cp27-cp27m-manylinux2010_x86_64.whl',
+            'reportlab-3.5.47-cp27-cp27mu-manylinux1_i686.whl',
+            'reportlab-3.5.47-cp27-cp27mu-manylinux1_x86_64.whl',
+            'reportlab-3.5.47-cp27-cp27mu-manylinux2010_i686.whl',
+            'reportlab-3.5.47-cp27-cp27mu-manylinux2010_x86_64.whl',
+            'reportlab-3.5.47-cp27-cp27m-win32.whl',
+            'reportlab-3.5.47-cp27-cp27m-win_amd64.whl',
+            'reportlab-3.5.47-cp35-cp35m-macosx_10_6_intel.whl',
+            'reportlab-3.5.47-cp35-cp35m-manylinux1_i686.whl',
+            'reportlab-3.5.47-cp35-cp35m-manylinux1_x86_64.whl',
+            'reportlab-3.5.47-cp35-cp35m-manylinux2010_i686.whl',
+            'reportlab-3.5.47-cp35-cp35m-manylinux2010_x86_64.whl',
+            'reportlab-3.5.47-cp35-cp35m-win32.whl',
+            'reportlab-3.5.47-cp35-cp35m-win_amd64.whl',
+            'reportlab-3.5.47-cp36-cp36m-macosx_10_9_x86_64.whl',
+            'reportlab-3.5.47-cp36-cp36m-manylinux1_i686.whl',
+            'reportlab-3.5.47-cp36-cp36m-manylinux1_x86_64.whl',
+            'reportlab-3.5.47-cp36-cp36m-manylinux2010_i686.whl',
+            'reportlab-3.5.47-cp36-cp36m-manylinux2010_x86_64.whl',
+            'reportlab-3.5.47-cp36-cp36m-win32.whl',
+            'reportlab-3.5.47-cp36-cp36m-win_amd64.whl',
+            'reportlab-3.5.47-cp37-cp37m-macosx_10_9_x86_64.whl',
+            'reportlab-3.5.47-cp37-cp37m-manylinux1_i686.whl',
+            'reportlab-3.5.47-cp37-cp37m-manylinux1_x86_64.whl',
+            'reportlab-3.5.47-cp37-cp37m-manylinux2010_i686.whl',
+            'reportlab-3.5.47-cp37-cp37m-manylinux2010_x86_64.whl',
+            'reportlab-3.5.47-cp37-cp37m-win32.whl',
+            'reportlab-3.5.47-cp37-cp37m-win_amd64.whl',
+            'reportlab-3.5.47-cp38-cp38-macosx_10_9_x86_64.whl',
+            'reportlab-3.5.47-cp38-cp38-manylinux1_i686.whl',
+            'reportlab-3.5.47-cp38-cp38-manylinux1_x86_64.whl',
+            'reportlab-3.5.47-cp38-cp38-manylinux2010_i686.whl',
+            'reportlab-3.5.47-cp38-cp38-manylinux2010_x86_64.whl',
+            'reportlab-3.5.47-cp38-cp38-win32.whl',
+            'reportlab-3.5.47-cp38-cp38-win_amd64.whl',
+        ]
+        for fn in filter(is_compatible, wheel_names):
+            w = Wheel(fn)
+            our_arch = ARCH.replace('linux_', '')
+            for pyver, abi, arch in w.tags:
+                self.assertEqual(pyver, IMPVER)
+                self.assertEqual(abi, ABI)
+                self.assertTrue(arch.endswith(our_arch))
+                if 'manylinux' in arch:
+                    self.assertTrue(sys.platform.startswith('linux'))
+                    parts = _get_glibc_version()
+                    self.assertEqual(len(parts), 2)
+                    if 'manylinux2014_' in arch:
+                        self.assertTrue(parts >= (2, 17))
+                    if 'manylinux2010_' in arch:
+                        self.assertTrue(parts >= (2, 12))
+                    if 'manylinux1_' in arch:
+                        self.assertTrue(parts >= (2, 5))
+                    if 'manylinux_' in arch:
+                        s = 'manylinux_%s_%s_' % parts
+                        self.assertIn(s, arch)
 
     def test_metadata(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
