@@ -331,7 +331,33 @@ class WheelTestCase(unittest.TestCase):
             for pyver, abi, arch in w.tags:
                 self.assertEqual(pyver, IMPVER)
                 self.assertEqual(abi, ABI)
-                self.assertTrue(arch.endswith(our_arch))
+                if sys.platform != 'darwin':
+                    self.assertTrue(arch.endswith(our_arch))
+                else:
+                    m = re.match(r'(\w+)_(\d+)_(\d+)_(\w+)$', our_arch)
+                    self.assertTrue(m)
+                    _, major, minor, our_arch_kind = m.groups()
+                    our_major = int(major)
+                    our_minor = int(minor)
+                    m = re.match(r'(\w+)_(\d+)_(\d+)_(\w+)$', arch)
+                    self.assertTrue(m)
+                    _, major, minor, arch_kind = m.groups()
+                    major = int(major)
+                    minor = int(minor)
+                    self.assertEqual(major, our_major)
+                    self.assertLessEqual(minor, our_minor)
+                    if arch_kind in ('x86_64', 'i386'):
+                        self.assertEqual(arch_kind, our_arch_kind)
+                    elif arch_kind == 'fat':
+                        self.assertIn(our_arch_kind, ('i386', 'ppc'))
+                    elif arch_kind == 'fat3':
+                        self.assertIn(our_arch_kind, ('i386', 'ppc', 'x86_x64'))
+                    elif arch_kind == 'fat64':
+                        self.assertIn(our_arch_kind, ('ppc64', 'x86_x64'))
+                    elif arch_kind == 'intel':
+                        self.assertIn(our_arch_kind, ('i386', 'x86_x64'))
+                    elif arch_kind == 'universal':
+                        self.assertIn(our_arch_kind, ('i386', 'ppc', 'ppc64', 'x86_x64', 'intel'))
                 if 'manylinux' in arch:
                     self.assertTrue(sys.platform.startswith('linux'))
                     parts = _get_glibc_version()
