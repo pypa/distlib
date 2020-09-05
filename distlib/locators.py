@@ -1062,8 +1062,6 @@ default_locator = AggregatingLocator(
 
 locate = default_locator.locate
 
-NAME_VERSION_RE = re.compile(r'(?P<name>[\w-]+)\s*'
-                             r'\(\s*(==\s*)?(?P<ver>[^)]+)\)$')
 
 class DependencyFinder(object):
     """

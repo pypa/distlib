@@ -6,6 +6,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- locators
+
+    - Fixed #141: Removed unused regular expression.
+
 - metadata
 
     - Fixed #140: allowed "Obsoletes" in more scenarios, to better handle faulty
@@ -32,6 +36,8 @@ Released: Not yet.
 - wheel
 
     - Dropped any trailing data when computing the Python tag.
+
+    - Added support for manylinux tags.
 
 - tests
 
