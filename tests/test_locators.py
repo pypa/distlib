@@ -15,14 +15,13 @@ import sys
 
 from compat import unittest
 
-from distlib.compat import url2pathname, urlparse, urljoin
+from distlib.compat import url2pathname, urlparse
 from distlib.database import (Distribution, DistributionPath, make_graph,
                               make_dist)
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
                               PyPIJSONLocator, DirectoryLocator,
                               DistPathLocator, AggregatingLocator,
-                              JSONLocator, DistPathLocator,
-                              DependencyFinder, locate,
+                              JSONLocator, DependencyFinder, locate,
                               get_all_distribution_names, default_locator)
 
 HERE = os.path.abspath(os.path.dirname(__file__))

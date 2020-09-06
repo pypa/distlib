@@ -23,7 +23,7 @@ from compat import unittest
 from support import TempdirManager
 
 from distlib import DistlibException
-from distlib.compat import cache_from_source,  Container
+from distlib.compat import cache_from_source
 from distlib.util import (get_export_entry, ExportEntry, resolve,
                           get_cache_base, path_to_cache_dir, zip_dir,
                           parse_credentials, ensure_slash, split_filename,

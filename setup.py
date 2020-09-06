@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2019 Vinay Sajip.
+# Copyright (C) 2020 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 
 import distutils.core
-from distutils.sysconfig import get_python_lib
-from os.path import join, dirname, abspath
-import re
-import sys
+from os.path import join, dirname
 
 import distlib
 
@@ -19,7 +16,6 @@ class TestCommand(distutils.core.Command):
 
     def run(self):
         import sys
-        import unittest
 
         sys.path.append(join(dirname(__file__), 'tests'))
         import test_all
@@ -31,6 +27,7 @@ class TestCommand(distutils.core.Command):
     def finalize_options(self):
         pass
 
+
 distutils.core.setup(
     name='distlib',
     version=distlib.__version__,
@@ -40,9 +37,8 @@ distutils.core.setup(
     download_url=('https://bitbucket.org/pypa/distlib/downloads/'
                   'distlib-' + distlib.__version__ + '.zip'),
     description='Distribution utilities',
-    long_description = ('Low-level components of distutils2/packaging, '
-                        'augmented with higher-level APIs for making '
-                        'packaging easier.'),
+    long_description=('Low-level components of distutils2/packaging, '
+                      'augmented with higher-level APIs for making packaging easier.'),
     license='Python license',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

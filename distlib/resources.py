@@ -11,13 +11,12 @@ import io
 import logging
 import os
 import pkgutil
-import shutil
 import sys
 import types
 import zipimport
 
 from . import DistlibException
-from .util import cached_property, get_cache_base, path_to_cache_dir, Cache
+from .util import cached_property, get_cache_base, Cache
 
 logger = logging.getLogger(__name__)
 
@@ -283,6 +282,7 @@ class ZipResourceFinder(ResourceFinder):
             result = False
         return result
 
+
 _finder_registry = {
     type(None): ResourceFinder,
     zipimport.zipimporter: ZipResourceFinder
@@ -303,6 +303,7 @@ except (ImportError, AttributeError):
 
 def register_finder(loader, finder_maker):
     _finder_registry[type(loader)] = finder_maker
+
 
 _finder_cache = {}
 

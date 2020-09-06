@@ -18,8 +18,7 @@ from distlib import __version__
 from distlib.compat import StringIO
 from distlib.metadata import (LegacyMetadata, Metadata, METADATA_FILENAME,
                               LEGACY_METADATA_FILENAME, PKG_INFO_PREFERRED_VERSION,
-                              MetadataConflictError, MetadataMissingError,
-                              MetadataUnrecognizedVersionError,
+                              MetadataMissingError, MetadataUnrecognizedVersionError,
                               MetadataInvalidError, _ATTR2FIELD)
 
 from support import (LoggingCatcher, TempdirManager)

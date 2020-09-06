@@ -19,7 +19,6 @@ except ImportError:
 
 from compat import unittest
 
-from distlib import DistlibException
 from distlib.compat import fsencode, sysconfig
 from distlib.scripts import ScriptMaker, enquote_executable
 from distlib.util import get_executable

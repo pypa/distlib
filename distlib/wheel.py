@@ -998,7 +998,6 @@ def compatible_tags():
             # manylinux
             if abi != 'none' and sys.platform.startswith('linux'):
                 arch = arch.replace('linux_', '')
-                import platform
                 parts = _get_glibc_version()
                 if len(parts) == 2:
                     if parts >= (2, 5):

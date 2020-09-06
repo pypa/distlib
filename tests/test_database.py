@@ -15,20 +15,17 @@ import re
 import shutil
 import sys
 import tempfile
-from textwrap import dedent
 
 from compat import unittest
 
 from distlib import DistlibException
-from distlib.compat import text_type, file_type, StringIO
-import distlib.database
+from distlib.compat import text_type, StringIO
 from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME
 from distlib.database import (InstalledDistribution, EggInfoDistribution,
                               BaseInstalledDistribution, EXPORTS_FILENAME,
                               DistributionPath, make_graph,
                               get_required_dists, get_dependent_dists)
-from distlib.util import (get_resources_dests, ExportEntry, CSVReader,
-                          read_exports, write_exports)
+from distlib.util import get_resources_dests, CSVReader, read_exports
 
 from test_util import GlobTestCaseBase
 from support import LoggingCatcher, requires_zlib

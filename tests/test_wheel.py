@@ -6,8 +6,6 @@
 #
 from __future__ import unicode_literals
 
-import codecs
-import hashlib
 import io
 import os
 import re
@@ -20,7 +18,7 @@ from compat import unittest
 
 from distlib import DistlibException
 from distlib.compat import ZipFile, sysconfig, fsencode
-from distlib.database import DistributionPath, InstalledDistribution
+from distlib.database import DistributionPath
 from distlib.manifest import Manifest
 from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME
 from distlib.scripts import ScriptMaker
