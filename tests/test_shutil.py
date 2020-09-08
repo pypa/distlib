@@ -9,7 +9,6 @@ try:
 except ImportError:
     BZ2_SUPPORTED = False
 
-from distutils.spawn import find_executable, spawn
 from functools import wraps
 import os
 from os.path import splitdrive
@@ -17,7 +16,7 @@ import stat
 import sys
 import tempfile
 
-from compat import unittest
+from compat import unittest, find_executable, spawn
 
 
 from distlib._backport import shutil, tarfile

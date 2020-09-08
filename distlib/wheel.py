@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 import base64
 import codecs
 import datetime
-import distutils.util
 from email import message_from_file
 import hashlib
 import imp
@@ -24,7 +23,7 @@ import tempfile
 import zipfile
 
 from . import __version__, DistlibException
-from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
+from .compat import sysconfig, ZipFile, fsdecode, text_type, filter, get_platform
 from .database import InstalledDistribution
 from .metadata import (Metadata, METADATA_FILENAME, WHEEL_METADATA_FILENAME,
                        LEGACY_METADATA_FILENAME)
@@ -51,7 +50,7 @@ if not VER_SUFFIX:   # pragma: no cover
 PYVER = 'py' + VER_SUFFIX
 IMPVER = IMP_PREFIX + VER_SUFFIX
 
-ARCH = distutils.util.get_platform().replace('-', '_').replace('.', '_')
+ARCH = get_platform().replace('-', '_').replace('.', '_')
 
 ABI = sysconfig.get_config_var('SOABI')
 if ABI and ABI.startswith('cpython-'):

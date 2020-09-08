@@ -1759,3 +1759,27 @@ def normalize_name(name):
     """Normalize a python package name a la PEP 503"""
     # https://www.python.org/dev/peps/pep-0503/#normalized-names
     return re.sub('[-_.]+', '-', name).lower()
+
+
+def _get_pypirc_command():
+    """
+    Get the distutils command for interacting with PyPI configurations.
+    :return: the command.
+    """
+    from distutils.core import Distribution
+    from distutils.config import PyPIRCCommand
+    d = Distribution()
+    return PyPIRCCommand(d)
+
+def _load_pypirc(index):
+    """
+    Read the PyPI access configuration as supported by distutils, getting
+    PyPI to do the actual work.
+    """
+    c = _get_pypirc_command()
+    c.repository = index.url
+    return c._read_pypirc()
+
+def _store_pypirc(index):
+    c = _get_pypirc_command()
+    c._store_pypirc(index.username, index.password)

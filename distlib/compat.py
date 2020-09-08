@@ -1118,3 +1118,10 @@ except ImportError: # pragma: no cover
             if isinstance(value, list):
                 value = tuple(value)
             return value
+
+
+#
+# Move distutils-related items here, to limit future changes
+#
+
+from distutils.util import get_platform
