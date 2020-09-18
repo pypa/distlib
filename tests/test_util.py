@@ -19,8 +19,7 @@ import textwrap
 import time
 
 from compat import unittest
-
-from support import TempdirManager
+from support import TempdirManager, DistlibTestCase
 
 from distlib import DistlibException
 from distlib.compat import cache_from_source
@@ -43,7 +42,7 @@ class TestContainer(object):
         self.kwargs = kwargs
 
 
-class UtilTestCase(unittest.TestCase):
+class UtilTestCase(DistlibTestCase):
     def check_entry(self, entry, name, prefix, suffix, flags):
         self.assertEqual(entry.name, name)
         self.assertEqual(entry.prefix, prefix)
@@ -587,7 +586,7 @@ def _eta_range(min_eta, max_eta, prefix='ETA '):
     msg = prefix + ': 00:00:%02d'
     return tuple([msg % v for v in range(min_eta, max_eta + 1)])
 
-class ProgressTestCase(unittest.TestCase):
+class ProgressTestCase(DistlibTestCase):
     # Of late, the speed tests keep failing on AppVeyor and Windows
     @unittest.skipIf(os.name == 'nt' and os.environ.get('APPVEYOR') == 'True',
                      'Test disabled on AppVeyor and Windows due to AppVeyor performance')
@@ -661,7 +660,7 @@ class ProgressTestCase(unittest.TestCase):
         self.assertEqual(bar.ETA, e)
         self.assertIn(bar.speed, s)
 
-class FileOpsTestCase(unittest.TestCase):
+class FileOpsTestCase(DistlibTestCase):
 
     def setUp(self):
         self.fileop = FileOperator()
@@ -754,7 +753,7 @@ class FileOpsTestCase(unittest.TestCase):
         self.assertFalse(self.fileop.record)
 
 
-class GlobTestCaseBase(TempdirManager, unittest.TestCase):
+class GlobTestCaseBase(TempdirManager, DistlibTestCase):
 
     def build_files_tree(self, files):
         tempdir = self.mkdtemp()

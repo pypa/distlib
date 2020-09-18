@@ -378,13 +378,13 @@ class Locator(object):
                     continue
                 try:
                     if not matcher.match(k):
-                        logger.debug('%s did not match %r', matcher, k)
+                        pass  # logger.debug('%s did not match %r', matcher, k)
                     else:
                         if prereleases or not vcls(k).is_prerelease:
                             slist.append(k)
-                        else:
-                            logger.debug('skipping pre-release '
-                                         'version %s of %s', k, matcher.name)
+                        # else:
+                            # logger.debug('skipping pre-release '
+                                         # 'version %s of %s', k, matcher.name)
                 except Exception:  # pragma: no cover
                     logger.warning('error matching %s with %r', matcher, k)
                     pass # slist.append(k)

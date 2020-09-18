@@ -18,6 +18,7 @@ except ImportError:
     venv = None
 
 from compat import unittest
+from support import DistlibTestCase
 
 from distlib.compat import fsencode, sysconfig
 from distlib.scripts import ScriptMaker, enquote_executable
@@ -32,7 +33,7 @@ COPIED_SCRIPT = '''#!python
 MADE_SCRIPT = 'made = dummy.module:main'
 
 
-class ScriptTestCase(unittest.TestCase):
+class ScriptTestCase(DistlibTestCase):
 
     def setUp(self):
         source_dir = os.path.join(HERE, 'scripts')

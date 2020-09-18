@@ -21,13 +21,13 @@ from distlib.metadata import (LegacyMetadata, Metadata, METADATA_FILENAME,
                               MetadataMissingError, MetadataUnrecognizedVersionError,
                               MetadataInvalidError, _ATTR2FIELD)
 
-from support import (LoggingCatcher, TempdirManager)
+from support import LoggingCatcher, TempdirManager, DistlibTestCase
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
-                             unittest.TestCase):
+                             DistlibTestCase):
 
     maxDiff = None
     restore_environ = ['HOME']
@@ -476,7 +476,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertFalse(md.is_field('Frobozz'))
 
 class MetadataTestCase(LoggingCatcher, TempdirManager,
-                       unittest.TestCase):
+                       DistlibTestCase):
     def test_init(self):
         "Test initialisation"
         md = Metadata()

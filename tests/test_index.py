@@ -24,6 +24,7 @@ except ImportError:
 import time
 
 from compat import unittest, Request
+from support import DistlibTestCase
 if ssl:
     from support import HTTPSServerThread
 
@@ -48,7 +49,7 @@ else:
 
 TEST_SERVER_PORT = os.environ.get('TEST_PYPISERVER_PORT', '8086')
 
-class PackageIndexTestCase(unittest.TestCase):
+class PackageIndexTestCase(DistlibTestCase):
     run_test_server = True
     test_server_url = 'http://localhost:%s/' % TEST_SERVER_PORT
 

@@ -14,6 +14,7 @@ except ImportError:
 import sys
 
 from compat import unittest
+from support import DistlibTestCase
 
 from distlib.compat import url2pathname, urlparse
 from distlib.database import (Distribution, DistributionPath, make_graph,
@@ -30,7 +31,7 @@ PYPI_RPC_HOST = 'http://python.org/pypi'
 
 PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.org/simple/')
 
-class LocatorTestCase(unittest.TestCase):
+class LocatorTestCase(DistlibTestCase):
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
@@ -235,8 +236,7 @@ class LocatorTestCase(unittest.TestCase):
     def test_dependency_finder(self):
         locator = AggregatingLocator(
             JSONLocator(),
-            SimpleScrapingLocator('https://pypi.org/simple/',
-                                  timeout=3.0),
+            SimpleScrapingLocator('https://pypi.org/simple/', timeout=3.0),
             scheme='legacy')
         finder = DependencyFinder(locator)
         dists, problems = finder.find('irc (== 5.0.1)')
@@ -248,27 +248,29 @@ class LocatorTestCase(unittest.TestCase):
                                       meta_extras=[':test:'])
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
-        self.assertEqual(actual, [
-            'atomicwrites',
-            'attrs',
-            'colorama',
-            'hgtools',
-            'importlib-metadata',
-            'irc',
-            'more-itertools',
-            'packaging',
-            'pathlib2',
-            'pluggy',
-            'py',
-            'pyparsing',
-            'pytest',
-            'pytest-runner',
-            'setuptools',
-            'setuptools-scm',
-            'setuptools_scm',
-            'six',
-            'wcwidth'
-        ])
+        # expected = [
+            # 'atomicwrites',
+            # 'attrs',
+            # 'colorama',
+            # 'hgtools',
+            # 'importlib-metadata',
+            # 'irc',
+            # 'more-itertools',
+            # 'packaging',
+            # 'pathlib2',
+            # 'pluggy',
+            # 'py',
+            # 'pyparsing',
+            # 'pytest',
+            # 'pytest-runner',
+            # 'setuptools',
+            # 'setuptools-scm',
+            # 'setuptools_scm',
+            # 'six',
+            # 'wcwidth'
+        # ]
+        expected = ['hgtools', 'irc', 'pytest', 'pytest-runner', 'setuptools_scm']
+        self.assertEqual(actual, expected)
 
         g = make_graph(dists)
         slist, cycle = g.topological_sort()
@@ -330,6 +332,7 @@ class LocatorTestCase(unittest.TestCase):
              'importlib-metadata', 'more-itertools', 'wcwidth', 'pyparsing', 'colorama',
              'setuptools_scm', 'pluggy', 'packaging', 'hgtools', 'py', 'pytest-runner',
              'pathlib2', 'irc', 'pytest'),
+            ('pytest', 'setuptools_scm', 'hgtools', 'pytest-runner', 'irc'),
         ])
         self.assertIn(tuple(names), expected)
 
@@ -430,7 +433,7 @@ class LocatorTestCase(unittest.TestCase):
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
-    def test_all(self):
+    def test_all_versions(self):
         d = default_locator.get_project('setuptools')
         self.assertTrue('urls' in d)
         d = d['urls']
@@ -587,6 +590,6 @@ class LocatorTestCase(unittest.TestCase):
 
 if __name__ == '__main__':  # pragma: no cover
     import logging
-    logging.basicConfig(level=logging.DEBUG, filename='test_locators.log',
+    logging.basicConfig(level=logging.DEBUG, filename='run/test_locators.log',
                         filemode='w', format='%(message)s')
     unittest.main()

@@ -17,7 +17,7 @@ import sys
 import tempfile
 
 from compat import unittest, find_executable, spawn
-
+from support import DistlibTestCase
 
 from distlib._backport import shutil, tarfile
 from distlib._backport.shutil import (
@@ -62,7 +62,7 @@ def mock_rename(func):
             os.rename = builtin_rename
     return wrap
 
-class TestShutil(unittest.TestCase):
+class TestShutil(DistlibTestCase):
 
     def setUp(self):
         super(TestShutil, self).setUp()
@@ -761,7 +761,7 @@ class TestShutil(unittest.TestCase):
         self.assertEqual(get_unpack_formats(), formats)
 
 
-class TestMove(unittest.TestCase):
+class TestMove(DistlibTestCase):
 
     def setUp(self):
         filename = "foo"
@@ -894,7 +894,7 @@ class TestMove(unittest.TestCase):
             shutil.rmtree(TESTFN, ignore_errors=True)
 
 
-class TestCopyFile(unittest.TestCase):
+class TestCopyFile(DistlibTestCase):
 
     _delete = False
 

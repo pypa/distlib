@@ -9,12 +9,13 @@ import sys
 import platform
 
 from compat import unittest
+from support import DistlibTestCase
 
 from distlib.compat import python_implementation
 from distlib.markers import interpret
 from distlib.util import in_venv
 
-class MarkersTestCase(unittest.TestCase):
+class MarkersTestCase(DistlibTestCase):
 
     def test_interpret(self):
         sys_platform = sys.platform

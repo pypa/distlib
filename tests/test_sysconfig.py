@@ -24,7 +24,7 @@ from distlib.compat import StringIO
 import support
 
 
-class TestSysConfig(unittest.TestCase):
+class TestSysConfig(support.DistlibTestCase):
 
     def setUp(self):
         super(TestSysConfig, self).setUp()
@@ -362,7 +362,7 @@ class TestSysConfig(unittest.TestCase):
             self.assertEqual(my_platform, test_platform)
 
 
-class MakefileTests(unittest.TestCase):
+class MakefileTests(support.DistlibTestCase):
 
     def setUp(self):
         fd, self.TESTFN = tempfile.mkstemp()

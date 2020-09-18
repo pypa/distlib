@@ -15,6 +15,7 @@ import sys
 import tempfile
 
 from compat import unittest
+from support import DistlibTestCase
 
 from distlib import DistlibException
 from distlib.compat import ZipFile, sysconfig, fsencode
@@ -117,7 +118,7 @@ def install_dist(distname, workdir):
     return result
 
 
-class WheelTestCase(unittest.TestCase):
+class WheelTestCase(DistlibTestCase):
 
     def test_valid_filename(self):
         attrs = ('name', 'version', 'buildver', 'pyver', 'abi', 'arch')

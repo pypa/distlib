@@ -296,3 +296,11 @@ def fake_dec(*args, **kw):
             return func(*args, **kw)
         return __wrap
     return _wrap
+
+SEP = '-' * 80
+
+class DistlibTestCase(unittest.TestCase):
+    def setUp(self):
+        logger.debug(SEP)
+        logger.debug(self.id().rsplit('.', 1)[-1])
+        logger.debug(SEP)

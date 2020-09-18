@@ -28,7 +28,7 @@ from distlib.database import (InstalledDistribution, EggInfoDistribution,
 from distlib.util import get_resources_dests, CSVReader, read_exports
 
 from test_util import GlobTestCaseBase
-from support import LoggingCatcher, requires_zlib
+from support import LoggingCatcher, requires_zlib, DistlibTestCase
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class CommonDistributionTests(FakeDistsMixin):
                     expected = '%s=%s' % (hasher, digest)
                 self.assertEqual(actual, expected)
 
-class TestDistribution(CommonDistributionTests, unittest.TestCase):
+class TestDistribution(CommonDistributionTests, DistlibTestCase):
 
     cls = InstalledDistribution
     sample_dist = 'choxie', '2.0.0.9', 'choxie-2.0.0.9.dist-info'
@@ -305,7 +305,7 @@ class TestDistribution(CommonDistributionTests, unittest.TestCase):
 
 class TestEggInfoDistribution(CommonDistributionTests,
                               LoggingCatcher,
-                              unittest.TestCase):
+                              DistlibTestCase):
 
     cls = EggInfoDistribution
     sample_dist = 'bacon', '0.1', 'bacon-0.1.egg-info'
@@ -348,7 +348,7 @@ class TestEggInfoDistribution(CommonDistributionTests,
 
 class TestDatabase(LoggingCatcher,
                    FakeDistsMixin,
-                   unittest.TestCase):
+                   DistlibTestCase):
 
     def setUp(self):
         super(TestDatabase, self).setUp()
@@ -784,7 +784,7 @@ class DataFilesTestCase(GlobTestCaseBase):
 
 
 class DepGraphTestCase(LoggingCatcher,
-                       unittest.TestCase):
+                       DistlibTestCase):
 
     DISTROS_DIST = ('choxie', 'grammar', 'towel-stuff')
     DISTROS_EGG = ('bacon', 'banana', 'strawberry', 'cheese')

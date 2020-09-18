@@ -1570,7 +1570,8 @@ class ServerProxy(xmlrpclib.ServerProxy):
         # The above classes only come into play if a timeout
         # is specified
         if timeout is not None:
-            scheme, _ = splittype(uri)
+            # scheme = splittype(uri)  # deprecated as of Python 3.8
+            scheme = urlparse(uri)[0]
             use_datetime = kwargs.get('use_datetime', 0)
             if scheme == 'https':
                 tcls = SafeTransport

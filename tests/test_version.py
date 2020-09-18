@@ -6,6 +6,7 @@
 import doctest
 
 from compat import unittest
+from support import DistlibTestCase
 
 from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
                              UnsupportedVersionError,
@@ -17,7 +18,7 @@ from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
                              _normalized_key, _legacy_key, _semantic_key)
 
 
-class VersionTestCase(unittest.TestCase):
+class VersionTestCase(DistlibTestCase):
 
     versions = ((NV('1.0'), '1.0'),
                 (NV('1.1'), '1.1'),
@@ -445,7 +446,7 @@ class VersionTestCase(unittest.TestCase):
             self.assertRaises((SyntaxError, ValueError), NM, s)
 
 
-class LegacyVersionTestCase(unittest.TestCase):
+class LegacyVersionTestCase(DistlibTestCase):
     # These tests are the same as distribute's
     def test_equality(self):
         def compare(a, b):
@@ -540,7 +541,7 @@ class LegacyVersionTestCase(unittest.TestCase):
             self.assertFalse(LV(s).is_prerelease, s)
 
 
-class SemanticVersionTestCase(unittest.TestCase):
+class SemanticVersionTestCase(DistlibTestCase):
     def test_basic(self):
         bad = [
             'a', '1', '1.', '1.2' , '1.2.',
@@ -604,7 +605,7 @@ class SemanticVersionTestCase(unittest.TestCase):
             self.assertFalse(SV(s).is_prerelease)
 
 
-class CompatibilityTestCase(unittest.TestCase):
+class CompatibilityTestCase(DistlibTestCase):
     def test_basic(self):
         def are_equal(v1, v2):
             return v1 == v2

@@ -11,6 +11,7 @@ import os
 import sys
 
 from compat import unittest
+from support import DistlibTestCase
 
 from distlib import DistlibException
 from distlib.resources import finder, finder_for_path, ResourceCache
@@ -18,7 +19,7 @@ from distlib.util import get_cache_base
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-class ZipResourceTestCase(unittest.TestCase):
+class ZipResourceTestCase(DistlibTestCase):
     def setUp(self):
         sys.path.insert(0, os.path.join(HERE, 'foo.zip'))
 
@@ -136,7 +137,7 @@ class ZipResourceTestCase(unittest.TestCase):
         self.assertEqual(actual, set([('bar/bar_resource.bin', False)]))
 
 
-class FileResourceTestCase(unittest.TestCase):
+class FileResourceTestCase(DistlibTestCase):
     def setUp(self):
         sys.path.insert(0, HERE)
 
@@ -241,7 +242,7 @@ class FileResourceTestCase(unittest.TestCase):
         self.assertEqual(actual, set([('bar/bar_resource.bin', False)]))
 
 
-class CacheTestCase(unittest.TestCase):
+class CacheTestCase(DistlibTestCase):
     def test_base(self):
         cache = ResourceCache()
         expected = os.path.join(get_cache_base(), str('resource-cache'))

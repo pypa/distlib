@@ -10,6 +10,7 @@ import os
 import re
 
 from compat import unittest
+from support import DistlibTestCase
 
 from distlib import DistlibException
 from distlib.manifest import Manifest
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class ManifestTestCase(unittest.TestCase):
+class ManifestTestCase(DistlibTestCase):
     def setUp(self):
         self.base = os.path.join(HERE, 'testsrc')
         self.manifest = Manifest(self.base)
