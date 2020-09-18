@@ -33,6 +33,8 @@ Released: Not yet.
     - Fixed #140: allowed a trailing comma in constraints, to better handle faulty
       metadata already on PyPI.
 
+    - Moved get_platform() logic from distutils to here.
+
 - wheel
 
     - Dropped any trailing data when computing the Python tag.

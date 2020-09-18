@@ -23,12 +23,13 @@ import tempfile
 import zipfile
 
 from . import __version__, DistlibException
-from .compat import sysconfig, ZipFile, fsdecode, text_type, filter, get_platform
+from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import InstalledDistribution
 from .metadata import (Metadata, METADATA_FILENAME, WHEEL_METADATA_FILENAME,
                        LEGACY_METADATA_FILENAME)
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter, Cache,
-                   cached_property, get_cache_base, read_exports, tempdir)
+                   cached_property, get_cache_base, read_exports, tempdir,
+                   get_platform)
 from .version import NormalizedVersion, UnsupportedVersionError
 
 logger = logging.getLogger(__name__)
