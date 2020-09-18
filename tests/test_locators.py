@@ -334,6 +334,7 @@ class LocatorTestCase(DistlibTestCase):
              'pathlib2', 'irc', 'pytest'),
             ('pytest', 'setuptools_scm', 'hgtools', 'pytest-runner', 'irc'),
             ('pytest', 'setuptools_scm', 'pytest-runner', 'hgtools', 'irc'),
+            ('setuptools_scm', 'pytest', 'hgtools', 'pytest-runner', 'irc'),
         ])
         self.assertIn(tuple(names), expected)
 
