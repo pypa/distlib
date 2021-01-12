@@ -41,6 +41,8 @@ Released: Not yet.
 
     - Added support for manylinux tags.
 
+    - Changed handling of tags for Python >= 3.10 (use 3_10 rather than 310).
+
 - tests
 
    - Fixed #139: Improved handling of errors related to the test PyPI server.
