@@ -338,6 +338,7 @@ class PackageIndexTestCase(DistlibTestCase):
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
+    @unittest.skipIf(True, 'skipping due to temporary changes in PyPI')
     def test_search(self):
         self.index = PackageIndex()
         result = self.index.search({'name': 'tatterdemalion'})
