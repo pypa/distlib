@@ -12,6 +12,7 @@ environment:
   - TOXENV: py36
   - TOXENV: py37
   - TOXENV: py38
+  - TOXENV: py39
 install:
 - cmd: pip install tox
 build: off
