@@ -271,7 +271,6 @@ class LocatorTestCase(DistlibTestCase):
         # ]
         expected = ['hgtools', 'irc', 'pytest', 'pytest-runner', 'setuptools_scm']
         self.assertEqual(actual, expected)
-
         g = make_graph(dists)
         slist, cycle = g.topological_sort()
         self.assertFalse(cycle)

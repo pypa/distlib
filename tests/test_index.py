@@ -114,7 +114,11 @@ class PackageIndexTestCase(DistlibTestCase):
                 cls.server.kill()
                 cls.server.wait()
                 cls.sink.close()
-                os.remove(cls.sinkfile)
+                try:
+                    os.remove(cls.sinkfile)
+                except:
+                    logger.warning('Unable to remove test file %s',
+                                   cls.sinkfile)
 
     def setUp(self):
         if not self.run_test_server:
