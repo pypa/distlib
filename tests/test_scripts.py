@@ -256,11 +256,12 @@ class ScriptTestCase(DistlibTestCase):
         wlauncher = self.maker._get_launcher('w')
         tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
-        executable = os.path.normcase(sys.executable).encode('utf-8')
-        if b'python3.exe' in executable:
-            wexecutable = executable.replace(b'python3.exe', b'pythonw3.exe')
+        # executable = os.path.normcase(sys.executable).encode('utf-8')
+        executable = sys.executable.encode('utf-8')
+        if b'python3.' in executable:
+            wexecutable = executable.replace(b'python3.', b'pythonw3.')
         else:
-            wexecutable = executable.replace(b'python.exe', b'pythonw.exe')
+            wexecutable = executable.replace(b'python.', b'pythonw.')
         files = self.maker.make('script4.py')
         self.assertEqual(len(files), 1)
         filenames = set([os.path.basename(f) for f in files])
