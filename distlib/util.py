@@ -309,7 +309,9 @@ def get_executable():
 #    else:
 #        result = sys.executable
 #    return result
-    result = os.path.normcase(sys.executable)
+    # Avoid normcasing: see issue #143
+    # result = os.path.normcase(sys.executable)
+    result = sys.executable
     if not isinstance(result, text_type):
         result = fsdecode(result)
     return result
