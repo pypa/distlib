@@ -35,6 +35,8 @@ Released: Not yet.
 
     - Moved get_platform() logic from distutils to here.
 
+    - Fixed #143: Removed normcase() to avoid some problems on Windows.
+
 - wheel
 
     - Dropped any trailing data when computing the Python tag.
