@@ -118,7 +118,8 @@ def _version2fieldlist(version):
     elif version == '1.2':
         return _345_FIELDS
     elif version in ('1.3', '2.1'):
-        return _345_FIELDS + _566_FIELDS
+        # avoid adding field names if already there
+        return _345_FIELDS + tuple(f for f in _566_FIELDS if f not in _345_FIELDS)
     elif version == '2.0':
         return _426_FIELDS
     raise MetadataUnrecognizedVersionError(version)
