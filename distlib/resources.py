@@ -296,6 +296,8 @@ try:
         import _frozen_importlib as _fi
     _finder_registry[_fi.SourceFileLoader] = ResourceFinder
     _finder_registry[_fi.FileFinder] = ResourceFinder
+    # See issue #146
+    _finder_registry[_fi.SourcelessFileLoader] = ResourceFinder
     del _fi
 except (ImportError, AttributeError):
     pass
