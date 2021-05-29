@@ -579,6 +579,13 @@ class Wheel(object):
                     if not is_script:
                         with zf.open(arcname) as bf:
                             fileop.copy_stream(bf, outfile)
+                        # Issue #147: permission bits aren't preserved. Using
+                        # zf.extract(zinfo, libdir) should have worked, but didn't,
+                        # see https://www.thetopsites.net/article/53834422.shtml
+                        # So ... manually preserve permission bits as given in zinfo
+                        if os.name == 'posix':
+                            # just set the normal permission bits
+                            os.chmod(outfile, (zinfo.external_attr >> 16) & 0x1FF)
                         outfiles.append(outfile)
                         # Double check the digest of the written file
                         if not dry_run and row[1]:
