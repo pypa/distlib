@@ -1,9 +1,8 @@
 .. image:: https://img.shields.io/appveyor/build/vsajip/distlib
    :alt: AppVeyor
 
-.. image:: https://coveralls.io/repos/vsajip/distlib/badge.svg
-   :target: https://coveralls.io/github/vsajip/distlib
-
+.. image:: https://coveralls.io/repos/github/vsajip/distlib/badge.svg?branch=master
+   :target: https://coveralls.io/github/vsajip/distlib?branch=master
 
 What is it?
 -----------
