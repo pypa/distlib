@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.org/vsajip/distlib.svg
-   :target: https://travis-ci.org/vsajip/distlib
+.. image:: https://img.shields.io/appveyor/build/vsajip/distlib
+   :alt: AppVeyor
 
 .. image:: https://coveralls.io/repos/vsajip/distlib/badge.svg
    :target: https://coveralls.io/github/vsajip/distlib
