@@ -1,14 +1,19 @@
 Change log for ``distlib``
 --------------------------
 
-0.3.2 (future)
+0.3.3 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
 
+0.3.2
+~~~~~
+
+Released: 2021-05-29
+
 - locators
 
-    - Fixed #141: Removed unused regular expression.
+    - Fixed #141: removed unused regular expression.
 
 - metadata
 
@@ -17,7 +22,7 @@ Released: Not yet.
 
 - resources
 
-    - Fixed #146: Added entry for SourcelessFileLoader to the finder registry.
+    - Fixed #146: added entry for SourcelessFileLoader to the finder registry.
 
 - scripts
 
@@ -39,7 +44,7 @@ Released: Not yet.
 
     - Moved get_platform() logic from distutils to here.
 
-    - Fixed #143: Removed normcase() to avoid some problems on Windows.
+    - Fixed #143: removed normcase() to avoid some problems on Windows.
 
 - wheel
 
@@ -54,7 +59,7 @@ Released: Not yet.
 
 - tests
 
-   - Fixed #139: Improved handling of errors related to the test PyPI server.
+   - Fixed #139: improved handling of errors related to the test PyPI server.
 
 0.3.1
 ~~~~~
