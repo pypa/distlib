@@ -15,6 +15,10 @@ Released: Not yet.
     - Fixed #140: allowed "Obsoletes" in more scenarios, to better handle faulty
       metadata already on PyPI.
 
+- resources
+
+    - Fixed #146: Added entry for SourcelessFileLoader to the finder registry.
+
 - scripts
 
     - Made the generation of scripts more configurable:
@@ -44,6 +48,9 @@ Released: Not yet.
     - Added support for manylinux tags.
 
     - Changed handling of tags for Python >= 3.10 (use 3_10 rather than 310).
+
+    - Fixed #147: permission bits are now preserved on POSIX when installing from a
+      wheel.
 
 - tests
 
