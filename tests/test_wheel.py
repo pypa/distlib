@@ -206,7 +206,7 @@ class WheelTestCase(DistlibTestCase):
 
     def test_is_compatible(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
-        if 'py27' <= PYVER < 'py32':
+        if PYVER in ('py27', 'py30', 'py31'):
             self.assertTrue(is_compatible(fn))
             self.assertTrue(Wheel(fn).is_compatible())
         # use actual wheel names from PyPI.
