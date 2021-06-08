@@ -6,6 +6,11 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- wheel
+
+    - Reverted handling of tags for Python >= 3.10 (use 310 rather than 3_10). This is
+      because PEP 641 was rejected.
+
 0.3.2
 ~~~~~
 
