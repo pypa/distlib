@@ -261,6 +261,7 @@ class PackageIndexTestCase(DistlibTestCase):
             expected = b'This is dummy documentation'
             self.assertIn(expected, data)
 
+    @unittest.skipUnless(os.name == 'posix', 'This test is end-of-line dependent')
     def test_verify_signature(self):
         if not self.index.gpg:      # pragma: no cover
             raise unittest.SkipTest('gpg not available')
@@ -315,6 +316,7 @@ class PackageIndexTestCase(DistlibTestCase):
             response = self.index.send_request(req)
             self.assertEqual(response.code, 200)
 
+        @unittest.skipUnless(os.name == 'posix', 'This test is end-of-line dependent')
         def test_download(self):
             digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt
             certfile = os.path.join(HERE, 'keycert.pem')

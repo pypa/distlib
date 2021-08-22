@@ -144,6 +144,7 @@ class FileResourceTestCase(DistlibTestCase):
     def tearDown(self):
         sys.path.pop(0)
 
+    @unittest.skipUnless(os.name == 'posix', 'This test is end-of-line dependent')
     def test_existing_resource(self):
         f = finder('foofoo')
         r = f.find('foo_resource.bin')

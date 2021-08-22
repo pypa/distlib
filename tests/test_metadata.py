@@ -337,6 +337,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(1, len(logs))
         self.assertIn('not a valid version', logs[0])
 
+    @unittest.skipUnless(os.name == 'posix', 'This test is end-of-line dependent')
     def test_description(self):
         content = self.get_file_contents('PKG-INFO')
         metadata = LegacyMetadata()
