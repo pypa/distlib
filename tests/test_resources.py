@@ -194,6 +194,7 @@ class FileResourceTestCase(DistlibTestCase):
         expected = set(('foo_resource.bin', 'bar', '__init__.py', 'nested'))
         self.assertEqual(r.resources, expected)
 
+    @unittest.skipIf(IN_GITHUB_WORKFLOW, 'This test is end-of-line dependent')
     def test_nested(self):
         f = finder('foofoo')
         r = f.find('nested/nested_resource.bin')

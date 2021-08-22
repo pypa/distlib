@@ -628,8 +628,9 @@ class ProgressTestCase(DistlibTestCase):
         self.assertIn(bar.speed, s)
 
     # Of late, the speed tests keep failing on AppVeyor and Windows
-    @unittest.skipIf(os.name == 'nt' and os.environ.get('APPVEYOR') == 'True',
-                     'Test disabled on AppVeyor and Windows due to AppVeyor performance')
+    @unittest.skipIf(IN_GITHUB_WORKFLOW or (os.name == 'nt' and
+                                            os.environ.get('APPVEYOR') == 'True'),
+                     'Test disabled on some environments due to performance')
     def test_unknown(self):
         if os.name == 'nt':
             speed = _speed_range(17, 20)
