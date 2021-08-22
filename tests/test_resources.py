@@ -11,13 +11,14 @@ import os
 import sys
 
 from compat import unittest
-from support import DistlibTestCase
+from support import DistlibTestCase, in_github_workflow
 
 from distlib import DistlibException
 from distlib.resources import finder, finder_for_path, ResourceCache
 from distlib.util import get_cache_base
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+IN_GITHUB_WORKFLOW = in_github_workflow()
 
 class ZipResourceTestCase(DistlibTestCase):
     def setUp(self):
@@ -144,7 +145,7 @@ class FileResourceTestCase(DistlibTestCase):
     def tearDown(self):
         sys.path.pop(0)
 
-    @unittest.skipUnless(os.name == 'posix', 'This test is end-of-line dependent')
+    @unittest.skipIf(IN_GITHUB_WORKFLOW, 'This test is end-of-line dependent')
     def test_existing_resource(self):
         f = finder('foofoo')
         r = f.find('foo_resource.bin')

@@ -297,6 +297,9 @@ def fake_dec(*args, **kw):
         return __wrap
     return _wrap
 
+def in_github_workflow():
+    return 'GITHUB_WORKFLOW' in os.environ
+
 SEP = '-' * 80
 
 class DistlibTestCase(unittest.TestCase):

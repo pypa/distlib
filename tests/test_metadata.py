@@ -21,10 +21,11 @@ from distlib.metadata import (LegacyMetadata, Metadata, METADATA_FILENAME,
                               MetadataMissingError, MetadataUnrecognizedVersionError,
                               MetadataInvalidError, _ATTR2FIELD)
 
-from support import LoggingCatcher, TempdirManager, DistlibTestCase
+from support import LoggingCatcher, TempdirManager, DistlibTestCase, in_github_workflow
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+IN_GITHUB_WORKFLOW = in_github_workflow()
 
 class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
                              DistlibTestCase):
@@ -337,7 +338,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(1, len(logs))
         self.assertIn('not a valid version', logs[0])
 
-    @unittest.skipUnless(os.name == 'posix', 'This test is end-of-line dependent')
+    @unittest.skipIf(IN_GITHUB_WORKFLOW, 'This test is end-of-line dependent')
     def test_description(self):
         content = self.get_file_contents('PKG-INFO')
         metadata = LegacyMetadata()

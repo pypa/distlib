@@ -19,7 +19,7 @@ import textwrap
 import time
 
 from compat import unittest
-from support import TempdirManager, DistlibTestCase
+from support import TempdirManager, DistlibTestCase, in_github_workflow
 
 from distlib import DistlibException
 from distlib.compat import cache_from_source
@@ -34,7 +34,7 @@ from distlib.util import (get_export_entry, ExportEntry, resolve,
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-
+IN_GITHUB_WORKFLOW = in_github_workflow()
 
 class TestContainer(object):
     def __init__(self, *args, **kwargs):
@@ -588,8 +588,9 @@ def _eta_range(min_eta, max_eta, prefix='ETA '):
 
 class ProgressTestCase(DistlibTestCase):
     # Of late, the speed tests keep failing on AppVeyor and Windows
-    @unittest.skipIf(os.name == 'nt' and os.environ.get('APPVEYOR') == 'True',
-                     'Test disabled on AppVeyor and Windows due to AppVeyor performance')
+    @unittest.skipIf(IN_GITHUB_WORKFLOW or (os.name == 'nt' and
+                                            os.environ.get('APPVEYOR') == 'True'),
+                     'Test disabled on some environments due to performance')
     def test_basic(self):
 
         # These ranges may need tweaking to cater for especially slow
