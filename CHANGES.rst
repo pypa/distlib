@@ -6,6 +6,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- compat
+
+    - Fixed #152: Removed splituser() function which wasn't used and is deprecated.
+
 - wheel
 
     - Reverted handling of tags for Python >= 3.10 (use 310 rather than 3_10). This is
