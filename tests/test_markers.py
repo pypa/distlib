@@ -66,6 +66,12 @@ class MarkersTestCase(DistlibTestCase):
         self.assertTrue(interpret("python_version < '5.0'"))
         self.assertTrue(interpret("python_version <= '5.0'"))
         self.assertTrue(interpret("python_version >= '1.0'"))
+        if sys.version_info < (3, 10):
+            self.assertTrue(interpret('python_version < "3.10"'))
+            self.assertFalse(interpret('python_version >= "3.10"'))
+        if sys.version_info >= (3, 10):
+            self.assertFalse(interpret('python_version < "3.10"'))
+            self.assertTrue(interpret('python_version >= "3.10"'))
         self.assertTrue(interpret("'%s' in os_name" % os_name))
         self.assertTrue(interpret("'buuuu' not in os_name"))
         self.assertTrue(interpret("'buu' in os_name", {'os_name': 'buuu'}))

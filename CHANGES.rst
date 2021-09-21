@@ -10,6 +10,10 @@ Released: Not yet.
 
     - Fixed #152: Removed splituser() function which wasn't used and is deprecated.
 
+- markers
+
+    - Fixed #149: Handle version comparisons correctly in environment markers.
+
 - scripts
 
     - Add ARM-64 launchers and support code to use them. Thanks to Niyas Sait and
