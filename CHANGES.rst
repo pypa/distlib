@@ -15,6 +15,10 @@ Released: Not yet.
     - Add ARM-64 launchers and support code to use them. Thanks to Niyas Sait and
       Adrian Vladu for their contributions.
 
+- version
+
+    - Fixed #150: Fix incorrect handling of epochs.
+
 - wheel
 
     - Reverted handling of tags for Python >= 3.10 (use 310 rather than 3_10). This is

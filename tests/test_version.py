@@ -162,6 +162,9 @@ class VersionTestCase(DistlibTestCase):
         self.assertGreater(NV('1.0'), NV('1.0rc2'))
         self.assertGreater(NV('1.0rc2'), NV('1.0rc1'))
         self.assertGreater(NV('1.0c4'), NV('1.0c1'))
+        self.assertGreater(NV('2014.04'), NV('2013.10'))
+        self.assertGreater(NV('1!1.1'), NV('2014.04'))
+        self.assertGreater(NV('1!2.0'), NV('1!1.1'))
 
     def test_suggest_normalized_version(self):
         suggest = _suggest_normalized_version
