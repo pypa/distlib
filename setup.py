@@ -63,7 +63,8 @@ distutils.core.setup(
     ],
     package_data={
         'distlib._backport': ['sysconfig.cfg'],
-        'distlib': ['t32.exe', 't64.exe', 'w32.exe', 'w64.exe'],
+        'distlib': ['t32.exe', 't64.exe', 'w32.exe', 'w64.exe',
+                    't64-arm.exe', 'w64-arm.exe'],
     },
     cmdclass={
         'test': TestCommand,

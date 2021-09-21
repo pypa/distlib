@@ -10,10 +10,19 @@ Released: Not yet.
 
     - Fixed #152: Removed splituser() function which wasn't used and is deprecated.
 
+- scripts
+
+    - Add ARM-64 launchers and support code to use them. Thanks to Niyas Sait and
+      Adrian Vladu for their contributions.
+
 - wheel
 
     - Reverted handling of tags for Python >= 3.10 (use 310 rather than 3_10). This is
       because PEP 641 was rejected.
+
+- tests
+
+    - Made changes relating to implementing CI using GitHub Actions.
 
 0.3.2
 ~~~~~
