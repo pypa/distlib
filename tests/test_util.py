@@ -953,6 +953,12 @@ class GlobTestCase(GlobTestCaseBase):
                  'a == 1.2.*, != 1.2.1.*', None))
         r = parse_requirement('a @ http://domain.com/path#abc=def')
         validate(r, ('a', None, None, 'a', 'http://domain.com/path#abc=def'))
+        # See issue #148
+        r = parse_requirement('a >=3.6')
+        validate(r, ('a', [('>=', '3.6')], None, 'a >= 3.6', None))
+        r = parse_requirement('a >=3.6,')
+        validate(r, ('a', [('>=', '3.6')], None, 'a >= 3.6', None))
+
         if False: # TODO re-enable
             for e in ('*', ':*:', ':meta:', '-', '-abc'):
                 r = parse_requirement('a [%s]' % e)

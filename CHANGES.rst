@@ -19,6 +19,11 @@ Released: Not yet.
     - Add ARM-64 launchers and support code to use them. Thanks to Niyas Sait and
       Adrian Vladu for their contributions.
 
+- util
+
+    - Fixed #148: Handle a single trailing comma following a version. Thanks to Blazej
+      Floch for the report and suggested fix.
+
 - version
 
     - Fixed #150: Fix incorrect handling of epochs.
