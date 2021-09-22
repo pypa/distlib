@@ -8,6 +8,15 @@
 Welcome to distlib's documentation!
 ===================================
 
+.. rst-class:: release-info
+
+   .. list-table::
+      :widths: auto
+      :stub-columns: 1
+
+      * - Release:
+        - |release|
+
 Welcome to the documentation for ``distlib``, **a library of packaging
 functionality which is intended to be used as the basis for third-party
 packaging tools**. Using a common layer will improve interoperability and
