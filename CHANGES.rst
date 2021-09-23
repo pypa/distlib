@@ -6,17 +6,17 @@ Change log for ``distlib``
 
 Released: Not yet.
 
-0.3.3
-~~~~~
-
 - database
 
     - Fixed #153: Raise warnings in get_distributions() if bad metadata seen, but keep
       going.
 
-- tests
+- markers
 
     - Fixed #154: Determine Python versions correctly for Python >= 3.10.
+
+0.3.3
+~~~~~
 
 Released: 2021-09-22
 
