@@ -69,7 +69,7 @@ class MarkersTestCase(DistlibTestCase):
         if sys.version_info < (3, 10):
             self.assertTrue(interpret('python_version < "3.10"'))
             self.assertFalse(interpret('python_version >= "3.10"'))
-        if sys.version_info >= (3, 10) and sys.version_info.releaselevel == 'final':
+        if sys.version_info >= (3, 10):
             self.assertFalse(interpret('python_version < "3.10"'))
             self.assertTrue(interpret('python_version >= "3.10"'))
         self.assertTrue(interpret("'%s' in os_name" % os_name))

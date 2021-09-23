@@ -16,8 +16,7 @@ Released: Not yet.
 
 - tests
 
-    - Fixed #154: In Python version tests, check the release level of the running
-      Python interpreter.
+    - Fixed #154: Determine Python versions correctly for Python >= 3.10.
 
 Released: 2021-09-22
 
