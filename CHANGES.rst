@@ -9,6 +9,16 @@ Released: Not yet.
 0.3.3
 ~~~~~
 
+- database
+
+    - Fixed #153: Raise warnings in get_distributions() if bad metadata seen, but keep
+      going.
+
+- tests
+
+    - Fixed #154: In Python version tests, check the release level of the running
+      Python interpreter.
+
 Released: 2021-09-22
 
 - compat
