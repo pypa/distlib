@@ -1,9 +1,9 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CLISimpleLauncher", "CLISimpleLauncher.vcproj", "{A0AB4387-243A-48F7-881D-DE138DDE68BA}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CLISimpleLauncher", "CLISimpleLauncher.vcxproj", "{A0AB4387-243A-48F7-881D-DE138DDE68BA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GUISimpleLauncher", "GUISimpleLauncher.vcproj", "{6295B87B-6312-4D7D-BCE9-A3626FD25417}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GUISimpleLauncher", "GUISimpleLauncher.vcxproj", "{6295B87B-6312-4D7D-BCE9-A3626FD25417}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

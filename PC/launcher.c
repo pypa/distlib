@@ -410,17 +410,29 @@ safe_duplicate_handle(HANDLE in, HANDLE * pout)
 {
     BOOL ok;
     HANDLE process = GetCurrentProcess();
+#if defined(_CONSOLE)
     DWORD rc;
+#endif
 
     *pout = NULL;
+    /*
+     * See https://github.com/pypa/pip/issues/10444 - for the GUI launcher,
+     * errors are returned by DuplicateHandle. There may be no good reason
+     * why a GUI process would want to use these handles, but for now we
+     * attempt duplication but ignore errors in the GUI case.
+     */
     ok = DuplicateHandle(process, in, process, pout, 0, TRUE,
                          DUPLICATE_SAME_ACCESS);
+#if defined(_CONSOLE)
     if (!ok) {
         rc = GetLastError();
         if (rc == ERROR_INVALID_HANDLE)
             ok = TRUE;
     }
     return ok;
+#else
+    return TRUE;
+#endif
 }
 
 static BOOL
