@@ -3,8 +3,23 @@ name: Package tests
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+      - 'LICENSE.*'
+      - 'README.*'
+      - '.github/ISSUE-TEMPLATE/**'
+      - 'docs/**'
+      - '.hgignore'
+      - '.gitignore'
+
   pull_request:
     branches: [ master ]
+    paths-ignore:
+      - 'LICENSE.*'
+      - 'README.*'
+      - '.github/ISSUE-TEMPLATE/**'
+      - 'docs/**'
+      - '.hgignore'
+      - '.gitignore'
 
 jobs:
   build:
@@ -23,6 +38,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Test with unittest
       run: |
-        python setup.py test
+        python setup.py test -v
       env:
         PYTHONHASHSEED: 0
