@@ -22,7 +22,6 @@ if sys.version_info[0] < 3:  # pragma: no cover
     from types import FileType as file_type
     import __builtin__ as builtins
     import ConfigParser as configparser
-    from ._backport import shutil
     from urlparse import urlparse, urlunparse, urljoin, urlsplit, urlunsplit
     from urllib import (urlretrieve, quote as _quote, unquote, url2pathname,
                         pathname2url, ContentTooShortError, splittype)
@@ -313,10 +312,8 @@ except ImportError: # pragma: no cover
             return 'IronPython'
         return 'CPython'
 
-try:
-    import sysconfig
-except ImportError: # pragma: no cover
-    from ._backport import sysconfig
+import shutil
+import sysconfig
 
 try:
     callable = callable

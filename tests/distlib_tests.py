@@ -21,8 +21,5 @@ from test_version import (VersionTestCase, CompatibilityTestCase,
                           LegacyVersionTestCase, SemanticVersionTestCase)
 from test_wheel import WheelTestCase
 
-if _ver == (2, 6):
-    from test_shutil import TestCopyFile, TestMove, TestShutil
-    from test_sysconfig import TestSysConfig, MakefileTests
 from test_util import (UtilTestCase, ProgressTestCase, FileOpsTestCase,
                        GlobTestCase)

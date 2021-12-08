@@ -1,5 +1,5 @@
 include README.rst CHANGES.rst LICENSE.txt CONTRIBUTORS.txt
-include distlib/_backport/sysconfig.cfg distlib/*.exe
+include distlib/*.exe
 recursive-include tests *
 recursive-include PC *
 global-exclude *.log __pycache__ *.pyc *.pyo

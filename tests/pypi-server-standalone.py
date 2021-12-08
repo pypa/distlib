@@ -9834,8 +9834,5 @@ sys.meta_path.append(importer)
 
 if __name__ == "__main__":
     from pypiserver import core
-    if sys.version_info >= (2, 6):
-        core.DEFAULT_SERVER = "waitress"
-    else:
-        core.bottle.AutoServer.adapters.remove(core.bottle.WaitressServer)
+    core.DEFAULT_SERVER = "waitress"
     core.main()

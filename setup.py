@@ -59,11 +59,9 @@ distutils.core.setup(
     ],
     platforms='any',
     packages=[
-        'distlib',
-        'distlib._backport',
+        'distlib'
     ],
     package_data={
-        'distlib._backport': ['sysconfig.cfg'],
         'distlib': ['t32.exe', 't64.exe', 'w32.exe', 'w64.exe',
                     't64-arm.exe', 'w64-arm.exe'],
     },

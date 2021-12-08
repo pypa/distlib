@@ -1513,25 +1513,6 @@ if ssl:
 #
 # XML-RPC with timeouts
 #
-
-_ver_info = sys.version_info[:2]
-
-if _ver_info == (2, 6):
-    class HTTP(httplib.HTTP):
-        def __init__(self, host='', port=None, **kwargs):
-            if port == 0:   # 0 means use port 0, not the default port
-                port = None
-            self._setup(self._connection_class(host, port, **kwargs))
-
-
-    if ssl:
-        class HTTPS(httplib.HTTPS):
-            def __init__(self, host='', port=None, **kwargs):
-                if port == 0:   # 0 means use port 0, not the default port
-                    port = None
-                self._setup(self._connection_class(host, port, **kwargs))
-
-
 class Transport(xmlrpclib.Transport):
     def __init__(self, timeout, use_datetime=0):
         self.timeout = timeout
@@ -1539,14 +1520,10 @@ class Transport(xmlrpclib.Transport):
 
     def make_connection(self, host):
         h, eh, x509 = self.get_host_info(host)
-        if _ver_info == (2, 6):
-            result = HTTP(h, timeout=self.timeout)
-        else:
-            if not self._connection or host != self._connection[0]:
-                self._extra_headers = eh
-                self._connection = host, httplib.HTTPConnection(h)
-            result = self._connection[1]
-        return result
+        if not self._connection or host != self._connection[0]:
+            self._extra_headers = eh
+            self._connection = host, httplib.HTTPConnection(h)
+        return self._connection[1]
 
 if ssl:
     class SafeTransport(xmlrpclib.SafeTransport):
@@ -1559,15 +1536,11 @@ if ssl:
             if not kwargs:
                 kwargs = {}
             kwargs['timeout'] = self.timeout
-            if _ver_info == (2, 6):
-                result = HTTPS(host, None, **kwargs)
-            else:
-                if not self._connection or host != self._connection[0]:
-                    self._extra_headers = eh
-                    self._connection = host, httplib.HTTPSConnection(h, None,
-                                                                     **kwargs)
-                result = self._connection[1]
-            return result
+            if not self._connection or host != self._connection[0]:
+                self._extra_headers = eh
+                self._connection = host, httplib.HTTPSConnection(h, None,
+                                                                 **kwargs)
+            return self._connection[1]
 
 
 class ServerProxy(xmlrpclib.ServerProxy):

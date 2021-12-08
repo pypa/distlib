@@ -15,6 +15,8 @@ Released: Not yet.
 
     - Fixed #154: Determine Python versions correctly for Python >= 3.10.
 
+Code relating to support for Python 2.6 was also removed.
+
 0.3.3
 ~~~~~
 
