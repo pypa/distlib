@@ -25,9 +25,3 @@ else:
     text_type = str
     from urllib.parse import urlparse, unquote
     from urllib.request import Request
-
-#
-# Move distutils-related items here, to limit future changes
-#
-
-from distutils.spawn import find_executable, spawn

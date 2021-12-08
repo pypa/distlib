@@ -598,7 +598,7 @@ class WheelTestCase(DistlibTestCase):
         w.verify()
         md = w.metadata
         self.assertEqual(md.run_requires, ['numpy'])
-        self.assertEquals(md.version, '0.1+1')
+        self.assertEqual(md.version, '0.1+1')
 
         modified = w.update(self.wheel_modifier_ver)
         self.assertTrue(modified)
@@ -607,7 +607,7 @@ class WheelTestCase(DistlibTestCase):
         w.verify()
         md = w.metadata
         self.assertEqual(md.run_requires, ['numpy'])
-        self.assertEquals(md.version, '0.1+123')
+        self.assertEqual(md.version, '0.1+123')
 
     def test_info(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
