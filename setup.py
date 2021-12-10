@@ -33,9 +33,9 @@ distutils.core.setup(
     version=distlib.__version__,
     author='Vinay Sajip',
     author_email='vinay_sajip@red-dove.com',
-    url='https://bitbucket.org/pypa/distlib',
-    download_url=('https://bitbucket.org/pypa/distlib/downloads/'
-                  'distlib-' + distlib.__version__ + '.zip'),
+    url='https://github.com/pypa/distlib',
+    download_url=('https://github.com/pypa/distlib/releases/download/' +
+                  distlib.__version__ + '/distlib-' + distlib.__version__ + '.zip'),
     description='Distribution utilities',
     long_description=('Low-level components of distutils2/packaging, '
                       'augmented with higher-level APIs for making packaging easier.'),

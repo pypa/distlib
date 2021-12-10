@@ -147,13 +147,12 @@ Continuous integration test results are available at:
 
 https://travis-ci.org/vsajip/distlib/
 
-The source repository for the project is on BitBucket:
+The source repository for the project is on GitHub:
 
-https://bitbucket.org/pypa/distlib/
+https://github.com/pypa/distlib/
 
 You can leave feedback by raising a new issue on the `issue
-tracker <https://bitbucket.org/pypa/distlib/issues/new>`_
-(BitBucket registration not necessary, but recommended).
+tracker <https://github.com/pypa/distlib/issues/new/choose>`_.
 
 .. include:: ../CHANGES.rst
 

@@ -1,4 +1,4 @@
-name: Package tests
+name: Tests
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [2.7, 3.7, 3.8, 3.9, pypy2, pypy3]
+        python-version: ['2.7', '3.7', '3.8', '3.9', '3.10', 'pypy-2.7', 'pypy3']
 
     steps:
     - uses: actions/checkout@v2
