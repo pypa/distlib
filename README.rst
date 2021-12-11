@@ -1,8 +1,5 @@
-.. image:: https://img.shields.io/appveyor/build/vsajip/distlib
-   :alt: AppVeyor
-
-.. image:: https://coveralls.io/repos/github/vsajip/distlib/badge.svg?branch=master
-   :target: https://coveralls.io/github/vsajip/distlib?branch=master
+.. image:: https://img.shields.io/github/workflow/status/pypa/distlib/Tests
+   :alt: GitHub Workflow Status
 
 What is it?
 -----------
