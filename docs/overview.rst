@@ -139,17 +139,17 @@ To work with the project, you can `download a release from PyPI
 <https://pypi.org/pypi/distlib/>`_, or clone the source repository or
 download a tarball from it.
 
+The source repository for the project is on GitHub:
+
+https://github.com/pypa/distlib/
+
 Coverage results are available at:
 
 https://coveralls.io/github/vsajip/distlib/
 
 Continuous integration test results are available at:
 
-https://travis-ci.org/vsajip/distlib/
-
-The source repository for the project is on GitHub:
-
-https://github.com/pypa/distlib/
+https://github.com/pypa/distlib/actions/
 
 You can leave feedback by raising a new issue on the `issue
 tracker <https://github.com/pypa/distlib/issues/new/choose>`_.

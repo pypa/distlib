@@ -57,17 +57,20 @@ Distlib currently offers the following features:
 Python version and platform compatibility
 -----------------------------------------
 
-Distlib is intended to be used on any Python version >= 2.7 and is tested on
-Python versions 2.7 and 3.3-3.6 on Linux, Windows, and Mac OS X (not
-all versions are tested on all platforms, but are expected to work correctly).
+Distlib is intended to be used on and is tested on Python versions 2.7 and 3.6 - 3.10,
+pypy-2.7 and pypy3 on Linux, Windows, and macOS.
 
 Project status
 --------------
 
-The project has reached a mature status in its development: there is a test
-suite and it has been exercised on Windows, Ubuntu and Mac OS X. The project is
-used by well-known projects such as `pip <https://pypi.org/pypi/pip>`_ and
-`caniusepython3 <https://pypi.org/pypi/caniusepython3>`_.
+The project has reached a mature status in its development: there is a comprehensive
+test suite and it has been exercised on Windows, Ubuntu and macOS. The project is used
+by well-known projects such as `pip <https://pypi.org/pypi/pip>`_ and `caniusepython3
+<https://pypi.org/pypi/caniusepython3>`_.
+
+This project was migrated from Mercurial to Git and from BitBucket to GitHub, and
+although all information of importance has been retained across the migration, some
+commit references in issues and issue comments may have become invalid.
 
 Code of Conduct
 ---------------
