@@ -416,17 +416,17 @@ class LocatorTestCase(DistlibTestCase):
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     def test_dist_reqts(self):
-        r = 'config <=0.3.5'
+        r = 'config <=0.3.9'
         dist = default_locator.locate(r)
         self.assertIsNotNone(dist)
         self.assertIsNone(dist.extras)
         self.assertTrue(dist.matches_requirement(r))
-        self.assertFalse(dist.matches_requirement('config == 0.3.6'))
+        self.assertFalse(dist.matches_requirement('config == 0.4.0'))
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     def test_dist_reqts_extras(self):
-        r = 'config[doc,test](<=0.3.5)'
+        r = 'config[doc,test](<=0.3.9)'
         dist = default_locator.locate(r)
         self.assertIsNotNone(dist)
         self.assertTrue(dist.matches_requirement(r))
@@ -571,8 +571,6 @@ class LocatorTestCase(DistlibTestCase):
             'setuptools-6.0.1.zip',
             'setuptools-6.0.2.tar.gz',
             'setuptools-6.0.2.zip',
-            # 'setuptools-6.0.tar.gz',
-            'setuptools-6.0.zip',
         ])
         actual = set()
         for k, v in d.items():
