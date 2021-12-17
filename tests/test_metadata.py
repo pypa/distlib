@@ -285,7 +285,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         # self.assertRaises(MetadataConflictError,
                           # metadata.set_metadata_version)
         metadata.set_metadata_version()
-        self.assertEqual(metadata['Metadata-Version'], '2.0')
+        self.assertEqual(metadata['Metadata-Version'], '2.2')
 
         del metadata['Obsoletes']
         del metadata['Obsoletes-Dist']

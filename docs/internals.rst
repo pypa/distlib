@@ -585,10 +585,6 @@ In addition, other methods suggest themselves for :class:`ScriptMaker`:
   The above specification is used by ``setuptools`` for the 'console_scripts'
   feature.  See :ref:`flag-formats` for more information about flags.
 
-  .. note:: Both ``setuptools`` and :pep:`426` interpret flags as a single
-     value, which represents an extra (a set of optional dependencies needed
-     for optional features of a distribution).
-
   It seems sensible for this method to return a list of absolute paths of
   files that were installed (or would have been installed, but for the
   dry-run mode being in effect).
@@ -637,10 +633,6 @@ whereas the following would be invalid::
   [a,]
   [a,,b]
   [a=,b,c]
-
-.. note:: Both ``setuptools`` and :pep:`426` restrict flag formats to a single
-   value, without an ``=``. This value represents an extra (a set of optional
-   dependencies needed for optional features of a distribution).
 
 .. _version-api:
 

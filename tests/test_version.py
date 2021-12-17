@@ -329,7 +329,7 @@ class VersionTestCase(DistlibTestCase):
         for s in final_releases:
             self.assertFalse(NV(s).is_prerelease)
 
-    def test_comparison_pep426(self):
+    def test_comparison_pep440(self):
         versions = (
             '1.0.dev456',
             '1.0a1',

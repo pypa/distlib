@@ -26,9 +26,9 @@ Distlib currently offers the following features:
   SSL connections (with domain matching) and signing/verifying packages using
   GnuPG.
 * The package ``distlib.metadata``, which implements distribution metadata as
-  defined by :pep:`426`, :pep:`345`, :pep:`314` and :pep:`241`.
+  defined by :pep:`643`, :pep:`566`, :pep:`345`, :pep:`314` and :pep:`241`.
 * The package ``distlib.markers``, which implements environment markers as
-  defined by :pep:`426`.
+  defined by :pep:`508`.
 * The package ``distlib.manifest``, which implements lists of files used
   in packaging source distributions.
 * The package ``distlib.locators``, which allows finding distributions, whether
@@ -40,8 +40,8 @@ Distlib currently offers the following features:
   adjustment of shebang lines and support for native Windows executable
   launchers.
 * The package ``distlib.version``, which implements version specifiers as
-  defined by :pep:`440` / :pep:`426`, but also support for working with
-  "legacy" versions (``setuptools``/``distribute``) and semantic versions.
+  defined by :pep:`440`, but also support for working with "legacy" versions and
+  semantic versions.
 * The package ``distlib.wheel``, which provides support for building and
   installing from the Wheel format for binary distributions (see :pep:`427`).
 * The package ``distlib.util``, which contains miscellaneous functions and

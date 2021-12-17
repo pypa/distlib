@@ -111,8 +111,8 @@ following classes:
   on a path.
 
 * :class:`Distribution`, which represents an individual distribution,
-  conforming to recent packaging PEPs (:pep:`440`, :pep:`426`, :pep:`386`,
-  :pep:`376`, :pep:`345`, :pep:`314` and :pep:`241`).
+  conforming to recent packaging PEPs (:pep:`643`, :pep:`566`, :pep:`508`, :pep:`440`,
+  :pep:`386`, :pep:`376`, :pep:`345`, :pep:`314` and :pep:`241`).
 * :class:`EggInfoDistribution`, which represents a legacy distribution in
   egg format.
 
@@ -260,10 +260,6 @@ be used for any purpose determined by the distribution author (for example, the
 
 This entry format is used in the :mod:`distlib.scripts` package for installing
 scripts based on Python callables.
-
-.. note:: In :pep:`426`, the ``flags`` value is limited to a single flag
-   representing an extra (optional set of dependencies, for optional features
-   of a distribution).
 
 Distribution dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -879,10 +875,10 @@ Using the metadata and markers APIs
 
 .. currentmodule:: distlib.metadata
 
-The metadata API is exposed through a :class:`Metadata` class. This class can
-read and write metadata files complying with any of the defined versions: 1.0
-(:pep:`241`), 1.1 (:pep:`314`), 1.2 (:pep:`345`) and 2.0 (:pep:`426`). It
-implements methods to parse and write metadata files.
+The metadata API is exposed through a :class:`Metadata` class. This class can read and
+write metadata files complying with any of the defined versions: 1.0 (:pep:`241`), 1.1
+(:pep:`314`), 1.2 (:pep:`345`), 2.1 (:pep:`566`) and 2.2 (:pep:`643`). It implements
+methods to parse and write metadata files.
 
 Instantiating metadata
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -895,9 +891,9 @@ it::
     >>> md.name = 'foo'
     >>> md.version = '1.0'
 
-An instance so created may not be valid unless it has some minimal properties
-which meet certain constraints, as specified in
-`PEP 426 <http://www.python.org/dev/peps/pep-0426/#core-metadata>`_.
+An instance so created may not be valid unless it has some minimal properties which
+meet certain constraints, as specified in the `Core metadata specifications
+<https://packaging.python.org/en/latest/specifications/core-metadata>`_.
 
 These constraints aren't applicable to legacy metadata. Therefore, when
 creating :class:`Metadata` instances to deal with such metadata, you can
@@ -905,21 +901,14 @@ specify the ``scheme`` keyword when creating the instance::
 
     >>> legacy_metadata = Metadata(scheme='legacy')
 
-The term 'legacy' is somewhat ambiguous, as it could refer to either the
-metadata format (legacy => key-value, non-legacy =< JSON as described in
-:pep:`426`) or the version specification (legacy => setuptools-compatible,
-non-legacy => as described in :pep:`440`). In this case, it refers to the
-**version scheme** and *not* the metadata format.
-Legacy metadata is also subject to constraints, but they are less stringent
-(for example, the name and version number are less constrained).
+The term 'legacy' refers to the version scheme.
 
 Whether dealing with current or legacy metadata. an instance's ``validate()``
 method can be called to ensure that the metadata has no missing or invalid
 data. This raises a ``DistlibException`` (either ``MetadataMissingError`` or
 ``MetadataInvalidError``) if the metadata isn't valid.
 
-You can initialise an instance with a dictionary which conforms to :pep:`426`
-using the following form::
+You can initialise an instance with a dictionary using the following form::
 
     >>> metadata = Metadata(mapping=a_dictionary)
 
@@ -965,7 +954,7 @@ Using markers
 Environment markers are implemented in the :mod:`distlib.markers` package
 and accessed via a single function, :func:`interpret`.
 
-See `PEP 426 <http://www.python.org/dev/peps/pep-0426/#environment-markers>`_
+See `PEP 508 <https://www.python.org/dev/peps/pep-0508/#environment-markers>`_
 for more information about environment markers. The :func:`interpret` function
 takes a string argument which represents a Boolean expression, and returns
 either ``True`` or ``False``::
@@ -1368,7 +1357,7 @@ Overview
 .. index::
    single: Versions; overview
 
-The :class:`NormalizedVersion` class implements a :pep:`426` compatible
+The :class:`NormalizedVersion` class implements a :pep:`440` compatible
 version::
 
       >>> from distlib.version import NormalizedVersion
