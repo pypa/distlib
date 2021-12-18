@@ -1,5 +1,8 @@
 .. image:: https://img.shields.io/github/workflow/status/pypa/distlib/Tests
-   :alt: GitHub Workflow Status
+   :alt: GitHub test status
+
+.. image:: https://img.shields.io/codecov/c/github/pypa/distlib
+   :alt: GitHub coverage status
 
 What is it?
 -----------
