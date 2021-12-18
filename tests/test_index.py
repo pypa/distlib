@@ -175,7 +175,7 @@ class PackageIndexTestCase(DistlibTestCase):
                 f.write(zip_data)
 
     @unittest.skip('The PyPI API changed, so this test is temporarily skipped')
-    def test_register(self):
+    def test_register(self):  # pragma: no cover
         "Test registration"
         self.check_pypi_server_available()
         self.check_testdist_available()
@@ -264,7 +264,7 @@ class PackageIndexTestCase(DistlibTestCase):
             self.assertIn(expected, data)
 
     @unittest.skipIf(IN_GITHUB_WORKFLOW, 'This test is end-of-line dependent')
-    def test_verify_signature(self):
+    def test_verify_signature(self):  # pragma: no cover
         if not self.index.gpg:      # pragma: no cover
             raise unittest.SkipTest('gpg not available')
         sig_file = os.path.join(HERE, 'good.bin.asc')
@@ -319,7 +319,7 @@ class PackageIndexTestCase(DistlibTestCase):
             self.assertEqual(response.code, 200)
 
         @unittest.skipIf(IN_GITHUB_WORKFLOW, 'This test is end-of-line dependent')
-        def test_download(self):
+        def test_download(self):  # pragma: no cover
             digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt
             certfile = os.path.join(HERE, 'keycert.pem')
             server = self.make_https_server(certfile)
@@ -347,7 +347,7 @@ class PackageIndexTestCase(DistlibTestCase):
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     @unittest.skipIf(True, 'skipping due to temporary changes in PyPI')
-    def test_search(self):
+    def test_search(self):  # pragma: no cover
         self.index = PackageIndex()
         result = self.index.search({'name': 'tatterdemalion'})
         self.assertEqual(len(result), 1)
