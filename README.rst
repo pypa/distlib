@@ -1,7 +1,9 @@
-.. image:: https://img.shields.io/github/workflow/status/pypa/distlib/Tests
+|badge1| |badge2|
+
+.. |badge1| image:: https://img.shields.io/github/workflow/status/pypa/distlib/Tests
    :alt: GitHub test status
 
-.. image:: https://img.shields.io/codecov/c/github/pypa/distlib
+.. |badge2| image:: https://img.shields.io/codecov/c/github/pypa/distlib
    :alt: GitHub coverage status
 
 What is it?
