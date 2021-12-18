@@ -595,7 +595,7 @@ Released: 2014-12-17
 - util
 
     - Removed reference to __PYVENV_LAUNCHER__ when determining executable
-      for scripts (relevant only on OS X).
+      for scripts (relevant only on macOS).
 
     - Updated to support changes to PEP 426.
 
@@ -705,7 +705,7 @@ Released: 2014-03-18
     - Avoided using ``pydist.json`` in 1.0 wheels (``bdist_wheel`` writes a
       non-conforming ``pydist.json``.)
 
-    - Improved computation of compatible tags on OS X, and made COMPATIBLE_TAGS
+    - Improved computation of compatible tags on macOS, and made COMPATIBLE_TAGS
       a set.
 
 - _backport/sysconfig

@@ -92,8 +92,22 @@ Distlib currently offers the following features:
   distribution or uploading documentation. Support is included for verifying
   SSL connections (with domain matching) and signing/verifying packages using
   GnuPG.
+
+  .. note:: Since this API was developed, a number of features of PyPI have been
+     turned off for various reasons - for example, documentation uploads, XMLRPC
+     search API - and a number of APIs have changed (e.g. PyPI no longer shows GnuPG
+     signatures). For now, the ``distlib.index`` API should be considered not fully
+     reliable, mostly due to changes in PyPI where there has not been enough time to
+     catch up with them.
+
 * The package ``distlib.metadata``, which implements distribution metadata as
   defined by :pep:`643`, :pep:`566`, :pep:`345`, :pep:`314` and :pep:`241`.
+
+  .. note:: In the past ``distlib`` has tracked metadata proposals in PEPs even when
+     they were draft, but this has proven to be too time-consuming. The current policy
+     is not to track standards proactively while they're still being thrashed out, but
+     to look instead at starting to implement them once they're marked ``Final``.
+
 * The package ``distlib.markers``, which implements environment markers as
   defined by :pep:`508`.
 * The package ``distlib.manifest``, which implements lists of files used
@@ -118,21 +132,20 @@ Distlib currently offers the following features:
   specify recursing into subdirectories.
 
 
-
 Python version and platform compatibility
 -----------------------------------------
 
 Distlib is intended to be used on any Python version >= 2.7 and is tested on
-Python versions 2.7 and 3.3-3.6 on Linux, Windows, and Mac OS X (not
-all versions are tested on all platforms, but are expected to work correctly).
+Python versions 2.7 and 3.6-3.10 on Linux, Windows, and macOS.
 
 Project status
 --------------
 
-The project has reached a mature status in its development: there is a test
-suite and it has been exercised on Windows, Ubuntu and Mac OS X. The project is
-used by well-known projects such as `pip <https://pypi.org/pypi/pip>`_ and
-`caniusepython3 <https://pypi.org/pypi/caniusepython3>`_.
+The project has reached a mature status in its development: there is a test suite and
+it has been exercised on Windows, Ubuntu and macOS. The project is used by well-known
+projects such as `pip <https://pypi.org/pypi/pip>`_, `virtualenv
+<https://github.com/pypa/virtualenv>`_ and `caniusepython3
+<https://pypi.org/pypi/caniusepython3>`_.
 
 
 To work with the project, you can `download a release from PyPI
