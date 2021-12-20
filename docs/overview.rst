@@ -12,6 +12,10 @@ the functions in the ``packaging`` Python package, which was intended to be
 released as part of Python 3.3, but was removed shortly before Python
 3.3 entered beta testing.
 
+.. note:: The ``packaging`` package referred to here does not refer to any
+  ``packaging`` package currently available on PyPI, but to a package that was never
+  released on PyPI but called ``packaging`` in the Python 3.3 alpha stdlib tree.
+
 What was the problem with ``packaging``?
 ----------------------------------------
 
