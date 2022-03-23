@@ -282,8 +282,6 @@ class UtilTestCase(DistlibTestCase):
         for pred, succ in steps:
             seq.add(pred, succ)
 
-        # Note: these tests are sensitive to dictionary ordering
-        # but work under Python 2.6, 2.7, 3.2, 3.3, 3.4 and PyPy 2.5
         cases = (
             ('check', ['check']),
             ('register', ['check', 'register']),
@@ -331,11 +329,11 @@ class UtilTestCase(DistlibTestCase):
         )
 
         for final, expected in cases:
-            actual = list(seq.get_steps(final))
+            actual = sorted(seq.get_steps(final))
             if isinstance(expected, tuple):
-                self.assertIn(actual, expected)
+                self.assertIn(actual, (sorted(e) for e in expected))
             else:
-                self.assertEqual(actual, expected)
+                self.assertEqual(actual, sorted(expected))
 
         dot = seq.dot
         expected = '''
@@ -365,7 +363,7 @@ class UtilTestCase(DistlibTestCase):
         self.assertEqual(expected[0], actual[0])
         self.assertEqual(expected[-1], actual[-1])
         self.assertEqual(set(expected[1:-1]), set(actual[1:-1]))
-        actual = seq.strong_connections
+        actual = sorted(seq.strong_connections)
         expected = (
             [
                 ('test',), ('upload_bdist',), ('install',),
@@ -407,7 +405,7 @@ class UtilTestCase(DistlibTestCase):
                 ('build_ext',), ('build_clibs',), ('check',)
             ]
         )
-        self.assertIn(actual, expected)
+        self.assertIn(actual, (sorted(e) for e in expected))
 
     def test_sequencer_cycle(self):
         seq = Sequencer()
