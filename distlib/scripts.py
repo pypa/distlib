@@ -41,7 +41,7 @@ FIRST_LINE_RE = re.compile(b'^#!.*pythonw?[0-9.]*([ \t].*)?$')
 SCRIPT_TEMPLATE = r'''# -*- coding: utf-8 -*-
 import re
 import sys
-from %(module)s import %(import_name)s
+import %(module)s
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
     sys.exit(%(func)s())
@@ -225,9 +225,9 @@ class ScriptMaker(object):
         return shebang
 
     def _get_script_text(self, entry):
+        suffix = ("." + entry.suffix) if entry.suffix else ""
         return self.script_template % dict(module=entry.prefix,
-                                           import_name=entry.suffix.split('.')[0],
-                                           func=entry.suffix)
+                                           func=entry.prefix + suffix)
 
     manifest = _DEFAULT_MANIFEST
 
