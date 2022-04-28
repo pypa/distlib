@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2018 Vinay Sajip. All rights reserved.
+ * Copyright (C) 2011-2022 Vinay Sajip. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,8 @@
 #endif
 
 #include <stdio.h>
+#include <io.h>
+#include <stdlib.h>
 #include <windows.h>
 #include <Shlwapi.h>
 
@@ -57,8 +59,6 @@ static wchar_t suffix[] = {
 #define RELATIVE_PREFIX_LENGTH 15
 
 #endif
-
-static int pid = 0;
 
 #if !defined(_CONSOLE)
 
@@ -271,7 +271,7 @@ find_shebang(char * buffer, size_t bufsize)
      */
 
     /* Check for case 1 - we are at the start of the shebang */
-    fseek(fp, end_cdr_offset, SEEK_SET);
+    fseek(fp, (long) end_cdr_offset, SEEK_SET);
     read = fread(buffer, sizeof(char), bufsize, fp);
     assert(read > 0, "Unable to read from file");
     if (memcmp(buffer, "#!", 2) == 0) {
@@ -405,6 +405,8 @@ find_terminator(char *buffer, size_t size)
     return result;
 }
 
+#if defined(DUPLICATE_HANDLES)
+
 static BOOL
 safe_duplicate_handle(HANDLE in, HANDLE * pout)
 {
@@ -435,44 +437,392 @@ safe_duplicate_handle(HANDLE in, HANDLE * pout)
 #endif
 }
 
+#endif
+
+/*
+ * These items are global so that thet can be accessed
+ * from the Ctrl-C handler or other auxiliary routine.
+ */
+static PROCESS_INFORMATION child_process_info;
+static JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_info;
+static HANDLE job;
+
 static BOOL
 control_key_handler(DWORD type)
 {
-    if ((type == CTRL_C_EVENT) && pid)
-        GenerateConsoleCtrlEvent(pid, 0);
+/*
+ * See https://github.com/pypa/pip/issues/10444
+ */
+#if !defined(NEW_LOGIC)
+    if ((type == CTRL_C_EVENT) || (type == CTRL_BREAK_EVENT)) {
+        return TRUE;
+    }
+    WaitForSingleObject(child_process_info.hProcess, INFINITE);
+#else
+    switch (type) {
+    case CTRL_CLOSE_EVENT:
+    case CTRL_LOGOFF_EVENT:
+    case CTRL_SHUTDOWN_EVENT:
+        /*
+         * Allow the child to outlive the launcher, to carry out any
+         * cleanup for a graceful exit. It will either exit or get
+         * terminated by the session server.
+         */
+        if (job != NULL) {
+            job_info.BasicLimitInformation.LimitFlags &=
+              ~JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            SetInformationJobObject(
+              job, JobObjectExtendedLimitInformation,
+              &job_info, sizeof(job_info));
+        }
+    }
+#endif
     return TRUE;
 }
+
+#if !defined(_CONSOLE)
+
+/*
+ * End the launcher's "app starting" cursor state.
+ *
+ * When Explorer launches a Windows (GUI) application, it displays
+ * the "app starting" (the "pointer + hourglass") cursor for a number
+ * of seconds, or until the app does something UI-ish (eg, creating a
+ * window, or fetching a message).  As this launcher doesn't do this
+ * directly, that cursor remains even after the child process does these
+ * things.  We avoid that by doing the stuff in here.
+ * See http://bugs.python.org/issue17290 and
+ * https://github.com/pypa/pip/issues/10444#issuecomment-973408601
+ */
+
+static void
+clear_app_starting_state() {
+    MSG msg;
+    HWND hwnd;
+
+    PostMessageW(0, 0, 0, 0);
+    GetMessageW(&msg, 0, 0, 0);
+    /* Proxy the child's input idle event. */
+    WaitForInputIdle(child_process_info.hProcess, INFINITE);
+    /*
+     * Signal the process input idle event by creating a window and pumping
+     * sent messages. The window class isn't important, so just use the
+     * system "STATIC" class.
+     */
+    hwnd = CreateWindowExW(0, L"STATIC", L"PyLauncher", 0, 0, 0, 0, 0,
+                           HWND_MESSAGE, NULL, NULL, NULL);
+    /* Process all sent messages and signal input idle. */
+    PeekMessageW(&msg, hwnd, 0, 0, 0);
+    DestroyWindow(hwnd);
+}
+
+#endif
+
+/*
+ * See https://github.com/pypa/pip/issues/10444#issuecomment-1055392299
+ */
+static BOOL
+make_handle_inheritable(HANDLE handle)
+{
+    DWORD file_type = GetFileType(handle);
+    // Ignore an invalid handle, non-file object type, unsupported file type,
+    // or a console file prior to Windows 8.
+    if (file_type == FILE_TYPE_UNKNOWN ||
+        (file_type == FILE_TYPE_CHAR && ((ULONG_PTR)handle & 3))) {
+        return TRUE;
+    }
+
+    return SetHandleInformation(handle, HANDLE_FLAG_INHERIT,
+        HANDLE_FLAG_INHERIT);
+}
+
+static void
+__cdecl
+silent_invalid_parameter_handler(
+    wchar_t const* expression,
+    wchar_t const* function,
+    wchar_t const* file,
+    unsigned int line,
+    uintptr_t pReserved
+)
+{
+}
+
+/*
+ * Best-effort cleanup of any C file descriptors that were inherited
+ * from the parent process. This cleans up all fds except 0-2.
+ */
+static void
+cleanup_fds(WORD cbReserved2, LPBYTE lpReserved2)
+{
+    int handle_count = 0;
+    UNALIGNED HANDLE* first_handle = NULL;
+    UNALIGNED HANDLE* current_handle = NULL;
+    _invalid_parameter_handler old_handler = NULL;
+
+    // The structure is: <handle_count>, <handle_count bytes with flags>, <handle_count HANDLEs>
+
+    if (cbReserved2 < sizeof(int) || NULL == lpReserved2)
+    {
+        return;
+    }
+
+    handle_count = *(UNALIGNED int*)lpReserved2;
+
+    // Verify the buffer is large enough
+    if (cbReserved2 < sizeof(int) + handle_count + sizeof(HANDLE) * handle_count)
+    {
+        return;
+    }
+
+    first_handle = (UNALIGNED HANDLE *)(lpReserved2 + sizeof(int) + handle_count);
+
+    old_handler = _set_invalid_parameter_handler(&silent_invalid_parameter_handler);
+    {
+        // Close all fds inherited from the parent, except for the standard I/O fds.
+        // We'll deal with those later.
+        for (current_handle = first_handle + 3; current_handle < first_handle + handle_count; ++current_handle)
+        {
+            // Ignore invalid handles, as that means this fd was not inherited.
+            // -2 is a special value (https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/get-osfhandle?view=msvc-170)
+            // that we check for just in case.
+            if (NULL == *current_handle || INVALID_HANDLE_VALUE == *current_handle || (HANDLE)-2 == *current_handle)
+            {
+                continue;
+            }
+
+            _close((int)(current_handle - first_handle));
+        }
+    }
+    _set_invalid_parameter_handler(old_handler);
+}
+
+/*
+ * Returns the HANDLE associated with a FILE* object, or INVALID_HANDLE_VALUE
+ * on error.
+ */
+static HANDLE
+get_stream_handle(FILE * stream)
+{
+    _invalid_parameter_handler old_handler = NULL;
+    int fd = -1;
+    HANDLE handle = INVALID_HANDLE_VALUE;
+
+    old_handler = _set_invalid_parameter_handler(&silent_invalid_parameter_handler);
+    {
+        fd = _fileno(stream);
+        if (fd >= 0)
+        {
+            handle = (HANDLE)_get_osfhandle(fd);
+        }
+        else
+        {
+            handle = INVALID_HANDLE_VALUE;
+        }
+    }
+    _set_invalid_parameter_handler(old_handler);
+
+    return handle;
+}
+
+/*
+ * Closes the Windows standard I/O handles (GetStdHandle)
+ * in a best-effort manner. Ensures that the stderr stream is left untouched.
+ */
+static void
+cleanup_standard_io(void)
+{
+    HANDLE stdin_handle = INVALID_HANDLE_VALUE;
+    HANDLE stdout_handle = INVALID_HANDLE_VALUE;
+    HANDLE stderr_handle = INVALID_HANDLE_VALUE;
+    HANDLE hStdIn = INVALID_HANDLE_VALUE;
+    HANDLE hStdOut = INVALID_HANDLE_VALUE;
+    HANDLE hStdErr = INVALID_HANDLE_VALUE;
+
+    // We need to close both the C streams stdin and stdout,
+    // and the Windows standard I/O handles. However, these may be equal,
+    // so care must be taken not to close a handle twice. Moreover,
+    // handles for several C streams may be equal as well.
+    // Fun all around.
+
+    // Get the handles associated with the standard I/O streams.
+    stdin_handle = get_stream_handle(stdin);
+    stdout_handle = get_stream_handle(stdout);
+    stderr_handle = get_stream_handle(stderr);
+
+    // If any two underlying handles are equal, drop everything and return.
+    // There's bound to be trouble if we continue with closing the streams.
+    if (((INVALID_HANDLE_VALUE != stdin_handle) && (stdin_handle == stdout_handle || stdin_handle == stderr_handle))
+        || ((INVALID_HANDLE_VALUE != stdout_handle) && (stdout_handle == stdin_handle || stdout_handle == stderr_handle))
+        || ((INVALID_HANDLE_VALUE != stderr_handle) && (stderr_handle == stdin_handle || stderr_handle == stdout_handle)))
+    {
+        return;
+    }
+
+    // Get the Windows I/O handles before we do anything.
+    hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+
+    // At this point, we have confirmed that the I/O streams all have different
+    // handles, and we have the Windows standard I/O handles as well.
+    // Proceed with closing the streams.
+
+    fclose(stdin);
+    fclose(stdout);
+
+    // Now we need to close the Windows standard I/O handles, as they might
+    // differ from the handles for the C streams.
+
+    // First, make sure we don't close handles that we have already closed
+    // by closing the streams.
+    if (stdin_handle == hStdIn || stdout_handle == hStdIn)
+    {
+        SetStdHandle(STD_INPUT_HANDLE, NULL);
+        hStdIn = NULL;
+    }
+    if (stdin_handle == hStdOut || stdout_handle == hStdOut)
+    {
+        SetStdHandle(STD_OUTPUT_HANDLE, NULL);
+        hStdOut = NULL;
+    }
+    if (stdin_handle == hStdErr || stdout_handle == hStdErr)
+    {
+        SetStdHandle(STD_ERROR_HANDLE, NULL);
+        hStdErr = NULL;
+    }
+
+    // Ensure we don't accidentally close the standard error handle.
+    if (stderr_handle == hStdIn)
+    {
+        hStdIn = NULL;
+    }
+    if (stderr_handle == hStdOut)
+    {
+        hStdOut = NULL;
+    }
+    if (stderr_handle == hStdErr)
+    {
+        hStdErr = NULL;
+    }
+
+    // Close 'em.
+    if (NULL != hStdIn && INVALID_HANDLE_VALUE != hStdIn)
+    {
+        CloseHandle(hStdIn);
+        SetStdHandle(STD_INPUT_HANDLE, NULL);
+    }
+    if (NULL != hStdOut && INVALID_HANDLE_VALUE != hStdOut)
+    {
+        CloseHandle(hStdOut);
+        SetStdHandle(STD_OUTPUT_HANDLE, NULL);
+    }
+    if (NULL != hStdErr && INVALID_HANDLE_VALUE != hStdErr)
+    {
+        CloseHandle(hStdErr);
+        SetStdHandle(STD_ERROR_HANDLE, NULL);
+    }
+}
+
+#define SWITCH_WORKING_DIR
+
+#if defined(SWITCH_WORKING_DIR)
+
+/*
+ * Switch the working directory to the user's temp directory.
+ */
+
+static void
+switch_working_directory() {
+    WCHAR tempDir[MAX_PATH + 1];
+    DWORD len = GetTempPathW(MAX_PATH + 1, tempDir);
+    if (len > 0 && len <= MAX_PATH) {
+        SetCurrentDirectoryW(tempDir);
+    }
+}
+#endif
+
+/*
+ * Best-effort cleanup of file descriptors and handles after spawning the child
+ * process.
+ * See discussion starting from here: https://github.com/pypa/pip/issues/10444#issuecomment-1055392299
+ */
+static void
+post_spawn_cleanup(WORD cbReserved2, LPBYTE lpReserved2)
+{
+    cleanup_fds(cbReserved2, lpReserved2);
+
+    cleanup_standard_io();
+#if defined(SWITCH_WORKING_DIR)
+    switch_working_directory();
+#endif
+}
+
+/*
+ * See https://github.com/pypa/pip/issues/10444#issuecomment-971921420
+ */
+#define STARTF_UNDOC_MONITOR 0x400
+/*
+ * See https://github.com/pypa/pip/issues/10444#issuecomment-973396812
+ */
 
 static void
 run_child(wchar_t * cmdline)
 {
-    HANDLE job;
-    JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
     DWORD rc;
     BOOL ok;
     STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
 
     job = CreateJobObject(NULL, NULL);
+    assert(job != NULL, "Job creation failed");
     ok = QueryInformationJobObject(job, JobObjectExtendedLimitInformation,
-                                  &info, sizeof(info), &rc);
-    assert(ok && (rc == sizeof(info)), "Job information querying failed");
-    info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE |
-                                             JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK;
-    ok = SetInformationJobObject(job, JobObjectExtendedLimitInformation, &info,
-                                 sizeof(info));
+                                  &job_info, sizeof(job_info), &rc);
+    assert(ok && (rc == sizeof(job_info)), "Job information querying failed");
+    job_info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE |
+                                                 JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK;
+    ok = SetInformationJobObject(job, JobObjectExtendedLimitInformation, &job_info,
+                                 sizeof(job_info));
     assert(ok, "Job information setting failed");
     memset(&si, 0, sizeof(si));
-    si.cb = sizeof(si);
-    ok = safe_duplicate_handle(GetStdHandle(STD_INPUT_HANDLE), &si.hStdInput);
-    assert(ok, "stdin duplication failed");
-    ok = safe_duplicate_handle(GetStdHandle(STD_OUTPUT_HANDLE), &si.hStdOutput);
-    assert(ok, "stdout duplication failed");
-    ok = safe_duplicate_handle(GetStdHandle(STD_ERROR_HANDLE), &si.hStdError);
-    assert(ok, "stderr duplication failed");
-    si.dwFlags = STARTF_USESTDHANDLES;
-    SetConsoleCtrlHandler((PHANDLER_ROUTINE) control_key_handler, TRUE);
-    ok = CreateProcessW(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+    GetStartupInfoW(&si);
+/*
+ * See https://github.com/pypa/pip/issues/10444#issuecomment-973396812
+ */
+    if ((si.dwFlags & (STARTF_USEHOTKEY | STARTF_UNDOC_MONITOR)) == 0) {
+        HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+
+#if defined(DUPLICATE_HANDLES)
+        ok = safe_duplicate_handle(hIn, &si.hStdInput);
+        assert(ok, "stdin duplication failed");
+        CloseHandle(hIn);
+
+        ok = safe_duplicate_handle(hOut, &si.hStdOutput);
+        assert(ok, "stdout duplication failed");
+        CloseHandle(hOut);
+        /* We might need stderr late, so don't close it but mark as non-inheritable */
+        SetHandleInformation(hErr, HANDLE_FLAG_INHERIT, 0);
+
+        ok = safe_duplicate_handle(hErr, &si.hStdError);
+        assert(ok, "stderr duplication failed");
+#else
+        /*
+         * See https://github.com/pypa/pip/issues/10444#issuecomment-1055392299
+         */
+        ok = make_handle_inheritable(hIn);
+        assert(ok, "making stdin inheritable failed");
+        ok = make_handle_inheritable(hOut);
+        assert(ok, "making stdout inheritable failed");
+        ok = make_handle_inheritable(hErr);
+        assert(ok, "making stderr inheritable failed");
+        si.hStdInput = hIn;
+        si.hStdOutput = hOut;
+        si.hStdError = hErr;
+#endif
+        si.dwFlags |= STARTF_USESTDHANDLES;
+    }
+    ok = CreateProcessW(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &child_process_info);
     if (!ok) {
         // Failed to create process. See if we can find out why.
         DWORD err = GetLastError();
@@ -481,11 +831,20 @@ run_child(wchar_t * cmdline)
                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), emessage, MSGSIZE, NULL);
         wassert(ok, L"Unable to create process using '%ls': %ls", cmdline, emessage);
     }
-    pid = pi.dwProcessId;
-    AssignProcessToJobObject(job, pi.hProcess);
-    CloseHandle(pi.hThread);
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    ok = GetExitCodeProcess(pi.hProcess, &rc);
+    post_spawn_cleanup(si.cbReserved2, si.lpReserved2);
+    /*
+     * Control handler setting is now done after process creation because the handler needs access
+     * to the child_process_info structure, which is populated by the CreateProcessW call above.
+     */
+    ok = SetConsoleCtrlHandler((PHANDLER_ROUTINE) control_key_handler, TRUE);
+    assert(ok, "control handler setting failed");
+#if !defined(_CONSOLE)
+    clear_app_starting_state(&child_process_info);
+#endif
+    AssignProcessToJobObject(job, child_process_info.hProcess);
+    CloseHandle(child_process_info.hThread);
+    WaitForSingleObjectEx(child_process_info.hProcess, INFINITE, FALSE);
+    ok = GetExitCodeProcess(child_process_info.hProcess, &rc);
     assert(ok, "Failed to get exit code of process");
     ExitProcess(rc);
 }
