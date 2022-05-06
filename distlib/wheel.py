@@ -301,10 +301,9 @@ class Wheel(object):
         result = base64.urlsafe_b64encode(result).rstrip(b'=').decode('ascii')
         return hash_kind, result
 
-    def write_record(self, records, record_path, base):
+    def write_record(self, records, record_path, archive_record_path):
         records = list(records) # make a copy, as mutated
-        p = to_posix(os.path.relpath(record_path, base))
-        records.append((p, '', ''))
+        records.append((archive_record_path, '', ''))
         with CSVWriter(record_path) as writer:
             for row in records:
                 writer.writerow(row)
@@ -321,8 +320,8 @@ class Wheel(object):
             records.append((ap, digest, size))
 
         p = os.path.join(distinfo, 'RECORD')
-        self.write_record(records, p, libdir)
         ap = to_posix(os.path.join(info_dir, 'RECORD'))
+        self.write_record(records, p, ap)
         archive_paths.append((ap, p))
 
     def build_zip(self, pathname, archive_paths):
