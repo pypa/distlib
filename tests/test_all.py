@@ -11,7 +11,7 @@ import sys
 from compat import unittest
 
 # Always find our sources first
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import distlib_tests
 sys.path.pop(0)
 

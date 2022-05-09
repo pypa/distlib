@@ -15,10 +15,16 @@ Released: Not yet.
       date/time to be inserted into created .exe files. Thanks to Somber Night for the
       patch.
 
+- util
+
+    - Fixed #161: Updated test case.
+
 - wheel
 
     - Updated to write archive path of RECORD to RECORD instead of staging path.
       Thanks to Pieter Pas for the patch.
+
+    - Fixed #169: Removed usage of deprecated imp module in favour of importlib.
 
 0.3.4
 ~~~~~

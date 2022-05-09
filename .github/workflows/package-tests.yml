@@ -38,13 +38,13 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Test with unittest
       run: |
-        python setup.py test -v
+        python tests/test_all.py
       env:
         PYTHONHASHSEED: 0
     - name: Test with coverage
       run: |
         pip install coverage
-        coverage run --branch setup.py test
+        coverage run --branch tests/test_all.py
         coverage xml
       env:
         PYTHONHASHSEED: 0
