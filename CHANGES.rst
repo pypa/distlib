@@ -6,6 +6,14 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- index
+
+    - Updated coverage pragmas for tests relating to obsolete PyPI APIs.
+
+- locators
+
+    - Changed the default locator configuration.
+
 - scripts
 
     - Updated launcher executables. Thanks to Michael Bikovitsky for his help with
@@ -25,6 +33,8 @@ Released: Not yet.
       Thanks to Pieter Pas for the patch.
 
     - Fixed #169: Removed usage of deprecated imp module in favour of importlib.
+
+In addition to the above, setup.py was replaced by setup.cfg and pyproject.toml.
 
 0.3.4
 ~~~~~

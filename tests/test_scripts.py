@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012-2013 Vinay Sajip.
+# Copyright (C) 2012-2022 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -37,7 +37,7 @@ class ScriptTestCase(DistlibTestCase):
 
     def setUp(self):
         source_dir = os.path.join(HERE, 'scripts')
-        target_dir = tempfile.mkdtemp()
+        target_dir = tempfile.mkdtemp(prefix='distlib-test-')
         self.maker = ScriptMaker(source_dir, target_dir, add_launchers=False)
 
     def tearDown(self):
@@ -60,9 +60,9 @@ class ScriptTestCase(DistlibTestCase):
                 self.assertIn(executable, first_line)
 
     def test_shebangs_custom_executable(self):
-        srcdir = tempfile.mkdtemp()
+        srcdir = tempfile.mkdtemp(prefix='distlib-test-')
         self.addCleanup(shutil.rmtree, srcdir)
-        dstdir = tempfile.mkdtemp()
+        dstdir = tempfile.mkdtemp(prefix='distlib-test-')
         self.addCleanup(shutil.rmtree, dstdir)
         maker = ScriptMaker(srcdir, dstdir, add_launchers=False)
         maker.executable = 'this_should_appear_in_the_shebang_line(中文)'
@@ -224,9 +224,9 @@ class ScriptTestCase(DistlibTestCase):
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_launcher_run_with_interpreter_args(self):
-        srcdir = tempfile.mkdtemp()
+        srcdir = tempfile.mkdtemp(prefix='distlib-test-')
         self.addCleanup(shutil.rmtree, srcdir)
-        dstdir = tempfile.mkdtemp()
+        dstdir = tempfile.mkdtemp(prefix='distlib-test-')
         self.addCleanup(shutil.rmtree, dstdir)
         maker = ScriptMaker(srcdir, dstdir, add_launchers=True)
 
@@ -434,7 +434,6 @@ class ScriptTestCase(DistlibTestCase):
             files = maker.make(spec)
             expected = set([e.replace('.py', '.exe') for e in expected])
             self.assertEqual(expected, set(files))
-
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
