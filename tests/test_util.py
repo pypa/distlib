@@ -405,6 +405,14 @@ class UtilTestCase(DistlibTestCase):
                 ('install_scripts',), ('install_lib',), ('install_headers',),
                 ('test',), ('build',), ('build_scripts',), ('build_py',),
                 ('build_ext',), ('build_clibs',), ('check',)
+            ],
+            # Next case added for Python 3.11
+            [
+                ('upload_sdist',), ('sdist',), ('install',), ('install_distinfo',),
+                ('install_data',), ('install_scripts',), ('install_lib',),
+                ('install_headers',), ('test',), ('upload_bdist',), ('build',),
+                ('build_scripts',), ('build_py',), ('build_ext',), ('build_clibs',),
+                ('register',), ('check',)
             ]
         )
         self.assertIn(actual, expected)

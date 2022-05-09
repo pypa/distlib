@@ -11,7 +11,6 @@ import codecs
 import datetime
 from email import message_from_file
 import hashlib
-import imp
 import json
 import logging
 import os
@@ -95,6 +94,29 @@ if os.sep == '/':
 else:
     to_posix = lambda o: o.replace(os.sep, '/')
 
+if sys.version_info[0] < 3:
+    import imp
+else:
+    imp = None
+    import importlib.machinery
+    import importlib.util
+
+def _get_suffixes():
+    if imp:
+        return [s[0] for s in imp.get_suffixes()]
+    else:
+        return importlib.machinery.EXTENSION_SUFFIXES
+
+def _load_dynamic(name, path):
+    # https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
+    if imp:
+        return imp.load_dynamic(name, path)
+    else:
+        spec = importlib.util.spec_from_file_location(name, path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+        return module
 
 class Mounter(object):
     def __init__(self):
@@ -124,7 +146,7 @@ class Mounter(object):
         else:
             if fullname not in self.libs:
                 raise ImportError('unable to find extension for %s' % fullname)
-            result = imp.load_dynamic(fullname, self.libs[fullname])
+            result = _load_dynamic(fullname, self.libs[fullname])
             result.__loader__ = self
             parts = fullname.rsplit('.', 1)
             if len(parts) > 1:
@@ -964,7 +986,7 @@ def compatible_tags():
         versions.append(''.join([major, str(minor)]))
 
     abis = []
-    for suffix, _, _ in imp.get_suffixes():
+    for suffix in _get_suffixes():
         if suffix.startswith('.abi'):
             abis.append(suffix.split('.', 2)[1])
     abis.sort()

@@ -6,6 +6,20 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- scripts
+
+    - Updated launcher executables. Thanks to Michael Bikovitsky for his help with
+      the launcher changes.
+
+    - Fixed #164: Improved support for reproducible builds by allowing a fixed
+      date/time to be inserted into created .exe files. Thanks to Somber Night for the
+      patch.
+
+- wheel
+
+    - Updated to write archive path of RECORD to RECORD instead of staging path.
+      Thanks to Pieter Pas for the patch.
+
 0.3.4
 ~~~~~
 
