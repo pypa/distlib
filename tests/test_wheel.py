@@ -25,7 +25,7 @@ from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENA
 from distlib.scripts import ScriptMaker
 from distlib.util import get_executable
 from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS,
-                           is_compatible, _get_glibc_version)
+                           IMP_PREFIX, is_compatible, _get_glibc_version)
 
 try:
     with open(os.devnull, 'wb') as junk:
@@ -676,12 +676,17 @@ class WheelTestCase(DistlibTestCase):
             parts.append('d')
         # Starting with 3.8, the SOABI doesn't append m when WITH_PYMALLOC is
         # defined (see bpo-36707)
-        if (sys.version_info[:2] < (3, 8) and
-            sysconfig.get_config_var('WITH_PYMALLOC')):
-            parts.append('m')
-        if sysconfig.get_config_var('Py_UNICODE_SIZE') == 4:
-            parts.append('u')
-        if sys.version_info[:2] < (3, 5):
+        vi = sys.version_info[:2]
+        if IMP_PREFIX == 'cp':
+            if vi < (3, 8):
+                wpm = sysconfig.get_config_var('WITH_PYMALLOC')
+                if wpm or wpm is None:
+                    parts.append('m')
+            if vi < (3, 3):
+                us = sysconfig.get_config_var('Py_UNICODE_SIZE')
+                if us == 4 or (us is None and sys.maxunicode == 0x10FFFF):
+                    parts.append('u')
+        if vi < (3, 5):
             abi = ABI
         else:
             abi = ABI.split('-')[0]
