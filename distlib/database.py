@@ -1314,18 +1314,19 @@ def get_required_dists(dists, dist):
 
     :param dists: a list of distributions
     :param dist: a distribution, member of *dists* for which we are interested
+                 in finding the dependencies.
     """
     if dist not in dists:
         raise DistlibException('given distribution %r is not a member '
                                'of the list' % dist.name)
     graph = make_graph(dists)
 
-    req = []  # required distributions
+    req = set()  # required distributions
     todo = graph.adjacency_list[dist]  # list of nodes we should inspect
 
     while todo:
         d = todo.pop()[0]
-        req.append(d)
+        req.add(d)
         for pred in graph.adjacency_list[d]:
             if pred not in req:
                 todo.append(pred)
