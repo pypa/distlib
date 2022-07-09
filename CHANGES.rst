@@ -34,6 +34,8 @@ Released: Not yet.
 
     - Fixed #169: Removed usage of deprecated imp module in favour of importlib.
 
+    - Fixed #172: Compute ABI correctly for Python < 3.8.
+
 In addition to the above, setup.py was replaced by setup.cfg and pyproject.toml.
 
 0.3.4
