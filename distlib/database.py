@@ -385,8 +385,9 @@ class Distribution(object):
 
     def _get_requirements(self, req_attr):
         md = self.metadata
-        logger.debug('Getting requirements from metadata %r', md.todict())
         reqts = getattr(md, req_attr)
+        logger.debug('%s: got requirements %r from metadata: %r', self.name, req_attr,
+                     reqts)
         return set(md.get_requirements(reqts, extras=self.extras,
                                        env=self.context))
 
@@ -1323,14 +1324,17 @@ def get_required_dists(dists, dist):
 
     req = set()  # required distributions
     todo = graph.adjacency_list[dist]  # list of nodes we should inspect
+    seen = set(t[0] for t in todo) # already added to todo
 
     while todo:
         d = todo.pop()[0]
         req.add(d)
-        for pred in graph.adjacency_list[d]:
-            if pred not in req:
+        pred_list = graph.adjacency_list[d]
+        for pred in pred_list:
+            d = pred[0]
+            if d not in req and d not in seen:
+                seen.add(d)
                 todo.append(pred)
-
     return req
 
 
