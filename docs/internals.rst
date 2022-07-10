@@ -120,6 +120,9 @@ a :attr:`matcher` attribute which is normally ``None`` but set to a
 :class:`distlib.version.Matcher` instance when a :meth:`locate` call is in
 progress.
 
+.. note:: To replicate behavior of pip, or to parse existing requirements.txt
+files, you need to instantiate the locator with ``version_scheme=legacy``.
+
 
 Finding dependencies
 ~~~~~~~~~~~~~~~~~~~~
