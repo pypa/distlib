@@ -120,6 +120,8 @@ a :attr:`matcher` attribute which is normally ``None`` but set to a
 :class:`distlib.version.Matcher` instance when a :meth:`locate` call is in
 progress.
 
+Note that in order to work with legacy version numbers (those not complying with PEP
+440), you need to pass ``scheme='legacy'`` to the initializer for a locator.
 
 Finding dependencies
 ~~~~~~~~~~~~~~~~~~~~

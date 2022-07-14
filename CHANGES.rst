@@ -1,10 +1,15 @@
 Change log for ``distlib``
 --------------------------
 
-0.3.5 (future)
+0.3.6 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+0.3.5
+~~~~~
+
+Released: 2022-07-14
 
 - database
 
