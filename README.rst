@@ -4,6 +4,7 @@
    :alt: GitHub test status
 
 .. |badge2| image:: https://img.shields.io/codecov/c/github/pypa/distlib
+   :target: https://app.codecov.io/gh/pypa/distlib
    :alt: GitHub coverage status
 
 What is it?
