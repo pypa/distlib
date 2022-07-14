@@ -86,7 +86,7 @@ will look something like this::
         Locate distributions.
         """
 
-        def __init__(self, version_scheme='default'):
+        def __init__(self, scheme='default'):
             """
             Initialise a locator with the specified version scheme.
             """

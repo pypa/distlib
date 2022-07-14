@@ -6,6 +6,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- database
+
+    - Fixed #170: Corrected implementation of ``get_required_dists()``.
+
 - index
 
     - Updated coverage pragmas for tests relating to obsolete PyPI APIs.
@@ -13,6 +17,10 @@ Released: Not yet.
 - locators
 
     - Changed the default locator configuration.
+
+- metadata
+
+    - Updates in support of PEP 643 / Metadata 2.2.
 
 - scripts
 
