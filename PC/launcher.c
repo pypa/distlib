@@ -831,6 +831,8 @@ run_child(wchar_t * cmdline)
                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), emessage, MSGSIZE, NULL);
         wassert(ok, L"Unable to create process using '%ls': %ls", cmdline, emessage);
     }
+    // Assign the process to the job straight away. See https://github.com/pypa/distlib/issues/175
+    AssignProcessToJobObject(job, child_process_info.hProcess);
     post_spawn_cleanup(si.cbReserved2, si.lpReserved2);
     /*
      * Control handler setting is now done after process creation because the handler needs access
@@ -841,7 +843,6 @@ run_child(wchar_t * cmdline)
 #if !defined(_CONSOLE)
     clear_app_starting_state(&child_process_info);
 #endif
-    AssignProcessToJobObject(job, child_process_info.hProcess);
     CloseHandle(child_process_info.hThread);
     WaitForSingleObjectEx(child_process_info.hProcess, INFINITE, FALSE);
     ok = GetExitCodeProcess(child_process_info.hProcess, &rc);
