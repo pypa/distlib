@@ -453,7 +453,7 @@ control_key_handler(DWORD type)
 /*
  * See https://github.com/pypa/pip/issues/10444
  */
-#if !defined(NEW_LOGIC)
+#if defined(OLD_LOGIC)
     if ((type == CTRL_C_EVENT) || (type == CTRL_BREAK_EVENT)) {
         return TRUE;
     }

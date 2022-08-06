@@ -6,6 +6,11 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- scripts
+
+    - Fixed #175: Updated launcher executables to better handle the relationship
+      between launcher and child process in the Job API.
+
 0.3.5
 ~~~~~
 
