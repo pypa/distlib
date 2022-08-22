@@ -42,14 +42,14 @@ with ``-R``. which is only available in Python 2.6.8 and later.)
 
 Continuous integration test results are available at:
 
-https://travis-ci.org/vsajip/distlib/
+https://github.com/pypa/distlib/actions
 
 Coverage results are available at:
 
 .. index::
    single: Coverage status; distlib
 
-https://coveralls.io/r/vsajip/distlib
+https://app.codecov.io/gh/pypa/distlib
 
 Note that the actual coverage is higher than that shown, because coverage
 under Windows is not included in the above coverage figures.
