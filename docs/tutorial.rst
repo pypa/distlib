@@ -29,10 +29,8 @@ Testing
    single: Testing; distlib
 
 A full test suite is included with ``distlib``. To run it, you'll need to
-download the source distribution, unpack it and run ``python setup.py test``
-in the top-level directory of the package. You can of course also run
-``python setup.py install`` to install the package (perhaps invoking with
-``sudo`` if you need to install to a protected location).
+download the source distribution, unpack it and run ``python tests/test_all.py``
+in the top-level directory of the package.
 
 If running the tests under Python >= 3.2.3, remember to first set the environment
 variable ``PYTHONHASHSEED=0`` to disable hash randomisation, which is needed for
@@ -79,12 +77,13 @@ If PyPI is unavailable or slow, then some of the tests can fail or become
 painfully slow. To skip tests that might be sometimes slow, set the
 ``SKIP_SLOW`` environment variable::
 
-    $ SKIP_SLOW=1 python setup.py test
+    $ SKIP_SLOW=1 PYTHONHASHSEED=0 python tests/test_all.py
 
 on Posix, or::
 
     C:\> set SKIP_SLOW=1
-    C:\> python setup.py test
+    C:\> set PYTHONHASHSEED=0
+    C:\> python tests/test_all.py
 
 on Windows.
 
