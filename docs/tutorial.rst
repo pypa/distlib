@@ -34,7 +34,7 @@ in the top-level directory of the package.
 
 If running the tests under Python >= 3.2.3, remember to first set the environment
 variable ``PYTHONHASHSEED=0`` to disable hash randomisation, which is needed for
-the tests. (The enviroment variable also needs to be set if running Python 2.x
+the tests. (The environment variable also needs to be set if running Python 2.x
 with ``-R``. which is only available in Python 2.6.8 and later.)
 
 .. index::
@@ -1567,7 +1567,7 @@ where you want the files in the wheel to be installed::
     maker = ScriptMaker(None, None)
     # You can specify a custom executable in script shebang lines, whether
     # or not to install native executable launchers, whether to do a dry run
-    # etc. by setting attributes on the maker, wither when creating it or
+    # etc. by setting attributes on the maker, either when creating it or
     # subsequently.
 
     # Now install. The method accepts optional keyword arguments:
