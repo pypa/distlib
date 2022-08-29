@@ -31,10 +31,7 @@ def _is_literal(o):
     return o[0] in '\'"'
 
 def _get_versions(s):
-    result = []
-    for m in _VERSION_PATTERN.finditer(s):
-        result.append(NV(m.groups()[0]))
-    return set(result)
+    return {NV(m.groups()[0]) for m in _VERSION_PATTERN.finditer(s)}
 
 class Evaluator(object):
     """
