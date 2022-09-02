@@ -40,9 +40,10 @@ Resource extraction
 
     resources.cache = resources.Cache(extraction_path)
 
-   before accessing the ``file_path`` property of any :class:`Resource`.
-   Note that if you have accessed the ``file_path`` property for a resource
-   *before* doing this, the cache may already have extracted files.
+   before accessing the ``file_path`` property of any
+   :class:`~distlib.resources.Resource`. Note that if you have accessed the
+   ``file_path`` property for a resource *before* doing this, the cache may already
+   have extracted files.
 
 ``cleanup_resources(force=False)``
    This is not actually implemented in ``pkg_resources`` -- it's a no-op.
@@ -55,9 +56,9 @@ Resource extraction
 Provider interface
 ~~~~~~~~~~~~~~~~~~
 
-You can provide an ``XXXResourceFinder`` class which finds resources in custom
-storage containers, and works like ``ResourceFinder``. Although it shouldn't
-be necessary, you could also return a subclass of :class:`Resource` from your
+You can provide an ``XXXResourceFinder`` class which finds resources in custom storage
+containers, and works like ``ResourceFinder``. Although it shouldn't be necessary, you
+could also return a subclass of :class:`~distlib.resources.Resource` from your
 finders, to deal with custom requirements which aren't catered for.
 
 ``get_cache_path(archive_name, names=())``
@@ -66,17 +67,18 @@ finders, to deal with custom requirements which aren't catered for.
    API, please give feedback with more information about your use cases.
 
 ``extraction_error()``
-   There's no analogue for this. The :meth:`Cache.get` method, which writes
-   a resource's bytes to a file in the cache, will raise any exception caused
-   by underlying I/O. If you need to handle this in the cache layer, you can
-   subclass :class:`Cache` and override :meth:`get`. If that doesn't work for
-   you, please give feedback with more information about your use cases.
+   There's no analogue for this. The :meth:`~distlib.resources.ResourceCache.get`
+   method, which writes a resource's bytes to a file in the cache, will raise any
+   exception caused by underlying I/O. If you need to handle this in the cache layer,
+   you can subclass :class:`~distlib.resources.ResourceCache` and override
+   :meth:`~distlib.resources.ResourceCache.get`. If that doesn't work for you, please
+   give feedback with more information about your use cases.
 
 ``postprocess(tempname, filename)``
-   There's no analogue for this. The :meth:`Cache.get` method, which writes
-   a resource's bytes to a file in the cache, can be overridden to perform any
-   custom post-processing. If that doesn't work for you, please give feedback
-   with more information about your use cases.
+   There's no analogue for this. The :meth:`~distlib.resources.ResourceCache.get`
+   method, which writes a resource's bytes to a file in the cache, can be overridden
+   to perform any custom post-processing. If that doesn't work for you, please give
+   feedback with more information about your use cases.
 
 The ``pkg_resources`` entry point API
 -------------------------------------
@@ -89,15 +91,15 @@ term is a little ambiguous. In Eclipse, for example, they are called *extension
 point IDs*, which is a little closer to the intended usage, but a bit of a
 mouthful. In ``distlib``, we'll use the term ``category`` or ``export category``.
 
-In ``distlib``, the implementation of exports is slightly different from
-entry points of ``pkg_resources``. A :class:`Distribution` instance has an
-``exports`` attribute, which is a dictionary keyed by category and whose values
-are dictionaries that map names to :class:`ExportEntry` instances.
+In ``distlib``, the implementation of exports is slightly different from entry points
+of ``pkg_resources``. A :class:`~distlib.database.Distribution` instance has an
+``exports`` attribute, which is a dictionary keyed by category and whose values are
+dictionaries that map names to :class:`~distlib.util.ExportEntry` instances.
 
-Below are the ``pkg_resources`` functions and how to achieve the equivalent
-in ``distlib``. In cases where the ``pkg_resources`` functions take distribution
-names, in ``distlib`` you get the corresponding :class:`Distribution` instance,
-using::
+Below are the ``pkg_resources`` functions and how to achieve the equivalent in
+``distlib``. In cases where the ``pkg_resources`` functions take distribution names,
+in ``distlib`` you get the corresponding :class:`~distlib.database.Distribution`
+instance, using::
 
     dist = dist_path.get_distribution(distname)
 

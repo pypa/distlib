@@ -64,22 +64,24 @@ Locating distributions
 ~~~~~~~~~~~~~~~~~~~~~~
 
 It seems that the simplest API to locate a distribution would look like
-``locate(requirement)``, where ``requirement`` is a string giving the
-distribution name and optional version constraints. Given that we know that
-distributions can be found in different places, it's best to consider a
-:class:`Locator` class which has a :meth:`locate` method with a corresponding
+``locate(requirement)``, where ``requirement`` is a string giving the distribution
+name and optional version constraints. Given that we know that distributions can be
+found in different places, it's best to consider a :class:`~distlib.locators.Locator`
+class which has a :meth:`~distlib.locators.Locator.locate` method with a corresponding
 signature, with subclasses for each of the different types of location that
-distributions inhabit. It's also reasonable to provide a default locator in
-a module attribute :attr:`default_locator`, and a module-level :func:`locate`
-function which calls the :meth:`locate` method on the default locator.
+distributions inhabit. It's also reasonable to provide a default locator in a module
+attribute :attr:`~distlib.locators.default_locator`, and a module-level
+:func:`~distlib.locators.locate` function which calls the
+:meth:`~distlib.locators.Locator.locate` method on the default locator.
 
-Since we'll often need to locate all the versions of a project before picking
-one, we can imagine that a locator would need a :meth:`get_project` method for
-fetching all versions of a project; and since we will be likely to want to use
-caching, we can assume there will be a :meth:`_get_project` method to do the
-actual work of fetching the version data, which the higher-level
-:meth:`get_project` will call (and probably cache). So our locator base class
-will look something like this::
+Since we'll often need to locate all the versions of a project before picking one, we
+can imagine that a locator would need a :meth:`~distlib.locators.Locator.get_project`
+method for fetching all versions of a project; and since we will be likely to want to
+use caching, we can assume there will be a
+:meth:`~distlib.locators.Locator._get_project` method to do the actual work of
+fetching the version data, which the higher-level
+:meth:`~distlib.locators.Locator.get_project` will call (and probably cache). So our
+locator base class will look something like this::
 
     class Locator(object):
         """
@@ -114,11 +116,11 @@ will look something like this::
             instance, or an empty dictionary if nothing was found.
             """
 
-When attempting to :meth:`locate`, it would be useful to pass requirement
-information to :meth:`get_project` / :meth:`_get_project`. This can be done in
-a :attr:`matcher` attribute which is normally ``None`` but set to a
-:class:`distlib.version.Matcher` instance when a :meth:`locate` call is in
-progress.
+When attempting to :meth:`~distlib.locators.Locator.locate`, it would be useful to
+pass requirement information to :meth:`~distlib.locators.Locator.get_project` /
+:meth:`~distlib.locators.Locator._get_project`. This can be done in a :attr:`~distlib.locators.Locator.matcher`
+attribute which is normally ``None`` but set to a :class:`~distlib.version.Matcher`
+instance when a :meth:`~distlib.locators.Locator.locate` call is in progress.
 
 Note that in order to work with legacy version numbers (those not complying with PEP
 440), you need to pass ``scheme='legacy'`` to the initializer for a locator.
@@ -126,8 +128,8 @@ Note that in order to work with legacy version numbers (those not complying with
 Finding dependencies
 ~~~~~~~~~~~~~~~~~~~~
 
-A dependency finder will depend on a locator to locate dependencies. A simple
-approach will be to consider a :class:`DependencyFinder` class which takes a
+A dependency finder will depend on a locator to locate dependencies. A simple approach
+will be to consider a :class:`~distlib.locators.DependencyFinder` class which takes a
 locator as a constructor argument. It might look something like this::
 
     class DependencyFinder(object):
@@ -195,17 +197,19 @@ A minimal solution
 ^^^^^^^^^^^^^^^^^^
 
 The distutils approach was to have several separate command classes called
-``register``, ``upload`` and ``upload_doc``, where really all that was needed
-was some methods. That's the approach ``distlib`` takes, by implementing a
-:class:`PackageIndex` class with :meth:`register`, :meth:`upload_file` and
-:meth:`upload_documentation` methods. The :class:`PackageIndex` class contains
-no user interface code whatsoever: that's assumed to be the domain of the
-packaging tool. The packaging tool is expected to get the required information
-from a user using whatever means the developers of that tool deem to be the
-most appropriate; the required attributes are then set on the
-:class:`PackageIndex` instance. (Examples of this kind of information: user
-name, password, whether the user wants to save a default configuration, where
-the signing program and its keys live.)
+``register``, ``upload`` and ``upload_doc``, where really all that was needed was some
+methods. That's the approach ``distlib`` takes, by implementing a
+:class:`~distlib.index.PackageIndex` class with
+:meth:`~distlib.index.PackageIndex.register`,
+:meth:`~distlib.index.PackageIndex.upload_file` and
+:meth:`~distlib.index.PackageIndex.upload_documentation` methods. The
+:class:`~distlib.index.PackageIndex` class contains no user interface code whatsoever:
+that's assumed to be the domain of the packaging tool. The packaging tool is expected
+to get the required information from a user using whatever means the developers of
+that tool deem to be the most appropriate; the required attributes are then set on the
+:class:`~distlib.index.PackageIndex` instance. (Examples of this kind of information:
+user name, password, whether the user wants to save a default configuration, where the
+signing program and its keys live.)
 
 The minimal interface to provide the required functionality thus looks like
 this::
@@ -245,8 +249,8 @@ this::
             archiving the directory contents into a .zip file.
             """
 
-The following additional attributes can be identified on :class:`PackageIndex`
-instances:
+The following additional attributes can be identified on
+:class:`~distlib.index.PackageIndex` instances:
 
 * ``username`` - the username to use for authentication.
 * ``password`` - the password to use for authentication.
@@ -465,7 +469,7 @@ available via a file on the file system, we'll assume a simple caching
 solution that saves any such resources to a local file system cache, and
 returns the filename of the resource in the cache. We need to divide the
 work between the finder and the cache. We'll deliver the cache function
-through a :class:`Cache` class, which will have the following methods:
+through a :class:`~distlib.util.Cache` class, which will have the following methods:
 
 * A constructor which takes an optional base directory for the cache. If
   none is provided, we'll construct a base directory of the form::
@@ -477,36 +481,36 @@ through a :class:`Cache` class, which will have the following methods:
   will be used as ``<rootdir>`` -- otherwise, the user's home directory
   will be used.
 
-* A :meth:`get` method which takes a ``Resource`` and returns a file system
-  filename, such that the contents of that named file will be the contents
-  of the resource.
+* A :meth:`~distlib.resources.ResourceCache.get` method which takes a ``Resource`` and
+  returns a file system filename, such that the contents of that named file will be
+  the contents of the resource.
 
-* An :meth:`is_stale` method which takes a ``Resource`` and its corresponding
-  file system filename, and returns whether the file system file is stale
-  when compared with the resource. Knowing that cache invalidation is hard,
-  the default implementation just returns ``True``.
+* An :meth:`~distlib.resources.ResourceCache.is_stale` method which takes a
+  ``Resource`` and its corresponding file system filename, and returns whether the
+  file system file is stale when compared with the resource. Knowing that cache
+  invalidation is hard, the default implementation just returns ``True``.
 
-* A :meth:`prefix_to_dir` method which converts a prefix to a directory name.
-  We'll assume that for the cache, a resource path can be divided into two
-  parts: the *prefix* and the *subpath*. For resources in a .zip file, the
-  prefix would be the pathname of the archive, while the subpath would be the
-  path inside the archive. For a file system resource, since it is already in
-  the file system, the prefix would be ``None`` and the subpath would be the
-  absolute path name of the resource. The :meth:`prefix_to_dir` method's job
-  is to convert a prefix (if not ``None``) to a subdirectory in the cache
-  that holds the cached files for all resources with that prefix. We'll
-  delegate the determination of a resource's prefix and subpath to its finder,
-  using a :meth:`get_cache_info` method on finders, which takes a ``Resource``
-  and returns a (``prefix``, ``subpath``) tuple.
+* A :meth:`~distlib.util.Cache.prefix_to_dir` method which converts a
+  prefix to a directory name. We'll assume that for the cache, a resource path can be
+  divided into two parts: the *prefix* and the *subpath*. For resources in a .zip
+  file, the prefix would be the pathname of the archive, while the subpath would be
+  the path inside the archive. For a file system resource, since it is already in the
+  file system, the prefix would be ``None`` and the subpath would be the absolute path
+  name of the resource. The :meth:`~distlib.util.Cache.prefix_to_dir` method's job is
+  to convert a prefix (if not ``None``) to a subdirectory in the cache that holds the
+  cached files for all resources with that prefix. We'll delegate the determination of
+  a resource's prefix and subpath to its finder, using a
+  :meth:`~distlib.resources.ResourceFinder.get_cache_info` method on finders, which
+  takes a ``Resource`` and returns a (``prefix``, ``subpath``) tuple.
 
-  The default implementation will use :func:`os.splitdrive` to see if there's
+  The default implementation will use :func:`os.path.splitdrive` to see if there's
   a Windows drive, if present, and convert its ``':'`` to ``'---'``. The rest
   of the prefix will be converted by replacing ``'/'`` by ``'--'``, and
   appending ``'.cache'`` to the result.
 
 The cache will be activated when the ``file_path`` property of a ``Resource``
 is accessed. This will be a cached property, and will call the cache's
-:meth:`get` method to obtain the file system path.
+:meth:`~distlib.resources.ResourceCache.get` method to obtain the file system path.
 
 The ``scripts`` API
 -------------------
@@ -602,9 +606,9 @@ In addition, other methods suggest themselves for :class:`ScriptMaker`:
   analysis tool, over all the installed files.
 
 * The details of the callable specification can be encapsulated in a utility
-  function, :func:`~distlib.util.get_exports_entry`. This would take a
-  specification and return ``None``, if the specification didn't match the
-  callable format, or an instance of :class:`ExportEntry` if it did match.
+  function, :func:`~distlib.util.get_export_entry`. This would take a specification
+  and return ``None``, if the specification didn't match the callable format, or an
+  instance of :class:`~distlib.util.ExportEntry` if it did match.
 
 In addition, the following attributes on a ``ScriptMaker`` could be further used
 to refine its behaviour:
@@ -863,11 +867,10 @@ each scheme are bundled into a simple :class:`VersionScheme` class::
 Of course, the version class is also available through the matcher's
 ``version_class`` attribute.
 
-:class:`VersionScheme` makes it easier to work with alternative version schemes.
-For example, say we decide to experiment with an "adaptive" version scheme,
-which is based on the PEP 386 scheme, but when handed a non-conforming version,
-automatically tries to convert it to a normalized version using
-:func:`suggest_normalized_version`. Then, code which has to deal with version
+:class:`VersionScheme` makes it easier to work with alternative version schemes. For
+example, say we decide to experiment with an "adaptive" version scheme, which is based
+on the PEP 386 scheme, but when handed a non-conforming version, automatically tries
+to convert it to a normalized version. Then, code which has to deal with version
 schemes just has to pick the appropriate scheme by name.
 
 Creating the adaptive scheme is easy::
@@ -927,10 +930,10 @@ There are basically two operations which need to be performed on wheels:
 A minimal solution
 ^^^^^^^^^^^^^^^^^^
 
-Since we're talking about wheels, it seems likely that a :class:`Wheel` class
-would be part of the design. This allows for extensibility over a purely
-function-based API. The :class:`Wheel` would be expected to have methods that
-support the required operations::
+Since we're talking about wheels, it seems likely that a :class:`~distlib.wheel.Wheel`
+class would be part of the design. This allows for extensibility over a purely
+function-based API. The :class:`~distlib.wheel.Wheel` would be expected to have
+methods that support the required operations::
 
     class Wheel(object):
         def __init__(self, spec):
@@ -985,7 +988,7 @@ support the required operations::
             """
 
 In addition to the above, the following attributes can be identified for a
-:class:`Wheel` instance:
+:class:`~distlib.wheel.Wheel` instance:
 
 * ``name`` -- the name of the distribution
 * ``version`` -- the version of the distribution

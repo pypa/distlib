@@ -992,7 +992,7 @@ Released: 2013-04-30
 
 - metadata
 
-    - Added missing condition in :meth:`todict`.
+    - Added missing condition in :meth:`~distlib.metadata.Metadata.todict`.
 
 - scripts
 

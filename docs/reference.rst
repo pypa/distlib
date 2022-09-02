@@ -6,8 +6,23 @@ API Reference
 This is the place where the functions and classes in ``distlib's`` public API
 are described.
 
+The ``distlib`` package
+-----------------------
+
+.. currentmodule:: distlib
+
+Classes
+^^^^^^^
+
+.. class:: DistlibException
+
+   This is the base class for all exceptions raised by this packages, other than
+   lower-level standard Python exceptions.
+
 The ``distlib.database`` package
 --------------------------------
+
+.. currentmodule:: distlib.database
 
 Classes
 ^^^^^^^
@@ -26,7 +41,7 @@ Classes
 
       :param path: The path to use when looking for distributions.
                    If ``None`` is specified, ``sys.path`` is used.
-      :type path: list of str
+      :type path: list[str]
       :param include_egg: If ``True``, legacy distributions (eggs)
                           are included in the search; otherwise,
                           they aren't.
@@ -79,7 +94,7 @@ Classes
                    entries in the category are returned.
       :type name: str
       :returns: An iterator which iterates over exported entries (instances of
-                :class:`ExportEntry`).
+                :class:`~distlib.util.ExportEntry`).
 
 .. class:: Distribution
 
@@ -207,7 +222,7 @@ Classes
       directory is written.
 
       :param exports: A dictionary whose keys are categories and whose values
-                      are dictionaries which contain :class:`ExportEntry`
+                      are dictionaries which contain :class:`~distlib.util.ExportEntry`
                       instances keyed on their name.
       :type exports: dict
       :param filename: The filename to read from, or ``None`` to read from the
@@ -284,6 +299,24 @@ Classes
 
       Dictionary mapping distributions to a list of requirements that were not
       provided by any distribution.
+
+Functions
+^^^^^^^^^
+
+.. function:: make_graph(dists, scheme='default')
+
+   Return a dependency graph from the given distributions.
+
+.. function:: get_dependent_dists(dists, dist)
+
+   Recursively generate a list of distributions from *dists* that are dependent on
+   *dist*.
+
+.. function:: get_required_dists(dists, dist)
+
+   Recursively generate a list of distributions from *dists* that are required by
+   *dist*.
+
 
 The ``distlib.resources`` package
 ---------------------------------
@@ -364,7 +397,7 @@ Classes
 
       This attribute is set by the resource's finder. It is a textual
       representation of the path, such that if a PEP 302 loader's
-      :meth:`get_data` method is called with the path, the resource's
+      ``get_data()`` method is called with the path, the resource's
       bytes are returned by the loader. This attribute is analogous to
       the ``resource_filename`` API in ``setuptools``. Note that for
       resources in zip files, the path will be a pointer to the resource
@@ -381,7 +414,7 @@ Classes
       to a file in a cache in the file system, and the name of the cached
       file is returned. This is for use with APIs that need file names,
       or need to be able to access data through OS-level file handles. See
-      the :class:`~distlib.resources.Cache` documentation for more
+      the :class:`~distlib.resources.ResourceCache` documentation for more
       information about the cache.
 
    Methods:
@@ -463,6 +496,16 @@ Classes
       :type resource: a :class:`Resource` instance
       :returns: The size of the resource in bytes.
 
+   .. method:: get_cache_info(resource)
+
+      Return the cache information for the specified resource. This is a two-tuple
+      consisting of an optional prefix (currently used for zip-based resources only,
+      and is otherwise ``None``) and an absolute path.
+
+      :param resource: The resource for which the cache info is wanted.
+      :type resource: a :class:`Resource` instance
+      :returns: tuple
+
 
 .. class:: ZipResourceFinder
 
@@ -484,7 +527,7 @@ Classes
 
       Ensures that the resource is available as a file in the file system,
       and returns the name of that file. This method calls the resource's
-      finder's :meth:`get_cache_info` method.
+      finder's :meth:`~distlib.resources.ResourceFinder.get_cache_info` method.
 
    .. method:: is_stale(resource, path)
 
@@ -493,6 +536,7 @@ Classes
       implementation returns ``True``, causing the resource's data to be
       re-written to the file every time.
 
+.. _scripts:
 
 The ``distlib.scripts`` package
 -------------------------------
@@ -526,6 +570,16 @@ Classes
 
       Whether to overwrite scripts even when timestamps show they're up to
       date.
+
+   .. attribute:: clobber
+
+      Whether to overwrite existing scripts. The default is ``False``, which means that
+      existing scripts will not be overwritten.
+
+   .. attribute:: executable
+
+      Value to use for the executable to use when constructing a shebang. If specified,
+      it is used in place of any value determined algorithmically.
 
    .. attribute:: set_mode
 
@@ -682,7 +736,7 @@ Functions
    ``"/usr/bin/env /dir with spaces/bin/jython"``
 
    .. versionchanged:: 0.3.1
-      This was an internal function :func:`_enquote_executable` in earlier versions.
+      This was an internal function ``_enquote_executable`` in earlier versions.
 
 The ``distlib.locators`` package
 --------------------------------
@@ -696,6 +750,10 @@ Classes
 
    The base class for locators. Implements logic common to multiple locators.
 
+   .. attribute:: matcher
+
+      A :class:~distlib.version.VersionMatcher`
+
    .. method:: __init__(scheme='default')
 
       Initialise an instance of the locator.
@@ -703,12 +761,17 @@ Classes
       :param scheme: The version scheme to use.
       :type scheme: str
 
-   .. method:: get_project(name)
+   .. method:: _get_project(name)
 
       This method should be implemented in subclasses. It returns a
       (potentially empty) dictionary whose keys are the versions located
       for the project named by ``name``, and whose values are instances of
-      :class:`distlib.util.Distribution`.
+      :class:`distlib.database.Distribution`.
+
+   .. method:: get_project(name)
+
+      This method calls :meth:`_get_project` to do the actual work, and provides a
+      caching layer on top.
 
    .. method:: convert_url_to_download_info(url, project_name)
 
@@ -846,13 +909,13 @@ Classes
 
 .. class:: DistPathLocator
 
-   This locator uses a :class:`DistributionPath` instance to locate installed
-   distributions.
+   This locator uses a :class:`~distlib.database.DistributionPath` instance to locate
+   installed distributions.
 
    .. method:: __init__(url, distpath, **kwargs)
 
       :param distpath: The distribution path to use.
-      :type distpath: :class:`DistributionPath`
+      :type distpath: :class:`~distlib.database.DistributionPath`
       :param  kwargs: Passed to base class constructor.
 
 .. class:: AggregatingLocator(Locator)
@@ -865,13 +928,16 @@ Classes
    .. method:: __init__(*locators, **kwargs)
 
       :param locators: A list of aggregators to delegate finding projects to.
-      :type locators: sequence of locators
+
+      :type locators: list[Locator]
+
       :param merge: If this *kwarg* is ``True``, each aggregator in the list is
                     asked to provide results, which are aggregated into a
                     results dictionary. If ``False``, the first non-empty
                     return value from the list of aggregators is returned.
                     The locators are consulted in the order in which they're
                     passed in.
+
       :type merge: bool
 
 .. class:: DependencyFinder
@@ -889,29 +955,29 @@ Classes
       Find all the distributions needed to fulfill ``requirement``.
 
       :param requirement: A string of the from ``name (version)`` where
-                          version can include an inequality constraint, or an
-                          instance of :class:`Distribution` (e.g. representing
-                          a distribution on the local hard disk).
+                          version can include an inequality constraint, or an instance
+                          of :class:`~distlib.database.Distribution` (e.g.
+                          representing a distribution on the local hard disk).
       :param meta_extras: A list of meta extras such as :test:, :build: and
                           so on, to be included in the dependencies.
       :param prereleases: If ``True``, allow pre-release versions to be
                           returned - otherwise, don't return prereleases
                           unless they're all that's available.
-      :returns: A 2-tuple. The first element is a set of :class:`Distribution`
-                instances. The second element is a set of problems encountered
-                during dependency resolution. Currently, if this set is non-
-                empty, it will contain 2-tuples whose first element is the
-                string 'unsatisfied' and whose second element is a requirement
-                which couldn't be satisfied.
+      :returns: A 2-tuple. The first element is a set of
+                :class:`~distlib.database.Distribution` instances. The second element
+                is a set of problems encountered during dependency resolution.
+                Currently, if this set is non- empty, it will contain 2-tuples whose
+                first element is the string 'unsatisfied' and whose second element is
+                a requirement which couldn't be satisfied.
 
-                In the set of :class:`Distribution` instances returned, some
-                attributes will be set:
+                In the set of :class:`~distlib.database.Distribution` instances
+                returned, some attributes will be set:
 
                 * The instance representing the passed-in ``requirement`` will
-                  have the :attr:`requested` attribute set to ``True``.
+                  have the ``requested`` attribute set to ``True``.
                 * All requirements which are not installation requirements (in
                   other words, are needed only for build and test) will have
-                  the :attr:`build_time_dependency` attribute set to ``True``.
+                  the ``build_time_dependency`` attribute set to ``True``.
 
 
 Functions
@@ -1000,10 +1066,9 @@ Classes
                        can see this in PyPI's Web UI when you click the
                        "Package submission" link in the left-hand side menu.
       :returns: An ``urllib`` HTTP response returned by the index. If an error
-                occurs, an :class:`HTTPError` exception will be raised.
+                occurs, an :class:`~urllib.error.HTTPError` exception will be raised.
 
-   .. method:: upload_file(metadata, filename, signer=None, sign_password=None,
-                           filetype='sdist', pyversion='source', keystore=None)
+   .. method:: upload_file(metadata, filename, signer=None, sign_password=None, filetype='sdist', pyversion='source', keystore=None)
 
       Upload a distribution to the index.
 
@@ -1032,7 +1097,7 @@ Classes
                        instance's ``gpg_home`` attribute is used instead. This
                        parameter is not used unless a signer is specified.
       :returns: An ``urllib`` HTTP response returned by the index. If an error
-                occurs, an :class:`HTTPError` exception will be raised.
+                occurs, an :class:`~urllib.error.HTTPError` exception will be raised.
 
       .. versionchanged:: 0.1.9
          The ``keystore`` argument was added.
@@ -1050,10 +1115,9 @@ Classes
                       documentation. This directory should be the one that
                       contains ``index.html``.
       :returns: An ``urllib`` HTTP response returned by the index. If an error
-                occurs, an :class:`HTTPError` exception will be raised.
+                occurs, an :class:`~urllib.error.HTTPError` exception will be raised.
 
-   .. method:: verify_signature(self, signature_filename, data_filename,
-                                keystore=None)
+   .. method:: verify_signature(self, signature_filename, data_filename, keystore=None)
 
       Verify a digital signature against a downloaded distribution.
 
@@ -1070,6 +1134,15 @@ Classes
 
       .. versionchanged:: 0.1.9
          The ``keystore`` argument was added.
+
+   .. method:: read_configuration()
+
+      Read the PyPI access configuration.
+
+   .. method:: save_configuration()
+
+      Save the PyPI access configuration. You must have set ``username`` and
+      ``password`` attributes before calling this method.
 
    .. method:: search(query, operation=None)
 
@@ -1209,7 +1282,18 @@ Classes
    .. attribute:: dist
 
       The distribution which exports this entry. This is normally an
-      instance of :class:`InstalledDistribution`.
+      instance of :class:`~distlib.database.InstalledDistribution`.
+
+.. class:: HTTPSHandler
+
+   A request handler inheriting from :class:`urllib.request.HTTPSHandler` which does
+   certificate validation.
+
+.. class:: HTTPSOnlyHandler
+
+   A request handler inheriting from :class:`urllib.request.HTTPSHandler` which raises
+   an exception if an attempt is made to open an HTTP (as opposed to HTTPS)
+   connection.
 
 Functions
 ^^^^^^^^^
@@ -1240,13 +1324,13 @@ Functions
       * As a place to cache package resources which need to be in the file
         system, because they are used by APIs which either expect filesystem
         paths, or to be able to use OS-level file handles. An example of the
-        former is the :meth:`SSLContext.load_verify_locations` method in
+        former is the :meth:`~ssl.SSLContext.load_verify_locations` method in
         Python's ``ssl`` module. The subdirectory ``resource-cache`` is used
         for this purpose.
 
       * As a place to cache shared libraries which are extracted as a result
-        of calling the :meth:`~wheel.Wheel.mount` method of the
-        :class:`~wheel.Wheel` class. The subdirectory ``dylib-cache`` is used
+        of calling the :meth:`~distlib.wheel.Wheel.mount` method of the
+        :class:`~distlib.wheel.Wheel` class. The subdirectory ``dylib-cache`` is used
         for this purpose.
 
       The application using this cache functionality, whether through the
@@ -1301,6 +1385,8 @@ Functions
 
 The ``distlib.wheel`` package
 -----------------------------
+
+.. currentmodule:: distlib.wheel
 
 This package has functionality which allows you to work with wheels (see :pep:`427`).
 
@@ -1376,10 +1462,10 @@ Classes
                     the wheel is for a pure-Python distribution.
 
       :param maker: This should be set to a suitably configured instance of
-                    :class:`ScriptMaker`. The ``source_dir`` and ``target_dir``
-                    arguments can be set to ``None`` when creating the
-                    instance - these will be set to appropriate values inside
-                    this method.
+                    :class:`~distlib.scripts.ScriptMaker`. The ``source_dir`` and
+                    ``target_dir`` arguments can be set to ``None`` when creating the
+                    instance - these will be set to appropriate values inside this
+                    method.
 
       :param warner: If specified, should be a callable that will be called
                      with (software_wheel_ver, file_wheel_ver) if they differ.
@@ -1415,11 +1501,11 @@ Classes
       for import.
 
       If the wheel tags indicate it is not compatible with the running Python,
-      a :class:`DistlibException` is raised. (The :meth:`is_compatible`
+      a :class:`~distlib.DistlibException` is raised. (The :meth:`is_compatible`
       method is used to determine compatibility.)
 
       If the wheel is indicated as not suitable for mounting, a
-      :class:`DistlibException` is raised.  (The :meth:`is_mountable`
+      :class:`distlib.DistlibException` is raised.  (The :meth:`is_mountable`
       method is used to determine mountability.)
 
       :param append: If ``True``, the wheel's pathname is added to the end of
@@ -1427,7 +1513,7 @@ Classes
 
       .. note:: Wheels may state in their metadata that they are not
          intended to be mountable, in which case this method will raise a
-         :class:`DistlibException` with a suitable message. If C extensions
+         :class:`distlib.DistlibException` with a suitable message. If C extensions
          are extracted, the location for extraction will be under the
          directory ``dylib-cache`` in the directory returned by
          :func:`~distlib.util.get_cache_base`.
@@ -1452,7 +1538,7 @@ Classes
 
       Verify sizes and hashes of the wheel's contents against the sizes and
       hashes declared in the wheel's RECORD. Raise a
-      :class:`DistlibException` if a size or digest mismatch is detected.
+      :class:`distlib.DistlibException` if a size or digest mismatch is detected.
 
       .. versionadded:: 0.1.8
 
@@ -1513,8 +1599,8 @@ Classes
 
    .. attribute:: metadata
 
-      The metadata for the distribution in the wheel, as a :class:`Metadata`
-      instance.
+      The metadata for the distribution in the wheel, as a
+      :class:`~distlib.metadata.Metadata` instance.
 
    .. attribute:: info
 
@@ -1542,6 +1628,116 @@ Functions
                 it defaults to the set of tags which are compatible with this
                 Python implementation.
    :return: ``True`` if compatible, else ``False``.
+
+
+The ``distlib.versions`` package
+--------------------------------
+
+.. currentmodule:: distlib.version
+
+This package has functionality which allows you to work with standard versions (see
+:pep:`440`) but also legacy versions and semantic versions.
+
+Classes
+^^^^^^^
+
+.. class:: Version
+
+   This base class represents a version.
+
+.. class:: Matcher
+
+   This base class represents a version matcher. It's used for parsing and comparing
+   versions.
+
+.. class:: VersionScheme
+
+   This class represents a version scheme (e.g. legacy, semantic or standard).
+
+.. class:: NormalizedVersion
+
+   This class represents :pep:`440`-compatible versions.
+
+.. class:: NormalizedMatcher
+
+   This class represents a matcher for :pep:`440`-compatible versions.
+
+
+Functions
+^^^^^^^^^
+
+.. function:: get_scheme(name)
+
+   Return a :class:`VersionScheme` instance corresponding to the specified *name*.
+
+The ``distlib.manifest`` package
+--------------------------------
+
+.. currentmodule:: distlib.manifest
+
+This package has functionality which allows you to maintain a manifest, i.e. a list of
+files which makes up a source distribution.
+
+Classes
+^^^^^^^
+
+.. class:: Manifest
+
+   This base class represents a manifest. You can explore files under a directory,
+   add and remove files, and process directives to e.g. include or exclude files based
+   on patterns.
+
+   .. attribute:: files
+
+      The list of paths representing files included in the manifest.
+
+   .. attribute:: allfiles
+
+      The list of paths representing all files in the directory tree which the manifest
+      is based on.
+
+   .. attribute:: base
+
+      The base directory on which this manifest instance is based.
+
+   .. method:: process_directive(directive)
+
+      Process a *directive* which either adds some files from ``allfiles`` to
+        ``files``, or removes some files from ``files``.
+
+The ``distlib.metadata`` package
+--------------------------------
+
+.. currentmodule:: distlib.metadata
+
+This package has functionality which allows you to manage a distribution's metadata.
+
+Classes
+^^^^^^^
+
+.. class:: Metadata
+
+   This class represents a distribution's metadata.
+
+   .. method:: todict()
+
+      Returns the metadata as a dictionary.
+
+
+The ``distlib.markers`` package
+--------------------------------
+
+.. currentmodule:: distlib.markers
+
+This package has functionality for interpreting environment markers.
+
+Functions
+^^^^^^^^^
+
+.. function:: interpret(marker, execution_context=None)
+
+   This function returns the result of interpreting an environment marker in aptional
+   execution context, which is used for name lookups.
 
 
 Next steps

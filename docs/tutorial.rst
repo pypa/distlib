@@ -118,10 +118,10 @@ following classes:
 Distribution paths
 ~~~~~~~~~~~~~~~~~~
 
-The :class:`Distribution` and :class:`EggInfoDistribution` classes are normally
-not instantiated directly; rather, they are returned by querying
-:class:`DistributionPath` for distributions. To create a ``DistributionPath``
-instance, you can do ::
+The :class:`Distribution` and :class:`EggInfoDistribution` classes are normally not
+instantiated directly; rather, they are returned by querying
+:class:`~distlib.database.DistributionPath` for distributions. To create a
+``DistributionPath`` instance, you can do ::
 
     >>> from distlib.database import DistributionPath
     >>> dist_path = DistributionPath()
@@ -131,7 +131,8 @@ Querying a path for distributions
 
 In this most basic form, ``dist_path`` will provide access to all non-legacy
 distributions on ``sys.path``. To get these distributions, you invoke the
-:meth:`get_distributions` method, which returns an iterable. Let's try it::
+:meth:`~distlib.database.DistributionPath.get_distributions` method, which returns an
+iterable. Let's try it::
 
     >>> list(dist_path.get_distributions())
     []
@@ -153,9 +154,9 @@ and then you'll get a less surprising result::
     >>> len(list(dist_path.get_distributions()))
     77
 
-The exact number returned will be different for you, of course. You can ask
-for a particular distribution by name, using the :meth:`get_distribution`
-method::
+The exact number returned will be different for you, of course. You can ask for a
+particular distribution by name, using the
+:meth:`~distlib.database.DistributionPath.get_distribution` method::
 
     >>> dist_path.get_distribution('setuptools')
     <EggInfoDistribution u'setuptools' 0.6c11 at '/usr/lib/python2.7/dist-packages/setuptools.egg-info'>
@@ -257,8 +258,8 @@ callable, ``suffix`` is the path to the callable in the module, and flags can
 be used for any purpose determined by the distribution author (for example, the
 ``extras`` feature in ``distribute`` / ``setuptools``).
 
-This entry format is used in the :mod:`distlib.scripts` package for installing
-scripts based on Python callables.
+This entry format is used in the :ref:`scripts` for installing scripts based on Python
+callables.
 
 Distribution dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -267,16 +268,16 @@ You can use the ``distlib.locators`` package to locate the dependencies that
 a distribution has. The ``distlib.database`` package has code which
 allow you to analyse the relationships between a set of distributions:
 
-* :func:`make_graph`, which generates a dependency graph from a list of
-  distributions.
-* :func:`get_dependent_dists`, which takes a list of distributions and a
-  specific distribution in that list, and returns the distributions that
+* :func:`~distlib.database.make_graph`, which generates a dependency graph from a list
+  of distributions.
+* :func:`~distlib.database.get_dependent_dists`, which takes a list of distributions
+  and a specific distribution in that list, and returns the distributions that
   are dependent on that specific distribution.
-* :func:`get_required_dists`, which takes a list of distributions and a
-  specific distribution in that list, and returns the distributions that
+* :func:`~distlib.database.get_required_dists`, which takes a list of distributions and
+  a specific distribution in that list, and returns the distributions that
   are required by that specific distribution.
 
-The graph returned by :func:`make_graph` is an instance of
+The graph returned by :func:`~distlib.database.make_graph` is an instance of
 :class:`DependencyGraph`.
 
 Using the locators API
@@ -330,14 +331,14 @@ Note that the constraints on the dependencies were honoured by :func:`locate`.
 Under the hood
 ~~~~~~~~~~~~~~
 
-Under the hood, :func:`locate` uses *locators*. Locators are a mechanism for
-finding distributions from a range of sources. Although the ``pypi`` subpackage
-has been copied from ``distutils2`` to ``distlib``, there may be benefits in a
-higher-level API, and so the ``distlib.locators`` package has been created as
-an experiment. Locators are objects which locate distributions. A locator
-instance's :meth:`get_project` method is called, passing in a project name: The
-method returns a dictionary containing information about distribution releases
-found for that project. The keys of the returned dictionary are versions, and
+Under the hood, :func:`~distlib.locators.locate` uses *locators*. Locators are a
+mechanism for finding distributions from a range of sources. Although the ``pypi``
+subpackage has been copied from ``distutils2`` to ``distlib``, there may be benefits
+in a higher-level API, and so the ``distlib.locators`` package has been created as an
+experiment. Locators are objects which locate distributions. A locator instance's
+:meth:`~distlib.locators.Locator.get_project` method is called, passing in a project
+name: The method returns a dictionary containing information about distribution
+releases found for that project. The keys of the returned dictionary are versions, and
 the values are instances of :class:`distlib.database.Distribution`.
 
 The following locators are provided:
@@ -360,30 +361,31 @@ The following locators are provided:
   two more for each version -- one to get the metadata, and another to get the
   downloads information).
 
-* :class:`PyPIJSONLocator`. -- This takes a base URL for the JSON service and
-  will locate packages using PyPI's JSON API. This locator is case-sensitive. For
-  example, searching for ``'flask'`` will throw up no results, but you get the
-  expected results when searching from ``'Flask'``. This appears to be a
-  limitation of the underlying JSON API. Note that unlike the XML-RPC service,
-  only non-hidden releases will be returned.
+* :class:`~distlib.locators.PyPIJSONLocator`. -- This takes a base URL for the JSON
+  service and will locate packages using PyPI's JSON API. This locator is
+  case-sensitive. For example, searching for ``'flask'`` will throw up no results, but
+  you get the expected results when searching from ``'Flask'``. This appears to be a
+  limitation of the underlying JSON API. Note that unlike the XML-RPC service, only
+  non-hidden releases will be returned.
 
-* :class:`SimpleScrapingLocator` -- this takes a base URL for the site to
-  scrape, and locates packages using a similar approach to the
+* :class:`~distlib.locators.SimpleScrapingLocator` -- this takes a base URL for the
+  site to scrape, and locates packages using a similar approach to the
   ``PackageFinder`` class in ``pip``, or as documented in the ``setuptools``
   documentation as the approach used by ``easy_install``.
 
-* :class:`DistPathLocator` -- this takes a :class:`DistributionPath` instance
-  and locates installed distributions. This can be used with
-  :class:`AggregatingLocator` to satisfy requirements from installed
-  distributions before looking elsewhere for them.
+* :class:`~distlib.locators.DistPathLocator` -- this takes a
+  :class:`~distlib.database.DistributionPath` instance and locates installed
+  distributions. This can be used with :class:`AggregatingLocator` to satisfy
+  requirements from installed distributions before looking elsewhere for them.
 
-* :class:`JSONLocator` -- this uses an improved JSON metadata schema and
-  returns data on all versions of a distribution, including dependencies,
-  using a single network request.
+..
+    * :class:`~distlib.locators.JSONLocator` -- this uses an improved JSON metadata schema
+      and returns data on all versions of a distribution, including dependencies,
+      using a single network request.
 
-* :class:`AggregatingLocator` -- this takes a list of other aggregators and
-  delegates finding projects to them. It can either return the first result
-  found (i.e. from the first aggregator in the list provided which returns a
+* :class:`~distlib.locators.AggregatingLocator` -- this takes a list of other
+  aggregators and delegates finding projects to them. It can either return the first
+  result found (i.e. from the first aggregator in the list provided which returns a
   non-empty result), or a merged result from all the aggregators in the list.
 
 There is a default locator, available at :attr:`distlib.locators.default_locator`.
@@ -400,14 +402,18 @@ distributions registered on PyPI::
 
 This is implemented using the XML-RPC API.
 
-Apart from :class:`JSONLocator`, none of the locators currently returns enough
-metadata to allow dependency resolution to be carried out, but that is a result
-of the fact that metadata relating to dependencies are not indexed, and would
-require not just downloading the distribution archives and inspection of
-contained metadata files, but potentially also introspecting setup.py! This is
-the downside of having vital information only available via keyword arguments
-to the :func:`setup` call: hopefully, a move to fully declarative metadata will
-facilitate indexing it and allowing the provision of improved features.
+..
+
+    Apart from ``JSONLocator``,
+
+None of the locators currently returns enough metadata to allow dependency resolution
+to be carried out, but that is a result of the fact that metadata relating to
+dependencies are not indexed, and would require not just downloading the distribution
+archives and inspection of contained metadata files, but potentially also
+introspecting setup.py! This is the downside of having vital information only
+available via keyword arguments to the ``setup()`` call: hopefully, a move to fully
+declarative metadata will facilitate indexing it and allowing the provision of
+improved features.
 
 The locators will skip binary distributions other than wheels. (``.egg`` files
 are currently treated as binary distributions).
@@ -450,8 +456,8 @@ To use a local test server, you might do this::
 Registering a project
 ~~~~~~~~~~~~~~~~~~~~~
 
-Registering a project can be done using a :class:`Metadata` instance which
-holds the index metadata used for registering. A simple example::
+Registering a project can be done using a :class:`~distlib.metadata.Metadata` instance
+which holds the index metadata used for registering. A simple example::
 
     >>> from distlib.metadata import Metadata
     >>> metadata = Metadata()
@@ -460,9 +466,9 @@ holds the index metadata used for registering. A simple example::
     >>> # other fields omitted
     >>> response = index.register(metadata)
 
-The :meth:`register` method returns an HTTP response, such as might be returned
-by a call to ``urlopen``. If an error occurs, a :class:`HTTPError` will be
-raised. Otherwise, the ``response.code`` should be 200.
+The :meth:`~distlib.index.PackageIndex.register` method returns an HTTP response, such
+as might be returned by a call to ``urlopen``. If an error occurs, a
+:py:class:`~urllib.error.HTTPError` will be raised. Otherwise, the ``response.code`` should be 200.
 
 Uploading a source distribution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -472,8 +478,8 @@ To upload a source distribution, you need to do the following as a minimum::
     >>> metadata = ... # get a populated Metadata instance
     >>> response = index.upload_file(metadata, archive_name)
 
-The :meth:`upload_file` method returns an HTTP response or, in case of error,
-raises an :class:`HTTPError`.
+The :meth:`~distlib.index.PackageIndex.upload_file` method returns an HTTP response
+or, in case of error, raises an :py:class:`~urllib.error.HTTPError`.
 
 Uploading binary distributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -523,15 +529,15 @@ download distributions (and other files, such as signatures)::
 
     >>> index.download_file(url, destfile, digest=None, reporthook=None)
 
-This is similar in function to :func:`urlretrieve` in the standard library.
-Provide a ``digest`` if you want the call to check that the has digest of the
-downloaded file matches a specific value: if not provided, no matching is done.
-The value passed can just be a plain string in the case of an MD5 digest or, if
-you want to specify the hashing algorithm to use, specify a tuple such as
-``('sha1', '0123456789abcdef...')``. The hashing algorithm must be one that's
-supported by the :mod:`hashlib` module.
+This is similar in function to :py:func:`~urllib.request.urlretrieve` in the standard
+library. Provide a ``digest`` if you want the call to check that the has digest of the
+downloaded file matches a specific value: if not provided, no matching is done. The
+value passed can just be a plain string in the case of an MD5 digest or, if you want
+to specify the hashing algorithm to use, specify a tuple such as ``('sha1',
+'0123456789abcdef...')``. The hashing algorithm must be one that's supported by the
+:mod:`hashlib` module.
 
-Benefits to using this method over plain :func:`urlretrieve` are:
+Benefits to using this method over plain :func:`~urllib.request.urlretrieve` are:
 
 * It will use the ``ssl_verifier``, if set, to ensure that the download is
   coming from where you think it is (see :ref:`verify-https`).
@@ -547,12 +553,13 @@ whichever ``url`` you supply -- whether it's a resource on the index or not.
 Verifying signatures
 ~~~~~~~~~~~~~~~~~~~~
 
-For any archive downloaded from an index, you can retrieve any signature by
-just appending ``.asc`` to the path portion of the download URL for the
-archive, and downloading that. The index class offers a
-:meth:`verify_signature` method for validating a signature. If you have files
-'good.bin', 'bad.bin' which are different from each other, and 'good.bin.asc'
-has the signature for 'good.bin', then you can verify signatures like this::
+For any archive downloaded from an index, you can retrieve any signature by just
+appending ``.asc`` to the path portion of the download URL for the archive, and
+downloading that. The index class offers a
+:meth:`~distlib.index.PackageIndex.verify_signature` method for validating a
+signature. If you have files 'good.bin', 'bad.bin' which are different from each
+other, and 'good.bin.asc' has the signature for 'good.bin', then you can verify
+signatures like this::
 
     >>> index.verify_signature('good.bin.asc', 'good.bin', '/path/to/keys')
     True
@@ -604,9 +611,10 @@ build your documentation, this will be something like
 
     >>> response = index.upload_documentation(metadata, doc_dir)
 
-The :meth:`upload_documentation` method returns an HTTP response or, in case of
-error, raises an :class:`HTTPError`. The call will zip up the entire contents
-of the passed directory ``doc_dir`` and upload the zip file to the index.
+The :meth:`~distlib.index.PackageIndex.upload_documentation` method returns an HTTP
+response or, in case of error, raises an :class:`~urllib.error.HTTPError`. The call
+will zip up the entire contents of the passed directory ``doc_dir`` and upload the zip
+file to the index.
 
 Authentication
 ~~~~~~~~~~~~~~
@@ -675,7 +683,7 @@ By default, the handler will attempt to match domains, including wildcard
 matching. This means that (for example) you access ``foo.org`` or
 ``www.foo.org`` which have a certificate for ``*.foo.org``, the domains will
 match. If the domains don't match, the handler raises a
-:class:`CertificateError` (a subclass of :class:`ValueError`).
+:class:`~ssl.CertificateError` (a subclass of :class:`ValueError`).
 
 Domain mismatches can, however, happen for valid reasons. Say a hosting server
 ``bar.com`` hosts ``www.foo.org``, which we are trying to access using SSL. If
@@ -699,16 +707,16 @@ interaction with a server -- for example:
 * Deal with situations where an index page obtained via HTTPS contains
   links with a scheme of ``http`` rather than ``https``.
 
-To do this, instead of using :class:`HTTPSHandler` as shown above,
-use the :class:`HTTPSOnlyHandler` class instead, which disallows any
-HTTP traffic. It's used in the same way as :class:`HTTPSHandler`::
+To do this, instead of using :py:class:`~urllib.request.HTTPSHandler` as shown above,
+use the :class:`~distlib.util.HTTPSOnlyHandler` class instead, which disallows any
+HTTP traffic. It's used in the same way as :py:class:`~urllib.request.HTTPSHandler`::
 
     >>> from distlib.util import HTTPSOnlyHandler
     >>> verifier = HTTPSOnlyHandler('/path/to/root/certs.pem')
     >>> index.ssl_verifier = verifier
 
 Note that with this handler, you can't make *any* HTTP connections at all -
-it will raise :class:`URLError` if you try.
+it will raise :py:class:`~urllib.error.URLError` if you try.
 
 
 Getting hold of root certificates
@@ -722,9 +730,9 @@ At the time of writing, you can find a file in the appropriate format on the
 Saving a default configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you don't have a ``.pypirc`` file but want to save one, you can do this by
-setting the username and password and calling the :meth:`save_configuration`
-method::
+If you don't have a ``.pypirc`` file but want to save one, you can do this by setting
+the username and password and calling the
+:meth:`~distlib.index.PackageIndex.save_configuration` method::
 
     >>> index = PackageIndex()
     >>> index.username = 'fred'
@@ -950,12 +958,12 @@ Using markers
    single: Markers; evaluating
    single: Environment markers; evaluating
 
-Environment markers are implemented in the :mod:`distlib.markers` package
-and accessed via a single function, :func:`interpret`.
+Environment markers are implemented in the ``distlib.markers`` package and accessed
+via a single function, :func:`~distlib.markers.interpret`.
 
-See `PEP 508 <https://www.python.org/dev/peps/pep-0508/#environment-markers>`_
-for more information about environment markers. The :func:`interpret` function
-takes a string argument which represents a Boolean expression, and returns
+See `PEP 508 <https://www.python.org/dev/peps/pep-0508/#environment-markers>`_ for
+more information about environment markers. The :func:`~distlib.markers.interpret`
+function takes a string argument which represents a Boolean expression, and returns
 either ``True`` or ``False``::
 
     >>> from distlib.markers import interpret
@@ -973,8 +981,9 @@ environment::
     False
 
 
-You won't normally need to work with markers in this way -- they are dealt
-with by the :class:`Metadata` and :class:`Distribution` logic when needed.
+You won't normally need to work with markers in this way -- they are dealt with by the
+:class:`~distlib.metadata.Metadata` and :class:`~distlib.database.Distribution` logic
+when needed.
 
 
 Using the resource API
@@ -1175,9 +1184,9 @@ The string passed to make can take one of the following forms:
   load and call the specified callable with no arguments, returning its value
   as the return code from the script.
 
-  You can pass an optional ``options`` dictionary to the :meth:`make` method.
-  This is meant to contain options which control script generation. There are
-  two options currently in use:
+  You can pass an optional ``options`` dictionary to the
+  :meth:`~distlib.scripts.ScriptMaker.make` method. This is meant to contain options
+  which control script generation. There are two options currently in use:
 
   ``gui``: This Boolean value, if ``True``, indicates on Windows that a Windows
   executable launcher (rather than a launcher which is a console application)
@@ -1262,15 +1271,15 @@ Specifying a custom executable for shebangs
    single: Scripts; specifying custom executables
 
 You may need to specify a custom executable for shebang lines. To do this, set the
-:attr:`executable` attribute of a :class:`ScriptMaker` instance to the absolute
-Unicode path of the executable which you want to be written to the shebang lines of
-scripts. If not specified, the executable running the :class:`ScriptMaker` code is
-used. If the value has spaces, you should surround it with double quotes. You can use
-the :func:`enquote_executable` function for this.
+:attr:`~distlib.scripts.ScriptMaker.executable` attribute of a :class:`ScriptMaker`
+instance to the absolute Unicode path of the executable which you want to be written
+to the shebang lines of scripts. If not specified, the executable running the
+:class:`ScriptMaker` code is used. If the value has spaces, you should surround it
+with double quotes. You can use the :func:`enquote_executable` function for this.
 
 .. versionchanged:: 0.3.1
-   The :func:`enquote_executable` function was an internal function
-   :func:`_enquote_executable` in earlier versions.
+   The :func:`~distlib.scripts.enquote_executable` function was an internal function
+   ``_enquote_executable`` in earlier versions.
 
 For relocatable .exe files under Windows, you can specify the location of the python
 executable relative to the script by putting *<launcher_dir>* as the beginning of the
@@ -1321,9 +1330,9 @@ installation to fail, because the overwritten file may be different (and so
 have a different hash from what was computed during the 2.7 installation).
 
 To control overwriting of generated scripts this way, you can use the
-:attr:`clobber` attribute of a :class:`ScriptMaker` instance. This is set to
-``False`` by default, which prevents overwriting; to force overwriting, set it
-to ``True``.
+:attr:`~distlib.scripts.ScriptMaker.clobber` attribute of a
+:class:`~distlib.scripts.ScriptMaker` instance. This is set to ``False`` by default,
+which prevents overwriting; to force overwriting, set it to ``True``.
 
 Generating windowed scripts on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1331,14 +1340,15 @@ Generating windowed scripts on Windows
 .. index::
    single: Scripts; windowed
 
-The :meth:`make` and :meth:`make_multiple` methods take an optional second
-``options`` argument, which can be used to control script generation. If
-specified, this should be a dictionary of options. Currently, only the value
-for the ``gui`` key in the dictionary is inspected: if ``True``, it generates
-scripts with ``.pyw`` extensions (rather than ``.py``) and, if
-``add_launchers`` is specified as ``True`` in the :class:`ScriptMaker`
-instance, then (on Windows) a windowed native executable launcher is created
-(otherwise, the native executable launcher will be a console application).
+The :meth:`~distlib.scripts.ScriptMaker.make` and
+:meth:`~distlib.scripts.ScriptMaker.make_multiple` methods take an optional second
+``options`` argument, which can be used to control script generation. If specified,
+this should be a dictionary of options. Currently, only the value for the ``gui`` key
+in the dictionary is inspected: if ``True``, it generates scripts with ``.pyw``
+extensions (rather than ``.py``) and, if ``add_launchers`` is specified as ``True`` in
+the :class:`~distlib.scripts.ScriptMaker` instance, then (on Windows) a windowed
+native executable launcher is created (otherwise, the native executable launcher will
+be a console application).
 
 
 Using the version API
@@ -1505,8 +1515,8 @@ Customising tags during build
 .. index::
    single: wheels; custom tags when building
 
-By default, the :meth:`build` method will use default tags depending on whether
-or not the build is a pure-Python build:
+By default, the :meth:`~distlib.wheel.Wheel.build` method will use default tags
+depending on whether or not the build is a pure-Python build:
 
 * For a pure-Python build, the ``pyver`` will be set to ``pyXY`` where ``XY``
   is the version of the building Python. The ``abi`` tag will be ``none`` and
@@ -1516,10 +1526,10 @@ or not the build is a pure-Python build:
   will be set to e.g. ``cpXY``, and the ``abi`` and ``arch`` tags will be
   set according to the building Python.
 
-If you want to override these default tags, you can pass a ``tags`` parameter
-to the :meth:`build` method which has the tags you want to declare. For
-example, for a pure build where we know that the code in the wheel will be
-compatible with the major version of the building Python::
+If you want to override these default tags, you can pass a ``tags`` parameter to the
+:meth:`~distlib.wheel.Wheel.build` method which has the tags you want to declare. For
+example, for a pure build where we know that the code in the wheel will be compatible
+with the major version of the building Python::
 
     from wheel import PYVER
     tags = {
@@ -1536,7 +1546,7 @@ Specifying a wheel's version
 
 You can also specify a particular "Wheel-Version" to be written to the wheel
 metadata of a wheel you're building. Simply pass a (major, minor) tuple in
-the ``wheel_version`` keyword argument to :meth:`~Wheel.build`. If not
+the ``wheel_version`` keyword argument to :meth:`~distlib.wheel.Wheel.build`. If not
 specified, the most recent version supported is written.
 
 Installing from wheels
@@ -1594,9 +1604,9 @@ Verifying wheels
 .. index::
    pair: verifying; wheels
 
-You can verify that a wheel's contents match the declared contents in the
-wheel's ``RECORD`` entry, by calling the :meth:`~Wheel.verify` method. This will
-raise a :class:`DistlibException` if a size or digest mismatch is found.
+You can verify that a wheel's contents match the declared contents in the wheel's
+``RECORD`` entry, by calling the :meth:`~distlib.wheel.Wheel.verify` method. This will
+raise a :class:`~distlib.DistlibException` if a size or digest mismatch is found.
 
 
 Modifying wheels
@@ -1618,14 +1628,14 @@ You can update existing wheels with ``distlib`` by calling the
 
     modified = wheel.update(modifier, dest_dir, **kwargs)
 
-where the ``modifier`` is a callable which you specify, and ``kwargs`` are
-options you want to pass to it (currently, the :meth:`update` method passes
-``kwargs`` unchanged to the ``modifier``). The ``dest_dir`` argument indicates
-where you want any new wheel to be written - it is optional and if not
-specified, *the existing wheel will be overwritten*.
+where the ``modifier`` is a callable which you specify, and ``kwargs`` are options you
+want to pass to it (currently, the :meth:`~distlib.wheel.Wheel.update` method passes
+``kwargs`` unchanged to the ``modifier``). The ``dest_dir`` argument indicates where
+you want any new wheel to be written - it is optional and if not specified, *the
+existing wheel will be overwritten*.
 
-The  :meth:`update` method extracts the entire contents of the wheel to
-a temporary location, and then calls ``modifier`` as follows::
+The  :meth:`~distlib.wheel.Wheel.update` method extracts the entire contents of the
+wheel to a temporary location, and then calls ``modifier`` as follows::
 
     modified = modifier(path_map, **kwargs)
 
@@ -1672,32 +1682,33 @@ Mounting wheels
 .. index::
    single: wheels; mounting
 
-One of Python's perhaps under-used features is ``zipimport``, which gives the
-ability to import Python source from ``.zip`` files. Since wheels are ``.zip``
-files, they can sometimes be used to provide functionality without needing to
-be installed. Whereas ``.zip`` files contain no convention for indicating
-compatibility with a particular Python, wheels *do* contain this compatibility
-information. Thus, it is possible to check if a wheel can be directly imported
-from, and the wheel support in ``distlib`` allows you to take advantage of this
-using the :meth:`mount` and :meth:`unmount` methods. When you mount a wheel,
-its absolute path name is added to ``sys.path``, allowing the Python code in it
-to be imported. (A :class:`DistlibException` is raised if the wheel isn't
-compatible with the Python which calls the :meth:`mount` method.)
+One of Python's perhaps under-used features is ``zipimport``, which gives the ability
+to import Python source from ``.zip`` files. Since wheels are ``.zip`` files, they can
+sometimes be used to provide functionality without needing to be installed. Whereas
+``.zip`` files contain no convention for indicating compatibility with a particular
+Python, wheels *do* contain this compatibility information. Thus, it is possible to
+check if a wheel can be directly imported from, and the wheel support in ``distlib``
+allows you to take advantage of this using the :meth:`~distlib.wheel.Wheel.mount` and
+:meth:`~distlib.wheel.Wheel.unmount` methods. When you mount a wheel, its absolute
+path name is added to ``sys.path``, allowing the Python code in it to be imported. (A
+:class:`~distlib.DistlibException` is raised if the wheel isn't compatible with the
+Python which calls the :meth:`~distlib.wheel.Wheel.mount` method.)
 
-The :meth:`mount` method takes an optional keyword parameter ``append`` which
-defaults to ``False``, meaning the a mounted wheel's pathname is added to the
-beginning of ``sys.path``. If you pass ``True``, the pathname is appended to
-``sys.path``.
+The :meth:`~distlib.wheel.Wheel.mount` method takes an optional keyword parameter
+``append`` which defaults to ``False``, meaning the a mounted wheel's pathname is
+added to the beginning of ``sys.path``. If you pass ``True``, the pathname is appended
+to ``sys.path``.
 
-The :meth:`mount` method goes further than just enabling Python imports -- any
-C extensions in the wheel are also made available for import. For this to be
-possible, the wheel has to be built with additional metadata about extensions
--- a JSON file called ``EXTENSIONS`` which serialises an extension mapping
-dictionary. This maps extension module names to the names in the wheel of the
-shared libraries which implement those modules.
+The :meth:`~distlib.wheel.Wheel.mount` method goes further than just enabling Python
+imports -- any C extensions in the wheel are also made available for import. For this
+to be possible, the wheel has to be built with additional metadata about extensions --
+a JSON file called ``EXTENSIONS`` which serialises an extension mapping dictionary.
+This maps extension module names to the names in the wheel of the shared libraries
+which implement those modules.
 
-Running :meth:`unmount` on the wheel removes its absolute pathname from
-``sys.path`` and makes its C extensions, if any, also unavailable for import.
+Running :meth:`~distlib.wheel.Wheel.unmount` on the wheel removes its absolute
+pathname from ``sys.path`` and makes its C extensions, if any, also unavailable for
+import.
 
 .. note:: The C extension mounting functionality may not work in all cases,
    though it should work in a useful subset of cases. Use with care. Note that
@@ -2058,8 +2069,9 @@ of files rooted in a particular directory::
     >>> from distlib.manifest import Manifest
     >>> manifest = Manifest('/path/to/my/sources')
 
-This sets the :attr:`base` attribute to the passed in root directory. You can
-add one or multiple files using names relative to the base directory::
+This sets the :attr:`~distlib.manifest.Manifest.base` attribute to the passed in root
+directory. You can add one or multiple files using names relative to the base
+directory::
 
     >>> manifest.add('abc')
     >>> manifest.add_many(['def', 'ghi'])
@@ -2073,20 +2085,22 @@ You can get all the files below the base directory of the manifest::
 
     >>> manifest.findall()
 
-This will populate the :attr:`allfiles` attribute of ``manifest`` with
-a list of all files in the directory tree rooted at the base. However,
-the manifest is still empty::
+This will populate the :attr:`~distlib.manifest.Manifest.allfiles` attribute of
+``manifest`` with a list of all files in the directory tree rooted at the base.
+However, the manifest is still empty::
 
     >>> manifest.files
     >>> set()
 
-You can populate the manifest -- the :attr:`files` attribute -- by running
-a number of *directives*, using the :meth:`process_directive` method. Each
-directive will either add files from :attr:`allfiles` to :attr:`files`, or
-remove files from :attr:`allfiles` if they were added by a previous directive.
-A directive is a string which must have a specific syntax: malformed lines will
-result in a :class:`DistlibException` being raised. The following directives
-are available: they are compatible with the syntax of ``MANIFEST.in`` files
+You can populate the manifest -- the :attr:`~distlib.manifest.Manifest.files`
+attribute -- by running a number of *directives*, using the
+:meth:`~distlib.manifest.Manifest.process_directive` method. Each directive will
+either add files from :attr:`~distlib.manifest.Manifest.allfiles` to
+:attr:`~distlib.manifest.Manifest.files`, or remove files from
+:attr:`~distlib.manifest.Manifest.allfiles` if they were added by a previous
+directive. A directive is a string which must have a specific syntax: malformed lines
+will result in a :class:`~distlib.DistlibException` being raised. The following
+directives are available: they are compatible with the syntax of ``MANIFEST.in`` files
 processed by ``distutils``.
 
 Consider the following directory tree::
@@ -2113,10 +2127,11 @@ The ``include`` directive
 .. index::
    single: Manifest; including files
 
-This takes the form of the word ``include`` (case-sensitive) followed by a
-number of file-name patterns (as used in ``MANIFEST.in`` in ``distutils``). All
-files in :attr:`allfiles`` matching the patterns (considered relative to the
-base directory) are added to :attr:`files`. For example::
+This takes the form of the word ``include`` (case-sensitive) followed by a number of
+file-name patterns (as used in ``MANIFEST.in`` in ``distutils``). All files in
+:attr:`~distlib.manifest.Manifest.allfiles` matching the patterns (considered relative
+to the base directory) are added to :attr:`~distlib.manifest.Manifest.files`. For
+example::
 
     >>> manifest.process_directive('include R*.txt LIC* keep/*.txt')
 
@@ -2130,10 +2145,11 @@ The ``exclude`` directive
 .. index::
    single: Manifest; excluding files
 
-This takes the form of the word ``exclude`` (case-sensitive) followed by a
-number of file-name patterns (as used in ``MANIFEST.in`` in ``distutils``). All
-files in :attr:`files`` matching the patterns (considered relative to the
-base directory) are removed from :attr:`files`. For example::
+This takes the form of the word ``exclude`` (case-sensitive) followed by a number of
+file-name patterns (as used in ``MANIFEST.in`` in ``distutils``). All files in
+:attr:`~distlib.manifest.Manifest.files` matching the patterns (considered relative
+to the base directory) are removed from :attr:`~distlib.manifest.Manifest.files`. For
+example::
 
     >>> manifest.process_directive('exclude LIC*')
 
@@ -2205,7 +2221,7 @@ The ``graft`` directive
    single: Manifest; grafting directories
 
 This directive takes the name of a directory (relative to the base) and copies
-all the names under it from :attr:`allfiles` to :attr:`files`.
+all the names under it from :attr:`~distlib.manifest.Manifest.allfiles` to :attr:`~distlib.manifest.Manifest.files`.
 
 
 The ``prune`` directive
@@ -2215,7 +2231,7 @@ The ``prune`` directive
    single: Manifest; pruning directories
 
 This directive takes the name of a directory (relative to the base) and removes
-all the names under it from :attr:`files`.
+all the names under it from :attr:`~distlib.manifest.Manifest.files`.
 
 
 Next steps
