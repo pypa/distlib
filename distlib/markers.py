@@ -24,6 +24,10 @@ from .version import NormalizedVersion as NV
 __all__ = ['interpret']
 
 _VERSION_PATTERN = re.compile(r'((\d+(\.\d+)*\w*)|\'(\d+(\.\d+)*\w*)\'|\"(\d+(\.\d+)*\w*)\")')
+_VERSION_MARKERS = {'python_version', 'python_full_version'}
+
+def _is_version_marker(s):
+    return isinstance(s, string_types) and s in _VERSION_MARKERS
 
 def _is_literal(o):
     if not isinstance(o, string_types) or not o:
@@ -77,11 +81,11 @@ class Evaluator(object):
 
             lhs = self.evaluate(elhs, context)
             rhs = self.evaluate(erhs, context)
-            if ((elhs == 'python_version' or erhs == 'python_version') and
+            if ((_is_version_marker(elhs) or _is_version_marker(erhs)) and
                 op in ('<', '<=', '>', '>=', '===', '==', '!=', '~=')):
                 lhs = NV(lhs)
                 rhs = NV(rhs)
-            elif elhs == 'python_version' and op in ('in', 'not in'):
+            elif _is_version_marker(elhs) and op in ('in', 'not in'):
                 lhs = NV(lhs)
                 rhs = _get_versions(rhs)
             result = self.operations[op](lhs, rhs)
