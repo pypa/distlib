@@ -78,6 +78,12 @@ class MarkersTestCase(DistlibTestCase):
         self.assertTrue(interpret(
             "'buuuu' not in os_name and '%s' in os_name" % os_name))
 
+        # normalized version comparison correctness
+        self.assertTrue(interpret('python_version > "5.0"', {'python_version': '10.0'}))
+        self.assertTrue(interpret('python_version == "5.0"', {'python_version': '5.0'}))
+        self.assertTrue(interpret('python_version < "5.0"', {'python_version': '5.0b0'}))
+        self.assertTrue(interpret('python_full_version > "5.0"', {'python_full_version': '10.0'}))
+
         # execution context
         self.assertTrue(interpret('python_version == "0.1"',
                                   {'python_version': '0.1'}))
