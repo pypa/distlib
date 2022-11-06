@@ -615,7 +615,7 @@ to refine its behaviour:
 
 * ``force`` to indicate when scripts should be copied from source to target
   even when timestamps show the target is up to date.
-* ``set_mode`` to indicate whether, on Posix, the execute mode bits should be
+* ``set_mode`` to indicate whether, on POSIX, the execute mode bits should be
   set on the target script.
 
 .. _flag-formats:

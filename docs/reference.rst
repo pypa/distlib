@@ -583,7 +583,7 @@ Classes
 
    .. attribute:: set_mode
 
-      Whether, on Posix, the scripts should have their execute mode set.
+      Whether, on POSIX, the scripts should have their execute mode set.
 
    .. attribute:: script_template
 
@@ -1736,7 +1736,7 @@ Functions
 
 .. function:: interpret(marker, execution_context=None)
 
-   This function returns the result of interpreting an environment marker in aptional
+   This function returns the result of interpreting an environment marker in optional
    execution context, which is used for name lookups.
 
 

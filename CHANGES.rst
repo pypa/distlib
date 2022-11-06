@@ -6,6 +6,11 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- markers
+
+    - Use version comparison logic for python_full_version. Thanks to Albert
+      Peschar for the patch.
+
 0.3.6
 ~~~~~
 

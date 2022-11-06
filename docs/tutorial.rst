@@ -18,7 +18,7 @@ Distlib is a pure-Python library. You should be able to install it using::
    pip install distlib
 
 for installing ``distlib`` into a virtualenv or other directory where you have
-write permissions. On Posix platforms, you may need to invoke using ``sudo``
+write permissions. On POSIX platforms, you may need to invoke using ``sudo``
 if you need to install ``distlib`` in a protected location such as your system
 Python's ``site-packages`` directory.
 
@@ -79,7 +79,7 @@ painfully slow. To skip tests that might be sometimes slow, set the
 
     $ SKIP_SLOW=1 PYTHONHASHSEED=0 python tests/test_all.py
 
-on Posix, or::
+on POSIX, or::
 
     C:\> set SKIP_SLOW=1
     C:\> set PYTHONHASHSEED=0
