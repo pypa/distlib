@@ -101,6 +101,12 @@ THEME_OPTIONS = {
   'sizzle': {'globaltoc_depth': 5},
 }
 
+if html_theme == 'sizzle' and os.path.isfile('hover.json'):
+    import json
+
+    with open('hover.json', encoding='utf-8') as f:
+        THEME_OPTIONS['sizzle']['custom_data'] = {'hovers': json.load(f) }
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.

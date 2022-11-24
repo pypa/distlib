@@ -1,4 +1,4 @@
-\.(py[co]|log|zip|coverage)$
+\.(py[co]|log|zip|coverage|json)$
 tests/run/
 tests/keys/random_seed
 docs/(_build|themes)/

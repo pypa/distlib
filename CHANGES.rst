@@ -11,6 +11,11 @@ Released: Not yet.
     - Use version comparison logic for python_full_version. Thanks to Albert
       Peschar for the patch.
 
+- scripts
+
+    - Fix shebang computation for source builds of Python. Thanks to Eli
+      Schwartz for the patch.
+
 0.3.6
 ~~~~~
 
