@@ -16,6 +16,9 @@ Released: Not yet.
     - Fix shebang computation for source builds of Python. Thanks to Eli
       Schwartz for the patch.
 
+Typing stubs for Python 3 were added. _frozen_importlib and 
+_frozen_importlib_externals were replaced with importlib.machinery.
+
 0.3.6
 ~~~~~
 
