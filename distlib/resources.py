@@ -289,11 +289,13 @@ _finder_registry = {
 }
 
 try:
-    # In Python 3.6, _frozen_importlib -> _frozen_importlib_external
-    try:
-        import _frozen_importlib_external as _fi
-    except ImportError:
-        import _frozen_importlib as _fi
+    # try:
+    #     import _frozen_importlib_external as _fi
+    # except ImportError:
+    #     import _frozen_importlib as _fi
+    # NOTE: I do not see any reason to be using _frozen* here.
+    # These are accessible in machinery since 3.3.
+    import importlib.machinery as _fi
     _finder_registry[_fi.SourceFileLoader] = ResourceFinder
     _finder_registry[_fi.FileFinder] = ResourceFinder
     # See issue #146
