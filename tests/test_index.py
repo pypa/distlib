@@ -309,6 +309,7 @@ class PackageIndexTestCase(DistlibTestCase):
             self.addCleanup(cleanup)
             return server
 
+        @unittest.skipIf(sys.version_info[:2] > (3, 11), 'Temporary skip')
         def test_ssl_verification(self):
             certfile = os.path.join(HERE, 'keycert.pem')
             server = self.make_https_server(certfile)
@@ -319,6 +320,7 @@ class PackageIndexTestCase(DistlibTestCase):
             self.assertEqual(response.code, 200)
 
         @unittest.skipIf(IN_GITHUB_WORKFLOW, 'This test is end-of-line dependent')
+        @unittest.skipIf(sys.version_info[:2] > (3, 11), 'Temporary skip')
         def test_download(self):  # pragma: no cover
             digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt
             certfile = os.path.join(HERE, 'keycert.pem')

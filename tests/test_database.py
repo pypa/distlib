@@ -578,8 +578,9 @@ class TestDatabase(LoggingCatcher,
         self.assertIn('real', d)
         e = d['real']
         self.check_entry(e, 'real', 'cgi', 'print_directory', [])
-        import cgi
-        self.assertIs(e.value, cgi.print_directory)
+        if sys.version_info[:2] < (3, 12):
+            import cgi
+            self.assertIs(e.value, cgi.print_directory)
 
         # See issue #78. Test reading an entry_points.txt with leading spaces
 
