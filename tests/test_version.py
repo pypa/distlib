@@ -54,14 +54,19 @@ class VersionTestCase(DistlibTestCase):
         self.assertEqual(set([NV('1.0')]), set([NV('1.0'), NV('1.0')]))
 
     def test_unsupported_versions(self):
-        unsupported = ('1.2a', '1.2.3b',
+        unsupported = (
+                       # '1.2a', '1.2.3b',  # see issue 200 - not unsupported
                       #'1.02', '1.2a03', '1.2a3.04',
-                      '1.2.dev.2', '1.2dev', '1.2.dev',
+                      '1.2.dev.2',
+                      # '1.2dev', '1.2.dev',  # see issue 200 - these are not unsupported
                       '1.2-', '1.2-a',
                       '1.2.dev2.post2', '1.2.post2.dev3.post4')
 
         for s in unsupported:
-            self.assertRaises(UnsupportedVersionError, NV, s)
+            with self.assertRaises(UnsupportedVersionError) as cm:
+                NV(s)
+                # print(s)
+                # import pdb; pdb.set_trace()
 
     def test_huge_version(self):
         self.assertEqual(str(NV('1980.0')), '1980.0')
@@ -176,23 +181,23 @@ class VersionTestCase(DistlibTestCase):
         self.assertEqual(suggest('v1.0'), 'v1.0')
 
         # from setuptools
-        self.assertEqual(suggest('0.4a1.r10'), '0.4a1.post10')
+        # self.assertEqual(suggest('0.4a1.r10'), '0.4a1.post10')  # see issue #200
         self.assertEqual(suggest('0.7a1dev-r66608'), '0.7a1.dev66608')
         self.assertEqual(suggest('0.6a9.dev-r41475'), '0.6a9.dev41475')
-        self.assertEqual(suggest('2.4preview1'), '2.4c1')
-        self.assertEqual(suggest('2.4pre1'), '2.4c1')
+        # self.assertEqual(suggest('2.4preview1'), '2.4c1')  # see issue #200
+        # self.assertEqual(suggest('2.4pre1'), '2.4c1')  # see issue #200
         self.assertEqual(suggest('2.1-rc2'), '2.1c2')
 
         # from pypi
-        self.assertEqual(suggest('0.1dev'), '0.1.dev0')
-        self.assertEqual(suggest('0.1.dev'), '0.1.dev0')
+        # self.assertEqual(suggest('0.1dev'), '0.1.dev0')   # see issue 200 - 0.1dev is now rational
+        # self.assertEqual(suggest('0.1.dev'), '0.1.dev0')  # see issue 200 - 0.1.dev is now rational
 
         # we want to be able to parse Twisted
         # development versions are like post releases in Twisted
         #self.assertEqual(suggest('9.0.0+r2363'), '9.0.0.post2363')
 
         # pre-releases are using markers like "pre1"
-        self.assertEqual(suggest('9.0.0pre1'), '9.0.0c1')
+        # self.assertEqual(suggest('9.0.0pre1'), '9.0.0c1')  # see issue #200
 
         # we want to be able to parse Tcl-TK
         # they us "p1" "p2" for post releases
@@ -448,6 +453,14 @@ class VersionTestCase(DistlibTestCase):
             s = 'foo (== %s)' % v
             self.assertRaises((SyntaxError, ValueError), NM, s)
 
+    def test_fix_200(self):
+        versions = (
+            ('foo<=0.8.1dev', '0.8.1.dev0'),
+        )
+
+        for v1, v2 in versions:
+            # import pdb; pdb.set_trace()
+            NM(v1).match(v2)
 
 class LegacyVersionTestCase(DistlibTestCase):
     # These tests are the same as distribute's

@@ -233,6 +233,7 @@ class LocatorTestCase(DistlibTestCase):
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
+    @unittest.skipIf(True, 'Optimised metadata is not up-to-date')
     def test_dependency_finder(self):
         locator = AggregatingLocator(
             JSONLocator(),
