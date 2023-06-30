@@ -1254,7 +1254,7 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
         # allows it easily. If not, just trust the input.
         # See: https://docs.python.org/3/library/tarfile.html#extraction-filters
         def extraction_filter(member, path):
-            """Run tarfile.tar_fillter, but raise the expected ValueError"""
+            """Run tarfile.tar_filter, but raise the expected ValueError"""
             # This is only called if the current Python has tarfile filters
             try:
                 return tarfile.tar_filter(member, path)
