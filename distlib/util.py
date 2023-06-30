@@ -1249,6 +1249,19 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
             for tarinfo in archive.getmembers():
                 if not isinstance(tarinfo.name, text_type):
                     tarinfo.name = tarinfo.name.decode('utf-8')
+
+        # Limit extraction of dangerous items, if this Python
+        # allows it easily. If not, just trust the input.
+        # See: https://docs.python.org/3/library/tarfile.html#extraction-filters
+        def extraction_filter(member, path):
+            """Run tarfile.tar_fillter, but raise the expected ValueError"""
+            # This is only called if the current Python has tarfile filters
+            try:
+                return tarfile.tar_filter(member, path)
+            except tarfile.FilterError as exc:
+                raise ValueError(str(exc))
+        archive.extraction_filter = extraction_filter
+
         archive.extractall(dest_dir)
 
     finally:

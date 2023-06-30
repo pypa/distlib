@@ -471,6 +471,10 @@ class UtilTestCase(DistlibTestCase):
         )
         bad_archives = ('bad.zip', 'bad.tar', 'bad.tar.gz', 'bad.tar.bz2')
 
+        # Test "evil" tarball on 3.12 *or* on Python with PEP-706 backported
+        if sys.version_info > (3, 12) or hasattr(tarfile, 'data_filter'):
+            bad_archives += ('evil.tar.gz',)
+
         for name, cls, mode, lister in good_archives:
             td = tempfile.mkdtemp()
             archive = None
