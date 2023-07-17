@@ -1,20 +1,50 @@
 Change log for ``distlib``
 --------------------------
 
-0.3.7 (future)
+0.3.8 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+0.3.7
+~~~~~
+
+Released: 2023-07-17
+
+- database
+
+    - Handle newlines when parsing metadata.
 
 - markers
 
     - Use version comparison logic for python_full_version. Thanks to Albert
       Peschar for the patch.
 
+    - Simplify code with a set comprehension. Thanks to Christian Clauss for
+      the patch.
+
 - scripts
 
     - Fix shebang computation for source builds of Python. Thanks to Eli
       Schwartz for the patch.
+
+- util
+
+    - Extract tarfiles more safely by incorporating tarfile filters. Thanks to
+      Petr Viktorin for the patch.
+
+    - Check for 'has_cert' attribute before using it. Thanks to Lumir Balhar for
+      the patch.
+
+    - Fix #203: Handle parsing of export entries to allow script names such as
+      "," or ",foo". Thanks to Flavio Amurrio for the report.
+
+- versions
+
+    - Fix #200: Improve conformance to PEP440. Thanks to GitHub user con-f-use
+      for the report.
+
+In addition to the above, an SPDX license identifier is now used.
 
 0.3.6
 ~~~~~
