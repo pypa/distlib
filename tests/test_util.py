@@ -74,6 +74,12 @@ class UtilTestCase(DistlibTestCase):
         self.check_entry(get_export_entry('foo=abc'), 'foo', 'abc', None, [])
         self.check_entry(get_export_entry('smc++ = smcpp.frontend:console'), 'smc++',
                                           'smcpp.frontend', 'console', [])
+        # See issue #203 - correct name parsing to allow non-name-like names like ","
+        self.check_entry(get_export_entry(', = comma:main'), ',',
+                                          'comma', 'main', [])
+        self.check_entry(get_export_entry(',comma = comma:main'), ',comma',
+                                          'comma', 'main', [])
+
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x:y')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x ]')
