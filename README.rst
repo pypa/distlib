@@ -1,7 +1,7 @@
 |badge1| |badge2|
 
-.. |badge1| image:: https://img.shields.io/github/workflow/status/pypa/distlib/Tests
-   :alt: GitHub test status
+.. |badge1| image:: https://img.shields.io/github/actions/workflow/status/pypa/distlib/package-tests.yml
+   :alt: GitHub Workflow Status (with event)
 
 .. |badge2| image:: https://img.shields.io/codecov/c/github/pypa/distlib
    :target: https://app.codecov.io/gh/pypa/distlib
@@ -60,7 +60,7 @@ Distlib currently offers the following features:
 Python version and platform compatibility
 -----------------------------------------
 
-Distlib is intended to be used on and is tested on Python versions 2.7 and 3.6 - 3.10,
+Distlib is intended to be used on and is tested on Python versions 2.7 and 3.6 or later,
 pypy-2.7 and pypy3 on Linux, Windows, and macOS.
 
 Project status
