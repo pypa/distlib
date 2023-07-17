@@ -19,5 +19,7 @@ dist
 htmlcov
 build
 .tox
+.pyright
+.mypy_cache
 .idea
 _testdist-0.1

@@ -1,8 +1,8 @@
 include README.rst CHANGES.rst LICENSE.txt CONTRIBUTORS.txt
-include distlib/*.exe
+include distlib/*.exe distlib/*.pyi distlib/py.typed
 recursive-include tests *
 recursive-include PC *
-global-exclude *.log __pycache__ *.pyc *.pyo
+global-exclude *.log __pycache__ *.pyc *.pyo .mypy_cache .pytype
 exclude tests/*pypi*
 prune tests/pypiserver
 prune tests/packages
