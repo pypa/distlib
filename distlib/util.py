@@ -1448,7 +1448,7 @@ if ssl:
             context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             if hasattr(ssl, 'OP_NO_SSLv2'):
                 context.options |= ssl.OP_NO_SSLv2
-            if hasattr(self, 'cert_file') and self.cert_file:
+            if getattr(self, 'cert_file', None):
                 context.load_cert_chain(self.cert_file, self.key_file)
             kwargs = {}
             if self.ca_certs:
