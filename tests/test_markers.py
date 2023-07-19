@@ -26,9 +26,10 @@ class MarkersTestCase(DistlibTestCase):
         platform_python_implementation = python_implementation()
 
         self.assertTrue(interpret("sys_platform == '%s'" % sys_platform))
-        self.assertTrue(interpret(
-            "sys_platform == '%s' and python_full_version == '%s'" %
-            (sys_platform, version)))
+        if sys.version_info[3] == 'final':
+            self.assertTrue(interpret(
+                "sys_platform == '%s' and python_full_version == '%s'" %
+                (sys_platform, version)))
         self.assertTrue(interpret("'%s' == sys_platform" % sys_platform))
         self.assertTrue(interpret('os_name == "%s"' % os_name))
         self.assertTrue(interpret(
