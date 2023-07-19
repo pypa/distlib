@@ -112,7 +112,8 @@ class ScriptTestCase(DistlibTestCase):
             bindir = os.path.join(dstdir, 'bin')
             maker = ScriptMaker(self.maker.source_dir, bindir,
                                 add_launchers=False)
-            venv.create(dstdir)
+            # See issue #204. Changed to use symlinks on POSIX
+            venv.create(dstdir, symlinks=(os.name != 'nt'))
             maker.executable = os.path.join(bindir, 'python')
             filenames = maker.make('script8.py')
             p = subprocess.Popen(filenames[0], shell=True,
