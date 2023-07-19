@@ -1,4 +1,4 @@
-include README.rst CHANGES.rst LICENSE.txt CONTRIBUTORS.txt
+include README.rst CHANGES.rst LICENSE.txt CONTRIBUTORS.txt tox.ini
 include distlib/*.exe
 recursive-include tests *
 recursive-include PC *
