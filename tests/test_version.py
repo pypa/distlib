@@ -1,9 +1,10 @@
 #
-# Copyright (C) 2012-2013 The Python Software Foundation.
+# Copyright (C) 2012-2023 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 """Tests for distlib.version."""
 import doctest
+import sys
 
 from compat import unittest
 from support import DistlibTestCase
@@ -645,10 +646,16 @@ class CompatibilityTestCase(DistlibTestCase):
 def test_suite():
     #README = os.path.join(os.path.dirname(__file__), 'README.txt')
     #suite = [doctest.DocFileSuite(README), unittest.makeSuite(VersionTestCase)]
-    suite = [unittest.makeSuite(VersionTestCase),
-             unittest.makeSuite(CompatibilityTestCase),
-             unittest.makeSuite(LegacyVersionTestCase),
-             unittest.makeSuite(SemanticVersionTestCase)]
+    if sys.version_info[:2] < (3, 13):
+        suite = [unittest.makeSuite(VersionTestCase),
+                 unittest.makeSuite(CompatibilityTestCase),
+                 unittest.makeSuite(LegacyVersionTestCase),
+                 unittest.makeSuite(SemanticVersionTestCase)]
+    else:
+        suite = unittest.defaultTestLoader.loadTestsFromNames([
+                    'VersionTestCase', 'CompatibilityTestCase',
+                    'LegacyVersionTestCase', 'SemanticVersionTestCase'
+                ], module=sys.modules['__main__'])
     return unittest.TestSuite(suite)
 
 if __name__ == "__main__":  # pragma: no cover

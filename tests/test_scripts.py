@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012-2022 Vinay Sajip.
+# Copyright (C) 2012-2023 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -327,13 +327,21 @@ class ScriptTestCase(DistlibTestCase):
         self.assertFalse(ofiles)
 
     def test_script_run(self):
-        files = self.maker.make('test = cgi:print_directory')
+        if sys.version_info[:2] < (3, 13):
+            target = 'cgi:print_directory'
+        else:
+            target = 'test.support.interpreters:list_all'
+        files = self.maker.make('test = %s' % target)
         self.assertEqual(len(files), 2)
         p = subprocess.Popen([sys.executable, files[0]],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        self.assertIn(b'<H3>Current Working Directory:</H3>', stdout)
-        self.assertIn(os.getcwd().encode('utf-8'), stdout)
+        if sys.version_info[:2] < (3, 13):
+            self.assertIn(b'<H3>Current Working Directory:</H3>', stdout)
+            self.assertIn(os.getcwd().encode('utf-8'), stdout)
+        else:
+            self.assertIn(b'[Interpreter(id=0, isolated=None)]', stderr)
+            self.assertEqual(p.returncode, 1)
 
     @unittest.skipUnless(os.name == 'posix', 'Test only valid for POSIX')
     def test_mode(self):
