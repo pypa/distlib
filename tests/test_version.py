@@ -644,14 +644,12 @@ class CompatibilityTestCase(DistlibTestCase):
 
 
 def test_suite():
-    #README = os.path.join(os.path.dirname(__file__), 'README.txt')
-    #suite = [doctest.DocFileSuite(README), unittest.makeSuite(VersionTestCase)]
     if sys.version_info[:2] < (3, 13):
         suite = [unittest.makeSuite(VersionTestCase),
                  unittest.makeSuite(CompatibilityTestCase),
                  unittest.makeSuite(LegacyVersionTestCase),
                  unittest.makeSuite(SemanticVersionTestCase)]
-    else:
+    else:  # pragma: no cover
         suite = unittest.defaultTestLoader.loadTestsFromNames([
                     'VersionTestCase', 'CompatibilityTestCase',
                     'LegacyVersionTestCase', 'SemanticVersionTestCase'
