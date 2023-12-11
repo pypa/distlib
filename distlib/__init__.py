@@ -8,16 +8,26 @@ import logging
 
 __version__ = '0.3.8.dev0'
 
+
 class DistlibException(Exception):
     pass
 
+
 try:
     from logging import NullHandler
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
+
     class NullHandler(logging.Handler):
-        def handle(self, record): pass
-        def emit(self, record): pass
-        def createLock(self): self.lock = None
+
+        def handle(self, record):
+            pass
+
+        def emit(self, record):
+            pass
+
+        def createLock(self):
+            self.lock = None
+
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
