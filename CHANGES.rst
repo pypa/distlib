@@ -6,6 +6,11 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- markers
+
+    -   Fix #209: use legacy version implementation for Python versions.
+
+
 0.3.7
 ~~~~~
 

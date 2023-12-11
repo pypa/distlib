@@ -19,7 +19,7 @@ import platform
 
 from .compat import string_types
 from .util import in_venv, parse_marker
-from .version import NormalizedVersion as NV
+from .version import LegacyVersion as LV
 
 __all__ = ['interpret']
 
@@ -35,7 +35,7 @@ def _is_literal(o):
     return o[0] in '\'"'
 
 def _get_versions(s):
-    return {NV(m.groups()[0]) for m in _VERSION_PATTERN.finditer(s)}
+    return {LV(m.groups()[0]) for m in _VERSION_PATTERN.finditer(s)}
 
 class Evaluator(object):
     """
@@ -83,10 +83,10 @@ class Evaluator(object):
             rhs = self.evaluate(erhs, context)
             if ((_is_version_marker(elhs) or _is_version_marker(erhs)) and
                 op in ('<', '<=', '>', '>=', '===', '==', '!=', '~=')):
-                lhs = NV(lhs)
-                rhs = NV(rhs)
+                lhs = LV(lhs)
+                rhs = LV(rhs)
             elif _is_version_marker(elhs) and op in ('in', 'not in'):
-                lhs = NV(lhs)
+                lhs = LV(lhs)
                 rhs = _get_versions(rhs)
             result = self.operations[op](lhs, rhs)
         return result
