@@ -8,8 +8,13 @@ Released: Not yet.
 
 - markers
 
-    -   Fix #209: use legacy version implementation for Python versions.
+    - Fix #209: use legacy version implementation for Python versions.
 
+- tests
+
+    - Fix #204: use symlinks in venv creation during test.
+
+    - Fix #208: handle deprecation removals in Python 3.13.
 
 0.3.7
 ~~~~~
