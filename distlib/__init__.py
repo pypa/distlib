@@ -6,7 +6,7 @@
 #
 import logging
 
-__version__ = '0.3.8.dev0'
+__version__ = '0.3.8'
 
 
 class DistlibException(Exception):
