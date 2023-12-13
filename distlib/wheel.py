@@ -513,7 +513,7 @@ class Wheel(object):
         installed, and the headers, scripts, data and dist-info metadata are
         not written. If kwarg ``bytecode_hashed_invalidation`` is True, written
         bytecode will try to use file-hash based invalidation (PEP-552) on
-        supported interpreter versions (CPython 2.7+).
+        supported interpreter versions (CPython 3.7+).
 
         The return value is a :class:`InstalledDistribution` instance unless
         ``options.lib_only`` is True, in which case the return value is ``None``.
