@@ -340,7 +340,7 @@ class ScriptTestCase(DistlibTestCase):
             self.assertIn(b'<H3>Current Working Directory:</H3>', stdout)
             self.assertIn(os.getcwd().encode('utf-8'), stdout)
         else:
-            self.assertIn(b'[Interpreter(id=0, isolated=None)]', stderr)
+            self.assertIn(b'[Interpreter(0)]', stderr)
             self.assertEqual(p.returncode, 1)
 
     @unittest.skipUnless(os.name == 'posix', 'Test only valid for POSIX')
