@@ -9,33 +9,30 @@ import sys
 from compat import unittest
 from support import DistlibTestCase
 
-from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM,
-                             UnsupportedVersionError,
-                             _suggest_normalized_version,
-                             _suggest_semantic_version,
-                             LegacyVersion as LV, LegacyMatcher as LM,
-                             SemanticVersion as SV, SemanticMatcher as SM,
-                             is_semver, get_scheme,
+from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM, UnsupportedVersionError,
+                             _suggest_normalized_version, _suggest_semantic_version, LegacyVersion as LV, LegacyMatcher
+                             as LM, SemanticVersion as SV, SemanticMatcher as SM, is_semver, get_scheme,
                              _normalized_key, _legacy_key, _semantic_key)
 
 
 class VersionTestCase(DistlibTestCase):
 
-    versions = ((NV('1.0'), '1.0'),
-                (NV('1.1'), '1.1'),
-                (NV('1.2.3'), '1.2.3'),
-                (NV('1.2'), '1.2'),
-                (NV('1.2.3a4'), '1.2.3a4'),
-                (NV('1.2c4'), '1.2c4'),
-                (NV('4.17rc2'), '4.17rc2'),
-                (NV('1.2.3.4'), '1.2.3.4'),
-                #(NV('1.2.3.4.0b3', drop_trailing_zeros=True), '1.2.3.4b3'),
-                #(NV('1.2.0.0.0', drop_trailing_zeros=True), '1.2'),
-                (NV('1.0.dev345'), '1.0.dev345'),
-                (NV('1.0.post456.dev623'), '1.0.post456.dev623'),
-                (NV('1.2.3+1.2'), '1.2.3+1.2'),
-                (NV('1.2.3+a1.b2'), '1.2.3+a1.b2'),
-               )
+    versions = (
+        (NV('1.0'), '1.0'),
+        (NV('1.1'), '1.1'),
+        (NV('1.2.3'), '1.2.3'),
+        (NV('1.2'), '1.2'),
+        (NV('1.2.3a4'), '1.2.3a4'),
+        (NV('1.2c4'), '1.2c4'),
+        (NV('4.17rc2'), '4.17rc2'),
+        (NV('1.2.3.4'), '1.2.3.4'),
+        # (NV('1.2.3.4.0b3', drop_trailing_zeros=True), '1.2.3.4b3'),
+        # (NV('1.2.0.0.0', drop_trailing_zeros=True), '1.2'),
+        (NV('1.0.dev345'), '1.0.dev345'),
+        (NV('1.0.post456.dev623'), '1.0.post456.dev623'),
+        (NV('1.2.3+1.2'), '1.2.3+1.2'),
+        (NV('1.2.3+a1.b2'), '1.2.3+a1.b2'),
+    )
 
     def test_repr(self):
         self.assertEqual(repr(NV('1.0')), "NormalizedVersion('1.0')")
@@ -56,15 +53,17 @@ class VersionTestCase(DistlibTestCase):
 
     def test_unsupported_versions(self):
         unsupported = (
-                       # '1.2a', '1.2.3b',  # see issue 200 - not unsupported
-                      #'1.02', '1.2a03', '1.2a3.04',
-                      '1.2.dev.2',
-                      # '1.2dev', '1.2.dev',  # see issue 200 - these are not unsupported
-                      '1.2-', '1.2-a',
-                      '1.2.dev2.post2', '1.2.post2.dev3.post4')
+            # '1.2a', '1.2.3b',  # see issue 200 - not unsupported
+            # '1.02', '1.2a03', '1.2a3.04',
+            '1.2.dev.2',
+            # '1.2dev', '1.2.dev',  # see issue 200 - these are not unsupported
+            '1.2-',
+            '1.2-a',
+            '1.2.dev2.post2',
+            '1.2.post2.dev3.post4')
 
         for s in unsupported:
-            with self.assertRaises(UnsupportedVersionError) as cm:
+            with self.assertRaises(UnsupportedVersionError):
                 NV(s)
                 # print(s)
                 # import pdb; pdb.set_trace()
@@ -195,7 +194,7 @@ class VersionTestCase(DistlibTestCase):
 
         # we want to be able to parse Twisted
         # development versions are like post releases in Twisted
-        #self.assertEqual(suggest('9.0.0+r2363'), '9.0.0.post2363')
+        # self.assertEqual(suggest('9.0.0+r2363'), '9.0.0.post2363')
 
         # pre-releases are using markers like "pre1"
         # self.assertEqual(suggest('9.0.0pre1'), '9.0.0c1')  # see issue #200
@@ -215,10 +214,7 @@ class VersionTestCase(DistlibTestCase):
         #
         #   Project (>=version, ver2)
 
-        constraints = ('zope.interface (>3.5.0)',
-                       'AnotherProject (3.4)',
-                       'OtherProject (<3.0)',
-                       'NoVersion',
+        constraints = ('zope.interface (>3.5.0)', 'AnotherProject (3.4)', 'OtherProject (<3.0)', 'NoVersion',
                        'Hey (>=2.5,<2.7)')
 
         for constraint in constraints:
@@ -240,9 +236,9 @@ class VersionTestCase(DistlibTestCase):
         self.assertRaises(ValueError, NM, '')
 
         # We don't allow
-        #self.assertTrue(NM('Hey 2.5').match('2.5.1'))
-        #self.assertTrue(NM('vi5two 1.0').match('1.0'))
-        #self.assertTrue(NM('5two 1.0').match('1.0'))
+        # self.assertTrue(NM('Hey 2.5').match('2.5.1'))
+        # self.assertTrue(NM('vi5two 1.0').match('1.0'))
+        # self.assertTrue(NM('5two 1.0').match('1.0'))
 
         self.assertTrue(NM('Ho (<3.0,!=2.6)').match('2.6.3'))
 
@@ -256,7 +252,7 @@ class VersionTestCase(DistlibTestCase):
         for constraint in constraints:
             self.assertEqual(str(NM(constraint)), constraint)
 
-        #Test exact_version
+        # Test exact_version
         cases = (
             ('Dummy', False),
             ('Dummy (1.0)', False),
@@ -389,12 +385,8 @@ class VersionTestCase(DistlibTestCase):
 
         # prefix matching
         v = '1.1.post1'
-        cases = (('(== 1.1)', False),
-                 ('(== 1.1.post1)', True),
-                 ('(== 1.1.*)', True),
-                 ('(!= 1.1)', True),
-                 ('(!= 1.1.post1)', False),
-                 ('(!= 1.1.*)', False))
+        cases = (('(== 1.1)', False), ('(== 1.1.post1)', True), ('(== 1.1.*)', True), ('(!= 1.1)', True),
+                 ('(!= 1.1.post1)', False), ('(!= 1.1.*)', False))
         for s, expected in cases:
             m = NM('foo %s' % s)
             actual = m.match(v)
@@ -402,16 +394,14 @@ class VersionTestCase(DistlibTestCase):
 
         # inclusive ordered
         m = NM('foo (<= 1.5)')
-        for should_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0',
-                             '1.5', '1.5.0', '1.5.0.0'):
+        for should_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0', '1.5', '1.5.0', '1.5.0.0'):
             msg = 'Failed for %s' % should_match
             self.assertTrue(m.match(should_match), msg)
         for should_not_match in ('1.5.post1', '1.5.post0.dev0', '1.6', '2.0'):
             msg = 'Failed for %s' % should_not_match
             self.assertFalse(m.match(should_not_match), msg)
         m = NM('foo (>= 1.5)')
-        for should_match in ('1.5.post1', '1.5.post0.dev0', '1.6', '2.0',
-                             '1.5', '1.5.0', '1.5.0.0'):
+        for should_match in ('1.5.post1', '1.5.post0.dev0', '1.6', '2.0', '1.5', '1.5.0', '1.5.0.0'):
             msg = 'Failed for %s' % should_match
             self.assertTrue(m.match(should_match), msg)
         for should_not_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0'):
@@ -423,21 +413,19 @@ class VersionTestCase(DistlibTestCase):
         for should_match in ('0.1', '1.4', '1.4.9.post1'):
             msg = 'Failed for %s' % should_match
             self.assertTrue(m.match(should_match), msg)
-        for should_not_match in ('1.5.post1', '1.5.post0.dev0', '1.5.dev0',
-                                 '1.5', '1.5.0', '1.5.0.1', '1.6', '2.0'):
+        for should_not_match in ('1.5.post1', '1.5.post0.dev0', '1.5.dev0', '1.5', '1.5.0', '1.5.0.1', '1.6', '2.0'):
             msg = 'Failed for %s' % should_not_match
             self.assertFalse(m.match(should_not_match), msg)
         m = NM('foo (> 1.5)')
         for should_match in ('1.6', '2.0'):
             msg = 'Failed for %s' % should_match
             self.assertTrue(m.match(should_match), msg)
-        for should_not_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0',
-                                 '1.5', '1.5.0', '1.5.post0','1.5.post0.dev0',
+        for should_not_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0', '1.5', '1.5.0', '1.5.post0', '1.5.post0.dev0',
                                  '1.5.0.1'):
             msg = 'Failed for %s' % should_not_match
             self.assertFalse(m.match(should_not_match), msg)
 
-        #unusual prefix matching
+        # unusual prefix matching
         m = NM('foo (== 1.2.post0.*)')
         for should_match in ('1.2.post0', '1.2.post0.dev0'):
             msg = 'Failed for %s' % should_match
@@ -455,17 +443,17 @@ class VersionTestCase(DistlibTestCase):
             self.assertRaises((SyntaxError, ValueError), NM, s)
 
     def test_fix_200(self):
-        versions = (
-            ('foo<=0.8.1dev', '0.8.1.dev0'),
-        )
+        versions = (('foo<=0.8.1dev', '0.8.1.dev0'), )
 
         for v1, v2 in versions:
             # import pdb; pdb.set_trace()
             NM(v1).match(v2)
 
+
 class LegacyVersionTestCase(DistlibTestCase):
     # These tests are the same as distribute's
     def test_equality(self):
+
         def compare(a, b):
             ka, kb = _legacy_key(a), _legacy_key(b)
             self.assertEqual(ka, kb)
@@ -481,15 +469,16 @@ class LegacyVersionTestCase(DistlibTestCase):
         compare('1.2...a', '1.2a')
 
     def test_ordering(self):
+
         def compare(a, b):
             ka, kb = _legacy_key(a), _legacy_key(b)
             self.assertLess(ka, kb)
 
-        compare('2.1','2.1.1')
-        compare('2.1.0','2.10')
-        compare('2a1','2b0')
-        compare('2b1','2c0')
-        compare('2a1','2.1')
+        compare('2.1', '2.1.1')
+        compare('2.1.0', '2.10')
+        compare('2a1', '2b0')
+        compare('2b1', '2c0')
+        compare('2a1', '2.1')
         compare('2.3a1', '2.3')
         compare('2.1-1', '2.1-2')
         compare('2.1-1', '2.1.1')
@@ -497,25 +486,25 @@ class LegacyVersionTestCase(DistlibTestCase):
         compare('2.1', '2.1pl4')
         compare('2.1a0-20040501', '2.1')
         compare('1.1', '02.1')
-        compare('A56','B27')
+        compare('A56', 'B27')
         compare('3.2', '3.2.pl0')
         compare('3.2-1', '3.2pl1')
         compare('3.2pl1', '3.2pl1-1')
         compare('0.4', '4.0')
         compare('0.0.4', '0.4.0')
         compare('0pl1', '0.4pl1')
-        compare('2.1dev','2.1a0')
-        compare('2.1.0rc1','2.1.0')
-        compare('2.1.0-rc0','2.1.0')
-        compare('2.1.0-a','2.1.0')
-        compare('2.1.0-alpha','2.1.0')
-        compare('2.1.0','2.1.0-foo')
-        compare('1.0','1.0-1')
-        compare('1.0-1','1.0.1')
-        compare('1.0a','1.0b')
-        compare('1.0dev','1.0rc1')
-        compare('1.0pre','1.0')
-        compare('1.0pre','1.0')
+        compare('2.1dev', '2.1a0')
+        compare('2.1.0rc1', '2.1.0')
+        compare('2.1.0-rc0', '2.1.0')
+        compare('2.1.0-a', '2.1.0')
+        compare('2.1.0-alpha', '2.1.0')
+        compare('2.1.0', '2.1.0-foo')
+        compare('1.0', '1.0-1')
+        compare('1.0-1', '1.0.1')
+        compare('1.0a', '1.0b')
+        compare('1.0dev', '1.0rc1')
+        compare('1.0pre', '1.0')
+        compare('1.0pre', '1.0')
 
         versions = """
         0.80.1-3 0.80.1-2 0.80.1-1 0.79.9999+0.80.0pre4-1
@@ -524,13 +513,11 @@ class LegacyVersionTestCase(DistlibTestCase):
         """.split()
 
         for i, v1 in enumerate(versions):
-            for v2 in versions[i+1:]:
+            for v2 in versions[i + 1:]:
                 compare(v2, v1)
 
     def test_absolute(self):
-        cases = (
-            ('1.0-beta6', ('00000001', '*beta', '00000006', '*final')),
-        )
+        cases = (('1.0-beta6', ('00000001', '*beta', '00000006', '*final')), )
         for k, v in cases:
             self.assertEqual(_legacy_key(k), v)
 
@@ -559,13 +546,20 @@ class LegacyVersionTestCase(DistlibTestCase):
 
 
 class SemanticVersionTestCase(DistlibTestCase):
+
     def test_basic(self):
         bad = [
-            'a', '1', '1.', '1.2' , '1.2.',
-            '1.2.a', '1.2.3.a',
+            'a',
+            '1',
+            '1.',
+            '1.2',
+            '1.2.',
+            '1.2.a',
+            '1.2.3.a',
         ]
         good = [
-            '1.2.3', '1.2.3-pre.1.abc.2.def',
+            '1.2.3',
+            '1.2.3-pre.1.abc.2.def',
             '1.2.3+post.1.abc.2.def',
             '1.2.3-pre.1.abc.2.def+post.1.abc.2.def',
         ]
@@ -577,6 +571,7 @@ class SemanticVersionTestCase(DistlibTestCase):
             self.assertTrue(is_semver(s))
 
     def test_ordering(self):
+
         def compare(a, b):
             ka, kb = _semantic_key(a), _semantic_key(b)
             self.assertLess(ka, kb)
@@ -597,7 +592,7 @@ class SemanticVersionTestCase(DistlibTestCase):
         )
 
         for i, v1 in enumerate(versions):
-            for v2 in versions[i+1:]:
+            for v2 in versions[i + 1:]:
                 compare(v1, v2)
 
     def test_prereleases(self):
@@ -623,43 +618,40 @@ class SemanticVersionTestCase(DistlibTestCase):
 
 
 class CompatibilityTestCase(DistlibTestCase):
+
     def test_basic(self):
+
         def are_equal(v1, v2):
             return v1 == v2
 
         def is_less(v1, v2):
             return v1 < v2
 
-        self.assertRaises(TypeError, are_equal, NV('3.3.0'),
-                          SV('3.3.0'))
-        self.assertRaises(TypeError, are_equal, NV('3.3.0'),
-                          LV('3.3.0'))
-        self.assertRaises(TypeError, are_equal, LV('3.3.0'),
-                          SV('3.3.0'))
-        self.assertRaises(TypeError, are_equal, NM('foo'),
-                          LV('foo'))
-        self.assertRaises(TypeError, are_equal, NM('foo'),
-                          NM('bar'))
-
+        self.assertRaises(TypeError, are_equal, NV('3.3.0'), SV('3.3.0'))
+        self.assertRaises(TypeError, are_equal, NV('3.3.0'), LV('3.3.0'))
+        self.assertRaises(TypeError, are_equal, LV('3.3.0'), SV('3.3.0'))
+        self.assertRaises(TypeError, are_equal, NM('foo'), LV('foo'))
+        self.assertRaises(TypeError, are_equal, NM('foo'), NM('bar'))
 
 
 def test_suite():
     if sys.version_info[:2] < (3, 13):
-        suite = [unittest.makeSuite(VersionTestCase),
-                 unittest.makeSuite(CompatibilityTestCase),
-                 unittest.makeSuite(LegacyVersionTestCase),
-                 unittest.makeSuite(SemanticVersionTestCase)]
+        suite = [
+            unittest.makeSuite(VersionTestCase),
+            unittest.makeSuite(CompatibilityTestCase),
+            unittest.makeSuite(LegacyVersionTestCase),
+            unittest.makeSuite(SemanticVersionTestCase)
+        ]
     else:  # pragma: no cover
-        suite = unittest.defaultTestLoader.loadTestsFromNames([
-                    'VersionTestCase', 'CompatibilityTestCase',
-                    'LegacyVersionTestCase', 'SemanticVersionTestCase'
-                ], module=sys.modules['__main__'])
+        suite = unittest.defaultTestLoader.loadTestsFromNames(
+            ['VersionTestCase', 'CompatibilityTestCase', 'LegacyVersionTestCase', 'SemanticVersionTestCase'],
+            module=sys.modules['__main__'])
     return unittest.TestSuite(suite)
+
 
 if __name__ == "__main__":  # pragma: no cover
     import logging
     import os
-    import sys
 
     here = os.path.dirname(os.path.abspath(__file__))
     rundir = os.path.join(here, 'run')
@@ -668,6 +660,5 @@ if __name__ == "__main__":  # pragma: no cover
     elif not os.path.isdir(rundir):
         raise ValueError('Not a directory: %r' % rundir)
     fn = os.path.join(rundir, 'test_version_%d.%d.log' % sys.version_info[:2])
-    logging.basicConfig(level=logging.DEBUG, filename=fn, filemode='w',
-                        format='%(name)s %(funcName)s %(message)s')
+    logging.basicConfig(level=logging.DEBUG, filename=fn, filemode='w', format='%(name)s %(funcName)s %(message)s')
     unittest.main(defaultTest="test_suite")

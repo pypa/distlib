@@ -1,0 +1,13 @@
+[flake8]
+max-line-length=120
+ignore =
+    E731
+    W504
+
+per-file-ignores =
+    distlib/compat.py:F401,F821
+    tests/compat.py:F401,F821
+    docs/conf.py:E302,E265,E401,E402
+    tests/support.py:F401
+    tests/test_all.py:E402
+

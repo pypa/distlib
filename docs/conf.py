@@ -25,7 +25,9 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.imgmath', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode', 'sphinxcontrib.spelling'
+extensions = [
+    'sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx', 'sphinx.ext.todo', 'sphinx.ext.coverage',
+    'sphinx.ext.imgmath', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode', 'sphinxcontrib.spelling'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -87,8 +89,8 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
-spelling_lang='en_GB'
-spelling_word_list_filename='spelling_wordlist.txt'
+spelling_lang = 'en_GB'
+spelling_word_list_filename = 'spelling_wordlist.txt'
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -97,15 +99,19 @@ spelling_word_list_filename='spelling_wordlist.txt'
 html_theme = os.environ.get('DOCS_THEME', 'default')
 
 THEME_OPTIONS = {
-  'pydoc': {'collapsiblesidebar': True},
-  'sizzle': {'globaltoc_depth': 5},
+    'pydoc': {
+        'collapsiblesidebar': True
+    },
+    'sizzle': {
+        'globaltoc_depth': 5
+    },
 }
 
 if html_theme == 'sizzle' and os.path.isfile('hover.json'):
     import json
 
     with open('hover.json', encoding='utf-8') as f:
-        THEME_OPTIONS['sizzle']['custom_data'] = {'hovers': json.load(f) }
+        THEME_OPTIONS['sizzle']['custom_data'] = {'hovers': json.load(f)}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -181,7 +187,6 @@ html_theme_path = ['themes']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'Distlibdoc'
 
-
 # -- Options for LaTeX output --------------------------------------------------
 
 # The paper size ('letter' or 'a4').
@@ -193,8 +198,7 @@ htmlhelp_basename = 'Distlibdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Distlib.tex', u'Distlib Documentation',
-   u'Vinay Sajip', 'manual'),
+    ('index', 'Distlib.tex', u'Distlib Documentation', u'Vinay Sajip', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -220,16 +224,11 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
-
 # -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'distlib', u'Distlib Documentation',
-     [u'Vinay Sajip'], 1)
-]
-
+man_pages = [('index', 'distlib', u'Distlib Documentation', [u'Vinay Sajip'], 1)]
 
 # -- Options for Epub output ---------------------------------------------------
 
@@ -270,13 +269,14 @@ epub_copyright = u'2012, The Python Software Foundation'
 # Allow duplicate toc entries.
 #epub_tocdup = True
 
-
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+
 
 def skip_module_docstring(app, what, name, obj, options, lines):
     if (what, name) == ('module', 'distlib'):
         del lines[:]
+
 
 def setup(app):
     app.connect('autodoc-process-docstring', skip_module_docstring)

@@ -13,7 +13,9 @@ from compat import unittest
 # Always find our sources first
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import distlib_tests
+
 sys.path.pop(0)
+
 
 def main():
     verbosity = 1
@@ -25,6 +27,7 @@ def main():
     results = runner.run(loader.loadTestsFromModule(distlib_tests))
     return not results.wasSuccessful()
 
+
 if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath(__file__))
     rundir = os.path.join(here, 'run')
@@ -33,6 +36,8 @@ if __name__ == '__main__':
     elif not os.path.isdir(rundir):
         raise ValueError('Not a directory: %r' % rundir)
     fn = os.path.join(rundir, 'test_all_%d.%d.log' % sys.version_info[:2])
-    logging.basicConfig(level=logging.DEBUG, filename=fn, filemode='w',
+    logging.basicConfig(level=logging.DEBUG,
+                        filename=fn,
+                        filemode='w',
                         format='%(levelname)-8s %(name)-20s %(message)s')
     sys.exit(main())

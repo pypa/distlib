@@ -23,26 +23,24 @@ from support import TempdirManager, DistlibTestCase, in_github_workflow
 
 from distlib import DistlibException
 from distlib.compat import cache_from_source
-from distlib.util import (get_export_entry, ExportEntry, resolve,
-                          get_cache_base, path_to_cache_dir, zip_dir,
-                          parse_credentials, ensure_slash, split_filename,
-                          EventMixin, Sequencer, unarchive, Progress,
-                          iglob, RICH_GLOB, parse_requirement, get_extras,
-                          Configurator, read_exports, write_exports,
-                          FileOperator, is_string_sequence, get_package_data,
-                          convert_path)
-
+from distlib.util import (get_export_entry, ExportEntry, resolve, get_cache_base, path_to_cache_dir, zip_dir,
+                          parse_credentials, ensure_slash, split_filename, EventMixin, Sequencer, unarchive, Progress,
+                          iglob, RICH_GLOB, parse_requirement, get_extras, Configurator, read_exports, write_exports,
+                          FileOperator, is_string_sequence, get_package_data, convert_path)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IN_GITHUB_WORKFLOW = in_github_workflow()
 
+
 class TestContainer(object):
+
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
 
 
 class UtilTestCase(DistlibTestCase):
+
     def check_entry(self, entry, name, prefix, suffix, flags):
         self.assertEqual(entry.name, name)
         self.assertEqual(entry.prefix, prefix)
@@ -52,33 +50,23 @@ class UtilTestCase(DistlibTestCase):
     def test_export_entry(self):
         self.assertIsNone(get_export_entry('foo.py'))
         self.assertIsNone(get_export_entry('foo.py='))
-        for spec in ('foo=foo:main', 'foo =foo:main', 'foo= foo:main',
-                     'foo = foo:main'):
-            self.check_entry(get_export_entry(spec),
-                             'foo', 'foo', 'main', [])
-        self.check_entry(get_export_entry('foo=foo.bar:main'),
-                         'foo', 'foo.bar', 'main', [])
-        self.check_entry(get_export_entry('foo=foo.bar:main [a]'),
-                         'foo', 'foo.bar', 'main', ['a'])
+        for spec in ('foo=foo:main', 'foo =foo:main', 'foo= foo:main', 'foo = foo:main'):
+            self.check_entry(get_export_entry(spec), 'foo', 'foo', 'main', [])
+        self.check_entry(get_export_entry('foo=foo.bar:main'), 'foo', 'foo.bar', 'main', [])
+        self.check_entry(get_export_entry('foo=foo.bar:main [a]'), 'foo', 'foo.bar', 'main', ['a'])
         # See issue #127 - allow hyphens
-        self.check_entry(get_export_entry('foo=foo.bar:main [with-foo]'),
-                         'foo', 'foo.bar', 'main', ['with-foo'])
-        self.check_entry(get_export_entry('foo=foo.bar:main [ a ]'),
-                         'foo', 'foo.bar', 'main', ['a'])
-        self.check_entry(get_export_entry('foo=foo.bar:main [a=b, c=d,e, f=g]'),
-                         'foo', 'foo.bar', 'main', ['a=b', 'c=d', 'e', 'f=g'])
-        self.check_entry(get_export_entry('foo=foo.bar:main [a=9, 9=8,e, f9=g8]'),
-                         'foo', 'foo.bar', 'main', ['a=9', '9=8', 'e', 'f9=g8'])
-        self.check_entry(get_export_entry('foo=foo.bar:main[x]'),
-                         'foo', 'foo.bar', 'main', ['x'])
+        self.check_entry(get_export_entry('foo=foo.bar:main [with-foo]'), 'foo', 'foo.bar', 'main', ['with-foo'])
+        self.check_entry(get_export_entry('foo=foo.bar:main [ a ]'), 'foo', 'foo.bar', 'main', ['a'])
+        self.check_entry(get_export_entry('foo=foo.bar:main [a=b, c=d,e, f=g]'), 'foo', 'foo.bar', 'main',
+                         ['a=b', 'c=d', 'e', 'f=g'])
+        self.check_entry(get_export_entry('foo=foo.bar:main [a=9, 9=8,e, f9=g8]'), 'foo', 'foo.bar', 'main',
+                         ['a=9', '9=8', 'e', 'f9=g8'])
+        self.check_entry(get_export_entry('foo=foo.bar:main[x]'), 'foo', 'foo.bar', 'main', ['x'])
         self.check_entry(get_export_entry('foo=abc'), 'foo', 'abc', None, [])
-        self.check_entry(get_export_entry('smc++ = smcpp.frontend:console'), 'smc++',
-                                          'smcpp.frontend', 'console', [])
+        self.check_entry(get_export_entry('smc++ = smcpp.frontend:console'), 'smc++', 'smcpp.frontend', 'console', [])
         # See issue #203 - correct name parsing to allow non-name-like names like ","
-        self.check_entry(get_export_entry(', = comma:main'), ',',
-                                          'comma', 'main', [])
-        self.check_entry(get_export_entry(',comma = comma:main'), ',comma',
-                                          'comma', 'main', [])
+        self.check_entry(get_export_entry(', = comma:main'), ',', 'comma', 'main', [])
+        self.check_entry(get_export_entry(',comma = comma:main'), ',comma', 'comma', 'main', [])
 
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x:y')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [')
@@ -110,18 +98,16 @@ class UtilTestCase(DistlibTestCase):
 
     @unittest.skipIf(os.name != 'posix', 'Test is only valid for POSIX')
     def test_path_to_cache_dir_posix(self):
-        self.assertEqual(path_to_cache_dir('/home/user/some-file.zip'),
-                        '--home--user--some-file.zip.cache')
+        self.assertEqual(path_to_cache_dir('/home/user/some-file.zip'), '--home--user--some-file.zip.cache')
 
     @unittest.skipIf(os.name != 'nt', 'Test is only valid for Windows')
     def test_path_to_cache_dir_nt(self):
-        self.assertEqual(path_to_cache_dir(r'c:\Users\User\Some-File.zip'),
-                        'c-----Users--User--Some-File.zip.cache')
+        self.assertEqual(path_to_cache_dir(r'c:\Users\User\Some-File.zip'), 'c-----Users--User--Some-File.zip.cache')
 
     def test_parse_credentials(self):
         cases = (
             ('example.com', (None, None, 'example.com')),
-            ('user@example.com',  ('user', None, 'example.com')),
+            ('user@example.com', ('user', None, 'example.com')),
             ('user:pwd@example.com', ('user', 'pwd', 'example.com')),
             ('user:@example.com', ('user', '', 'example.com')),
             ('user:pass@word@example.com', ('user', 'pass@word', 'example.com')),
@@ -140,36 +126,22 @@ class UtilTestCase(DistlibTestCase):
 
     def test_split_filename(self):
         self.assertIsNone(split_filename('abl.jquery'))
-        self.assertEqual(split_filename('abl.jquery-1.4.2-2'),
-                         ('abl.jquery', '1.4.2-2', None))
-        self.assertEqual(split_filename('python-gnupg-0.1'),
-                         ('python-gnupg', '0.1', None))
-        self.assertEqual(split_filename('baklabel-1.0.3-2729-py3.2'),
-                         ('baklabel', '1.0.3-2729', '3.2'))
-        self.assertEqual(split_filename('baklabel-1.0.3-2729-py27'),
-                         ('baklabel', '1.0.3-2729', '27'))
-        self.assertEqual(split_filename('advpy-0.99b'),
-                         ('advpy', '0.99b', None))
+        self.assertEqual(split_filename('abl.jquery-1.4.2-2'), ('abl.jquery', '1.4.2-2', None))
+        self.assertEqual(split_filename('python-gnupg-0.1'), ('python-gnupg', '0.1', None))
+        self.assertEqual(split_filename('baklabel-1.0.3-2729-py3.2'), ('baklabel', '1.0.3-2729', '3.2'))
+        self.assertEqual(split_filename('baklabel-1.0.3-2729-py27'), ('baklabel', '1.0.3-2729', '27'))
+        self.assertEqual(split_filename('advpy-0.99b'), ('advpy', '0.99b', None))
         self.assertEqual(split_filename('asv_files-dev-20120501-01', 'asv_files'),
                          ('asv_files', 'dev-20120501-01', None))
-        self.assertEqual(split_filename('greenlet-0.4.0-py27-win32'),
-                         ('greenlet', '0.4.0', '27'))
-        self.assertEqual(split_filename('greenlet-0.4.0-py27-linux_x86_64'),
-                         ('greenlet', '0.4.0', '27'))
-        self.assertEqual(split_filename('django-altuser-v0.6.8'),
-                         ('django-altuser', 'v0.6.8', None))
-        self.assertEqual(split_filename('youtube_dl_server-alpha.1'),
-                         ('youtube_dl_server', 'alpha.1', None))
-        self.assertEqual(split_filename('pytest-xdist-dev'),
-                         ('pytest-xdist', 'dev', None))
-        self.assertEqual(split_filename('pytest_xdist-0.1_myfork', None),
+        self.assertEqual(split_filename('greenlet-0.4.0-py27-win32'), ('greenlet', '0.4.0', '27'))
+        self.assertEqual(split_filename('greenlet-0.4.0-py27-linux_x86_64'), ('greenlet', '0.4.0', '27'))
+        self.assertEqual(split_filename('django-altuser-v0.6.8'), ('django-altuser', 'v0.6.8', None))
+        self.assertEqual(split_filename('youtube_dl_server-alpha.1'), ('youtube_dl_server', 'alpha.1', None))
+        self.assertEqual(split_filename('pytest-xdist-dev'), ('pytest-xdist', 'dev', None))
+        self.assertEqual(split_filename('pytest_xdist-0.1_myfork', None), ('pytest_xdist', '0.1_myfork', None))
+        self.assertEqual(split_filename('pytest_xdist-0.1_myfork', 'pytest-xdist'),
                          ('pytest_xdist', '0.1_myfork', None))
-        self.assertEqual(split_filename('pytest_xdist-0.1_myfork',
-                                        'pytest-xdist'),
-                         ('pytest_xdist', '0.1_myfork', None))
-        self.assertEqual(split_filename('pytest_xdist-0.1_myfork',
-                                        'pytest_dist'),
-                         ('pytest_xdist', '0.1_myfork', None))
+        self.assertEqual(split_filename('pytest_xdist-0.1_myfork', 'pytest_dist'), ('pytest_xdist', '0.1_myfork', None))
 
     def test_convert_path(self):
         CP = convert_path
@@ -201,8 +173,12 @@ class UtilTestCase(DistlibTestCase):
         self.assertRaises(ValueError, e.remove, 'B', handler1)
 
         cases = (
-            ((1, 2), {'buckle': 'my shoe'}),
-            ((3, 4), {'shut': 'the door'}),
+            ((1, 2), {
+                'buckle': 'my shoe'
+            }),
+            ((3, 4), {
+                'shut': 'the door'
+            }),
         )
 
         for case in cases:
@@ -215,8 +191,8 @@ class UtilTestCase(DistlibTestCase):
         collected = []
         e.add('B', handler2)
 
-        self.assertEqual(tuple(e.get_subscribers('A')), (handler1,))
-        self.assertEqual(tuple(e.get_subscribers('B')), (handler2,))
+        self.assertEqual(tuple(e.get_subscribers('A')), (handler1, ))
+        self.assertEqual(tuple(e.get_subscribers('B')), (handler2, ))
         self.assertEqual(tuple(e.get_subscribers('C')), ())
 
         for case in cases:
@@ -262,28 +238,13 @@ class UtilTestCase(DistlibTestCase):
     def test_sequencer_basic(self):
         seq = Sequencer()
 
-        steps = (
-            ('check', 'sdist'),
-            ('check', 'register'),
-            ('check', 'sdist'),
-            ('check', 'register'),
-            ('register', 'upload_sdist'),
-            ('sdist', 'upload_sdist'),
-            ('check', 'build_clibs'),
-            ('build_clibs', 'build_ext'),
-            ('build_ext', 'build_py'),
-            ('build_py', 'build_scripts'),
-            ('build_scripts', 'build'),
-            ('build', 'test'),
-            ('register', 'upload_bdist'),
-            ('build', 'upload_bdist'),
-            ('build', 'install_headers'),
-            ('install_headers', 'install_lib'),
-            ('install_lib', 'install_scripts'),
-            ('install_scripts', 'install_data'),
-            ('install_data', 'install_distinfo'),
-            ('install_distinfo', 'install')
-        )
+        steps = (('check', 'sdist'), ('check', 'register'), ('check', 'sdist'), ('check', 'register'),
+                 ('register', 'upload_sdist'), ('sdist', 'upload_sdist'), ('check', 'build_clibs'),
+                 ('build_clibs', 'build_ext'), ('build_ext', 'build_py'), ('build_py', 'build_scripts'),
+                 ('build_scripts', 'build'), ('build', 'test'), ('register', 'upload_bdist'), ('build', 'upload_bdist'),
+                 ('build', 'install_headers'), ('install_headers', 'install_lib'), ('install_lib', 'install_scripts'),
+                 ('install_scripts', 'install_data'), ('install_data', 'install_distinfo'), ('install_distinfo',
+                                                                                             'install'))
 
         for pred, succ in steps:
             seq.add(pred, succ)
@@ -297,43 +258,36 @@ class UtilTestCase(DistlibTestCase):
             ('build_clibs', ['check', 'build_clibs']),
             ('build_ext', ['check', 'build_clibs', 'build_ext']),
             ('build_py', ['check', 'build_clibs', 'build_ext', 'build_py']),
-            ('build_scripts', ['check', 'build_clibs', 'build_ext', 'build_py',
-                               'build_scripts']),
-            ('build', ['check', 'build_clibs', 'build_ext', 'build_py',
-                       'build_scripts', 'build']),
-            ('test', ['check', 'build_clibs', 'build_ext', 'build_py',
-                      'build_scripts', 'build', 'test']),
-            ('install_headers', ['check', 'build_clibs', 'build_ext',
-                                 'build_py', 'build_scripts', 'build',
-                                 'install_headers']),
-            ('install_lib', ['check', 'build_clibs', 'build_ext', 'build_py',
-                             'build_scripts', 'build', 'install_headers',
-                             'install_lib']),
-            ('install_scripts', ['check', 'build_clibs', 'build_ext',
-                                 'build_py', 'build_scripts', 'build',
-                                 'install_headers', 'install_lib',
-                                 'install_scripts']),
-            ('install_data', ['check', 'build_clibs', 'build_ext', 'build_py',
-                              'build_scripts', 'build', 'install_headers',
-                              'install_lib', 'install_scripts',
-                              'install_data']),
-            ('install_distinfo', ['check', 'build_clibs', 'build_ext',
-                                  'build_py', 'build_scripts', 'build',
-                                  'install_headers', 'install_lib',
-                                  'install_scripts', 'install_data',
-                                  'install_distinfo']),
-            ('install', ['check', 'build_clibs', 'build_ext', 'build_py',
-                         'build_scripts', 'build', 'install_headers',
-                         'install_lib', 'install_scripts', 'install_data',
-                         'install_distinfo', 'install']),
-            ('upload_sdist', (['check', 'register', 'sdist', 'upload_sdist'],
-                              ['check', 'sdist', 'register', 'upload_sdist'])),
-            ('upload_bdist', (['check', 'build_clibs', 'build_ext', 'build_py',
-                               'build_scripts', 'build', 'register',
-                               'upload_bdist'],
-                              ['check', 'build_clibs', 'build_ext', 'build_py',
-                               'build_scripts', 'register', 'build',
-                               'upload_bdist'])),
+            ('build_scripts', ['check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts']),
+            ('build', ['check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build']),
+            ('test', ['check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build', 'test']),
+            ('install_headers',
+             ['check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build', 'install_headers']),
+            ('install_lib', [
+                'check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build', 'install_headers',
+                'install_lib'
+            ]),
+            ('install_scripts', [
+                'check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build', 'install_headers',
+                'install_lib', 'install_scripts'
+            ]),
+            ('install_data', [
+                'check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build', 'install_headers',
+                'install_lib', 'install_scripts', 'install_data'
+            ]),
+            ('install_distinfo', [
+                'check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build', 'install_headers',
+                'install_lib', 'install_scripts', 'install_data', 'install_distinfo'
+            ]),
+            ('install', [
+                'check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build', 'install_headers',
+                'install_lib', 'install_scripts', 'install_data', 'install_distinfo', 'install'
+            ]),
+            ('upload_sdist', (['check', 'register', 'sdist',
+                               'upload_sdist'], ['check', 'sdist', 'register', 'upload_sdist'])),
+            ('upload_bdist',
+             (['check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'build', 'register', 'upload_bdist'],
+              ['check', 'build_clibs', 'build_ext', 'build_py', 'build_scripts', 'register', 'build', 'upload_bdist'])),
         )
 
         for final, expected in cases:
@@ -373,54 +327,31 @@ class UtilTestCase(DistlibTestCase):
         self.assertEqual(set(expected[1:-1]), set(actual[1:-1]))
         actual = seq.strong_connections
         expected = (
-            [
-                ('test',), ('upload_bdist',), ('install',),
-                ('install_distinfo',), ('install_data',), ('install_scripts',),
-                ('install_lib',), ('install_headers',), ('build',),
-                ('build_scripts',), ('build_py',), ('build_ext',),
-                ('build_clibs',), ('upload_sdist',), ('sdist',), ('register',),
-                ('check',)
-            ],
-            [
-                ('install',), ('install_distinfo',), ('install_data',),
-                ('install_scripts',), ('install_lib',), ('install_headers',),
-                ('test',), ('upload_bdist',), ('build',), ('build_scripts',),
-                ('build_py',), ('build_ext',), ('build_clibs',),
-                ('upload_sdist',), ('sdist',), ('register',), ('check',)
-            ],
-            [
-                ('upload_sdist',), ('sdist',), ('install',),
-                ('install_distinfo',), ('install_data',), ('upload_bdist',),
-                ('register',), ('install_scripts',), ('install_lib',),
-                ('install_headers',), ('test',), ('build',),
-                ('build_scripts',), ('build_py',), ('build_ext',),
-                ('build_clibs',), ('check',)
-            ],
+            [('test', ), ('upload_bdist', ), ('install', ), ('install_distinfo', ), ('install_data', ),
+             ('install_scripts', ), ('install_lib', ), ('install_headers', ), ('build', ), ('build_scripts', ),
+             ('build_py', ), ('build_ext', ), ('build_clibs', ), ('upload_sdist', ), ('sdist', ), ('register', ),
+             ('check', )],
+            [('install', ), ('install_distinfo', ), ('install_data', ), ('install_scripts', ), ('install_lib', ),
+             ('install_headers', ), ('test', ), ('upload_bdist', ), ('build', ), ('build_scripts', ), ('build_py', ),
+             ('build_ext', ), ('build_clibs', ), ('upload_sdist', ), ('sdist', ), ('register', ), ('check', )],
+            [('upload_sdist', ), ('sdist', ), ('install', ), ('install_distinfo', ), ('install_data', ),
+             ('upload_bdist', ), ('register', ), ('install_scripts', ), ('install_lib', ), ('install_headers', ),
+             ('test', ), ('build', ), ('build_scripts', ), ('build_py', ), ('build_ext', ), ('build_clibs', ),
+             ('check', )],
             # Next case added for PyPy
-            [
-                ('upload_sdist',), ('sdist',), ('upload_bdist',), ('register',),
-                ('test',), ('install',), ('install_distinfo',),
-                ('install_data',), ('install_scripts',), ('install_lib',),
-                ('install_headers',), ('build',), ('build_scripts',),
-                ('build_py',), ('build_ext',), ('build_clibs',), ('check',)
-            ],
+            [('upload_sdist', ), ('sdist', ), ('upload_bdist', ), ('register', ), ('test', ), ('install', ),
+             ('install_distinfo', ), ('install_data', ),
+             ('install_scripts', ), ('install_lib', ), ('install_headers', ), ('build', ), ('build_scripts', ),
+             ('build_py', ), ('build_ext', ), ('build_clibs', ), ('check', )],
             # Next case added for Python 3.6
-            [
-                ('upload_sdist',), ('sdist',), ('upload_bdist',), ('register',),
-                ('install',), ('install_distinfo',), ('install_data',),
-                ('install_scripts',), ('install_lib',), ('install_headers',),
-                ('test',), ('build',), ('build_scripts',), ('build_py',),
-                ('build_ext',), ('build_clibs',), ('check',)
-            ],
+            [('upload_sdist', ), ('sdist', ), ('upload_bdist', ), ('register', ), ('install', ), ('install_distinfo', ),
+             ('install_data', ), ('install_scripts', ), ('install_lib', ), ('install_headers', ), ('test', ),
+             ('build', ), ('build_scripts', ), ('build_py', ), ('build_ext', ), ('build_clibs', ), ('check', )],
             # Next case added for Python 3.11
-            [
-                ('upload_sdist',), ('sdist',), ('install',), ('install_distinfo',),
-                ('install_data',), ('install_scripts',), ('install_lib',),
-                ('install_headers',), ('test',), ('upload_bdist',), ('build',),
-                ('build_scripts',), ('build_py',), ('build_ext',), ('build_clibs',),
-                ('register',), ('check',)
-            ]
-        )
+            [('upload_sdist', ), ('sdist', ), ('install', ), ('install_distinfo', ), ('install_data', ),
+             ('install_scripts', ), ('install_lib', ), ('install_headers', ), ('test', ), ('upload_bdist', ),
+             ('build', ), ('build_scripts', ), ('build_py', ), ('build_ext', ), ('build_clibs', ), ('register', ),
+             ('check', )])
         self.assertIn(actual, expected)
 
     def test_sequencer_cycle(self):
@@ -447,16 +378,8 @@ class UtilTestCase(DistlibTestCase):
         seq.add('A', 'B')
         seq.add('B', 'C')
         seq.add('C', 'D')
-        preds = {
-            'B': set(['A']),
-            'C': set(['B']),
-            'D': set(['C'])
-        }
-        succs =  {
-            'A': set(['B']),
-            'B': set(['C']),
-            'C': set(['D'])
-        }
+        preds = {'B': set(['A']), 'C': set(['B']), 'D': set(['C'])}
+        succs = {'A': set(['B']), 'B': set(['C']), 'C': set(['D'])}
         self.assertEqual(seq._preds, preds)
         self.assertEqual(seq._succs, succs)
         seq.remove_node('C')
@@ -479,7 +402,7 @@ class UtilTestCase(DistlibTestCase):
 
         # Test "evil" tarball on 3.12 *or* on Python with PEP-706 backported
         if sys.version_info > (3, 12) or hasattr(tarfile, 'data_filter'):
-            bad_archives += ('evil.tar.gz',)
+            bad_archives += ('evil.tar.gz', )
 
         for name, cls, mode, lister in good_archives:
             td = tempfile.mkdtemp()
@@ -558,7 +481,7 @@ class UtilTestCase(DistlibTestCase):
                     'p1': 'a',
                     'p2': 'b',
                     'p3': {
-                        '()' : __name__ + '.TestContainer',
+                        '()': __name__ + '.TestContainer',
                         '[]': [1, 2],
                         '.': {
                             'p1': 'c',
@@ -577,7 +500,7 @@ class UtilTestCase(DistlibTestCase):
         self.assertIs(cfg['stderr'], sys.stderr)
         self.assertIs(cfg['list_o_stuff'][0], sys.stderr)
         self.assertIs(cfg['list_o_stuff'][1], sys.stdout)
-        self.assertIs(cfg['list_o_stuff'][-1], 0)   # logging.NOTSET == 0
+        self.assertIs(cfg['list_o_stuff'][-1], 0)  # logging.NOTSET == 0
         self.assertIs(cfg['dict_o_stuff']['k1'], sys.stdout)
         self.assertIs(cfg['another_dict_o_stuff']['k1'], 'abc')
         self.assertIs(cfg['another_dict_o_stuff']['k2'], re.I)
@@ -597,17 +520,17 @@ class UtilTestCase(DistlibTestCase):
 
 
 def _speed_range(min_speed, max_speed):
-    return tuple(['%d KB/s' % v for v in range(min_speed,
-                                               max_speed + 1)])
+    return tuple(['%d KB/s' % v for v in range(min_speed, max_speed + 1)])
+
 
 def _eta_range(min_eta, max_eta, prefix='ETA '):
     msg = prefix + ': 00:00:%02d'
     return tuple([msg % v for v in range(min_eta, max_eta + 1)])
 
+
 class ProgressTestCase(DistlibTestCase):
     # Of late, the speed tests keep failing on AppVeyor and Windows
-    @unittest.skipIf(IN_GITHUB_WORKFLOW or (os.name == 'nt' and
-                                            os.environ.get('APPVEYOR') == 'True'),
+    @unittest.skipIf(IN_GITHUB_WORKFLOW or (os.name == 'nt' and os.environ.get('APPVEYOR') == 'True'),
                      'Test disabled on some environments due to performance')
     def test_basic(self):
 
@@ -646,8 +569,7 @@ class ProgressTestCase(DistlibTestCase):
         self.assertIn(bar.speed, s)
 
     # Of late, the speed tests keep failing on AppVeyor and Windows
-    @unittest.skipIf(IN_GITHUB_WORKFLOW or (os.name == 'nt' and
-                                            os.environ.get('APPVEYOR') == 'True'),
+    @unittest.skipIf(IN_GITHUB_WORKFLOW or (os.name == 'nt' and os.environ.get('APPVEYOR') == 'True'),
                      'Test disabled on some environments due to performance')
     def test_unknown(self):
         if os.name == 'nt':
@@ -679,6 +601,7 @@ class ProgressTestCase(DistlibTestCase):
         self.assertEqual(bar.percentage, p)
         self.assertEqual(bar.ETA, e)
         self.assertIn(bar.speed, s)
+
 
 class FileOpsTestCase(DistlibTestCase):
 
@@ -744,15 +667,13 @@ class FileOpsTestCase(DistlibTestCase):
         self.fileop.write_text_file(srcpath, 'test', 'utf-8')
         dstpath = os.path.join(self.workdir, 'file2')
         os.mkdir(dstpath)
-        self.assertRaises(ValueError, self.fileop.copy_file, srcpath,
-                          dstpath)
+        self.assertRaises(ValueError, self.fileop.copy_file, srcpath, dstpath)
         os.rmdir(dstpath)
-        if os.name == 'posix':      # symlinks available
+        if os.name == 'posix':  # symlinks available
             linkpath = os.path.join(self.workdir, 'file3')
             self.fileop.write_text_file(linkpath, 'linkdest', 'utf-8')
             os.symlink(linkpath, dstpath)
-            self.assertRaises(ValueError, self.fileop.copy_file, srcpath,
-                              dstpath)
+            self.assertRaises(ValueError, self.fileop.copy_file, srcpath, dstpath)
 
     def test_commit(self):
         # will assert if record isn't set
@@ -767,11 +688,10 @@ class FileOpsTestCase(DistlibTestCase):
         # will assert if record isn't set
         self.assertRaises(AssertionError, self.fileop.commit)
         self.fileop.record = True
-        expected = self.write_some_files()
-        actual = self.fileop.rollback()
+        self.write_some_files()
+        self.fileop.rollback()
         self.assertEqual(os.listdir(self.workdir), [])
         self.assertFalse(self.fileop.record)
-
 
 class GlobTestCaseBase(TempdirManager, DistlibTestCase):
 
@@ -813,109 +733,116 @@ class GlobTestCase(GlobTestCaseBase):
         self.assertEqual(expected, result)
 
     def test_regex_rich_glob(self):
-        matches = RICH_GLOB.findall(
-                                r"babar aime les {fraises} est les {huitres}")
+        matches = RICH_GLOB.findall(r"babar aime les {fraises} est les {huitres}")
         self.assertEqual(["fraises", "huitres"], matches)
 
     def test_simple_glob(self):
         glob = '*.tp?'
-        spec = {'coucou.tpl': True,
-                 'coucou.tpj': True,
-                 'Donotwant': False}
+        spec = {'coucou.tpl': True, 'coucou.tpj': True, 'Donotwant': False}
         self.assertGlobMatch(glob, spec)
 
     def test_simple_glob_in_dir(self):
         glob = os.path.join('babar', '*.tp?')
-        spec = {'babar/coucou.tpl': True,
-                 'babar/coucou.tpj': True,
-                 'babar/toto.bin': False,
-                 'Donotwant': False}
+        spec = {'babar/coucou.tpl': True, 'babar/coucou.tpj': True, 'babar/toto.bin': False, 'Donotwant': False}
         self.assertGlobMatch(glob, spec)
 
     def test_recursive_glob_head(self):
         glob = os.path.join('**', 'tip', '*.t?l')
-        spec = {'babar/zaza/zuzu/tip/coucou.tpl': True,
-                 'babar/z/tip/coucou.tpl': True,
-                 'babar/tip/coucou.tpl': True,
-                 'babar/zeop/tip/babar/babar.tpl': False,
-                 'babar/z/tip/coucou.bin': False,
-                 'babar/toto.bin': False,
-                 'zozo/zuzu/tip/babar.tpl': True,
-                 'zozo/tip/babar.tpl': True,
-                 'Donotwant': False}
+        spec = {
+            'babar/zaza/zuzu/tip/coucou.tpl': True,
+            'babar/z/tip/coucou.tpl': True,
+            'babar/tip/coucou.tpl': True,
+            'babar/zeop/tip/babar/babar.tpl': False,
+            'babar/z/tip/coucou.bin': False,
+            'babar/toto.bin': False,
+            'zozo/zuzu/tip/babar.tpl': True,
+            'zozo/tip/babar.tpl': True,
+            'Donotwant': False
+        }
         self.assertGlobMatch(glob, spec)
 
     def test_recursive_glob_tail(self):
         glob = os.path.join('babar', '**')
-        spec = {'babar/zaza/': True,
-                'babar/zaza/zuzu/': True,
-                'babar/zaza/zuzu/babar.xml': True,
-                'babar/zaza/zuzu/toto.xml': True,
-                'babar/zaza/zuzu/toto.csv': True,
-                'babar/zaza/coucou.tpl': True,
-                'babar/bubu.tpl': True,
-                'zozo/zuzu/tip/babar.tpl': False,
-                'zozo/tip/babar.tpl': False,
-                'Donotwant': False}
+        spec = {
+            'babar/zaza/': True,
+            'babar/zaza/zuzu/': True,
+            'babar/zaza/zuzu/babar.xml': True,
+            'babar/zaza/zuzu/toto.xml': True,
+            'babar/zaza/zuzu/toto.csv': True,
+            'babar/zaza/coucou.tpl': True,
+            'babar/bubu.tpl': True,
+            'zozo/zuzu/tip/babar.tpl': False,
+            'zozo/tip/babar.tpl': False,
+            'Donotwant': False
+        }
         self.assertGlobMatch(glob, spec)
 
     def test_recursive_glob_middle(self):
         glob = os.path.join('babar', '**', 'tip', '*.t?l')
-        spec = {'babar/zaza/zuzu/tip/coucou.tpl': True,
-                 'babar/z/tip/coucou.tpl': True,
-                 'babar/tip/coucou.tpl': True,
-                 'babar/zeop/tip/babar/babar.tpl': False,
-                 'babar/z/tip/coucou.bin': False,
-                 'babar/toto.bin': False,
-                 'zozo/zuzu/tip/babar.tpl': False,
-                 'zozo/tip/babar.tpl': False,
-                 'Donotwant': False}
+        spec = {
+            'babar/zaza/zuzu/tip/coucou.tpl': True,
+            'babar/z/tip/coucou.tpl': True,
+            'babar/tip/coucou.tpl': True,
+            'babar/zeop/tip/babar/babar.tpl': False,
+            'babar/z/tip/coucou.bin': False,
+            'babar/toto.bin': False,
+            'zozo/zuzu/tip/babar.tpl': False,
+            'zozo/tip/babar.tpl': False,
+            'Donotwant': False
+        }
         self.assertGlobMatch(glob, spec)
 
     def test_glob_set_tail(self):
         glob = os.path.join('bin', '*.{bin,sh,exe}')
-        spec = {'bin/babar.bin': True,
-                 'bin/zephir.sh': True,
-                 'bin/celestine.exe': True,
-                 'bin/cornelius.bat': False,
-                 'bin/cornelius.xml': False,
-                 'toto/yurg': False,
-                 'Donotwant': False}
+        spec = {
+            'bin/babar.bin': True,
+            'bin/zephir.sh': True,
+            'bin/celestine.exe': True,
+            'bin/cornelius.bat': False,
+            'bin/cornelius.xml': False,
+            'toto/yurg': False,
+            'Donotwant': False
+        }
         self.assertGlobMatch(glob, spec)
 
     def test_glob_set_middle(self):
         glob = os.path.join('xml', '{babar,toto}.xml')
-        spec = {'xml/babar.xml': True,
-                 'xml/toto.xml': True,
-                 'xml/babar.xslt': False,
-                 'xml/cornelius.sgml': False,
-                 'xml/zephir.xml': False,
-                 'toto/yurg.xml': False,
-                 'Donotwant': False}
+        spec = {
+            'xml/babar.xml': True,
+            'xml/toto.xml': True,
+            'xml/babar.xslt': False,
+            'xml/cornelius.sgml': False,
+            'xml/zephir.xml': False,
+            'toto/yurg.xml': False,
+            'Donotwant': False
+        }
         self.assertGlobMatch(glob, spec)
 
     def test_glob_set_head(self):
         glob = os.path.join('{xml,xslt}', 'babar.*')
-        spec = {'xml/babar.xml': True,
-                 'xml/toto.xml': False,
-                 'xslt/babar.xslt': True,
-                 'xslt/toto.xslt': False,
-                 'toto/yurg.xml': False,
-                 'Donotwant': False}
+        spec = {
+            'xml/babar.xml': True,
+            'xml/toto.xml': False,
+            'xslt/babar.xslt': True,
+            'xslt/toto.xslt': False,
+            'toto/yurg.xml': False,
+            'Donotwant': False
+        }
         self.assertGlobMatch(glob, spec)
 
     def test_glob_all(self):
-        dirs = '{%s,%s}' % (os.path.join('xml', '*'),
-                            os.path.join('xslt', '**'))
+        dirs = '{%s,%s}' % (os.path.join('xml', '*'), os.path.join('xslt', '**'))
         glob = os.path.join(dirs, 'babar.xml')
-        spec = {'xml/a/babar.xml': True,
-                 'xml/b/babar.xml': True,
-                 'xml/a/c/babar.xml': False,
-                 'xslt/a/babar.xml': True,
-                 'xslt/b/babar.xml': True,
-                 'xslt/a/c/babar.xml': True,
-                 'toto/yurg.xml': False,
-                 'Donotwant': False}
+        spec = {
+            'xml/a/babar.xml': True,
+            'xml/b/babar.xml': True,
+            'xml/a/c/babar.xml': False,
+            'xslt/a/babar.xml': True,
+            'xslt/b/babar.xml': True,
+            'xslt/a/c/babar.xml': True,
+            'toto/yurg.xml': False,
+            'Donotwant': False
+        }
         self.assertGlobMatch(glob, spec)
 
     def test_invalid_glob_pattern(self):
@@ -959,16 +886,13 @@ class GlobTestCase(GlobTestCaseBase):
         r = parse_requirement('a')
         validate(r, ('a', None, None, 'a', None))
         r = parse_requirement('a >= 1.2, <2.0,!=1.7')
-        validate(r, ('a', [('>=', '1.2'), ('<', '2.0'), ('!=', '1.7')], None,
-                     'a >= 1.2, < 2.0, != 1.7', None))
+        validate(r, ('a', [('>=', '1.2'), ('<', '2.0'), ('!=', '1.7')], None, 'a >= 1.2, < 2.0, != 1.7', None))
         r = parse_requirement('a [ab,cd , ef] >= 1.2, <2.0')
-        validate(r, ('a', [('>=', '1.2'), ('<', '2.0')], ['ab', 'cd', 'ef'],
-                     'a >= 1.2, < 2.0', None))
+        validate(r, ('a', [('>=', '1.2'), ('<', '2.0')], ['ab', 'cd', 'ef'], 'a >= 1.2, < 2.0', None))
         r = parse_requirement('a[]')
         validate(r, ('a', None, None, 'a', None))
         r = parse_requirement('a (== 1.2.*, != 1.2.1.*)')
-        validate(r, ('a', [('==', '1.2.*'), ('!=', '1.2.1.*')], None,
-                 'a == 1.2.*, != 1.2.1.*', None))
+        validate(r, ('a', [('==', '1.2.*'), ('!=', '1.2.1.*')], None, 'a == 1.2.*, != 1.2.1.*', None))
         r = parse_requirement('a @ http://domain.com/path#abc=def')
         validate(r, ('a', None, None, 'a', 'http://domain.com/path#abc=def'))
         # See issue #148
@@ -977,7 +901,7 @@ class GlobTestCase(GlobTestCaseBase):
         r = parse_requirement('a >=3.6,')
         validate(r, ('a', [('>=', '3.6')], None, 'a >= 3.6', None))
 
-        if False: # TODO re-enable
+        if False:  # TODO re-enable
             for e in ('*', ':*:', ':meta:', '-', '-abc'):
                 r = parse_requirement('a [%s]' % e)
                 validate(r, ('a', None, [e], 'a', None))
@@ -1013,5 +937,7 @@ class GlobTestCase(GlobTestCaseBase):
         for requested, available, expected in cases:
             actual = get_extras(requested, available)
             self.assertEqual(actual, expected)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

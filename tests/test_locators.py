@@ -17,19 +17,17 @@ from compat import unittest
 from support import DistlibTestCase
 
 from distlib.compat import url2pathname, urlparse
-from distlib.database import (Distribution, DistributionPath, make_graph,
-                              make_dist)
-from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator,
-                              PyPIJSONLocator, DirectoryLocator,
-                              DistPathLocator, AggregatingLocator,
-                              JSONLocator, DependencyFinder, locate,
-                              get_all_distribution_names, default_locator)
+from distlib.database import (Distribution, DistributionPath, make_graph, make_dist)
+from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator, PyPIJSONLocator, DirectoryLocator, DistPathLocator,
+                              AggregatingLocator, JSONLocator, DependencyFinder, locate, get_all_distribution_names,
+                              default_locator)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 PYPI_RPC_HOST = 'http://python.org/pypi'
 
 PYPI_WEB_HOST = os.environ.get('PYPI_WEB_HOST', 'https://pypi.org/simple/')
+
 
 class LocatorTestCase(DistlibTestCase):
 
@@ -40,22 +38,20 @@ class LocatorTestCase(DistlibTestCase):
         try:
             try:
                 result = locator.get_project('sarge')
-            except Exception:     # pragma: no cover
+            except Exception:  # pragma: no cover
                 raise unittest.SkipTest('PyPI XML-RPC not available')
             self.assertIn('0.1', result)
             dist = result['0.1']
             self.assertEqual(dist.name, 'sarge')
             self.assertEqual(dist.version, '0.1')
             possible = ('https://pypi.org/packages/source/s/sarge/'
-                        'sarge-0.1.tar.gz',
-                        'http://pypi.org/packages/source/s/sarge/'
+                        'sarge-0.1.tar.gz', 'http://pypi.org/packages/source/s/sarge/'
                         'sarge-0.1.tar.gz')
             self.assertIn(dist.source_url, possible)
-            self.assertEqual(dist.digest,
-                             ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'))
+            self.assertEqual(dist.digest, ('md5', '961ddd9bc085fdd8b248c6dd96ceb1c8'))
             try:
                 names = locator.get_distribution_names()
-            except Exception:   # pragma: no cover
+            except Exception:  # pragma: no cover
                 raise unittest.SkipTest('PyPI XML-RPC not available')
             self.assertGreater(len(names), 25000)
         finally:
@@ -98,15 +94,15 @@ class LocatorTestCase(DistlibTestCase):
             )
             self.assertIn(dist.digest, SARGE_HASHES)
         # Test to check issue #112 fix.
-        locator.wheel_tags = [('cp27', 'cp27m', 'win_amd64'),
-                              ('cp35', 'cp35m', 'win32')]
+        locator.wheel_tags = [('cp27', 'cp27m', 'win_amd64'), ('cp35', 'cp35m', 'win32')]
         result = locator.get_project('simplejson')
         urls = result['urls'].get('3.16.0')
         self.assertTrue(urls)
         self.assertEqual(3, len(urls))
-        expected = set(['simplejson-3.16.0-cp27-cp27m-win_amd64.whl',
-                        'simplejson-3.16.0-cp35-cp35m-win32.whl',
-                        'simplejson-3.16.0.tar.gz'])
+        expected = set([
+            'simplejson-3.16.0-cp27-cp27m-win_amd64.whl', 'simplejson-3.16.0-cp35-cp35m-win32.whl',
+            'simplejson-3.16.0.tar.gz'
+        ])
         for u in urls:
             p = posixpath.split(urlparse(u).path)[-1]
             self.assertIn(p, expected)
@@ -131,8 +127,8 @@ class LocatorTestCase(DistlibTestCase):
     def test_dir(self):
         d = os.path.join(HERE, 'fake_archives')
         locator = DirectoryLocator(d)
-        expected = os.path.join(HERE, 'fake_archives', 'subdir',
-                                'subsubdir', 'Flask-0.9.tar.gz')
+        expected = os.path.join(HERE, 'fake_archives', 'subdir', 'subsubdir', 'Flask-0.9.tar.gz')
+
         def get_path(url):
             t = urlparse(url)
             return url2pathname(t.path)
@@ -143,8 +139,7 @@ class LocatorTestCase(DistlibTestCase):
             dist = result['0.9']
             self.assertEqual(dist.name, 'Flask')
             self.assertEqual(dist.version, '0.9')
-            self.assertEqual(os.path.normcase(get_path(dist.source_url)),
-                             os.path.normcase(expected))
+            self.assertEqual(os.path.normcase(get_path(dist.source_url)), os.path.normcase(expected))
         names = locator.get_distribution_names()
         expected = set(['Flask', 'python-gnupg', 'coverage', 'Django'])
         if sys.version_info[:2] == (2, 7):
@@ -154,8 +149,8 @@ class LocatorTestCase(DistlibTestCase):
     def test_dir_nonrecursive(self):
         d = os.path.join(HERE, 'fake_archives')
         locator = DirectoryLocator(d, recursive=False)
-        expected = os.path.join(HERE, 'fake_archives', 'subdir',
-                                'subsubdir', 'Flask-0.9.tar.gz')
+        expected = os.path.join(HERE, 'fake_archives', 'subdir', 'subsubdir', 'Flask-0.9.tar.gz')
+
         def get_path(url):
             t = urlparse(url)
             return url2pathname(t.path)
@@ -173,18 +168,13 @@ class LocatorTestCase(DistlibTestCase):
         try:
             edp = DistributionPath(include_egg=True)
             locator = DistPathLocator(edp)
-            cases = ('babar', 'choxie', 'strawberry', 'towel-stuff',
-                     'coconuts-aster', 'bacon', 'grammar', 'truffles',
+            cases = ('babar', 'choxie', 'strawberry', 'towel-stuff', 'coconuts-aster', 'bacon', 'grammar', 'truffles',
                      'banana', 'cheese')
             for name in cases:
                 d = locator.locate(name, True)
                 self.assertIsNotNone(d)
                 r = locator.get_project(name)
-                expected = {
-                    d.version: d,
-                    'urls': {d.version: set([d.source_url])},
-                    'digests': {d.version: set([None])}
-                }
+                expected = {d.version: d, 'urls': {d.version: set([d.source_url])}, 'digests': {d.version: set([None])}}
                 self.assertEqual(r, expected)
             d = locator.locate('nonexistent')
             self.assertIsNone(d)
@@ -199,11 +189,9 @@ class LocatorTestCase(DistlibTestCase):
     def test_aggregation(self):
         d = os.path.join(HERE, 'fake_archives')
         loc1 = DirectoryLocator(d)
-        loc2 = SimpleScrapingLocator('https://pypi.org/simple/',
-                                     timeout=5.0)
+        loc2 = SimpleScrapingLocator('https://pypi.org/simple/', timeout=5.0)
         locator = AggregatingLocator(loc1, loc2)
-        exp1 = os.path.join(HERE, 'fake_archives', 'subdir',
-                            'subsubdir', 'Flask-0.9.tar.gz')
+        exp1 = os.path.join(HERE, 'fake_archives', 'subdir', 'subsubdir', 'Flask-0.9.tar.gz')
         exp2 = '/Flask-0.9.tar.gz'
         result = locator.get_project('flask')
         self.assertEqual(len(result), 3)
@@ -213,8 +201,7 @@ class LocatorTestCase(DistlibTestCase):
         self.assertEqual(dist.version, '0.9')
         scheme, _, path, _, _, _ = urlparse(dist.source_url)
         self.assertEqual(scheme, 'file')
-        self.assertEqual(os.path.normcase(url2pathname(path)),
-                         os.path.normcase(exp1))
+        self.assertEqual(os.path.normcase(url2pathname(path)), os.path.normcase(exp1))
         locator.merge = True
         locator._cache.clear()
         result = locator.get_project('flask')
@@ -235,40 +222,37 @@ class LocatorTestCase(DistlibTestCase):
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     @unittest.skipIf(True, 'Optimised metadata is not up-to-date')
     def test_dependency_finder(self):
-        locator = AggregatingLocator(
-            JSONLocator(),
-            SimpleScrapingLocator('https://pypi.org/simple/', timeout=3.0),
-            scheme='legacy')
+        locator = AggregatingLocator(JSONLocator(),
+                                     SimpleScrapingLocator('https://pypi.org/simple/', timeout=3.0),
+                                     scheme='legacy')
         finder = DependencyFinder(locator)
         dists, problems = finder.find('irc (== 5.0.1)')
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
-        self.assertEqual(actual, ['hgtools', 'irc',
-                                  'pytest-runner', 'setuptools_scm'])
-        dists, problems = finder.find('irc (== 5.0.1)',
-                                      meta_extras=[':test:'])
+        self.assertEqual(actual, ['hgtools', 'irc', 'pytest-runner', 'setuptools_scm'])
+        dists, problems = finder.find('irc (== 5.0.1)', meta_extras=[':test:'])
         self.assertFalse(problems)
         actual = sorted([d.name for d in dists])
         # expected = [
-            # 'atomicwrites',
-            # 'attrs',
-            # 'colorama',
-            # 'hgtools',
-            # 'importlib-metadata',
-            # 'irc',
-            # 'more-itertools',
-            # 'packaging',
-            # 'pathlib2',
-            # 'pluggy',
-            # 'py',
-            # 'pyparsing',
-            # 'pytest',
-            # 'pytest-runner',
-            # 'setuptools',
-            # 'setuptools-scm',
-            # 'setuptools_scm',
-            # 'six',
-            # 'wcwidth'
+        # 'atomicwrites',
+        # 'attrs',
+        # 'colorama',
+        # 'hgtools',
+        # 'importlib-metadata',
+        # 'irc',
+        # 'more-itertools',
+        # 'packaging',
+        # 'pathlib2',
+        # 'pluggy',
+        # 'py',
+        # 'pyparsing',
+        # 'pytest',
+        # 'pytest-runner',
+        # 'setuptools',
+        # 'setuptools-scm',
+        # 'setuptools_scm',
+        # 'six',
+        # 'wcwidth'
         # ]
         expected = ['hgtools', 'irc', 'pytest', 'pytest-runner', 'setuptools_scm']
         self.assertEqual(actual, expected)
@@ -277,61 +261,45 @@ class LocatorTestCase(DistlibTestCase):
         self.assertFalse(cycle)
         names = [d.name for d in slist]
         expected = set([
-            ('atomicwrites', 'six', 'importlib-metadata', 'more-itertools',
-             'attrs', 'pyparsing', 'setuptools', 'setuptools_scm',
-             'setuptools-scm', 'wcwidth', 'colorama', 'py', 'pathlib2',
-             'pluggy', 'hgtools', 'pytest-runner', 'packaging', 'irc',
-             'pytest'),
-            ('atomicwrites', 'setuptools', 'importlib-metadata',
-            'more-itertools', 'attrs', 'wcwidth', 'pyparsing', 'colorama',
-            'six', 'setuptools_scm', 'setuptools-scm', 'pluggy', 'packaging',
-            'py', 'hgtools', 'pytest-runner', 'pathlib2', 'irc', 'pytest'),
-            ('wcwidth', 'setuptools_scm', 'colorama', 'six',
-            'importlib-metadata', 'setuptools', 'setuptools-scm', 'pyparsing',
-            'more-itertools', 'attrs', 'atomicwrites', 'pathlib2',
-            'packaging', 'pytest-runner', 'hgtools', 'py', 'pluggy', 'irc',
-            'pytest'),
-            ('setuptools', 'setuptools-scm', 'wcwidth',
-            'importlib-metadata', 'colorama', 'six', 'atomicwrites',
-            'more-itertools', 'attrs', 'pyparsing', 'setuptools_scm',
-            'pluggy', 'pathlib2', 'packaging', 'py', 'pytest-runner',
-            'hgtools', 'irc', 'pytest'),
-            ('atomicwrites', 'setuptools', 'importlib-metadata', 'attrs',
-             'wcwidth', 'more-itertools', 'pyparsing', 'colorama', 'six',
-             'setuptools_scm', 'setuptools-scm', 'pluggy', 'packaging',
-             'hgtools', 'pytest-runner', 'pathlib2', 'py', 'irc', 'pytest'),
-            ('wcwidth', 'setuptools_scm', 'more-itertools', 'colorama', 'six',
-             'importlib-metadata', 'setuptools', 'setuptools-scm',
-             'atomicwrites', 'pyparsing', 'attrs', 'pathlib2', 'packaging',
-             'pytest-runner', 'py', 'pluggy', 'hgtools', 'irc', 'pytest'),
-            ('six', 'atomicwrites', 'setuptools', 'setuptools-scm', 'attrs',
-             'importlib-metadata', 'more-itertools', 'wcwidth', 'colorama', 'pyparsing',
-             'setuptools_scm', 'pluggy', 'packaging', 'hgtools', 'py', 'pytest-runner',
-             'pathlib2', 'irc', 'pytest'),
-            ('wcwidth', 'setuptools_scm', 'more-itertools', 'six', 'setuptools',
-             'importlib-metadata', 'pyparsing', 'setuptools-scm', 'atomicwrites',
-             'colorama', 'attrs', 'pathlib2', 'packaging', 'pytest-runner', 'hgtools',
-             'py', 'pluggy', 'pytest', 'irc'),
-            ('atomicwrites', 'importlib-metadata', 'attrs', 'pyparsing', 'wcwidth',
-             'colorama', 'setuptools', 'more-itertools', 'six', 'setuptools_scm',
-             'setuptools-scm', 'pluggy', 'packaging', 'hgtools', 'pytest-runner',
+            ('atomicwrites', 'six', 'importlib-metadata', 'more-itertools', 'attrs', 'pyparsing', 'setuptools',
+             'setuptools_scm', 'setuptools-scm', 'wcwidth', 'colorama', 'py', 'pathlib2', 'pluggy', 'hgtools',
+             'pytest-runner', 'packaging', 'irc', 'pytest'),
+            ('atomicwrites', 'setuptools', 'importlib-metadata', 'more-itertools', 'attrs', 'wcwidth', 'pyparsing',
+             'colorama', 'six', 'setuptools_scm', 'setuptools-scm', 'pluggy', 'packaging', 'py', 'hgtools',
+             'pytest-runner', 'pathlib2', 'irc', 'pytest'),
+            ('wcwidth', 'setuptools_scm', 'colorama', 'six', 'importlib-metadata', 'setuptools', 'setuptools-scm',
+             'pyparsing', 'more-itertools', 'attrs', 'atomicwrites', 'pathlib2', 'packaging', 'pytest-runner',
+             'hgtools', 'py', 'pluggy', 'irc', 'pytest'),
+            ('setuptools', 'setuptools-scm', 'wcwidth', 'importlib-metadata', 'colorama', 'six', 'atomicwrites',
+             'more-itertools', 'attrs', 'pyparsing', 'setuptools_scm', 'pluggy', 'pathlib2', 'packaging', 'py',
+             'pytest-runner', 'hgtools', 'irc', 'pytest'),
+            ('atomicwrites', 'setuptools', 'importlib-metadata', 'attrs', 'wcwidth', 'more-itertools', 'pyparsing',
+             'colorama', 'six', 'setuptools_scm', 'setuptools-scm', 'pluggy', 'packaging', 'hgtools', 'pytest-runner',
              'pathlib2', 'py', 'irc', 'pytest'),
-            ('atomicwrites', 'pyparsing', 'six', 'setuptools', 'importlib-metadata',
-             'more-itertools', 'attrs', 'setuptools_scm', 'setuptools-scm', 'wcwidth',
-             'colorama', 'py', 'pathlib2', 'pluggy', 'hgtools', 'pytest-runner',
-             'packaging', 'irc', 'pytest'),
-            ('atomicwrites', 'setuptools', 'importlib-metadata', 'more-itertools',
-             'attrs', 'pyparsing', 'wcwidth', 'colorama', 'six', 'setuptools_scm',
-             'setuptools-scm', 'pluggy', 'packaging', 'py', 'hgtools', 'pytest-runner',
-             'pathlib2', 'irc', 'pytest'),
-            ('wcwidth', 'setuptools_scm', 'more-itertools', 'six', 'setuptools',
-             'importlib-metadata', 'pyparsing', 'setuptools-scm', 'atomicwrites',
-             'attrs', 'colorama', 'pathlib2', 'packaging', 'pytest-runner', 'hgtools',
+            ('wcwidth', 'setuptools_scm', 'more-itertools', 'colorama', 'six', 'importlib-metadata', 'setuptools',
+             'setuptools-scm', 'atomicwrites', 'pyparsing', 'attrs', 'pathlib2', 'packaging', 'pytest-runner', 'py',
+             'pluggy', 'hgtools', 'irc', 'pytest'),
+            ('six', 'atomicwrites', 'setuptools', 'setuptools-scm', 'attrs', 'importlib-metadata', 'more-itertools',
+             'wcwidth', 'colorama', 'pyparsing', 'setuptools_scm', 'pluggy', 'packaging', 'hgtools', 'py',
+             'pytest-runner', 'pathlib2', 'irc', 'pytest'),
+            ('wcwidth', 'setuptools_scm', 'more-itertools', 'six', 'setuptools', 'importlib-metadata', 'pyparsing',
+             'setuptools-scm', 'atomicwrites', 'colorama', 'attrs', 'pathlib2', 'packaging', 'pytest-runner', 'hgtools',
              'py', 'pluggy', 'pytest', 'irc'),
-            ('six', 'atomicwrites', 'setuptools', 'setuptools-scm', 'attrs',
-             'importlib-metadata', 'more-itertools', 'wcwidth', 'pyparsing', 'colorama',
-             'setuptools_scm', 'pluggy', 'packaging', 'hgtools', 'py', 'pytest-runner',
-             'pathlib2', 'irc', 'pytest'),
+            ('atomicwrites', 'importlib-metadata', 'attrs', 'pyparsing', 'wcwidth', 'colorama', 'setuptools',
+             'more-itertools', 'six', 'setuptools_scm', 'setuptools-scm', 'pluggy', 'packaging', 'hgtools',
+             'pytest-runner', 'pathlib2', 'py', 'irc', 'pytest'),
+            ('atomicwrites', 'pyparsing', 'six', 'setuptools', 'importlib-metadata', 'more-itertools', 'attrs',
+             'setuptools_scm', 'setuptools-scm', 'wcwidth', 'colorama', 'py', 'pathlib2', 'pluggy', 'hgtools',
+             'pytest-runner', 'packaging', 'irc', 'pytest'),
+            ('atomicwrites', 'setuptools', 'importlib-metadata', 'more-itertools', 'attrs', 'pyparsing', 'wcwidth',
+             'colorama', 'six', 'setuptools_scm', 'setuptools-scm', 'pluggy', 'packaging', 'py', 'hgtools',
+             'pytest-runner', 'pathlib2', 'irc', 'pytest'),
+            ('wcwidth', 'setuptools_scm', 'more-itertools', 'six', 'setuptools', 'importlib-metadata', 'pyparsing',
+             'setuptools-scm', 'atomicwrites', 'attrs', 'colorama', 'pathlib2', 'packaging', 'pytest-runner', 'hgtools',
+             'py', 'pluggy', 'pytest', 'irc'),
+            ('six', 'atomicwrites', 'setuptools', 'setuptools-scm', 'attrs', 'importlib-metadata', 'more-itertools',
+             'wcwidth', 'pyparsing', 'colorama', 'setuptools_scm', 'pluggy', 'packaging', 'hgtools', 'py',
+             'pytest-runner', 'pathlib2', 'irc', 'pytest'),
             ('pytest', 'setuptools_scm', 'hgtools', 'pytest-runner', 'irc'),
             ('pytest', 'setuptools_scm', 'pytest-runner', 'hgtools', 'irc'),
             ('setuptools_scm', 'pytest', 'hgtools', 'pytest-runner', 'irc'),
@@ -373,13 +341,12 @@ class LocatorTestCase(DistlibTestCase):
         for url in (None, PYPI_RPC_HOST):
             try:
                 all_dists = get_all_distribution_names(url)
-            except Exception:     # pragma: no cover
+            except Exception:  # pragma: no cover
                 raise unittest.SkipTest('PyPI XML-RPC not available')
             self.assertGreater(len(all_dists), 0)
 
     def test_url_preference(self):
-        cases = (('https://netloc/path', 'http://netloc/path'),
-                 ('http://pypi.org/path', 'http://netloc/path'),
+        cases = (('https://netloc/path', 'http://netloc/path'), ('http://pypi.org/path', 'http://netloc/path'),
                  ('http://netloc/B', 'http://netloc/A'))
         for url1, url2 in cases:
             self.assertEqual(default_locator.prefer_url(url1, url2), url1)
@@ -387,11 +354,9 @@ class LocatorTestCase(DistlibTestCase):
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     def test_prereleases(self):
-        locator = AggregatingLocator(
-            JSONLocator(),
-            SimpleScrapingLocator('https://pypi.org/simple/',
-                                  timeout=3.0),
-            scheme='legacy')
+        locator = AggregatingLocator(JSONLocator(),
+                                     SimpleScrapingLocator('https://pypi.org/simple/', timeout=3.0),
+                                     scheme='legacy')
         REQT = 'SQLAlchemy (>0.5.8, < 0.6)'
         finder = DependencyFinder(locator)
         d = locator.locate(REQT)
@@ -588,8 +553,8 @@ class LocatorTestCase(DistlibTestCase):
         d = locate('foobarbazbishboshboo')
         self.assertTrue(d is None or isinstance(d, Distribution))
 
+
 if __name__ == '__main__':  # pragma: no cover
     import logging
-    logging.basicConfig(level=logging.DEBUG, filename='run/test_locators.log',
-                        filemode='w', format='%(message)s')
+    logging.basicConfig(level=logging.DEBUG, filename='run/test_locators.log', filemode='w', format='%(message)s')
     unittest.main()

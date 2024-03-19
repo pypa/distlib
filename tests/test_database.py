@@ -21,10 +21,8 @@ from compat import unittest
 from distlib import DistlibException
 from distlib.compat import text_type, StringIO
 from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME
-from distlib.database import (InstalledDistribution, EggInfoDistribution,
-                              BaseInstalledDistribution, EXPORTS_FILENAME,
-                              DistributionPath, make_graph,
-                              get_required_dists, get_dependent_dists)
+from distlib.database import (InstalledDistribution, EggInfoDistribution, BaseInstalledDistribution, EXPORTS_FILENAME,
+                              DistributionPath, make_graph, get_required_dists, get_dependent_dists)
 from distlib.util import get_resources_dests, CSVReader, read_exports
 
 from test_util import GlobTestCaseBase
@@ -46,10 +44,8 @@ class FakeDistsMixin(object):
         # distributions
         tmpdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmpdir)
-        self.fake_dists_path = os.path.realpath(
-            os.path.join(tmpdir, 'fake_dists'))
-        fake_dists_src = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), 'fake_dists'))
+        self.fake_dists_path = os.path.realpath(os.path.join(tmpdir, 'fake_dists'))
+        fake_dists_src = os.path.abspath(os.path.join(os.path.dirname(__file__), 'fake_dists'))
         shutil.copytree(fake_dists_src, self.fake_dists_path)
         # XXX ugly workaround: revert copystat calls done by shutil behind our
         # back (to avoid getting a read-only copy of a read-only file).  we
@@ -133,8 +129,7 @@ class CommonDistributionTests(FakeDistsMixin):
         data = os.urandom(datalen)
         for dir_ in self.dirs:
             dist = self.cls(dir_)
-            for hasher in ('sha1', 'sha224', 'sha384',
-                           'sha256', 'sha512', None):
+            for hasher in ('sha1', 'sha224', 'sha384', 'sha256', 'sha512', None):
                 dist.hasher = hasher
                 actual = dist.get_hash(data)
                 if hasher is None:
@@ -150,6 +145,7 @@ class CommonDistributionTests(FakeDistsMixin):
                     expected = '%s=%s' % (hasher, digest)
                 self.assertEqual(actual, expected)
 
+
 class TestDistribution(CommonDistributionTests, DistlibTestCase):
 
     cls = InstalledDistribution
@@ -157,9 +153,9 @@ class TestDistribution(CommonDistributionTests, DistlibTestCase):
     expected_str_output = 'choxie 2.0.0.9'
 
     def setUp(self):
+
         def get_files(location):
-            for path in ('REQUESTED', 'INSTALLER', LEGACY_METADATA_FILENAME,
-                         METADATA_FILENAME, EXPORTS_FILENAME):
+            for path in ('REQUESTED', 'INSTALLER', LEGACY_METADATA_FILENAME, METADATA_FILENAME, EXPORTS_FILENAME):
                 p = os.path.join(location + '.dist-info', path)
                 if os.path.exists(p):
                     yield p
@@ -168,9 +164,9 @@ class TestDistribution(CommonDistributionTests, DistlibTestCase):
                     yield os.path.join(path, f)
 
         super(TestDistribution, self).setUp()
-        self.dirs = [os.path.join(self.fake_dists_path, f)
-                     for f in os.listdir(self.fake_dists_path)
-                     if f.endswith('.dist-info')]
+        self.dirs = [
+            os.path.join(self.fake_dists_path, f) for f in os.listdir(self.fake_dists_path) if f.endswith('.dist-info')
+        ]
 
         self.records = {}
         for distinfo_dir in self.dirs:
@@ -188,8 +184,7 @@ class TestDistribution(CommonDistributionTests, DistlibTestCase):
                 for row in record_reader:
                     if row == []:
                         continue
-                    path, hash, size = (row[:] +
-                                        [None for i in range(len(row), 3)])
+                    path, hash, size = (row[:] + [None for i in range(len(row), 3)])
                     record_data[path] = hash, size
             self.records[distinfo_dir] = record_data
 
@@ -201,13 +196,13 @@ class TestDistribution(CommonDistributionTests, DistlibTestCase):
         # Test the retrieval of dist-info file objects.
         distinfo_name = 'choxie-2.0.0.9'
         other_distinfo_name = 'grammar-1.0a4'
-        distinfo_dir = os.path.join(self.fake_dists_path,
-                                    distinfo_name + '.dist-info')
+        distinfo_dir = os.path.join(self.fake_dists_path, distinfo_name + '.dist-info')
         dist = InstalledDistribution(distinfo_dir)
         # Test for known good file matches
         distinfo_files = [
             # Relative paths
-            'INSTALLER', METADATA_FILENAME,
+            'INSTALLER',
+            METADATA_FILENAME,
             # Absolute paths
             os.path.join(distinfo_dir, 'RECORD'),
             os.path.join(distinfo_dir, 'REQUESTED'),
@@ -216,27 +211,20 @@ class TestDistribution(CommonDistributionTests, DistlibTestCase):
         for distfile in distinfo_files:
             value = dist.get_distinfo_file(distfile)
             self.assertTrue(os.path.isfile(value))
-            self.assertEqual(value,
-                             os.path.join(distinfo_dir, distfile))
+            self.assertEqual(value, os.path.join(distinfo_dir, distfile))
 
         # Test an absolute path that is part of another distributions dist-info
-        other_distinfo_file = os.path.join(
-            self.fake_dists_path, other_distinfo_name + '.dist-info',
-            'REQUESTED')
-        self.assertRaises(DistlibException, dist.get_distinfo_file,
-                          other_distinfo_file)
+        other_distinfo_file = os.path.join(self.fake_dists_path, other_distinfo_name + '.dist-info', 'REQUESTED')
+        self.assertRaises(DistlibException, dist.get_distinfo_file, other_distinfo_file)
         # Test for a file that should not exist
-        self.assertRaises(DistlibException, dist.get_distinfo_file,
-                          'MAGICFILE')
+        self.assertRaises(DistlibException, dist.get_distinfo_file, 'MAGICFILE')
 
     def test_list_distinfo_files(self):
         distinfo_name = 'towel_stuff-0.1'
-        distinfo_dir = os.path.join(self.fake_dists_path,
-                                    distinfo_name + '.dist-info')
+        distinfo_dir = os.path.join(self.fake_dists_path, distinfo_name + '.dist-info')
         dist = InstalledDistribution(distinfo_dir)
         # Test for the iteration of the raw path
-        distinfo_files = [os.path.join(distinfo_dir, filename) for filename in
-                          os.listdir(distinfo_dir)]
+        distinfo_files = [os.path.join(distinfo_dir, filename) for filename in os.listdir(distinfo_dir)]
         found = list(dist.list_distinfo_files())
         base = self.fake_dists_path
         for i, p in enumerate(found):
@@ -244,8 +232,7 @@ class TestDistribution(CommonDistributionTests, DistlibTestCase):
                 found[i] = os.path.join(base, p)
         self.assertEqual(sorted(found), sorted(distinfo_files))
         # Test for the iteration of local absolute paths
-        distinfo_files = [os.path.join(sys.prefix, distinfo_dir, path) for
-                          path in distinfo_files]
+        distinfo_files = [os.path.join(sys.prefix, distinfo_dir, path) for path in distinfo_files]
         found = sorted(dist.list_distinfo_files())
         if os.sep != '/':
             self.assertNotIn('/', found[0])
@@ -254,8 +241,7 @@ class TestDistribution(CommonDistributionTests, DistlibTestCase):
 
     def test_get_resources_path(self):
         distinfo_name = 'babar-0.1'
-        distinfo_dir = os.path.join(self.fake_dists_path,
-                                    distinfo_name + '.dist-info')
+        distinfo_dir = os.path.join(self.fake_dists_path, distinfo_name + '.dist-info')
         dist = InstalledDistribution(distinfo_dir)
         resource_path = dist.get_resource_path('babar.png')
         self.assertEqual(resource_path, 'babar.png')
@@ -282,30 +268,25 @@ class TestDistribution(CommonDistributionTests, DistlibTestCase):
             with open(bad_file_name, 'wb') as f:
                 f.write(bad_data)
             mismatches = dist.check_installed_files()
-            self.assertEqual(mismatches, [(bad_file_name, 'hash', bad_file[1],
-                                           bad_hash)])
+            self.assertEqual(mismatches, [(bad_file_name, 'hash', bad_file[1], bad_hash)])
             # now truncate the file by one byte and see what's returned
             with open(bad_file_name, 'wb') as f:
                 f.write(bad_data[:-1])
             bad_size = str(len(bad_data) - 1)
             mismatches = dist.check_installed_files()
-            self.assertEqual(mismatches, [(bad_file_name, 'size', bad_file[2],
-                                           bad_size)])
+            self.assertEqual(mismatches, [(bad_file_name, 'size', bad_file[2], bad_size)])
 
             # now remove the file and see what's returned
             os.remove(bad_file_name)
             mismatches = dist.check_installed_files()
-            self.assertEqual(mismatches, [(bad_file_name, 'exists',
-                                           True, False)])
+            self.assertEqual(mismatches, [(bad_file_name, 'exists', True, False)])
 
             # restore the file
             with open(bad_file_name, 'wb') as f:
                 f.write(data)
 
 
-class TestEggInfoDistribution(CommonDistributionTests,
-                              LoggingCatcher,
-                              DistlibTestCase):
+class TestEggInfoDistribution(CommonDistributionTests, LoggingCatcher, DistlibTestCase):
 
     cls = EggInfoDistribution
     sample_dist = 'bacon', '0.1', 'bacon-0.1.egg-info'
@@ -314,18 +295,19 @@ class TestEggInfoDistribution(CommonDistributionTests,
     def setUp(self):
         super(TestEggInfoDistribution, self).setUp()
 
-        self.dirs = [os.path.join(self.fake_dists_path, f)
-                     for f in os.listdir(self.fake_dists_path)
-                     if f.endswith('.egg') or f.endswith('.egg-info')]
+        self.dirs = [
+            os.path.join(self.fake_dists_path, f) for f in os.listdir(self.fake_dists_path)
+            if f.endswith('.egg') or f.endswith('.egg-info')
+        ]
 
         self.records = {}
         for egginfo_dir in self.dirs:
-            dist_location = egginfo_dir.replace('.egg-info', '')
+            # dist_location = egginfo_dir.replace('.egg-info', '')
             record_file = os.path.join(egginfo_dir, 'installed-files.txt')
 
-            dist = self.cls(egginfo_dir)
-            #prefix = os.path.dirname(dist_location)
-            #dist.write_installed_files(get_files(dist_location), prefix)
+            # dist = self.cls(egginfo_dir)
+            # prefix = os.path.dirname(dist_location)
+            # dist.write_installed_files(get_files(dist_location), prefix)
 
             record_data = {}
             if os.path.exists(record_file):
@@ -346,9 +328,7 @@ class TestEggInfoDistribution(CommonDistributionTests,
         pass
 
 
-class TestDatabase(LoggingCatcher,
-                   FakeDistsMixin,
-                   DistlibTestCase):
+class TestDatabase(LoggingCatcher, FakeDistsMixin, DistlibTestCase):
 
     def setUp(self):
         super(TestDatabase, self).setUp()
@@ -376,7 +356,7 @@ class TestDatabase(LoggingCatcher,
             ('python-ldap', '2.5', 'python_ldap-2.5.dist-info'),
             # Test for both '-' in the name and a funky version number
             ('python-ldap', '2.5 a---5', 'python_ldap-2.5 a---5.dist-info'),
-            ]
+        ]
 
         # Loop through the items to validate the results
         for name, version, standard_dirname in items:
@@ -387,20 +367,16 @@ class TestDatabase(LoggingCatcher,
     def test_get_distributions(self):
         # Lookup all distributions found in the ``sys.path``.
         # This test could potentially pick up other installed distributions
-        non_egg_dists = [('grammar', '1.0a4'), ('choxie', '2.0.0.9'),
-                         ('towel-stuff', '0.1'), ('babar', '0.1')]
-        egg_dists = [('bacon', '0.1'), ('cheese', '2.0.2'),
-                     ('coconuts-aster', '10.3'),
-                     ('banana', '0.4'), ('strawberry', '0.6'),
-                     ('truffles', '5.0'), ('nut', 'funkyversion')]
+        non_egg_dists = [('grammar', '1.0a4'), ('choxie', '2.0.0.9'), ('towel-stuff', '0.1'), ('babar', '0.1')]
+        egg_dists = [('bacon', '0.1'), ('cheese', '2.0.2'), ('coconuts-aster', '10.3'), ('banana', '0.4'),
+                     ('strawberry', '0.6'), ('truffles', '5.0'), ('nut', 'funkyversion')]
 
         all_dists = non_egg_dists + egg_dists
 
         d = DistributionPath()
         ed = DistributionPath(include_egg=True)
 
-        cases = ((d, non_egg_dists, InstalledDistribution),
-                 (ed, all_dists, BaseInstalledDistribution))
+        cases = ((d, non_egg_dists, InstalledDistribution), (ed, all_dists, BaseInstalledDistribution))
 
         fake_dists_path = self.fake_dists_path
         for enabled in (True, False):
@@ -417,8 +393,7 @@ class TestDatabase(LoggingCatcher,
                 dists = list(distset.get_distributions())
                 for dist in dists:
                     self.assertIsInstance(dist, allowed_class)
-                    if (dist.name in dict(fake_dists) and
-                        dist.path.startswith(fake_dists_path)):
+                    if (dist.name in dict(fake_dists) and dist.path.startswith(fake_dists_path)):
                         found_dists.append((dist.name, dist.version))
                     else:
                         # check that it doesn't find anything more than this
@@ -471,69 +446,65 @@ class TestDatabase(LoggingCatcher,
         d = DistributionPath()
         ed = DistributionPath(include_egg=True)
 
-        l = [dist.name for dist in d.provides_distribution('truffles')]
-        checkLists(l, ['choxie', 'towel-stuff'])
+        test_list = [dist.name for dist in d.provides_distribution('truffles')]
+        checkLists(test_list, ['choxie', 'towel-stuff'])
 
-        l = [dist.name for dist in d.provides_distribution('truffles', '1.0')]
-        checkLists(l, ['choxie', 'towel-stuff'])
+        test_list = [dist.name for dist in d.provides_distribution('truffles', '1.0')]
+        checkLists(test_list, ['choxie', 'towel-stuff'])
 
-        l = [dist.name for dist in ed.provides_distribution('truffles', '1.0')]
-        checkLists(l, ['choxie', 'cheese', 'towel-stuff'])
+        test_list = [dist.name for dist in ed.provides_distribution('truffles', '1.0')]
+        checkLists(test_list, ['choxie', 'cheese', 'towel-stuff'])
 
-        l = [dist.name for dist in d.provides_distribution('truffles', '1.1.2')]
-        checkLists(l, ['towel-stuff'])
+        test_list = [dist.name for dist in d.provides_distribution('truffles', '1.1.2')]
+        checkLists(test_list, ['towel-stuff'])
 
-        l = [dist.name for dist in d.provides_distribution('truffles', '1.1')]
-        checkLists(l, ['towel-stuff'])
+        test_list = [dist.name for dist in d.provides_distribution('truffles', '1.1')]
+        checkLists(test_list, ['towel-stuff'])
 
-        l = [dist.name for dist in d.provides_distribution('truffles',
-                                                           '!=1.1,<=2.0')]
-        checkLists(l, ['choxie', 'towel-stuff'])
+        test_list = [dist.name for dist in d.provides_distribution('truffles', '!=1.1,<=2.0')]
+        checkLists(test_list, ['choxie', 'towel-stuff'])
 
-        l = [dist.name for dist in ed.provides_distribution('truffles',
-                                                            '!=1.1,<=2.0')]
-        checkLists(l, ['choxie', 'bacon', 'cheese', 'towel-stuff'])
+        test_list = [dist.name for dist in ed.provides_distribution('truffles', '!=1.1,<=2.0')]
+        checkLists(test_list, ['choxie', 'bacon', 'cheese', 'towel-stuff'])
 
-        l = [dist.name for dist in d.provides_distribution('truffles', '>1.0')]
-        checkLists(l, ['towel-stuff'])
+        test_list = [dist.name for dist in d.provides_distribution('truffles', '>1.0')]
+        checkLists(test_list, ['towel-stuff'])
 
-        l = [dist.name for dist in d.provides_distribution('truffles', '>1.5')]
-        checkLists(l, [])
+        test_list = [dist.name for dist in d.provides_distribution('truffles', '>1.5')]
+        checkLists(test_list, [])
 
-        l = [dist.name for dist in ed.provides_distribution('truffles', '>1.5')]
-        checkLists(l, ['bacon', 'truffles'])
+        test_list = [dist.name for dist in ed.provides_distribution('truffles', '>1.5')]
+        checkLists(test_list, ['bacon', 'truffles'])
 
-        l = [dist.name for dist in d.provides_distribution('truffles', '>=1.0')]
-        checkLists(l, ['choxie', 'towel-stuff'])
+        test_list = [dist.name for dist in d.provides_distribution('truffles', '>=1.0')]
+        checkLists(test_list, ['choxie', 'towel-stuff'])
 
-        l = [dist.name for dist in ed.provides_distribution('strawberry', '0.6')]
-        checkLists(l, ['coconuts-aster', 'strawberry'])
+        test_list = [dist.name for dist in ed.provides_distribution('strawberry', '0.6')]
+        checkLists(test_list, ['coconuts-aster', 'strawberry'])
 
-        l = [dist.name for dist in ed.provides_distribution('strawberry', '>=0.5')]
-        checkLists(l, ['coconuts-aster', 'strawberry'])
+        test_list = [dist.name for dist in ed.provides_distribution('strawberry', '>=0.5')]
+        checkLists(test_list, ['coconuts-aster', 'strawberry'])
 
-        l = [dist.name for dist in ed.provides_distribution('strawberry', '>0.6')]
-        checkLists(l, [])
+        test_list = [dist.name for dist in ed.provides_distribution('strawberry', '>0.6')]
+        checkLists(test_list, [])
 
-        l = [dist.name for dist in ed.provides_distribution('banana', '0.4')]
-        checkLists(l, ['banana', 'coconuts-aster'])
+        test_list = [dist.name for dist in ed.provides_distribution('banana', '0.4')]
+        checkLists(test_list, ['banana', 'coconuts-aster'])
 
-        l = [dist.name for dist in ed.provides_distribution('banana', '>=0.3')]
-        checkLists(l, ['banana', 'coconuts-aster'])
+        test_list = [dist.name for dist in ed.provides_distribution('banana', '>=0.3')]
+        checkLists(test_list, ['banana', 'coconuts-aster'])
 
-        l = [dist.name for dist in ed.provides_distribution('banana', '!=0.4')]
-        checkLists(l, [])
+        test_list = [dist.name for dist in ed.provides_distribution('banana', '!=0.4')]
+        checkLists(test_list, [])
 
     @requires_zlib
     def test_yield_distribution(self):
         # tests the internal function _yield_distributions
         checkLists = lambda x, y: self.assertEqual(sorted(x), sorted(y))
 
-        eggs = [('bacon', '0.1'), ('banana', '0.4'), ('strawberry', '0.6'),
-                ('truffles', '5.0'), ('cheese', '2.0.2'),
+        eggs = [('bacon', '0.1'), ('banana', '0.4'), ('strawberry', '0.6'), ('truffles', '5.0'), ('cheese', '2.0.2'),
                 ('coconuts-aster', '10.3'), ('nut', 'funkyversion')]
-        dists = [('choxie', '2.0.0.9'), ('grammar', '1.0a4'),
-                 ('towel-stuff', '0.1'), ('babar', '0.1')]
+        dists = [('choxie', '2.0.0.9'), ('grammar', '1.0a4'), ('towel-stuff', '0.1'), ('babar', '0.1')]
 
         d = DistributionPath(include_egg=False)
         d._include_dist = False
@@ -541,20 +512,17 @@ class TestDatabase(LoggingCatcher,
 
         d = DistributionPath(include_egg=True)
         d._include_dist = False
-        found = [(dist.name, dist.version)
-                 for dist in d._yield_distributions()
+        found = [(dist.name, dist.version) for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(eggs, found)
 
         d = DistributionPath()
-        found = [(dist.name, dist.version)
-                 for dist in d._yield_distributions()
+        found = [(dist.name, dist.version) for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(dists, found)
 
         d = DistributionPath(include_egg=True)
-        found = [(dist.name, dist.version)
-                 for dist in d._yield_distributions()
+        found = [(dist.name, dist.version) for dist in d._yield_distributions()
                  if dist.path.startswith(self.fake_dists_path)]
         checkLists(dists + eggs, found)
 
@@ -592,8 +560,7 @@ class TestDatabase(LoggingCatcher,
         """
         with io.BytesIO(TEST_EXPORTS) as f:
             exports = read_exports(f)
-        self.assertEqual(set(exports.keys()),
-                         set(['paste.server_runner', 'console_scripts']))
+        self.assertEqual(set(exports.keys()), set(['paste.server_runner', 'console_scripts']))
 
     def test_exports_iteration(self):
         d = DistributionPath()
@@ -608,7 +575,7 @@ class TestDatabase(LoggingCatcher,
             t = e.name, e.prefix, e.suffix, tuple(e.flags)
             self.assertIn(t, expected)
             expected.remove(t)
-        self.assertFalse(expected)   # nothing left
+        self.assertFalse(expected)  # nothing left
         expected = set((
             ('bar', 'baz', 'barbaz', ('a=10', 'b')),
             ('bar', 'crunchie', None, ()),
@@ -619,20 +586,20 @@ class TestDatabase(LoggingCatcher,
             t = e.name, e.prefix, e.suffix, tuple(e.flags)
             self.assertIn(t, expected)
             expected.remove(t)
-        self.assertFalse(expected)   # nothing left
+        self.assertFalse(expected)  # nothing left
 
         expected = set((
             ('foofoo', 'baz.foo', 'bazbar', ()),
             ('real', 'cgi', 'print_directory', ()),
             ('foofoo', 'ferrero', 'rocher', ()),
-            ('foobar', 'hoopy', 'frood', ('dent',)),
+            ('foobar', 'hoopy', 'frood', ('dent', )),
         ))
         entries = list(d.get_exported_entries('bar.baz'))
         for e in entries:
             t = e.name, e.prefix, e.suffix, tuple(e.flags)
             self.assertIn(t, expected)
             expected.remove(t)
-        self.assertFalse(expected)   # nothing left
+        self.assertFalse(expected)  # nothing left
 
     def test_modules(self):
         dp = DistributionPath(include_egg=True)
@@ -658,53 +625,59 @@ class DataFilesTestCase(GlobTestCaseBase):
 
     def test_simple_glob(self):
         rules = [('', '*.tpl', '{data}')]
-        spec = {'coucou.tpl': '{data}/coucou.tpl',
-                'Donotwant': None}
+        spec = {'coucou.tpl': '{data}/coucou.tpl', 'Donotwant': None}
         self.assertRulesMatch(rules, spec)
 
     def test_multiple_match(self):
-        rules = [('scripts', '*.bin', '{appdata}'),
-                 ('scripts', '*', '{appscript}')]
-        spec = {'scripts/script.bin': '{appscript}/script.bin',
-                'Babarlikestrawberry': None}
+        rules = [('scripts', '*.bin', '{appdata}'), ('scripts', '*', '{appscript}')]
+        spec = {'scripts/script.bin': '{appscript}/script.bin', 'Babarlikestrawberry': None}
         self.assertRulesMatch(rules, spec)
 
     def test_set_match(self):
         rules = [('scripts', '*.{bin,sh}', '{appscript}')]
-        spec = {'scripts/script.bin': '{appscript}/script.bin',
-                'scripts/babar.sh':  '{appscript}/babar.sh',
-                'Babarlikestrawberry': None}
+        spec = {
+            'scripts/script.bin': '{appscript}/script.bin',
+            'scripts/babar.sh': '{appscript}/babar.sh',
+            'Babarlikestrawberry': None
+        }
         self.assertRulesMatch(rules, spec)
 
     def test_set_match_multiple(self):
         rules = [('scripts', 'script{s,}.{bin,sh}', '{appscript}')]
-        spec = {'scripts/scripts.bin': '{appscript}/scripts.bin',
-                'scripts/script.sh':  '{appscript}/script.sh',
-                'Babarlikestrawberry': None}
+        spec = {
+            'scripts/scripts.bin': '{appscript}/scripts.bin',
+            'scripts/script.sh': '{appscript}/script.sh',
+            'Babarlikestrawberry': None
+        }
         self.assertRulesMatch(rules, spec)
 
     def test_set_match_exclude(self):
-        rules = [('scripts', '*', '{appscript}'),
-                 ('', os.path.join('**', '*.sh'), None)]
-        spec = {'scripts/scripts.bin': '{appscript}/scripts.bin',
-                'scripts/script.sh':  None,
-                'Babarlikestrawberry': None}
+        rules = [('scripts', '*', '{appscript}'), ('', os.path.join('**', '*.sh'), None)]
+        spec = {
+            'scripts/scripts.bin': '{appscript}/scripts.bin',
+            'scripts/script.sh': None,
+            'Babarlikestrawberry': None
+        }
         self.assertRulesMatch(rules, spec)
 
     def test_glob_in_base(self):
         rules = [('scrip*', '*.bin', '{appscript}')]
-        spec = {'scripts/scripts.bin': '{appscript}/scripts.bin',
-                'scripouille/babar.bin': '{appscript}/babar.bin',
-                'scriptortu/lotus.bin': '{appscript}/lotus.bin',
-                'Babarlikestrawberry': None}
+        spec = {
+            'scripts/scripts.bin': '{appscript}/scripts.bin',
+            'scripouille/babar.bin': '{appscript}/babar.bin',
+            'scriptortu/lotus.bin': '{appscript}/lotus.bin',
+            'Babarlikestrawberry': None
+        }
         self.assertRulesMatch(rules, spec)
 
     def test_recursive_glob(self):
         rules = [('', os.path.join('**', '*.bin'), '{binary}')]
-        spec = {'binary0.bin': '{binary}/binary0.bin',
-                'scripts/binary1.bin': '{binary}/scripts/binary1.bin',
-                'scripts/bin/binary2.bin': '{binary}/scripts/bin/binary2.bin',
-                'you/kill/pandabear.guy': None}
+        spec = {
+            'binary0.bin': '{binary}/binary0.bin',
+            'scripts/binary1.bin': '{binary}/scripts/binary1.bin',
+            'scripts/bin/binary2.bin': '{binary}/scripts/bin/binary2.bin',
+            'you/kill/pandabear.guy': None
+        }
         self.assertRulesMatch(rules, spec)
 
     def test_final_example_glob(self):
@@ -714,24 +687,19 @@ class DataFilesTestCase(GlobTestCaseBase):
             ('', os.path.join('developer-docs', '**', '*.txt'), '{doc}'),
             ('', 'README', '{doc}'),
             ('mailman/etc/', '*', '{config}'),
-            ('mailman/foo/', os.path.join('**', 'bar', '*.cfg'),
-             '{config}/baz'),
+            ('mailman/foo/', os.path.join('**', 'bar', '*.cfg'), '{config}/baz'),
             ('mailman/foo/', os.path.join('**', '*.cfg'), '{config}/hmm'),
             ('', 'some-new-semantic.sns', '{funky-crazy-category}'),
         ]
         spec = {
             'README': '{doc}/README',
             'some.tpl': '{appdata}/templates/some.tpl',
-            'some-new-semantic.sns':
-                '{funky-crazy-category}/some-new-semantic.sns',
+            'some-new-semantic.sns': '{funky-crazy-category}/some-new-semantic.sns',
             'mailman/database/mailman.db': None,
-            'mailman/database/schemas/blah.schema':
-                '{appdata}/schemas/blah.schema',
+            'mailman/database/schemas/blah.schema': '{appdata}/schemas/blah.schema',
             'mailman/etc/my.cnf': '{config}/my.cnf',
-            'mailman/foo/some/path/bar/my.cfg':
-                '{config}/hmm/some/path/bar/my.cfg',
-            'mailman/foo/some/path/other.cfg':
-                '{config}/hmm/some/path/other.cfg',
+            'mailman/foo/some/path/bar/my.cfg': '{config}/hmm/some/path/bar/my.cfg',
+            'mailman/foo/some/path/other.cfg': '{config}/hmm/some/path/other.cfg',
             'developer-docs/index.txt': '{doc}/developer-docs/index.txt',
             'developer-docs/api/toc.txt': '{doc}/developer-docs/api/toc.txt',
         }
@@ -778,21 +746,17 @@ class DataFilesTestCase(GlobTestCaseBase):
 
         # Try to retrieve resources paths and files
         d = DistributionPath()
-        self.assertEqual(d.get_file_path(dist_name, test_path),
-                         test_resource_path)
-        self.assertRaises(KeyError, d.get_file_path, dist_name,
-                          'i-dont-exist')
+        self.assertEqual(d.get_file_path(dist_name, test_path), test_resource_path)
+        self.assertRaises(KeyError, d.get_file_path, dist_name, 'i-dont-exist')
 
 
-class DepGraphTestCase(LoggingCatcher,
-                       DistlibTestCase):
+class DepGraphTestCase(LoggingCatcher, DistlibTestCase):
 
     DISTROS_DIST = ('choxie', 'grammar', 'towel-stuff')
     DISTROS_EGG = ('bacon', 'banana', 'strawberry', 'cheese')
-    BAD_EGGS = ('nut',)
+    BAD_EGGS = ('nut', )
 
-    EDGE = re.compile(
-           r'"(?P<from>.*)" -> "(?P<to>.*)" \[label="(?P<label>.*)"\]')
+    EDGE = re.compile(r'"(?P<from>.*)" -> "(?P<to>.*)" \[label="(?P<label>.*)"\]')
 
     def checkLists(self, l1, l2):
         """ Compare two lists without taking the order into consideration """
@@ -890,9 +854,7 @@ class DepGraphTestCase(LoggingCatcher,
         self.checkLists(['choxie'], deps)
 
     def test_required_dists(self):
-        dists = self.get_dists(self.DISTROS_DIST +
-                               ('truffles', 'bacon', 'banana',
-                                'coconuts-aster'), True)
+        dists = self.get_dists(self.DISTROS_DIST + ('truffles', 'bacon', 'banana', 'coconuts-aster'), True)
 
         choxie, grammar, towel, truffles, bacon, banana, coco = dists
 
@@ -1033,8 +995,7 @@ class DepGraphTestCase(LoggingCatcher,
             ('banana', 'strawberry', 'strawberry (>=0.5)'),
         )
 
-        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG +
-                               self.BAD_EGGS, True)
+        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG + self.BAD_EGGS, True)
 
         graph = make_graph(dists)
         buf = StringIO()
@@ -1053,8 +1014,7 @@ class DepGraphTestCase(LoggingCatcher,
 
     @requires_zlib
     def test_repr(self):
-        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG +
-                               self.BAD_EGGS, True)
+        dists = self.get_dists(self.DISTROS_DIST + self.DISTROS_EGG + self.BAD_EGGS, True)
 
         graph = make_graph(dists)
         self.assertTrue(repr(graph))

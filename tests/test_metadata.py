@@ -16,19 +16,17 @@ from compat import unittest
 
 from distlib import __version__
 from distlib.compat import StringIO
-from distlib.metadata import (LegacyMetadata, Metadata, METADATA_FILENAME,
-                              LEGACY_METADATA_FILENAME, PKG_INFO_PREFERRED_VERSION,
-                              MetadataMissingError, MetadataUnrecognizedVersionError,
+from distlib.metadata import (LegacyMetadata, Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME,
+                              PKG_INFO_PREFERRED_VERSION, MetadataMissingError, MetadataUnrecognizedVersionError,
                               MetadataInvalidError, _ATTR2FIELD)
 
 from support import LoggingCatcher, TempdirManager, DistlibTestCase, in_github_workflow
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 IN_GITHUB_WORKFLOW = in_github_workflow()
 
-class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
-                             DistlibTestCase):
+
+class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
 
     maxDiff = None
     restore_environ = ['HOME']
@@ -42,7 +40,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         sys.argv[:] = self.argv[1]
         super(LegacyMetadataTestCase, self).tearDown()
 
-    ####  Test various methods of the LegacyMetadata class
+    # Test various methods of the LegacyMetadata class
 
     def get_file_contents(self, name):
         name = os.path.join(HERE, name)
@@ -76,14 +74,10 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(len(m.items()), 17)
 
         d = dict(m.items())
-        self.assertRaises(TypeError, LegacyMetadata,
-                          PKG_INFO, fileobj=fp)
-        self.assertRaises(TypeError, LegacyMetadata,
-                          PKG_INFO, mapping=d)
-        self.assertRaises(TypeError, LegacyMetadata,
-                          fileobj=fp, mapping=d)
-        self.assertRaises(TypeError, LegacyMetadata,
-                          PKG_INFO, mapping=m, fileobj=fp)
+        self.assertRaises(TypeError, LegacyMetadata, PKG_INFO, fileobj=fp)
+        self.assertRaises(TypeError, LegacyMetadata, PKG_INFO, mapping=d)
+        self.assertRaises(TypeError, LegacyMetadata, fileobj=fp, mapping=d)
+        self.assertRaises(TypeError, LegacyMetadata, PKG_INFO, mapping=m, fileobj=fp)
 
     def test_mapping_api(self):
         content = self.get_file_contents('PKG-INFO')
@@ -113,13 +107,15 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
             self.assertEqual(getattr(metadata, attr), metadata[attr])
 
     def test_read_metadata(self):
-        fields = {'name': 'project',
-                  'version': '1.0',
-                  'description': 'desc',
-                  'summary': 'xxx',
-                  'download_url': 'http://example.com',
-                  'keywords': ['one', 'two'],
-                  'requires_dist': ['foo']}
+        fields = {
+            'name': 'project',
+            'version': '1.0',
+            'description': 'desc',
+            'summary': 'xxx',
+            'download_url': 'http://example.com',
+            'keywords': ['one', 'two'],
+            'requires_dist': ['foo']
+        }
 
         metadata = LegacyMetadata(mapping=fields)
         PKG_INFO = StringIO()
@@ -142,13 +138,14 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         tmp_dir = self.mkdtemp()
         my_file = os.path.join(tmp_dir, 'f')
 
-        metadata = LegacyMetadata(mapping={
-                                     'name': 'my.project',
-                                     'author': 'Café Junior',
-                                     'summary': 'Café torréfié',
-                                     'description': 'Héhéhé',
-                                     'keywords': ['café', 'coffee']
-                                  })
+        metadata = LegacyMetadata(
+            mapping={
+                'name': 'my.project',
+                'author': 'Café Junior',
+                'summary': 'Café torréfié',
+                'description': 'Héhéhé',
+                'keywords': ['café', 'coffee']
+            })
         metadata.write(my_file)
 
         # the file should use UTF-8
@@ -165,12 +162,14 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(metadata.items(), metadata2.items())
 
         # ASCII also works, it's a subset of UTF-8
-        metadata = LegacyMetadata(mapping={'author': 'Mister Cafe',
-                                     'name': 'my.project',
-                                     'author': 'Cafe Junior',
-                                     'summary': 'Cafe torrefie',
-                                     'description': 'Hehehe'
-                                  })
+        metadata = LegacyMetadata(
+            mapping={
+                # 'author': 'Mister Cafe',
+                'name': 'my.project',
+                'author': 'Cafe Junior',
+                'summary': 'Cafe torrefie',
+                'description': 'Hehehe'
+            })
         metadata.write(my_file)
 
         metadata2 = LegacyMetadata()
@@ -191,7 +190,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         res.read_file(out)
         self.assertEqual(metadata.values(), res.values())
 
-    ####  Test checks
+    # Test checks
 
     def test_check_version(self):
         metadata = LegacyMetadata()
@@ -251,13 +250,11 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         missing, warnings = metadata.check()
         self.assertEqual(len(warnings), 4)
 
-    ####  Test fields and metadata versions
+    # Test fields and metadata versions
 
     def test_metadata_versions(self):
-        metadata = LegacyMetadata(mapping={'name': 'project',
-                                           'version': '1.0'})
-        self.assertEqual(metadata['Metadata-Version'],
-                         PKG_INFO_PREFERRED_VERSION)
+        metadata = LegacyMetadata(mapping={'name': 'project', 'version': '1.0'})
+        self.assertEqual(metadata['Metadata-Version'], PKG_INFO_PREFERRED_VERSION)
         self.assertNotIn('Provides', metadata)
         self.assertNotIn('Requires', metadata)
         self.assertNotIn('Obsoletes', metadata)
@@ -283,7 +280,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         metadata.set('Obsoletes', 'ok')
         # See issue #140. Relaxed checking on Obsoletes
         # self.assertRaises(MetadataConflictError,
-                          # metadata.set_metadata_version)
+        # metadata.set_metadata_version)
         metadata.set_metadata_version()
         self.assertEqual(metadata['Metadata-Version'], '2.2')
 
@@ -329,11 +326,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(metadata['Metadata-Version'], '2.1')
 
     def test_version(self):
-        LegacyMetadata(mapping={'author': 'xxx',
-                          'name': 'xxx',
-                          'version': 'xxx',
-                          'home_page': 'xxxx'
-                       })
+        LegacyMetadata(mapping={'author': 'xxx', 'name': 'xxx', 'version': 'xxx', 'home_page': 'xxxx'})
         logs = self.get_logs()
         self.assertEqual(1, len(logs))
         self.assertIn('not a valid version', logs[0])
@@ -402,27 +395,20 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
     # (they're useless but we support them so we should test them anyway)
 
     def test_provides_dist(self):
-        fields = {'name': 'project',
-                  'version': '1.0',
-                  'provides_dist': ['project', 'my.project']}
+        fields = {'name': 'project', 'version': '1.0', 'provides_dist': ['project', 'my.project']}
         metadata = LegacyMetadata(mapping=fields)
-        self.assertEqual(metadata['Provides-Dist'],
-                         ['project', 'my.project'])
+        self.assertEqual(metadata['Provides-Dist'], ['project', 'my.project'])
         self.assertEqual(metadata['Metadata-Version'], '1.2', metadata)
         self.assertNotIn('Requires', metadata)
         self.assertNotIn('Obsoletes', metadata)
 
     def test_requires_dist(self):
-        fields = {'name': 'project',
-                  'version': '1.0',
-                  'requires_dist': ['other', 'another (==1.0)']}
+        fields = {'name': 'project', 'version': '1.0', 'requires_dist': ['other', 'another (==1.0)']}
         metadata = LegacyMetadata(mapping=fields)
-        self.assertEqual(metadata['Requires-Dist'],
-                         ['other', 'another (==1.0)'])
+        self.assertEqual(metadata['Requires-Dist'], ['other', 'another (==1.0)'])
         self.assertEqual(metadata['Metadata-Version'], '1.2')
         self.assertNotIn('Provides', metadata)
-        self.assertEqual(metadata['Requires-Dist'],
-                         ['other', 'another (==1.0)'])
+        self.assertEqual(metadata['Requires-Dist'], ['other', 'another (==1.0)'])
         self.assertNotIn('Obsoletes', metadata)
 
         # make sure write_file uses one RFC 822 header per item
@@ -449,17 +435,13 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(self.get_logs(), [])
 
     def test_obsoletes_dist(self):
-        fields = {'name': 'project',
-                  'version': '1.0',
-                  'obsoletes_dist': ['other', 'another (<1.0)']}
+        fields = {'name': 'project', 'version': '1.0', 'obsoletes_dist': ['other', 'another (<1.0)']}
         metadata = LegacyMetadata(mapping=fields)
-        self.assertEqual(metadata['Obsoletes-Dist'],
-                         ['other', 'another (<1.0)'])
+        self.assertEqual(metadata['Obsoletes-Dist'], ['other', 'another (<1.0)'])
         self.assertEqual(metadata['Metadata-Version'], '1.2')
         self.assertNotIn('Provides', metadata)
         self.assertNotIn('Requires', metadata)
-        self.assertEqual(metadata['Obsoletes-Dist'],
-                         ['other', 'another (<1.0)'])
+        self.assertEqual(metadata['Obsoletes-Dist'], ['other', 'another (<1.0)'])
 
     def test_fullname(self):
         md = LegacyMetadata()
@@ -477,8 +459,9 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertTrue(md.is_field('Obsoleted-By'))
         self.assertFalse(md.is_field('Frobozz'))
 
-class MetadataTestCase(LoggingCatcher, TempdirManager,
-                       DistlibTestCase):
+
+class MetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
+
     def test_init(self):
         "Test initialisation"
         md = Metadata()
@@ -495,11 +478,11 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
 
         # Initialise from mapping
         md = Metadata(mapping={
-                        'metadata_version': '2.0',
-                        'name': 'foo',
-                        'version': '0.3.4',
-                        'summary': 'Summary',
-                      })
+            'metadata_version': '2.0',
+            'name': 'foo',
+            'version': '0.3.4',
+            'summary': 'Summary',
+        })
         md.validate()
         self.assertEqual(md.name, 'foo')
         self.assertEqual(md.version, '0.3.4')
@@ -508,8 +491,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(md.provides, ['foo (0.3.4)'])
 
         # Initialise from legacy metadata
-        fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
-                          LEGACY_METADATA_FILENAME)
+        fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info', LEGACY_METADATA_FILENAME)
         md = Metadata(path=fn)
         md.validate()
         self.assertIsNotNone(md._legacy)
@@ -517,8 +499,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         self.assertEqual(md.metadata_version, '1.2')
         self.assertEqual(md.version, '2.0.0.9')
         self.assertEqual(md.meta_requires, [])
-        self.assertEqual(set(md.provides),
-                         set(['choxie (2.0.0.9)', 'truffles (1.0)']))
+        self.assertEqual(set(md.provides), set(['choxie (2.0.0.9)', 'truffles (1.0)']))
 
         # Initialise from new metadata
         fn = os.path.join(HERE, METADATA_FILENAME)
@@ -535,14 +516,12 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         md.name = 'bar'
         md.version = '0.5'
         md.add_requirements(['foo (0.1.2)'])
-        self.assertEqual(md.run_requires, [{ 'requires': ['foo (0.1.2)']}])
+        self.assertEqual(md.run_requires, [{'requires': ['foo (0.1.2)']}])
 
-        fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
-                          LEGACY_METADATA_FILENAME)
+        fn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info', LEGACY_METADATA_FILENAME)
         md = Metadata(path=fn)
         md.add_requirements(['foo (0.1.2)'])
-        self.assertEqual(set(md.run_requires),
-                         set(['towel-stuff (0.1)', 'nut', 'foo (0.1.2)']))
+        self.assertEqual(set(md.run_requires), set(['towel-stuff (0.1)', 'nut', 'foo (0.1.2)']))
 
     def test_requirements(self):
         fn = os.path.join(HERE, METADATA_FILENAME)
@@ -556,102 +535,85 @@ class MetadataTestCase(LoggingCatcher, TempdirManager,
         if sys.platform != 'win32':
             self.assertEqual(r, ['foo', 'certifi (0.0.8)'])
         else:
-            self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)',
-                                          'wincertstore (0.1)']))
+            self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)', 'wincertstore (0.1)']))
         for ver in ('2.5', '2.4'):
             env = {'python_version': ver}
-            r = md.get_requirements(md.run_requires,
-                                    extras=['certs', 'ssl'], env=env)
+            r = md.get_requirements(md.run_requires, extras=['certs', 'ssl'], env=env)
             if sys.platform != 'win32':
-                self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)',
-                                              'ssl (1.16)']))
+                self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)', 'ssl (1.16)']))
             elif ver == '2.4':
-                self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
-                                              'wincertstore (0.1)', 'foo',
-                                              'ctypes (1.0.2)']))
+                self.assertEqual(set(r),
+                                 set(['certifi (0.0.8)', 'ssl (1.16)', 'wincertstore (0.1)', 'foo', 'ctypes (1.0.2)']))
             else:
-                self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)',
-                                              'wincertstore (0.1)', 'foo']))
+                self.assertEqual(set(r), set(['certifi (0.0.8)', 'ssl (1.16)', 'wincertstore (0.1)', 'foo']))
         env['sys_platform'] = 'win32'
-        r = md.get_requirements(md.run_requires,
-                                extras=['certs', 'ssl'], env=env)
-        self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)', 'ssl (1.16)',
-                                      'ctypes (1.0.2)', 'wincertstore (0.1)']))
+        r = md.get_requirements(md.run_requires, extras=['certs', 'ssl'], env=env)
+        self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)', 'ssl (1.16)', 'ctypes (1.0.2)', 'wincertstore (0.1)']))
         env['python_version'] = '2.5'
-        r = md.get_requirements(md.run_requires,
-                                extras=['certs', 'ssl'], env=env)
-        self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)', 'ssl (1.16)',
-                                      'wincertstore (0.1)']))
+        r = md.get_requirements(md.run_requires, extras=['certs', 'ssl'], env=env)
+        self.assertEqual(set(r), set(['foo', 'certifi (0.0.8)', 'ssl (1.16)', 'wincertstore (0.1)']))
         r = md.get_requirements(md.run_requires, extras=[':test:'])
         self.assertEqual(r, ['foo', 'nose'])
         r = md.get_requirements(md.run_requires, extras=[':test:', 'udp'])
         self.assertEqual(set(r), set(['foo', 'nose', 'nose-udp']))
-        self.assertEqual(md.dependencies, {
-            'provides': ['foobar (0.1)'],
-            'meta_requires': [
-                {
+        self.assertEqual(
+            md.dependencies, {
+                'provides': ['foobar (0.1)'],
+                'meta_requires': [{
                     'requires': ['bar (1.0)']
-                }
-            ],
-            'extras': ['ssl', 'certs'],
-            'build_requires': [],
-            'test_requires': [
-                {
+                }],
+                'extras': ['ssl', 'certs'],
+                'build_requires': [],
+                'test_requires': [{
                     'requires': ['nose'],
-                },
-                {
+                }, {
                     'requires': ['nose-udp'],
                     'extra': 'udp',
-                }
-            ],
-            'run_requires': [
-                {
+                }],
+                'run_requires': [{
                     'requires': ['foo']
-                },
-                {
+                }, {
                     'requires': ['certifi (0.0.8)'],
                     'extra': 'certs',
-                },
-                {
+                }, {
                     'requires': ['wincertstore (0.1)'],
                     'extra': 'ssl',
                     'environment': "sys_platform=='win32'",
-                },
-                {
+                }, {
                     'requires': ['ctypes (1.0.2)'],
                     'extra': 'ssl',
                     'environment': "sys_platform=='win32' and "
-                                   "python_version=='2.4'",
-                },
-                {
+                    "python_version=='2.4'",
+                }, {
                     'requires': ['ssl (1.16)'],
                     'extra': 'ssl',
                     'environment': "python_version in '2.4, 2.5'",
-                }
-            ]
-        })
+                }]
+            })
 
     def test_write(self):
         dfn = self.temp_filename()
         # Read legacy, write new
-        sfn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info',
-                           LEGACY_METADATA_FILENAME)
+        sfn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info', LEGACY_METADATA_FILENAME)
         md = Metadata(path=sfn)
         md.write(path=dfn)
         with codecs.open(dfn, 'r', 'utf-8') as f:
             data = json.load(f)
-        self.assertEqual(data, {
-            'metadata_version': '2.0',
-            'generator': 'distlib (%s)' % __version__,
-            'name': 'choxie',
-            'version': '2.0.0.9',
-            'license': 'BSD',
-            'summary': 'Chocolate with a kick!',
-            'description': 'Chocolate with a longer kick!',
-            'provides': ['truffles (1.0)', 'choxie (2.0.0.9)'],
-            'run_requires': [{'requires': ['towel-stuff (0.1)', 'nut']}],
-            'keywords': [],
-        })
+        self.assertEqual(
+            data, {
+                'metadata_version': '2.0',
+                'generator': 'distlib (%s)' % __version__,
+                'name': 'choxie',
+                'version': '2.0.0.9',
+                'license': 'BSD',
+                'summary': 'Chocolate with a kick!',
+                'description': 'Chocolate with a longer kick!',
+                'provides': ['truffles (1.0)', 'choxie (2.0.0.9)'],
+                'run_requires': [{
+                    'requires': ['towel-stuff (0.1)', 'nut']
+                }],
+                'keywords': [],
+            })
         # Write legacy, compare with original
         md.write(path=dfn, legacy=True)
         nmd = Metadata(path=dfn)

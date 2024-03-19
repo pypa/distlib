@@ -9,7 +9,7 @@ import json
 import logging
 import os
 import shutil
-import socket
+
 try:
     import ssl
 except ImportError:
@@ -51,6 +51,7 @@ TEST_SERVER_PORT = os.environ.get('TEST_PYPISERVER_PORT', '8086')
 
 IN_GITHUB_WORKFLOW = in_github_workflow()
 
+
 class PackageIndexTestCase(DistlibTestCase):
     run_test_server = True
     test_server_url = 'http://localhost:%s/' % TEST_SERVER_PORT
@@ -65,20 +66,20 @@ class PackageIndexTestCase(DistlibTestCase):
                              'will be skipped.')
                 return
             pwdfn = os.path.join(HERE, 'passwords')
-            if not os.path.exists(pwdfn):   # pragma: no cover
+            if not os.path.exists(pwdfn):  # pragma: no cover
                 with open(pwdfn, 'w') as f:
                     f.write('test:secret\n')
             pkgdir = os.path.join(HERE, 'packages')
-            if not os.path.isdir(pkgdir):   # pragma: no cover
+            if not os.path.isdir(pkgdir):  # pragma: no cover
                 os.mkdir(pkgdir)
             fd, cls.sinkfile = tempfile.mkstemp(suffix='.log', prefix='distlib-pypi-')
             os.close(fd)
             cls.sink = sink = open(cls.sinkfile, 'w')
-            cmd = [sys.executable, 'pypi-server-standalone.py',
-                   '--interface', '127.0.0.1', '--port', TEST_SERVER_PORT,
-                   '-P', 'passwords', 'packages']
-            cls.server = subprocess.Popen(cmd, stdout=sink, stderr=sink,
-                                          cwd=HERE)
+            cmd = [
+                sys.executable, 'pypi-server-standalone.py', '--interface', '127.0.0.1', '--port', TEST_SERVER_PORT,
+                '-P', 'passwords', 'packages'
+            ]
+            cls.server = subprocess.Popen(cmd, stdout=sink, stderr=sink, cwd=HERE)
             # wait for the server to start up
             response = None
             tries = 20
@@ -118,9 +119,8 @@ class PackageIndexTestCase(DistlibTestCase):
                 cls.sink.close()
                 try:
                     os.remove(cls.sinkfile)
-                except:
-                    logger.warning('Unable to remove test file %s',
-                                   cls.sinkfile)
+                except Exception:
+                    logger.warning('Unable to remove test file %s', cls.sinkfile)
 
     def setUp(self):
         if not self.run_test_server:
@@ -148,7 +148,7 @@ class PackageIndexTestCase(DistlibTestCase):
         return result
 
     def check_pypi_server_available(self):
-        if self.run_test_server and not self.server:    # pragma: no cover
+        if self.run_test_server and not self.server:  # pragma: no cover
             raise unittest.SkipTest('test server not available')
 
     def check_testdist_available(self):
@@ -205,7 +205,7 @@ class PackageIndexTestCase(DistlibTestCase):
         self.index.check_credentials()
         request = self.index.encode_request(d.items(), [])
         try:
-            response = self.index.send_request(request)
+            self.index.send_request(request)
         except HTTPError as e:
             if e.getcode() != 404:
                 raise
@@ -223,10 +223,8 @@ class PackageIndexTestCase(DistlibTestCase):
         self.index.gpg_home = os.path.join(HERE, 'keys')
         try:
             zip_name = os.path.join(HERE, '%s.zip' % self.testdir)
-            self.assertRaises(DistlibException, self.index.upload_file, md,
-                              'random-' + zip_name, 'Test User', 'tuser')
-            response = self.index.upload_file(md, zip_name,
-                                              'Test User', 'tuser')
+            self.assertRaises(DistlibException, self.index.upload_file, md, 'random-' + zip_name, 'Test User', 'tuser')
+            response = self.index.upload_file(md, zip_name, 'Test User', 'tuser')
             self.assertEqual(response.code, 200)
             if self.run_test_server:
                 fn = os.path.join(HERE, 'packages', os.path.basename(zip_name))
@@ -248,11 +246,9 @@ class PackageIndexTestCase(DistlibTestCase):
         md = Metadata(mapping=data)
         d = os.path.join(d, 'doc')
         # Non-existent directory
-        self.assertRaises(DistlibException, self.index.upload_documentation,
-                          md, d+'-random')
+        self.assertRaises(DistlibException, self.index.upload_documentation, md, d + '-random')
         # Directory with no index.html
-        self.assertRaises(DistlibException, self.index.upload_documentation,
-                          md, HERE)
+        self.assertRaises(DistlibException, self.index.upload_documentation, md, HERE)
         response = self.index.upload_documentation(md, d)
         self.assertEqual(response.code, 200)
         if not self.run_test_server:
@@ -265,31 +261,27 @@ class PackageIndexTestCase(DistlibTestCase):
 
     @unittest.skipIf(IN_GITHUB_WORKFLOW, 'This test is end-of-line dependent')
     def test_verify_signature(self):  # pragma: no cover
-        if not self.index.gpg:      # pragma: no cover
+        if not self.index.gpg:  # pragma: no cover
             raise unittest.SkipTest('gpg not available')
         sig_file = os.path.join(HERE, 'good.bin.asc')
         good_file = os.path.join(HERE, 'good.bin')
         bad_file = os.path.join(HERE, 'bad.bin')
         gpg = self.index.gpg
         self.index.gpg = None
-        self.assertRaises(DistlibException, self.index.verify_signature,
-                          sig_file, good_file)
+        self.assertRaises(DistlibException, self.index.verify_signature, sig_file, good_file)
         self.index.gpg = gpg
         # Not pointing to keycd tests
-        self.assertRaises(DistlibException, self.index.verify_signature,
-                          sig_file, good_file)
+        self.assertRaises(DistlibException, self.index.verify_signature, sig_file, good_file)
         self.index.gpg_home = os.path.join(HERE, 'keys')
         self.assertTrue(self.index.verify_signature(sig_file, good_file))
         self.assertFalse(self.index.verify_signature(sig_file, bad_file))
 
     def test_invalid(self):
-        self.assertRaises(DistlibException, PackageIndex,
-                          'ftp://ftp.python.org/')
+        self.assertRaises(DistlibException, PackageIndex, 'ftp://ftp.python.org/')
         self.index.username = None
         self.assertRaises(DistlibException, self.index.check_credentials)
 
-    @unittest.skipIf(PYPIRC is None or os.path.exists(PYPIRC),
-                    'because $HOME/.pypirc is unavailable for use')
+    @unittest.skipIf(PYPIRC is None or os.path.exists(PYPIRC), 'because $HOME/.pypirc is unavailable for use')
     def test_save_configuration(self):
         try:
             self.index.save_configuration()
@@ -298,14 +290,17 @@ class PackageIndexTestCase(DistlibTestCase):
             os.remove(PYPIRC)
 
     if ssl:
+
         def make_https_server(self, certfile):
             server = HTTPSServerThread(certfile)
             flag = threading.Event()
             server.start(flag)
             flag.wait()
+
             def cleanup():
                 server.stop()
                 server.join()
+
             self.addCleanup(cleanup)
             return server
 
@@ -322,7 +317,7 @@ class PackageIndexTestCase(DistlibTestCase):
         @unittest.skipIf(IN_GITHUB_WORKFLOW, 'This test is end-of-line dependent')
         @unittest.skipIf(sys.version_info[:2] > (3, 11), 'Temporary skip')
         def test_download(self):  # pragma: no cover
-            digest = '913093474942c5a564c011f232868517' # for testsrc/README.txt
+            digest = '913093474942c5a564c011f232868517'  # for testsrc/README.txt
             certfile = os.path.join(HERE, 'keycert.pem')
             server = self.make_https_server(certfile)
             url = 'https://localhost:%d/README.txt' % server.port
@@ -332,7 +327,7 @@ class PackageIndexTestCase(DistlibTestCase):
             with open(os.path.join(HERE, 'testsrc', 'README.txt'), 'rb') as f:
                 data = f.read()
             self.index.ssl_verifier = HTTPSHandler(certfile)
-            self.index.download_file(url, fn)   # no digest
+            self.index.download_file(url, fn)  # no digest
             with open(fn, 'rb') as f:
                 self.assertEqual(data, f.read())
             self.index.download_file(url, fn, digest)
@@ -343,8 +338,7 @@ class PackageIndexTestCase(DistlibTestCase):
             with open(fn, 'rb') as f:
                 self.assertEqual(data, f.read())
             # bad digest
-            self.assertRaises(DistlibException, self.index.download_file, url, fn,
-                              digest[:-1] + '8')
+            self.assertRaises(DistlibException, self.index.download_file, url, fn, digest[:-1] + '8')
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(ssl, 'SSL required for this test.')

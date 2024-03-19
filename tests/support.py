@@ -21,12 +21,12 @@ except ImportError:
     import dummy_threading as threading
 import weakref
 
-from compat import (unittest, HTTPServer as BaseHTTPServer,
-                    SimpleHTTPRequestHandler, urlparse)
+from compat import (unittest, HTTPServer as BaseHTTPServer, SimpleHTTPRequestHandler, urlparse)
 
 from distlib import logger
 
 HERE = os.path.dirname(__file__)
+
 
 class _TestHandler(logging.handlers.BufferingHandler, object):
     # stolen and adapted from test.support
@@ -40,6 +40,7 @@ class _TestHandler(logging.handlers.BufferingHandler, object):
 
     def emit(self, record):
         self.buffer.append(record)
+
 
 class LoggingCatcher(object):
     """TestCase-compatible mixin to receive logging calls.
@@ -89,8 +90,7 @@ class LoggingCatcher(object):
         called, unless *flush* is False (this is useful to get e.g. all
         warnings then all info messages).
         """
-        messages = [log.getMessage() for log in self.loghandler.buffer
-                    if log.levelno == level]
+        messages = [log.getMessage() for log in self.loghandler.buffer if log.levelno == level]
         if flush:
             self.loghandler.flush()
         return messages
@@ -162,8 +162,7 @@ class TempdirManager(object):
             msg = "%s not found in %s: %s" % (file, dirname, files)
             assert os.path.isfile(path), msg
         else:
-            raise AssertionError(
-                    '%s not found. %s does not exist' % (file, dirname))
+            raise AssertionError('%s not found. %s does not exist' % (file, dirname))
 
     def assertIsNotFile(self, *args):
         path = os.path.join(*args)
@@ -196,6 +195,7 @@ class EnvironRestorer(object):
             os.environ.pop(key, None)
         super(EnvironRestorer, self).tearDown()
 
+
 class HTTPRequestHandler(SimpleHTTPRequestHandler):
 
     server_version = "TestHTTPS/1.0"
@@ -207,6 +207,7 @@ class HTTPRequestHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         pass
+
 
 class HTTPSServer(BaseHTTPServer):
     # Adapted from the one in Python's test suite.
@@ -222,7 +223,8 @@ class HTTPSServer(BaseHTTPServer):
                 context.load_cert_chain(self.certfile)
                 sock = context.wrap_socket(sock, server_side=True)
             else:
-                sock = ssl.wrap_socket(sock, server_side=True,
+                sock = ssl.wrap_socket(sock,
+                                       server_side=True,
                                        certfile=self.certfile,
                                        keyfile=self.certfile,
                                        ssl_version=ssl.PROTOCOL_SSLv23)
@@ -232,12 +234,12 @@ class HTTPSServer(BaseHTTPServer):
             raise
         return sock, addr
 
+
 class HTTPSServerThread(threading.Thread):
 
     def __init__(self, certfile):
         self.flag = None
-        self.server = HTTPSServer(('localhost', 0),
-                                  HTTPRequestHandler, certfile)
+        self.server = HTTPSServer(('localhost', 0), HTTPRequestHandler, certfile)
         self.port = self.server.server_port
         threading.Thread.__init__(self)
         self.daemon = True
@@ -257,6 +259,7 @@ class HTTPSServerThread(threading.Thread):
     def stop(self):
         self.server.shutdown()
 
+
 try:
     import zlib
 except ImportError:
@@ -265,6 +268,8 @@ except ImportError:
 requires_zlib = unittest.skipUnless(zlib, 'requires zlib')
 
 _can_symlink = None
+
+
 def can_symlink():
     global _can_symlink
     if _can_symlink is not None:
@@ -283,26 +288,36 @@ def can_symlink():
     _can_symlink = can
     return can
 
+
 def skip_unless_symlink(test):
     """Skip decorator for tests that require functional symlink"""
     ok = can_symlink()
     msg = "Requires functional symlink implementation"
     return test if ok else unittest.skip(msg)(test)
 
+
 def fake_dec(*args, **kw):
     """Fake decorator"""
+
     def _wrap(func):
+
         def __wrap(*args, **kw):
             return func(*args, **kw)
+
         return __wrap
+
     return _wrap
+
 
 def in_github_workflow():
     return 'GITHUB_WORKFLOW' in os.environ
 
+
 SEP = '-' * 80
 
+
 class DistlibTestCase(unittest.TestCase):
+
     def setUp(self):
         logger.debug(SEP)
         logger.debug(self.id().rsplit('.', 1)[-1])
