@@ -372,10 +372,10 @@ class LocatorTestCase(DistlibTestCase):
         self.assertEqual(actual[0].name_and_version, 'SQLAlchemy (0.6beta3)')
         dists, problems = finder.find(dist)
         # Test changed since now prereleases as found as a last resort.
-        #self.assertEqual(dists, set([dist]))
-        #self.assertEqual(len(problems), 1)
-        #problem = problems.pop()
-        #self.assertEqual(problem, ('unsatisfied', REQT))
+        # self.assertEqual(dists, set([dist]))
+        # self.assertEqual(len(problems), 1)
+        # problem = problems.pop()
+        # self.assertEqual(problem, ('unsatisfied', REQT))
         self.assertEqual(dists, set([actual[0], dist]))
         self.assertFalse(problems)
 
@@ -411,9 +411,9 @@ class LocatorTestCase(DistlibTestCase):
             'setuptools-0.6b4.zip',
             'setuptools-0.6c10.tar.gz',
             'setuptools-0.6c11.tar.gz',
-            #'setuptools-0.6c12dev-r88997.tar.gz',
-            #'setuptools-0.6c12dev-r88998.tar.gz',
-            #'setuptools-0.6c12dev-r89000.tar.gz',
+            # 'setuptools-0.6c12dev-r88997.tar.gz',
+            # 'setuptools-0.6c12dev-r88998.tar.gz',
+            # 'setuptools-0.6c12dev-r89000.tar.gz',
             'setuptools-0.6c1.zip',
             'setuptools-0.6c2.zip',
             'setuptools-0.6c3.tar.gz',

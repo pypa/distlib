@@ -15,6 +15,7 @@ from distlib.compat import python_implementation
 from distlib.markers import interpret
 from distlib.util import in_venv
 
+
 class MarkersTestCase(DistlibTestCase):
 
     def test_interpret(self):
@@ -26,22 +27,17 @@ class MarkersTestCase(DistlibTestCase):
         platform_python_implementation = python_implementation()
 
         self.assertTrue(interpret("sys_platform == '%s'" % sys_platform))
-        self.assertTrue(interpret(
-            "sys_platform == '%s' and python_full_version == '%s'" %
-            (sys_platform, version)))
+        self.assertTrue(interpret("sys_platform == '%s' and python_full_version == '%s'" % (sys_platform, version)))
         self.assertTrue(interpret("'%s' == sys_platform" % sys_platform))
         self.assertTrue(interpret('os_name == "%s"' % os_name))
-        self.assertTrue(interpret(
-            'platform_version == "%s" and platform_machine == "%s"' %
-            (platform_version, platform_machine)))
-        self.assertTrue(interpret('platform_python_implementation == "%s"' %
-            platform_python_implementation))
+        self.assertTrue(
+            interpret('platform_version == "%s" and platform_machine == "%s"' % (platform_version, platform_machine)))
+        self.assertTrue(interpret('platform_python_implementation == "%s"' % platform_python_implementation))
 
         self.assertTrue(interpret('platform_in_venv == "%s"' % in_venv()))
 
         # stuff that need to raise a syntax error
-        ops = ('os_name == 2', "'2' == '2'",
-               'okpjonon', '', 'os_name ==', 'python_version == 2.4')
+        ops = ('os_name == 2', "'2' == '2'", 'okpjonon', '', 'os_name ==', 'python_version == 2.4')
         for op in ops:
             self.assertRaises(SyntaxError, interpret, op)
 
@@ -75,8 +71,7 @@ class MarkersTestCase(DistlibTestCase):
         self.assertTrue(interpret("'%s' in os_name" % os_name))
         self.assertTrue(interpret("'buuuu' not in os_name"))
         self.assertTrue(interpret("'buu' in os_name", {'os_name': 'buuu'}))
-        self.assertTrue(interpret(
-            "'buuuu' not in os_name and '%s' in os_name" % os_name))
+        self.assertTrue(interpret("'buuuu' not in os_name and '%s' in os_name" % os_name))
 
         # normalized version comparison correctness
         self.assertTrue(interpret('python_version > "5.0"', {'python_version': '10.0'}))
@@ -85,8 +80,7 @@ class MarkersTestCase(DistlibTestCase):
         self.assertTrue(interpret('python_full_version > "5.0"', {'python_full_version': '10.0'}))
 
         # execution context
-        self.assertTrue(interpret('python_version == "0.1"',
-                                  {'python_version': '0.1'}))
+        self.assertTrue(interpret('python_version == "0.1"', {'python_version': '0.1'}))
 
         # parentheses and extra
         if sys.platform != 'win32':
@@ -96,6 +90,7 @@ class MarkersTestCase(DistlibTestCase):
         expression = ("(sys_platform %s 'win32' or python_version == '2.4') "
                       "and extra == 'quux'" % relop)
         self.assertTrue(interpret(expression, {'extra': 'quux'}))
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

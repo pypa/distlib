@@ -47,14 +47,13 @@ class ScriptTestCase(DistlibTestCase):
                      'Python source builds')
     def test_shebangs(self):
         executable = fsencode(get_executable())
-        for fn in ('foo.py', 'script1.py', 'script2.py', 'script3.py',
-                   'shell.sh'):
+        for fn in ('foo.py', 'script1.py', 'script2.py', 'script3.py', 'shell.sh'):
             files = self.maker.make(fn)
             self.assertEqual(len(files), 1)
             d, f = os.path.split(files[0])
             self.assertEqual(f, fn)
             self.assertEqual(d, self.maker.target_dir)
-            if fn.endswith('.py') and fn != 'foo.py':   # no shebang in foo.py
+            if fn.endswith('.py') and fn != 'foo.py':  # no shebang in foo.py
                 with open(files[0], 'rb') as f:
                     first_line = f.readline()
                 self.assertIn(executable, first_line)
@@ -83,7 +82,6 @@ class ScriptTestCase(DistlibTestCase):
             actual = f.readline().decode('utf-8')
         self.assertIn(maker.executable, actual)
 
-
     @unittest.skipIf(os.name != 'posix', 'Test only appropriate for '
                      'POSIX systems')
     def test_custom_shebang(self):
@@ -96,7 +94,7 @@ class ScriptTestCase(DistlibTestCase):
             third_line = f.readline()
         self.assertEqual(first_line, b'#!/bin/sh\n')
         self.assertEqual(second_line, b"'''exec' an executable with "
-                                      b'spaces "$0" "$@"\n')
+                         b'spaces "$0" "$@"\n')
         self.assertEqual(third_line, b"' '''\n")
         # Python 3.3 cannot create a venv in an existing directory
         if venv and sys.version_info[:2] >= (3, 4):
@@ -110,14 +108,12 @@ class ScriptTestCase(DistlibTestCase):
             dstdir = tempfile.mkdtemp(suffix='cataaaaaa' + 'a' * dlen)
             self.addCleanup(shutil.rmtree, dstdir)
             bindir = os.path.join(dstdir, 'bin')
-            maker = ScriptMaker(self.maker.source_dir, bindir,
-                                add_launchers=False)
+            maker = ScriptMaker(self.maker.source_dir, bindir, add_launchers=False)
             # See issue #204. Changed to use symlinks on POSIX
             venv.create(dstdir, symlinks=(os.name != 'nt'))
             maker.executable = os.path.join(bindir, 'python')
             filenames = maker.make('script8.py')
-            p = subprocess.Popen(filenames[0], shell=True,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(filenames[0], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
             self.assertEqual(p.returncode, 0)
             self.assertEqual(stderr, b'')
@@ -126,8 +122,7 @@ class ScriptTestCase(DistlibTestCase):
             self.assertEqual(actual, expected.encode('utf-8'))
 
     def test_multiple(self):
-        specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
-                 'shell.sh', 'uwsgi_part')
+        specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py', 'shell.sh', 'uwsgi_part')
         files = self.maker.make_multiple(specs)
         self.assertEqual(len(specs), len(files))
         expected = set(specs)
@@ -154,13 +149,9 @@ class ScriptTestCase(DistlibTestCase):
                             ext = 'pyw'
                         else:
                             ext = 'py'
-                        expected = set(['foo.%s' % ext,
-                                        'foo-%s.%s.%s' % (version_info[0],
-                                                          version_info[1],
-                                                          ext)])
+                        expected = set(['foo.%s' % ext, 'foo-%s.%s.%s' % (version_info[0], version_info[1], ext)])
                     else:
-                        expected = set(['foo', 'foo-%s.%s' % (version_info[0],
-                                        version_info[1])])
+                        expected = set(['foo', 'foo-%s.%s' % (version_info[0], version_info[1])])
                     self.assertEqual(actual, expected)
                     self.assertEqual(d, maker.target_dir)
                     for fn in files:
@@ -190,14 +181,11 @@ class ScriptTestCase(DistlibTestCase):
     def test_launchers(self):  # pragma: no cover
         tlauncher = self.maker._get_launcher('t')
         self.maker.add_launchers = True
-        specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py',
-                 'shell.sh')
+        specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py', 'shell.sh')
         files = self.maker.make_multiple(specs)
         self.assertEqual(len(specs), len(files))
         filenames = set([os.path.basename(f) for f in files])
-        self.assertEqual(filenames, set(('foo.py', 'script1.exe',
-                                         'script2.exe', 'script3.exe',
-                                         'shell.sh')))
+        self.assertEqual(filenames, set(('foo.py', 'script1.exe', 'script2.exe', 'script3.exe', 'shell.sh')))
         for fn in files:
             if not fn.endswith('.exe'):
                 continue
@@ -211,7 +199,8 @@ class ScriptTestCase(DistlibTestCase):
         files = self.maker.make('script6.py')
         self.assertEqual(len(files), 1)
         p = subprocess.Popen([files[0], 'Test Argument'],
-                             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate('input'.encode('ascii'))
         actual = stdout.decode('ascii').replace('\r\n', '\n')
@@ -241,7 +230,8 @@ class ScriptTestCase(DistlibTestCase):
         files = maker.make('script6-optimized.py')
         self.assertEqual(len(files), 1)
         p = subprocess.Popen([files[0], 'Test Argument'],
-                             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate('input'.encode('ascii'))
         actual = stdout.decode('ascii').replace('\r\n', '\n')
@@ -302,7 +292,8 @@ class ScriptTestCase(DistlibTestCase):
 
         test_output = os.path.join(self.maker.target_dir, 'test_output.txt')
         p = subprocess.Popen([files[0], test_output, 'Test Argument'],
-                             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate()
         self.assertFalse(stdout)
@@ -321,8 +312,7 @@ class ScriptTestCase(DistlibTestCase):
             bar = 'bar.py'
         else:
             bar = 'bar'
-        self.assertEqual(set(('foo.py', bar)),
-                         set([os.path.basename(f) for f in files]))
+        self.assertEqual(set(('foo.py', bar)), set([os.path.basename(f) for f in files]))
         ofiles = os.listdir(self.maker.target_dir)
         self.assertFalse(ofiles)
 
@@ -333,8 +323,7 @@ class ScriptTestCase(DistlibTestCase):
             target = 'test.support.interpreters:list_all'
         files = self.maker.make('test = %s' % target)
         self.assertEqual(len(files), 2)
-        p = subprocess.Popen([sys.executable, files[0]],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen([sys.executable, files[0]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if sys.version_info[:2] < (3, 13):
             self.assertIn(b'<H3>Current Working Directory:</H3>', stdout)
@@ -364,9 +353,7 @@ class ScriptTestCase(DistlibTestCase):
 
     def test_interpreter_args(self):
         executable = fsencode(get_executable())
-        options = {
-            'interpreter_args': ['-E', '"foo bar"', 'baz frobozz']
-        }
+        options = {'interpreter_args': ['-E', '"foo bar"', 'baz frobozz']}
         self.maker.variants = set([''])
         files = self.maker.make('foo = bar:baz', options=options)
         self.assertEqual(len(files), 1)
@@ -393,14 +380,11 @@ class ScriptTestCase(DistlibTestCase):
             self.assertEqual(actual, expected)
 
     def test_enquote_executable(self):
-        for executable, expected in (
-                ('/no/spaces', '/no/spaces'),
-                ('/i have/space', '"/i have/space"'),
-                ('"/space prequoted"', '"/space prequoted"'),
-                ('/usr/bin/env nospaces', '/usr/bin/env nospaces'),
-                ('/usr/bin/env with spaces', '/usr/bin/env "with spaces"'),
-                ('/usr/bin/env "pre spaced"', '/usr/bin/env "pre spaced"')
-                ):
+        for executable, expected in (('/no/spaces', '/no/spaces'), ('/i have/space', '"/i have/space"'),
+                                     ('"/space prequoted"', '"/space prequoted"'),
+                                     ('/usr/bin/env nospaces', '/usr/bin/env nospaces'), ('/usr/bin/env with spaces',
+                                                                                          '/usr/bin/env "with spaces"'),
+                                     ('/usr/bin/env "pre spaced"', '/usr/bin/env "pre spaced"')):
             self.assertEqual(enquote_executable(executable), expected)
 
     def test_variant_configuration(self):
@@ -410,32 +394,29 @@ class ScriptTestCase(DistlibTestCase):
             ext = '.py'
         else:
             ext = ''
-        basenames = ('foo%s' % ext,
-                     'foo-%s.%s%s' % (self.maker.version_info[:2] + (ext,)))
+        basenames = ('foo%s' % ext, 'foo-%s.%s%s' % (self.maker.version_info[:2] + (ext, )))
         expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
         self.assertEqual(expected, set(files))
         self.maker.variant_separator = ''
         self.maker.clobber = True
         files = self.maker.make(spec)
-        basenames = ('foo%s' % ext,
-                     'foo%s.%s%s' % (self.maker.version_info[:2] + (ext,)))
+        basenames = ('foo%s' % ext, 'foo%s.%s%s' % (self.maker.version_info[:2] + (ext, )))
         expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
         self.assertEqual(expected, set(files))
 
         class CustomMaker(ScriptMaker):
+
             def get_script_filenames(self, name):
                 result = super(CustomMaker, self).get_script_filenames(name)
                 if 'X.Y' in self.variants:
-                    result.add('%s%s.%s' % ((name,) + self.version_info[:2]))
+                    result.add('%s%s.%s' % ((name, ) + self.version_info[:2]))
                 return result
 
-        maker = CustomMaker(self.maker.source_dir, self.maker.target_dir,
-                            add_launchers=False)
+        maker = CustomMaker(self.maker.source_dir, self.maker.target_dir, add_launchers=False)
         maker.clobber = True
         files = maker.make(spec)
-        basenames = ('foo%s' % ext,
-                     'foo%s.%s%s' % (self.maker.version_info[:2] + (ext,)),
-                     'foo-%s.%s%s' % (self.maker.version_info[:2] + (ext,)))
+        basenames = ('foo%s' % ext, 'foo%s.%s%s' % (self.maker.version_info[:2] + (ext, )),
+                     'foo-%s.%s%s' % (self.maker.version_info[:2] + (ext, )))
         expected = set([os.path.join(self.maker.target_dir, s) for s in basenames])
         self.assertEqual(expected, set(files))
         if os.name == 'nt':
@@ -443,6 +424,7 @@ class ScriptTestCase(DistlibTestCase):
             files = maker.make(spec)
             expected = set([e.replace('.py', '.exe') for e in expected])
             self.assertEqual(expected, set(files))
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

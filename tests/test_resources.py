@@ -20,7 +20,9 @@ from distlib.util import get_cache_base
 HERE = os.path.abspath(os.path.dirname(__file__))
 IN_GITHUB_WORKFLOW = in_github_workflow()
 
+
 class ZipResourceTestCase(DistlibTestCase):
+
     def setUp(self):
         sys.path.insert(0, os.path.join(HERE, 'foo.zip'))
 
@@ -114,24 +116,13 @@ class ZipResourceTestCase(DistlibTestCase):
         f = finder('foo')
         iterator = f.iterator('')
         actual = set([(r.name, r.is_container) for r in iterator])
-        expected = set([
-                        ('', True),
-                        ('foo_resource.bin', False),
-                        ('bar/bar_resource.bin', False),
-                        ('bar/baz.py', False),
-                        ('__init__.py', False),
-                        ('bar', True),
-                        ('bar/__init__.py', False)
-                       ])
+        expected = set([('', True), ('foo_resource.bin', False), ('bar/bar_resource.bin', False), ('bar/baz.py', False),
+                        ('__init__.py', False), ('bar', True), ('bar/__init__.py', False)])
         self.assertEqual(actual, expected)
         iterator = f.iterator('bar')
         actual = set([(r.name, r.is_container) for r in iterator])
-        expected = set([
-                        ('bar/baz.py', False),
-                        ('bar', True),
-                        ('bar/bar_resource.bin', False),
-                        ('bar/__init__.py', False)
-                       ])
+        expected = set([('bar/baz.py', False), ('bar', True), ('bar/bar_resource.bin', False),
+                        ('bar/__init__.py', False)])
         self.assertEqual(actual, expected)
         iterator = f.iterator('bar/bar_resource.bin')
         actual = set([(r.name, r.is_container) for r in iterator])
@@ -139,6 +130,7 @@ class ZipResourceTestCase(DistlibTestCase):
 
 
 class FileResourceTestCase(DistlibTestCase):
+
     def setUp(self):
         sys.path.insert(0, HERE)
 
@@ -220,25 +212,22 @@ class FileResourceTestCase(DistlibTestCase):
         f = finder('foofoo')
         iterator = f.iterator('')
         actual = set([(r.name, r.is_container) for r in iterator])
-        expected = set([('', True),
-                        ('nested/nested_resource.bin', False),
-                        ('bar', True),
-                        ('__init__.py', False),
-                        ('nested', True),
-                        ('bar/bar_resource.bin', False),
-                        ('bar/__init__.py', False),
-                        ('bar/baz.py', False),
-                        ('foo_resource.bin', False),
-                       ])
+        expected = set([
+            ('', True),
+            ('nested/nested_resource.bin', False),
+            ('bar', True),
+            ('__init__.py', False),
+            ('nested', True),
+            ('bar/bar_resource.bin', False),
+            ('bar/__init__.py', False),
+            ('bar/baz.py', False),
+            ('foo_resource.bin', False),
+        ])
         self.assertEqual(actual, expected)
         iterator = f.iterator('bar')
         actual = set([(r.name, r.is_container) for r in iterator])
-        expected = set([
-                        ('bar/baz.py', False),
-                        ('bar', True),
-                        ('bar/bar_resource.bin', False),
-                        ('bar/__init__.py', False)
-                       ])
+        expected = set([('bar/baz.py', False), ('bar', True), ('bar/bar_resource.bin', False),
+                        ('bar/__init__.py', False)])
         self.assertEqual(actual, expected)
         iterator = f.iterator('bar/bar_resource.bin')
         actual = set([(r.name, r.is_container) for r in iterator])
@@ -246,6 +235,7 @@ class FileResourceTestCase(DistlibTestCase):
 
 
 class CacheTestCase(DistlibTestCase):
+
     def test_base(self):
         cache = ResourceCache()
         expected = os.path.join(get_cache_base(), str('resource-cache'))
@@ -262,13 +252,8 @@ class CacheTestCase(DistlibTestCase):
         sys.path.insert(0, path)
         self.addCleanup(sys.path.remove, path)
 
-        cases = (
-            ('foo', 'foo_resource.bin'),
-            ('foo', 'bar/bar_resource.bin'),
-            ('foofoo', 'bar/bar_resource.bin'),
-            ('barbar', 'bar_resource.bin'),
-            ('barbar.baz', 'baz_resource.bin')
-        )
+        cases = (('foo', 'foo_resource.bin'), ('foo', 'bar/bar_resource.bin'), ('foofoo', 'bar/bar_resource.bin'),
+                 ('barbar', 'bar_resource.bin'), ('barbar.baz', 'baz_resource.bin'))
 
         for pkg, path in cases:
             f = finder(pkg)

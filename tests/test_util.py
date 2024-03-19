@@ -693,6 +693,7 @@ class FileOpsTestCase(DistlibTestCase):
         self.assertEqual(os.listdir(self.workdir), [])
         self.assertFalse(self.fileop.record)
 
+
 class GlobTestCaseBase(TempdirManager, DistlibTestCase):
 
     def build_files_tree(self, files):

@@ -10,4 +10,6 @@ per-file-ignores =
     docs/conf.py:E302,E265,E401,E402
     tests/support.py:F401
     tests/test_all.py:E402
+    tests/test_util.py:E401
+    tests/distlib_tests.py:F401,E402
 

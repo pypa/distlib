@@ -24,13 +24,12 @@ from distlib.manifest import Manifest
 from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME
 from distlib.scripts import ScriptMaker
 from distlib.util import get_executable
-from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS,
-                           IMP_PREFIX, is_compatible, _get_glibc_version)
+from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS, IMP_PREFIX, is_compatible,
+                           _get_glibc_version)
 
 try:
     with open(os.devnull, 'wb') as junk:
-        subprocess.check_call(['pip', '--version'], stdout=junk,
-                               stderr=subprocess.STDOUT)
+        subprocess.check_call(['pip', '--version'], stdout=junk, stderr=subprocess.STDOUT)
     PIP_AVAILABLE = True
 except Exception:
     PIP_AVAILABLE = False
@@ -39,14 +38,14 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 EGG_INFO_RE = re.compile(r'(-py\d\.\d)?\.egg-info', re.I)
 
+
 def pip_version():
     result = None
     fd, fn = tempfile.mkstemp(prefix='distlib-test-', suffix='.txt')
     try:
         os.close(fd)
         with open(fn, 'wb') as out:
-            subprocess.check_call(['pip', '--version'], stdout=out,
-                                   stderr=subprocess.STDOUT)
+            subprocess.check_call(['pip', '--version'], stdout=out, stderr=subprocess.STDOUT)
         with io.open(fn, encoding='utf-8') as f:
             data = f.read().split()
         assert data[0] == 'pip'
@@ -61,6 +60,7 @@ def pip_version():
     finally:
         os.remove(fn)
     return result
+
 
 def convert_egg_info(libdir, prefix):
     files = os.listdir(libdir)
@@ -83,6 +83,7 @@ def convert_egg_info(libdir, prefix):
     dist = next(dp.get_distributions())
     dist.write_installed_files(manifest.allfiles, prefix)
 
+
 def install_dist(distname, workdir):
     pfx = '--install-option='
     purelib = pfx + '--install-purelib=%s/purelib' % workdir
@@ -90,17 +91,16 @@ def install_dist(distname, workdir):
     headers = pfx + '--install-headers=%s/headers' % workdir
     scripts = pfx + '--install-scripts=%s/scripts' % workdir
     data = pfx + '--install-data=%s/data' % workdir
-    cmd = ['pip', 'install',
-           '--index-url', 'https://pypi.org/simple/',
-           '--timeout', '3', '--default-timeout', '3',
-           purelib, platlib, headers, scripts, data, distname]
+    cmd = [
+        'pip', 'install', '--index-url', 'https://pypi.org/simple/', '--timeout', '3', '--default-timeout', '3',
+        purelib, platlib, headers, scripts, data, distname
+    ]
     result = {
         'scripts': os.path.join(workdir, 'scripts'),
         'headers': os.path.join(workdir, 'headers'),
         'data': os.path.join(workdir, 'data'),
     }
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout, _ = p.communicate()
     if p.returncode:
         raise ValueError('pip failed to install %s:\n%s' % (distname, stdout))
@@ -123,21 +123,16 @@ class WheelTestCase(DistlibTestCase):
     def test_valid_filename(self):
         attrs = ('name', 'version', 'buildver', 'pyver', 'abi', 'arch')
         cases = (
-            ('pkg-1.0.0-cp32.cp33-noabi-noarch.whl',
-             ('pkg', '1.0.0', '', ['cp32', 'cp33'], ['noabi'],
-              ['noarch'])),
-            ('package-1.0.0-cp33-noabi-linux_x86_64.whl',
-             ('package', '1.0.0', '', ['cp33'], ['noabi'],
-              ['linux_x86_64'])),
-            ('test-1.0-1st-py2.py3-none-win32.whl',
-             ('test', '1.0', '1st', ['py2', 'py3'], ['none'], ['win32'])),
+            ('pkg-1.0.0-cp32.cp33-noabi-noarch.whl', ('pkg', '1.0.0', '', ['cp32', 'cp33'], ['noabi'], ['noarch'])),
+            ('package-1.0.0-cp33-noabi-linux_x86_64.whl', ('package', '1.0.0', '', ['cp33'], ['noabi'],
+                                                           ['linux_x86_64'])),
+            ('test-1.0-1st-py2.py3-none-win32.whl', ('test', '1.0', '1st', ['py2', 'py3'], ['none'], ['win32'])),
             ('Pillow-2.8.1-cp27-none-macosx_10_6_intel.'
              'macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.'
-             'macosx_10_10_x86_64.whl',
-             ('Pillow', '2.8.1', '', ['cp27'], ['none'],
-              ['macosx_10_6_intel', 'macosx_10_9_intel',
-               'macosx_10_9_x86_64', 'macosx_10_10_intel',
-               'macosx_10_10_x86_64'])),
+             'macosx_10_10_x86_64.whl', ('Pillow', '2.8.1', '', ['cp27'], ['none'], [
+                 'macosx_10_6_intel', 'macosx_10_9_intel', 'macosx_10_9_x86_64', 'macosx_10_10_intel',
+                 'macosx_10_10_x86_64'
+             ])),
         )
 
         for name, values in cases:
@@ -164,12 +159,9 @@ class WheelTestCase(DistlibTestCase):
         attrs = ('name', 'version', 'buildver', 'pyver', 'abi', 'arch')
         pyver = PYVER
         cases = (
-            ('pkg-1.0.0',
-             ('pkg', '1.0.0', '', [PYVER], ['none'], ['any'])),
-            ('test-1.0-1st',
-             ('test', '1.0', '1st', [PYVER], ['none'], ['any'])),
-            (None,
-             ('dummy', '0.1', '', [PYVER], ['none'], ['any'])),
+            ('pkg-1.0.0', ('pkg', '1.0.0', '', [pyver], ['none'], ['any'])),
+            ('test-1.0-1st', ('test', '1.0', '1st', [pyver], ['none'], ['any'])),
+            (None, ('dummy', '0.1', '', [pyver], ['none'], ['any'])),
         )
 
         ENDING = '-%s-none-any.whl' % PYVER
@@ -191,18 +183,13 @@ class WheelTestCase(DistlibTestCase):
             arch = ARCH.replace('linux_', '')
             parts = _get_glibc_version()
             if len(parts) == 2:
-                self.assertTrue(filter(lambda o: o[-1] == 'manylinux_%s_%s_%s' %
-                                       (parts[0], parts[1], arch), tags))
+                self.assertTrue(filter(lambda o: o[-1] == 'manylinux_%s_%s_%s' % (parts[0], parts[1], arch), tags))
                 if parts >= (2, 17):
-                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux2014_%s' %
-                                           arch, tags))
+                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux2014_%s' % arch, tags))
                 if parts >= (2, 12):
-                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux2010_%s' %
-                                           arch, tags))
+                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux2010_%s' % arch, tags))
                 if parts >= (2, 5):
-                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux1_%s' %
-                                           arch, tags))
-
+                    self.assertTrue(filter(lambda o: o[-1] == 'manylinux1_%s' % arch, tags))
 
     def test_is_compatible(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
@@ -255,7 +242,6 @@ class WheelTestCase(DistlibTestCase):
             'simplejson-3.17.2-cp38-cp38-manylinux2010_i686.whl',
             'simplejson-3.17.2-cp38-cp38-manylinux2010_x86_64.whl',
             'simplejson-3.17.2-cp38-cp38-manylinux2014_aarch64.whl',
-
             'Pillow-7.2.0-cp35-cp35m-macosx_10_10_intel.whl',
             'Pillow-7.2.0-cp35-cp35m-manylinux1_i686.whl',
             'Pillow-7.2.0-cp35-cp35m-manylinux1_x86_64.whl',
@@ -283,7 +269,6 @@ class WheelTestCase(DistlibTestCase):
             'Pillow-7.2.0-pp36-pypy36_pp73-macosx_10_10_x86_64.whl',
             'Pillow-7.2.0-pp36-pypy36_pp73-manylinux2010_x86_64.whl',
             'Pillow-7.2.0-pp36-pypy36_pp73-win32.whl',
-
             'reportlab-3.5.47-cp27-cp27m-macosx_10_9_x86_64.whl',
             'reportlab-3.5.47-cp27-cp27m-manylinux1_i686.whl',
             'reportlab-3.5.47-cp27-cp27m-manylinux1_x86_64.whl',
@@ -391,8 +376,7 @@ class WheelTestCase(DistlibTestCase):
         name, version = wheel.name, wheel.version
         with ZipFile(fn, 'r') as zf:
             for key in ('scripts', 'headers', 'data'):
-                arcname = '%s-%s.data/%s/%s_file.txt' % (name, version,
-                                                         key, key)
+                arcname = '%s-%s.data/%s/%s_file.txt' % (name, version, key, key)
                 with zf.open(arcname) as bf:
                     data = bf.read()
                 expected = ('dummy data - %s' % key).encode('utf-8')
@@ -497,7 +481,9 @@ class WheelTestCase(DistlibTestCase):
         self.assertTrue(omitted.endswith(endings))
 
     def test_version_incompatibility(self):
+
         class Warner(object):
+
             def __call__(self, wheel_version, file_version):
                 self.wheel_version = wheel_version
                 self.file_version = file_version
@@ -614,15 +600,11 @@ class WheelTestCase(DistlibTestCase):
         w = Wheel(fn)
         actual = w.info
         actual.pop('Generator', None)
-        expected = {
-            'Root-Is-Purelib': 'true',
-            'Tag': 'py27-none-any',
-            'Wheel-Version': '2.0'
-        }
+        expected = {'Root-Is-Purelib': 'true', 'Tag': 'py27-none-any', 'Wheel-Version': '2.0'}
         self.assertEqual(actual, expected)
 
     @unittest.skipIf(sys.version_info[:2] != (2, 7), 'The test wheel is only '
-                                               '2.7 mountable')
+                     '2.7 mountable')
     def test_mount(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)
@@ -641,11 +623,11 @@ class WheelTestCase(DistlibTestCase):
             fn = 'minimext-0.1-cp33-cp33m-linux_x86_64.whl'
         else:
             fn = None
-        if not fn:      # pragma: no cover
+        if not fn:  # pragma: no cover
             raise unittest.SkipTest('Suitable wheel not found.')
         fn = os.path.join(HERE, fn)
         w = Wheel(fn)
-        if not w.is_compatible() or not w.is_mountable():     # pragma: no cover
+        if not w.is_compatible() or not w.is_mountable():  # pragma: no cover
             raise unittest.SkipTest('Wheel not suitable for mounting.')
         self.assertRaises(ImportError, __import__, 'minimext')
         w.mount()
@@ -659,13 +641,13 @@ class WheelTestCase(DistlibTestCase):
     def test_local_version(self):
         w = Wheel('dummy-0.1_1.2')
         self.assertEqual(w.filename, 'dummy-0.1_1.2-%s'
-                                     '-none-any.whl' % PYVER)
+                         '-none-any.whl' % PYVER)
         self.assertEqual(w.name, 'dummy')
         self.assertEqual(w.version, '0.1-1.2')
         self.assertFalse(w.exists)
         w.version = '0.1-1.3'
         self.assertEqual(w.filename, 'dummy-0.1_1.3-%s'
-                                     '-none-any.whl' % PYVER)
+                         '-none-any.whl' % PYVER)
 
     def test_abi(self):
         pyver = sysconfig.get_config_var('py_version_nodot')
@@ -695,7 +677,7 @@ class WheelTestCase(DistlibTestCase):
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     @unittest.skipIf(sys.version_info[:2] >= (3, 7), 'The test distribution is not '
-                                               '3.7+ compatible')
+                     '3.7+ compatible')
     def test_build_and_install_pure(self):
         if pip_version() >= (20, 2, 0):
             raise unittest.SkipTest('Test not supported by pip version')
@@ -703,9 +685,9 @@ class WheelTestCase(DistlibTestCase):
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipIf(hasattr(sys, 'pypy_version_info'), 'The test distribution'
-                                               ' does not build on PyPy')
+                     ' does not build on PyPy')
     @unittest.skipIf(sys.platform != 'linux2', 'The test distribution only '
-                                               'builds on Linux')
+                     'builds on Linux')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_plat(self):
         if pip_version() >= (20, 2, 0):
@@ -714,7 +696,7 @@ class WheelTestCase(DistlibTestCase):
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
-                                               '3.x compatible')
+                     '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_data(self):
         if pip_version() >= (20, 2, 0):
@@ -723,15 +705,15 @@ class WheelTestCase(DistlibTestCase):
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
     @unittest.skipIf(sys.version_info[0] == 3, 'The test distribution is not '
-                                               '3.x compatible')
+                     '3.x compatible')
     @unittest.skipUnless(PIP_AVAILABLE, 'pip is needed for this test')
     def test_build_and_install_scripts(self):
         if pip_version() >= (20, 2, 0):
             raise unittest.SkipTest('Test not supported by pip version')
         self.do_build_and_install('Babel == 0.9.6')
 
+
 if __name__ == '__main__':  # pragma: no cover
     import logging
-    logging.basicConfig(level=logging.DEBUG, filename='test_wheel.log',
-                        filemode='w', format='%(message)s')
+    logging.basicConfig(level=logging.DEBUG, filename='test_wheel.log', filemode='w', format='%(message)s')
     unittest.main()
