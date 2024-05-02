@@ -56,15 +56,16 @@ if __name__ == '__main__':
 # location where it was imported from. So we load everything into memory in
 # advance.
 
-# Issue 31: don't hardcode an absolute package name, but
-# determine it relative to the current package
-distlib_package = __name__.rsplit('.', 1)[0]
+if os.name == 'nt' or (os.name == 'java' and os._name == 'nt'):
+    # Issue 31: don't hardcode an absolute package name, but
+    # determine it relative to the current package
+    DISTLIB_PACKAGE = __name__.rsplit('.', 1)[0]
 
-WRAPPERS = {
-    r.name: r.bytes
-    for r in finder(distlib_package).iterator("")
-    if r.name.endswith(".exe")
-}
+    WRAPPERS = {
+        r.name: r.bytes
+        for r in finder(DISTLIB_PACKAGE).iterator("")
+        if r.name.endswith(".exe")
+    }
 
 
 def enquote_executable(executable):
@@ -406,7 +407,7 @@ class ScriptMaker(object):
             name = '%s%s%s.exe' % (kind, bits, platform_suffix)
             if name not in WRAPPERS:
                 msg = ('Unable to find resource %s in package %s' %
-                       (name, distlib_package))
+                       (name, DISTLIB_PACKAGE))
                 raise ValueError(msg)
             return WRAPPERS[name]
 
