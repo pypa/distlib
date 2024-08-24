@@ -252,9 +252,6 @@ class ScriptMaker(object):
 
     def _write_script(self, names, shebang, script_bytes, filenames, ext):
         use_launcher = self.add_launchers and self._is_nt
-        linesep = os.linesep.encode('utf-8')
-        if not shebang.endswith(linesep):
-            shebang += linesep
         if not use_launcher:
             script_bytes = shebang + script_bytes
         else:  # pragma: no cover
