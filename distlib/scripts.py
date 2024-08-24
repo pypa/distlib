@@ -171,7 +171,7 @@ class ScriptMaker(object):
         else:
             result = b'#!/bin/sh\n'
             result += b"'''exec' " + executable + post_interp + b' "$0" "$@"\n'
-            result += b"' '''"
+            result += b"' '''\n"
         return result
 
     def _get_shebang(self, encoding, post_interp=b'', options=None):
