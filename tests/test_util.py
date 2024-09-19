@@ -99,6 +99,11 @@ class UtilTestCase(DistlibTestCase):
     @unittest.skipIf(os.name != 'posix', 'Test is only valid for POSIX')
     def test_path_to_cache_dir_posix(self):
         self.assertEqual(path_to_cache_dir('/home/user/some-file.zip'), '--home--user--some-file.zip.cache')
+        self.assertEqual(path_to_cache_dir('path/to/some-file.zip'),
+                         os.path.splitext(path_to_cache_dir(os.path.dirname(HERE)))[0] +
+                         '--path--to--some-file.zip.cache')
+        self.assertEqual(path_to_cache_dir('path/to/some-file.zip', use_abspath=False),
+                         'path--to--some-file.zip.cache')
 
     @unittest.skipIf(os.name != 'nt', 'Test is only valid for Windows')
     def test_path_to_cache_dir_nt(self):

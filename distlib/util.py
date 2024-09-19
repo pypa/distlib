@@ -789,7 +789,7 @@ def get_cache_base(suffix=None):
     return os.path.join(result, suffix)
 
 
-def path_to_cache_dir(path):
+def path_to_cache_dir(path, use_abspath=True):
     """
     Convert an absolute path to a directory name for use in a cache.
 
@@ -799,7 +799,7 @@ def path_to_cache_dir(path):
     #. Any occurrence of ``os.sep`` is replaced with ``'--'``.
     #. ``'.cache'`` is appended.
     """
-    d, p = os.path.splitdrive(os.path.abspath(path))
+    d, p = os.path.splitdrive(os.path.abspath(path) if use_abspath else path)
     if d:
         d = d.replace(':', '---')
     p = p.replace(os.sep, '--')
@@ -981,11 +981,11 @@ class Cache(object):
             logger.warning('Directory \'%s\' is not private', base)
         self.base = os.path.abspath(os.path.normpath(base))
 
-    def prefix_to_dir(self, prefix):
+    def prefix_to_dir(self, prefix, use_abspath=True):
         """
         Converts a resource prefix to a directory name in the cache.
         """
-        return path_to_cache_dir(prefix)
+        return path_to_cache_dir(prefix, use_abspath=use_abspath)
 
     def clear(self):
         """
