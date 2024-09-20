@@ -356,6 +356,27 @@ class WheelTestCase(DistlibTestCase):
                         s = 'manylinux_%s_%s_' % parts
                         self.assertIn(s, arch)
 
+    def test_is_compatible_limited_abi(self):
+        major_version = sys.version_info.major
+        minor_version = sys.version_info.minor
+        minimum_abi3_version = (3, 2)
+        if not ((major_version, minor_version) >= minimum_abi3_version and IMP_PREFIX == 'cp'):
+            self.skipTest('Python %s does not support the limited API' % VER_SUFFIX)
+
+        compatible_wheel_filenames = [
+            'dummy-0.1-cp%d%d-abi3-%s.whl' % (major_version, current_minor_version, ARCH)
+            for current_minor_version in range(minor_version, -1, -1)
+            if (major_version, current_minor_version) >= minimum_abi3_version
+        ]
+        incompatible_wheel_filenames = [
+            'dummy-0.1-cp%d%d-%s-%s.whl' % (major_version, current_minor_version, ABI, ARCH)
+            for current_minor_version in range(minor_version - 1, -1, -1)
+        ]
+        for wheel_filename in compatible_wheel_filenames:
+            self.assertTrue(is_compatible(wheel_filename), msg=wheel_filename)
+        for wheel_filename in incompatible_wheel_filenames:
+            self.assertFalse(is_compatible(wheel_filename), msg=wheel_filename)
+
     def test_metadata(self):
         fn = os.path.join(HERE, 'dummy-0.1-py27-none-any.whl')
         w = Wheel(fn)

@@ -987,11 +987,20 @@ def compatible_tags():
     """
     Return (pyver, abi, arch) tuples compatible with this Python.
     """
-    versions = [VER_SUFFIX]
-    major = VER_SUFFIX[0]
-    for minor in range(sys.version_info[1] - 1, -1, -1):
-        versions.append(''.join([major, str(minor)]))
+    class _Version:
+        def __init__(self, major, minor):
+            self.major = major
+            self.major_minor = (major, minor)
+            self.string = ''.join((str(major), str(minor)))
 
+        def __str__(self):
+            return self.string
+
+
+    versions = [
+        _Version(sys.version_info.major, minor_version)
+        for minor_version in range(sys.version_info.minor, -1, -1)
+    ]
     abis = []
     for suffix in _get_suffixes():
         if suffix.startswith('.abi'):
@@ -1027,31 +1036,42 @@ def compatible_tags():
                 minor -= 1
 
     # Most specific - our Python version, ABI and arch
-    for abi in abis:
-        for arch in arches:
-            result.append((''.join((IMP_PREFIX, versions[0])), abi, arch))
-            # manylinux
-            if abi != 'none' and sys.platform.startswith('linux'):
-                arch = arch.replace('linux_', '')
-                parts = _get_glibc_version()
-                if len(parts) == 2:
-                    if parts >= (2, 5):
-                        result.append((''.join((IMP_PREFIX, versions[0])), abi, 'manylinux1_%s' % arch))
-                    if parts >= (2, 12):
-                        result.append((''.join((IMP_PREFIX, versions[0])), abi, 'manylinux2010_%s' % arch))
-                    if parts >= (2, 17):
-                        result.append((''.join((IMP_PREFIX, versions[0])), abi, 'manylinux2014_%s' % arch))
-                    result.append((''.join(
-                        (IMP_PREFIX, versions[0])), abi, 'manylinux_%s_%s_%s' % (parts[0], parts[1], arch)))
+    for i, version_object in enumerate(versions):
+        version = str(version_object)
+        add_abis = []
+        if i == 0:
+            add_abis = abis
+        elif IMP_PREFIX == 'cp' and version_object.major_minor >= (3, 2):
+            limited_api_abi = 'abi' + str(version_object.major)
+            add_abis = [limited_api_abi]
+
+        for abi in add_abis:
+            for arch in arches:
+                result.append((''.join((IMP_PREFIX, version)), abi, arch))
+                # manylinux
+                if abi != 'none' and sys.platform.startswith('linux'):
+                    arch = arch.replace('linux_', '')
+                    parts = _get_glibc_version()
+                    if len(parts) == 2:
+                        if parts >= (2, 5):
+                            result.append((''.join((IMP_PREFIX, version)), abi, 'manylinux1_%s' % arch))
+                        if parts >= (2, 12):
+                            result.append((''.join((IMP_PREFIX, version)), abi, 'manylinux2010_%s' % arch))
+                        if parts >= (2, 17):
+                            result.append((''.join((IMP_PREFIX, version)), abi, 'manylinux2014_%s' % arch))
+                        result.append((''.join(
+                            (IMP_PREFIX, version)), abi, 'manylinux_%s_%s_%s' % (parts[0], parts[1], arch)))
 
     # where no ABI / arch dependency, but IMP_PREFIX dependency
-    for i, version in enumerate(versions):
+    for i, version_object in enumerate(versions):
+        version = str(version_object)
         result.append((''.join((IMP_PREFIX, version)), 'none', 'any'))
         if i == 0:
             result.append((''.join((IMP_PREFIX, version[0])), 'none', 'any'))
 
     # no IMP_PREFIX, ABI or arch dependency
-    for i, version in enumerate(versions):
+    for i, version_object in enumerate(versions):
+        version = str(version_object)
         result.append((''.join(('py', version)), 'none', 'any'))
         if i == 0:
             result.append((''.join(('py', version[0])), 'none', 'any'))
