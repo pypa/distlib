@@ -121,6 +121,28 @@ class ScriptTestCase(DistlibTestCase):
             actual = os.path.realpath(stdout.strip())
             self.assertEqual(actual, expected.encode('utf-8'))
 
+    @unittest.skipIf(os.name != 'posix', 'Test only appropriate for '
+                     'POSIX systems')
+    def test_cross_env_shebang(self):
+        # Construct an executable with a path that wouldn't ordinarily be a problem
+        self.maker.executable = '/path/to/python3'
+
+        # Set the cross-compiling marker attribute, then clean up.
+        try:
+            sys.cross_compiling = True
+            filenames = self.maker.make('script1.py')
+        finally:
+            delattr(sys, "cross_compiling")
+
+        with open(filenames[0], 'rb') as f:
+            first_line = f.readline()
+            second_line = f.readline()
+            third_line = f.readline()
+        self.assertEqual(first_line, b'#!/bin/sh\n')
+        self.assertEqual(second_line, b"'''exec' /path/to/python3 "
+                         b'"$0" "$@"\n')
+        self.assertEqual(third_line, b"' '''\n")
+
     def test_multiple(self):
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py', 'shell.sh', 'uwsgi_part')
         files = self.maker.make_multiple(specs)
