@@ -1039,11 +1039,14 @@ def compatible_tags():
     for i, version_object in enumerate(versions):
         version = str(version_object)
         add_abis = []
+
         if i == 0:
             add_abis = abis
-        elif IMP_PREFIX == 'cp' and version_object.major_minor >= (3, 2):
+
+        if IMP_PREFIX == 'cp' and version_object.major_minor >= (3, 2):
             limited_api_abi = 'abi' + str(version_object.major)
-            add_abis = [limited_api_abi]
+            if limited_api_abi not in add_abis:
+                add_abis.append(limited_api_abi)
 
         for abi in add_abis:
             for arch in arches:
