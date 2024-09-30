@@ -3,6 +3,7 @@
 *.log
 *.zip
 .coverage
+.vscode
 tests/run
 tests/keys/random_seed
 docs/_build
