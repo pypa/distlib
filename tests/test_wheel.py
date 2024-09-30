@@ -24,8 +24,8 @@ from distlib.manifest import Manifest
 from distlib.metadata import Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME
 from distlib.scripts import ScriptMaker
 from distlib.util import get_executable
-from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS, IMP_PREFIX, is_compatible,
-                           _get_glibc_version)
+from distlib.wheel import (Wheel, PYVER, IMPVER, ARCH, ABI, COMPATIBLE_TAGS, IMP_PREFIX, VER_SUFFIX,
+                           is_compatible, _get_glibc_version)
 
 try:
     with open(os.devnull, 'wb') as junk:
