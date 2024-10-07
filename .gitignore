@@ -16,6 +16,11 @@ distlib-vcsid
 tests/passwords
 tests/keys
 tests/pypi-server-standalone.py
+tests/minimext/*.egg-info
+tests/minimext/.venv*
+tests/minimext/minimext/*.pyd
+tests/minimext/minimext/*.so
+tests/minimext/wheels
 dist
 htmlcov
 build
