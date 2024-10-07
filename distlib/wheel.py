@@ -752,7 +752,7 @@ class Wheel(object):
                     wf = wrapper(bf)
                     extensions = json.load(wf)
                     cache = self._get_dylib_cache()
-                    prefix = cache.prefix_to_dir(pathname)
+                    prefix = cache.prefix_to_dir(self.filename, use_abspath=False)
                     cache_base = os.path.join(cache.base, prefix)
                     if not os.path.isdir(cache_base):
                         os.makedirs(cache_base)
