@@ -22,4 +22,3 @@ def fib(index):
         current_value = next_value
         index -= 1
     return current_value
-
