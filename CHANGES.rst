@@ -1,10 +1,35 @@
 Change log for ``distlib``
 --------------------------
 
-0.3.9 (future)
+0.4.0 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+0.3.9
+~~~~~
+
+Released: 2024-10-09
+
+- scripts
+
+    - Merge #215: preload script wrappers on Windows to assist with a pip issue (thanks,
+      Paul Moore).
+
+    - Fix #220: Remove duplicated newline in shebang of windows launcher (thanks. A2uria).
+
+    - Fix #230: Add handling for cross-compilation environments (thanks, Russell Keith-Magee).
+
+- util
+
+    - Fix #224: Do not use the absolute path to cache wheel extensions (thanks, Stewart Miles).
+
+- wheel
+
+    - Fix #222: Support mounting wheels that use extensions without an EXTENSIONS file (thanks,
+      Stewart Miles).
+
+    - Fix #225: Add support for wheel compatibility with the limited API (thanks, Stewart Miles).
 
 0.3.8
 ~~~~~
