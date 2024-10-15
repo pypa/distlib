@@ -6,6 +6,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- markers
+
+    - Add the ``interpret_parsed`` function.
+
 0.3.9
 ~~~~~
 
