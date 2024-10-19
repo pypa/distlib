@@ -362,7 +362,8 @@ Functions
                         to load a package. The callable is called
                         with a single argument -- the Python module object
                         corresponding to the package -- and must return a
-                        finder for that package.
+                        finder (compatible with the :class:`ResourceFinder`)
+                        for that package.
 
 Classes
 ^^^^^^^
