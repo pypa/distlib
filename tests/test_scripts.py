@@ -341,8 +341,10 @@ class ScriptTestCase(DistlibTestCase):
     def test_script_run(self):
         if sys.version_info[:2] < (3, 13):
             target = 'cgi:print_directory'
-        else:
+        elif os.name != 'nt':
             target = 'test.support.interpreters:list_all'
+        else:
+            raise unittest.SkipTest('test not available on Windows for Python >= 3.13')
         files = self.maker.make('test = %s' % target)
         self.assertEqual(len(files), 2)
         p = subprocess.Popen([sys.executable, files[0]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
