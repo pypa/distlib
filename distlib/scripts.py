@@ -40,11 +40,13 @@ _DEFAULT_MANIFEST = '''
 # check if Python is called on the first line with this expression
 FIRST_LINE_RE = re.compile(b'^#!.*pythonw?[0-9.]*([ \t].*)?$')
 SCRIPT_TEMPLATE = r'''# -*- coding: utf-8 -*-
-import re
 import sys
 from %(module)s import %(import_name)s
 if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    if sys.argv[0].endswith('-script.pyw'):
+        sys.argv[0] = sys.argv[0][: -11]
+    elif sys.argv[0].endswith('.exe'):
+        sys.argv[0] = sys.argv[0][: -4]
     sys.exit(%(func)s())
 '''
 
