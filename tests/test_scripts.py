@@ -449,6 +449,18 @@ class ScriptTestCase(DistlibTestCase):
             expected = set([e.replace('.py', '.exe') for e in expected])
             self.assertEqual(expected, set(files))
 
+    def test_reserved_names(self):
+        self.maker.clobber = True
+        for reserved_name in ('sys', 're', '__name__'):
+            spec = 'foo = foo:' + reserved_name
+            files = self.maker.make(spec)
+            self.assertEqual(len(files), 2)
+            for fn in files:
+                with open(fn, 'r') as f:
+                    text = f.read()
+                    self.assertIn('from foo import ' + reserved_name + ' as _' + reserved_name, text)
+                    self.assertIn('sys.exit(_' + reserved_name + '())', text)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

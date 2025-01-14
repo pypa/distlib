@@ -47,6 +47,7 @@ if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
     sys.exit(%(func)s())
 '''
+SCRIPT_TEMPLATE_RESERVED_NAMES = ('re', 'sys', '__name__')
 
 # Pre-fetch the contents of all executable wrapper stubs.
 # This is to address https://github.com/pypa/pip/issues/12666.
@@ -94,6 +95,7 @@ class ScriptMaker(object):
     specifications.
     """
     script_template = SCRIPT_TEMPLATE
+    script_template_reserved_names = SCRIPT_TEMPLATE_RESERVED_NAMES
 
     executable = None  # for shebangs
 
@@ -247,8 +249,15 @@ class ScriptMaker(object):
         return shebang
 
     def _get_script_text(self, entry):
+        import_name = entry.suffix.split('.')[0]
+        if import_name in self.script_template_reserved_names:
+            import_as = import_name + ' as _' + import_name
+            func = '_' + entry.suffix
+        else:
+            import_as = None
+            func = entry.suffix
         return self.script_template % dict(
-            module=entry.prefix, import_name=entry.suffix.split('.')[0], func=entry.suffix)
+            module=entry.prefix, import_name=import_as if import_as else import_name, func=func)
 
     manifest = _DEFAULT_MANIFEST
 
