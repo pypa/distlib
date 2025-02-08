@@ -10,6 +10,11 @@ Released: Not yet.
 
     - Add the ``interpret_parsed`` function.
 
+- wheel
+
+    - Fix #238: Add build tag to wheel metadata if specified.
+
+
 0.3.9
 ~~~~~
 

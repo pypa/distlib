@@ -453,6 +453,8 @@ class Wheel(object):
             'Generator: distlib %s' % __version__,
             'Root-Is-Purelib: %s' % is_pure,
         ]
+        if self.buildver:
+            wheel_metadata.append('Build: %s' % self.buildver)
         for pyver, abi, arch in self.tags:
             wheel_metadata.append('Tag: %s-%s-%s' % (pyver, abi, arch))
         p = os.path.join(distinfo, 'WHEEL')

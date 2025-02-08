@@ -17,7 +17,7 @@ import tempfile
 from compat import unittest
 from support import DistlibTestCase
 
-from distlib import DistlibException
+from distlib import __version__, DistlibException
 from distlib.compat import ZipFile, sysconfig, fsencode
 from distlib.database import DistributionPath
 from distlib.manifest import Manifest
@@ -405,6 +405,33 @@ class WheelTestCase(DistlibTestCase):
                     expected = b'#!python\n' + expected
                 self.assertTrue(data, expected)
 
+    def check_built_metadata(self, wheel):
+        # Check the metadata of the built wheel (see #238).
+        name, version = wheel.name, wheel.version
+        fn = os.path.join(wheel.dirname, wheel.filename)
+        self.assertTrue(os.path.exists(fn))
+        arcname = '%s-%s.dist-info/WHEEL' % (name, version)
+        with ZipFile(fn, 'r') as zf:
+            with zf.open(arcname) as bf:
+                data = bf.read().decode('utf-8')
+        if wheel.arch[0] == 'any':
+            is_pure = 'true'
+        else:
+            is_pure = 'false'
+        expected = {
+            'Wheel-Version': '%d.%d' % wheel.wheel_version,
+            'Generator': 'distlib %s' % __version__,
+            'Root-Is-Purelib': is_pure,
+            'Build': '1foobar',
+            'Tag': '%s-%s-%s' % (wheel.pyver[0], wheel.abi[0], wheel.arch[0]),
+        }
+        actual = {}
+        for line in data.splitlines():
+            i = line.find(':')
+            key, value = line[:i], line[i + 1:].lstrip()
+            actual[key] = value
+        self.assertEqual(actual, expected)
+
     def test_build_tags(self):
         workdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, workdir)
@@ -453,14 +480,17 @@ class WheelTestCase(DistlibTestCase):
         self.check_built_wheel(wheel, expected)
 
         # Make a non-pure wheel with default tags
+        # On this last build in the test, set a buildver and check the metadata
         paths.pop('purelib')
         paths['platlib'] = platlib
+        wheel.buildver = '1foobar'
         wheel.build(paths)
         expected['pyver'] = [IMPVER]
         expected['abi'] = [ABI]
         expected['arch'] = [ARCH]
-        expected['filename'] = 'dummy-0.1-%s-%s-%s.whl' % (IMPVER, ABI, ARCH)
+        expected['filename'] = 'dummy-0.1-%s-%s-%s-%s.whl' % (wheel.buildver, IMPVER, ABI, ARCH)
         self.check_built_wheel(wheel, expected)
+        self.check_built_metadata(wheel)
 
     def do_build_and_install(self, dist):
         srcdir = tempfile.mkdtemp()
