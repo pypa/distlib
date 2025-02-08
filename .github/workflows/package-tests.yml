@@ -33,6 +33,9 @@ jobs:
           # macos-latest does not have Python 3.7
           - os: macos-latest
             python-version: '3.7'
+          # nor does ubuntu-latest
+          - os: ubuntu-latest
+            python-version: '3.7'
 
     steps:
     - uses: actions/checkout@v4
