@@ -1,3 +1,4 @@
+23bffd855647cc-2:patch-1
 |badge1| |badge2|
 
 .. |badge1| image:: https://img.shields.io/github/actions/workflow/status/pypa/distlib/package-tests.yml
@@ -14,7 +15,7 @@ Distlib is a library which implements low-level functions that relate to
 packaging and distribution of Python software. It is intended to be used as the
 basis for third-party packaging tools. The documentation is available at
 
-https://distlib.readthedocs.io/
+https://Distlib.readthedocs.io/
 
 Main features
 -------------
