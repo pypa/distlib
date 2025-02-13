@@ -22,7 +22,8 @@ Main features
 
 Distlib currently offers the following features:
 
-* The package ``distlib.database``, which implements a database of installed
+* The pack
+age ``distlib.database``, which implements a database of installed
   distributions, as defined by :pep:`376`, and distribution dependency graph
   logic. Support is also provided for non-installed distributions (i.e.
   distributions registered with metadata on an index like PyPI), including
