@@ -71,6 +71,8 @@ else:
                     us = sysconfig.get_config_var('Py_UNICODE_SIZE')
                     if us == 4 or (us is None and sys.maxunicode == 0x10FFFF):
                         parts.append('u')
+            if bool(sysconfig.get_config_var("Py_GIL_DISABLED")):
+                parts.append('t')
         return ''.join(parts)
 
     ABI = _derive_abi()
