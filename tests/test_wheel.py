@@ -719,6 +719,8 @@ class WheelTestCase(DistlibTestCase):
                 us = sysconfig.get_config_var('Py_UNICODE_SIZE')
                 if us == 4 or (us is None and sys.maxunicode == 0x10FFFF):
                     parts.append('u')
+            if bool(sysconfig.get_config_var("Py_GIL_DISABLED")):
+                parts.append('t')
         if vi < (3, 5):
             abi = ABI
         else:
