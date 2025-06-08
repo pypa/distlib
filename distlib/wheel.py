@@ -442,13 +442,14 @@ class Wheel(object):
                 rp = to_posix(os.path.relpath(p, path))
                 archive_paths.append((rp, p))
 
-        # Now distinfo. Assumed to be flat, i.e. os.listdir is enough.
-        files = os.listdir(distinfo)
-        for fn in files:
-            if fn not in ('RECORD', 'INSTALLER', 'SHARED', 'WHEEL'):
-                p = fsdecode(os.path.join(distinfo, fn))
-                ap = to_posix(os.path.join(info_dir, fn))
-                archive_paths.append((ap, p))
+        # Now distinfo. It may contain subdirectories (e.g. PEP 639)
+        for root, _, files in os.walk(distinfo):
+            for fn in files:
+                if fn not in ('RECORD', 'INSTALLER', 'SHARED', 'WHEEL'):
+                    p = fsdecode(os.path.join(root, fn))
+                    r = os.path.relpath(root, distinfo)
+                    ap = to_posix(os.path.join(info_dir, r, fn))
+                    archive_paths.append((ap, p))
 
         wheel_metadata = [
             'Wheel-Version: %d.%d' % (wheel_version or self.wheel_version),
