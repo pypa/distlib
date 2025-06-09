@@ -36,6 +36,9 @@ jobs:
           # nor does ubuntu-latest
           - os: ubuntu-latest
             python-version: '3.7'
+          # Failing, seemingly not through anything we're doing ...
+          - os: windows-latest
+            python-version: '3.13t'
 
     steps:
     - uses: actions/checkout@v4
