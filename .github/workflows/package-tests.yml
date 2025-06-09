@@ -48,6 +48,7 @@ jobs:
         python tests/test_all.py
       env:
         PYTHONHASHSEED: 0
+        SKIP_EXT_PACKAGE_DATA: 1
     - name: Test with coverage
       run: |
         pip install coverage
@@ -55,6 +56,7 @@ jobs:
         coverage xml
       env:
         PYTHONHASHSEED: 0
+        SKIP_EXT_PACKAGE_DATA: 1
     - name: Upload coverage to Codecov
       # Repeated failures of Codecov on macos-12
       # if: ${{ matrix.os != 'macos-12' }

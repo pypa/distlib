@@ -440,6 +440,7 @@ class UtilTestCase(DistlibTestCase):
         self.assertRaises(AssertionError, is_string_sequence, [])
 
     @unittest.skipIf('SKIP_ONLINE' in os.environ, 'Skipping online test')
+    @unittest.skipIf('SKIP_EXT_PACKAGE_DATA' in os.environ, 'Skipping test requiring external package data')
     @unittest.skipUnless(ssl, 'SSL required for this test.')
     def test_package_data(self):
         data = get_package_data(name='config', version='0.3.6')
