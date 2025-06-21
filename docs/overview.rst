@@ -162,7 +162,7 @@ https://github.com/pypa/distlib/
 
 Coverage results are available at:
 
-https://coveralls.io/github/vsajip/distlib/
+https://app.codecov.io/gh/pypa/distlib/
 
 Continuous integration test results are available at:
 
