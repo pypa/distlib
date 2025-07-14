@@ -14,6 +14,17 @@ Released: Not yet.
 
     - Fix #238: Add build tag to wheel metadata if specified.
 
+    - Fix #243: Update to support free-threading version of Python (3.13t).
+
+    - Fix #246: Support subdirectories in the dist-info directory. Thanks to Pieter P for the patch.
+
+    - Fix #248: Fix path normalisation issue caused by the fix for #246.
+
+    - Move import in script wrapper to "if __name__ == 'main'" clause.
+
+- tests
+
+    - Fix #245: Skip test_package_data if a SKIP_EXT_PACKAGE_DATA environment variable is present.
 
 0.3.9
 ~~~~~
