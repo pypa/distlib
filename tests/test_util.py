@@ -429,7 +429,8 @@ class UtilTestCase(DistlibTestCase):
             name = os.path.join(HERE, name)
             td = tempfile.mkdtemp()
             try:
-                self.assertRaises(ValueError, unarchive, name, td)
+                # OSError is raised on Windows on CPython 3.13, pypy-3.11
+                self.assertRaises((OSError, ValueError), unarchive, name, td)
             finally:
                 shutil.rmtree(td)
 
