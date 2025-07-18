@@ -6,6 +6,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- tests
+
+    - Fix #251: Change test function following a reorganization which happened in the Python stdlib.
+
 0.4.0
 ~~~~~
 

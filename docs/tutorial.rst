@@ -1727,8 +1727,7 @@ import.
      should have a good understanding of how dynamic loading works on your
      platforms, before taking advantage of this feature.
 
-.. comment::
-
+..
     Section commented out because get_package_data no longer available, and
     the code presented uses it. Another casualty of PEP 426 withdrawal.
 
