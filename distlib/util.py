@@ -1774,9 +1774,25 @@ class SubprocessMixin(object):
         return p
 
 
+# Translation table for normalize_name: lowercase and replace _ . with -
+if sys.version_info[0] >= 3:
+    _normalize_name_table = str.maketrans(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ_.",
+        "abcdefghijklmnopqrstuvwxyz--",
+    )
+
+
 def normalize_name(name):
     """Normalize a python package name a la PEP 503"""
-    # https://www.python.org/dev/peps/pep-0503/#normalized-names
+    # https://peps.python.org/pep-0503/#normalized-names
+    if sys.version_info[0] >= 3:
+        # Emulates re.sub(r"[-_.]+", "-", name).lower()
+        # About 3x faster
+        value = name.translate(_normalize_name_table)
+        while "--" in value:
+            value = value.replace("--", "-")
+        return value
+
     return re.sub('[-_.]+', '-', name).lower()
 
 
