@@ -652,7 +652,7 @@ class FileOpsTestCase(DistlibTestCase):
 
     def test_byte_compile(self):
         path = os.path.join(self.workdir, 'hello.py')
-        dpath = cache_from_source(path, True)
+        dpath = cache_from_source(path, optimization='')
         self.fileop.write_text_file(path, 'print("Hello, world!")', 'utf-8')
         self.fileop.byte_compile(path, optimize=False)
         self.assertTrue(os.path.exists(dpath))
