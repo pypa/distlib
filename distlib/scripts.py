@@ -45,7 +45,7 @@ import sys
 if __name__ == '__main__':
     from %(module)s import %(import_name)s
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    sys.exit(%(func)s())
+    %(func)s
 '''
 
 # Pre-fetch the contents of all executable wrapper stubs.
@@ -247,8 +247,19 @@ class ScriptMaker(object):
         return shebang
 
     def _get_script_text(self, entry):
-        return self.script_template % dict(
-            module=entry.prefix, import_name=entry.suffix.split('.')[0], func=entry.suffix)
+        if entry.suffix is None:
+            values = dict(
+                module='runpy',
+                import_name='run_module',
+                func='run_module(%r, run_name=__name__)' % entry.prefix,
+            )
+        else:
+            values = dict(
+                module=entry.prefix,
+                import_name=entry.suffix.split('.')[0],
+                func='sys.exit(%s())' % entry.suffix,
+            )
+        return self.script_template % values
 
     manifest = _DEFAULT_MANIFEST
 
