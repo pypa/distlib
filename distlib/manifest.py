@@ -76,7 +76,7 @@ class Manifest(object):
                 fullname = os.path.join(root, name)
 
                 # Avoid excess stat calls -- just one will do, thank you!
-                stat = os.stat(fullname)
+                stat = os.lstat(fullname)
                 mode = stat.st_mode
                 if S_ISREG(mode):
                     allfiles.append(fsdecode(fullname))
