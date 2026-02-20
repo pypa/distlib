@@ -572,7 +572,7 @@ href\\s*=\\s*(?:"(?P<url1>[^"]*)"|'(?P<url2>[^']*)'|(?P<url3>[^>\\s\n]*))
             url = d['url1'] or d['url2'] or d['url3']
             url = urljoin(self.base_url, url)
             url = unescape(url)
-            url = self._clean_re.sub(lambda m: '%%%2x' % ord(m.group(0)), url)
+            url = self._clean_re.sub(lambda m: '%%%02x' % ord(m.group(0)), url)
             result.add((url, rel))
         # We sort the result, hoping to bring the most recent versions
         # to the front
