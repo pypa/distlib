@@ -1,10 +1,20 @@
 Change log for ``distlib``
 --------------------------
 
-0.4.1 (future)
-~~~~~~~~~~~~~~
+0.4.2
+~~~~~
 
 Released: Not yet.
+
+0.4.1
+~~~~~
+
+Released: 2026-06-02
+
+- scripts
+
+    - Fix path traversal bug in handling entry points which allowed escaping the scripts directory.
+      Thanks to tonghuaroot for the comprehensive report.
 
 - tests
 
