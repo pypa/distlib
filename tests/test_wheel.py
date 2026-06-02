@@ -773,7 +773,7 @@ class WheelTestCase(DistlibTestCase):
         purelib = os.path.join(root, "lib", "site-packages")
         scripts = os.path.join(root, "bin")
         for d in (purelib, scripts):
-            os.makedirs(d, exist_ok=True)
+            os.makedirs(d)
         paths = {
             "prefix":   root,
             "purelib":  purelib,
