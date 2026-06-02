@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013-2023 Vinay Sajip.
+# Copyright (C) 2013-2026 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -26,7 +26,7 @@ from .compat import sysconfig, ZipFile, fsdecode, text_type, filter
 from .database import InstalledDistribution
 from .metadata import Metadata, WHEEL_METADATA_FILENAME, LEGACY_METADATA_FILENAME
 from .util import (FileOperator, convert_path, CSVReader, CSVWriter, Cache, cached_property, get_cache_base,
-                   read_exports, tempdir, get_platform)
+                   read_exports, tempdir, get_platform, is_in_directory)
 from .version import NormalizedVersion, UnsupportedVersionError
 
 logger = logging.getLogger(__name__)
@@ -606,12 +606,18 @@ class Wheel(object):
 
                     if u_arcname.startswith(data_pfx):
                         _, where, rp = u_arcname.split('/', 2)
-                        outfile = os.path.join(paths[where], convert_path(rp))
+                        base = paths[where]
+                        cp = convert_path(rp)
                     else:
                         # meant for site-packages.
                         if u_arcname in (wheel_metadata_name, record_name):
                             continue
-                        outfile = os.path.join(libdir, convert_path(u_arcname))
+                        base = libdir
+                        cp = convert_path(u_arcname)
+                    # outfile = os.path.join(base, cp)
+                    outfile = os.path.abspath(os.path.join(base, cp))
+                    if not is_in_directory(outfile, base):
+                        raise DistlibException('Wheel member escapes installation directory: %r' % cp)
                     if not is_script:
                         with zf.open(arcname) as bf:
                             fileop.copy_stream(bf, outfile)
