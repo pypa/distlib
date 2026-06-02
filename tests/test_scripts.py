@@ -463,8 +463,8 @@ class ScriptTestCase(DistlibTestCase):
         self.maker.clobber = True
         self.maker.variants = set(('',))
         specs = (
-            '../%s/known_good=foo:bar' % os.path.basename(known_good_dir),
-            '../../%s/known_good=foo:bar' % os.path.basename(known_good_dir),
+            os.path.join('..', os.path.basename(known_good_dir), 'known_good') + '=foo:bar',
+            os.path.join('..', '..', os.path.basename(known_good_dir), 'known_good') + '=foo:bar',
         )
         for spec in specs:
             with self.assertRaises(DistlibException) as ctx:
