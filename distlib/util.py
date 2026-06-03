@@ -589,7 +589,11 @@ class FileOperator(object):
                 self.dirs_created.add(path)
 
     def byte_compile(self, path, optimize=False, force=False, prefix=None, hashed_invalidation=False):
-        dpath = cache_from_source(path, not optimize)
+        if not optimize:
+            optimization = ''
+        else:
+            optimization = '1'
+        dpath = cache_from_source(path, optimization=optimization)
         logger.info('Byte-compiling %s to %s', path, dpath)
         if not self.dry_run:
             if force or self.newer(path, dpath):
