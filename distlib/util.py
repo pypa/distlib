@@ -589,7 +589,11 @@ class FileOperator(object):
                 self.dirs_created.add(path)
 
     def byte_compile(self, path, optimize=False, force=False, prefix=None, hashed_invalidation=False):
-        dpath = cache_from_source(path, not optimize)
+        if not optimize:
+            optimization = ''
+        else:
+            optimization = '1'
+        dpath = cache_from_source(path, optimization=optimization)
         logger.info('Byte-compiling %s to %s', path, dpath)
         if not self.dry_run:
             if force or self.newer(path, dpath):
@@ -1987,3 +1991,12 @@ def get_platform():
     if cross_compilation_target not in _TARGET_TO_PLAT:
         return get_host_platform()
     return _TARGET_TO_PLAT[cross_compilation_target]
+
+
+def is_in_directory(path, target):
+    """
+    Check if a path is inside a target directory. This doesn't check case (might be an issue on Windows)
+    """
+    path = os.path.abspath(path)
+    target = os.path.abspath(target)
+    return path == target or path.startswith(target + os.sep)

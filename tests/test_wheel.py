@@ -765,6 +765,29 @@ class WheelTestCase(DistlibTestCase):
             raise unittest.SkipTest('Test not supported by pip version')
         self.do_build_and_install('Babel == 0.9.6')
 
+    def test_path_doesnt_escape(self):
+        workdir = tempfile.mkdtemp(prefix='distlib-test-')
+        self.addCleanup(shutil.rmtree, workdir)
+        maker = ScriptMaker(None, None)
+        root    = os.path.join(workdir, "venv_root")
+        purelib = os.path.join(root, "lib", "site-packages")
+        scripts = os.path.join(root, "bin")
+        for d in (purelib, scripts):
+            os.makedirs(d)
+        paths = {
+            "prefix":   root,
+            "purelib":  purelib,
+            "platlib":  purelib,
+            "scripts":  scripts,
+            "headers":  os.path.join(root, "include"),
+            "data":     root,
+        }
+        fn = os.path.join(HERE, 'evilpkg-1.0-py3-none-any.whl')
+        w = Wheel(fn)
+        with self.assertRaises(DistlibException) as ctx:
+            w.install(paths, maker)
+        self.assertIn('Wheel member escapes installation directory', str(ctx.exception))
+
 
 if __name__ == '__main__':  # pragma: no cover
     import logging

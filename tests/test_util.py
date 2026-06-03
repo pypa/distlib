@@ -536,8 +536,8 @@ def _eta_range(min_eta, max_eta, prefix='ETA '):
 
 
 class ProgressTestCase(DistlibTestCase):
-    # Of late, the speed tests keep failing on AppVeyor and Windows
-    @unittest.skipIf(IN_GITHUB_WORKFLOW or (os.name == 'nt' and os.environ.get('APPVEYOR') == 'True'),
+    # Of late, the speed tests keep failing onWindows
+    @unittest.skipIf(IN_GITHUB_WORKFLOW,
                      'Test disabled on some environments due to performance')
     def test_basic(self):
 
@@ -575,8 +575,8 @@ class ProgressTestCase(DistlibTestCase):
         self.assertIn(bar.ETA, e, p)
         self.assertIn(bar.speed, s)
 
-    # Of late, the speed tests keep failing on AppVeyor and Windows
-    @unittest.skipIf(IN_GITHUB_WORKFLOW or (os.name == 'nt' and os.environ.get('APPVEYOR') == 'True'),
+    # Of late, the speed tests keep failing on Windows
+    @unittest.skipIf(IN_GITHUB_WORKFLOW,
                      'Test disabled on some environments due to performance')
     def test_unknown(self):
         if os.name == 'nt':
@@ -652,7 +652,7 @@ class FileOpsTestCase(DistlibTestCase):
 
     def test_byte_compile(self):
         path = os.path.join(self.workdir, 'hello.py')
-        dpath = cache_from_source(path, True)
+        dpath = cache_from_source(path, optimization='')
         self.fileop.write_text_file(path, 'print("Hello, world!")', 'utf-8')
         self.fileop.byte_compile(path, optimize=False)
         self.assertTrue(os.path.exists(dpath))

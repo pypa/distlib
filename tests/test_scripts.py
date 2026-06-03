@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012-2023 Vinay Sajip.
+# Copyright (C) 2012-2026 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -20,6 +20,7 @@ except ImportError:
 from compat import unittest
 from support import DistlibTestCase
 
+from distlib import DistlibException
 from distlib.compat import fsencode, sysconfig
 from distlib.scripts import ScriptMaker, enquote_executable
 from distlib.util import get_executable
@@ -447,6 +448,28 @@ class ScriptTestCase(DistlibTestCase):
             expected = set([e.replace('.py', '.exe') for e in expected])
             self.assertEqual(expected, set(files))
 
+    def test_path_doesnt_escape_script_dir(self):
+        """
+        Check that a crafted entry point name doesn't escape the scripts directory.
+        """
+        # First, create a directory unconnected to any script being installed and put
+        # a known good script in it. Then make a script from an entry point crafted to overwrite it
+        # and see if it's caught.
+        known_good_dir = tempfile.mkdtemp(prefix='distlib-test-')
+        self.addCleanup(shutil.rmtree, known_good_dir)
+        fn = os.path.join(known_good_dir, 'known_good')
+        with open(fn, 'w') as f:
+            f.write('KNOWN GOOD')
+        self.maker.clobber = True
+        self.maker.variants = set(('',))
+        specs = (
+            os.path.join('..', os.path.basename(known_good_dir), 'known_good') + '=foo:bar',
+            os.path.join('..', '..', os.path.basename(known_good_dir), 'known_good') + '=foo:bar',
+        )
+        for spec in specs:
+            with self.assertRaises(DistlibException) as ctx:
+                self.maker.make(spec)
+            self.assertEqual(str(ctx.exception), 'Attempt to escape script directory')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
