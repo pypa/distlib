@@ -1780,8 +1780,13 @@ class SubprocessMixin(object):
 
 def normalize_name(name):
     """Normalize a python package name a la PEP 503"""
-    # https://www.python.org/dev/peps/pep-0503/#normalized-names
-    return re.sub('[-_.]+', '-', name).lower()
+    # https://peps.python.org/pep-0503/#normalized-names
+    # Emulates re.sub(r"[-_.]+", "-", name).lower()
+    # Much faster than re, and even faster than str.translate
+    value = name.lower().replace("_", "-").replace(".", "-")
+    while "--" in value:
+        value = value.replace("--", "-")
+    return value
 
 
 # def _get_pypirc_command():
