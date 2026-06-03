@@ -629,7 +629,7 @@ try:
     from importlib.util import cache_from_source  # Python >= 3.4
 except ImportError:  # pragma: no cover
 
-    def cache_from_source(path, debug_override=None):
+    def cache_from_source(path, debug_override=None, optimization=None):
         assert path.endswith('.py')
         if debug_override is None:
             debug_override = __debug__
