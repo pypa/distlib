@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012-2023 Vinay Sajip.
+# Copyright (C) 2012-2026 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -536,7 +536,7 @@ def _eta_range(min_eta, max_eta, prefix='ETA '):
 
 
 class ProgressTestCase(DistlibTestCase):
-    # Of late, the speed tests keep failing onWindows
+    # Of late, the speed tests keep failing on Windows
     @unittest.skipIf(IN_GITHUB_WORKFLOW,
                      'Test disabled on some environments due to performance')
     def test_basic(self):
@@ -652,7 +652,10 @@ class FileOpsTestCase(DistlibTestCase):
 
     def test_byte_compile(self):
         path = os.path.join(self.workdir, 'hello.py')
-        dpath = cache_from_source(path, optimization='')
+        if sys.version_info[:2] >= (3, 15):
+            dpath = cache_from_source(path, optimization='')
+        else:
+            dpath = cache_from_source(path, True)
         self.fileop.write_text_file(path, 'print("Hello, world!")', 'utf-8')
         self.fileop.byte_compile(path, optimize=False)
         self.assertTrue(os.path.exists(dpath))
