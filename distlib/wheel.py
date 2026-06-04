@@ -768,7 +768,18 @@ class Wheel(object):
                     if not os.path.isdir(cache_base):
                         os.makedirs(cache_base)
                     for name, relpath in extensions.items():
+                        # See verify()/update(): reject any '..' in the
+                        # directory portions of the entry, then confine the
+                        # resolved destination to the cache directory so a
+                        # crafted EXTENSIONS entry cannot point _load_dynamic
+                        # at a path outside the dylib cache.
+                        if '..' in relpath.split('/'):
+                            raise DistlibException('invalid extension entry '
+                                                   'in wheel: %r' % relpath)
                         dest = os.path.join(cache_base, convert_path(relpath))
+                        if not is_in_directory(dest, cache_base):
+                            raise DistlibException('extension escapes dylib '
+                                                   'cache: %r' % relpath)
                         if not os.path.exists(dest):
                             extract = True
                         else:
