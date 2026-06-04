@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013-2017 Vinay Sajip.
+# Copyright (C) 2013-2026 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -133,6 +133,14 @@ class ResourceFinder(object):
     def _adjust_path(self, path):
         return os.path.realpath(path)
 
+    def _is_in_base(self, path):
+        base = self._adjust_path(self.base)
+        if path == base:
+            return True
+        if not base.endswith(os.sep):
+            base = base + os.sep
+        return path.startswith(base)
+
     def _make_path(self, resource_name):
         # Issue #50: need to preserve type of path on Python 2.x
         # like os.path._get_sep
@@ -143,7 +151,13 @@ class ResourceFinder(object):
         parts = resource_name.split(sep)
         parts.insert(0, self.base)
         result = os.path.join(*parts)
-        return self._adjust_path(result)
+        result = self._adjust_path(result)
+        # Confine the resolved resource to the package base so a resource
+        # name containing '..' cannot read files outside the package.
+        if not self._is_in_base(result):
+            raise DistlibException('resource name escapes package: '
+                                   '%r' % resource_name)
+        return result
 
     def _find(self, path):
         return os.path.exists(path)
