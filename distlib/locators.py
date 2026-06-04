@@ -587,12 +587,39 @@ class SimpleScrapingLocator(Locator):
     as pip's PackageFinder, which works in an analogous fashion.
     """
 
-    # These are used to deal with various Content-Encoding schemes.
+    # Upper bound, in bytes, on the size a Content-Encoded index response
+    # may inflate to. A compressed response can expand by a very large ratio
+    # (a few hundred KB inflating to hundreds of MB), so decompression is
+    # capped to avoid unbounded memory use from a malicious or compromised
+    # index. Index pages are HTML listings, so this limit is generous.
+    decode_size_limit = 100 * 1024 * 1024
+
+    # These are used to deal with various Content-Encoding schemes. Each
+    # decoder bounds its inflated output to decode_size_limit (see
+    # _decompress) to avoid unbounded memory use from a hostile index.
     decoders = {
-        'deflate': zlib.decompress,
-        'gzip': lambda b: gzip.GzipFile(fileobj=BytesIO(b)).read(),
+        'deflate': lambda b: self._decompress(b, zlib.decompressobj()),
+        # wbits 16 + MAX_WBITS selects gzip framing in zlib.
+        'gzip': lambda b: SimpleScrapingLocator._decompress(
+            b, zlib.decompressobj(16 + zlib.MAX_WBITS)),
         'none': lambda b: b,
     }
+
+    def _decompress(self, data, decompressor):
+        # Decompress and abort if the inflated output would exceed
+        # decode_size_limit. zlib's decompress(max_length) bounds the output
+        # of a single call; ask for one byte past the limit to detect
+        # overflow, then ensure nothing remains unconsumed.
+        limit = self.decode_size_limit
+        produced = decompressor.decompress(data, limit + 1)
+        if len(produced) > limit or decompressor.unconsumed_tail:
+            raise DistlibException('decompressed index response exceeds '
+                                   '%d bytes' % limit)
+        produced += decompressor.flush()
+        if len(produced) > limit:
+            raise DistlibException('decompressed index response exceeds '
+                                   '%d bytes' % limit)
+        return produced
 
     def __init__(self, url, timeout=None, num_workers=10, **kwargs):
         """
