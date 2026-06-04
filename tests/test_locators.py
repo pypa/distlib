@@ -5,6 +5,8 @@
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 from __future__ import unicode_literals
+import gzip
+import io
 import os
 import posixpath
 try:
@@ -12,10 +14,12 @@ try:
 except ImportError:
     ssl = None
 import sys
+import zlib
 
 from compat import unittest
 from support import DistlibTestCase
 
+from distlib import DistlibException
 from distlib.compat import url2pathname, urlparse
 from distlib.database import (Distribution, DistributionPath, make_graph, make_dist)
 from distlib.locators import (SimpleScrapingLocator, PyPIRPCLocator, PyPIJSONLocator, DirectoryLocator, DistPathLocator,
@@ -552,6 +556,28 @@ class LocatorTestCase(DistlibTestCase):
         # See Issue #58
         d = locate('foobarbazbishboshboo')
         self.assertTrue(d is None or isinstance(d, Distribution))
+
+    def test_decompression_limit(self):
+        """
+        Test that decompression doesn't use too much memory
+        """
+        locator = SimpleScrapingLocator('https://pypi.org/simple/')
+        # Deterministic, moderately compressible test data
+        block = b'ABCDEFGHIJKLMNOPQRSTUVWXYZ012345abcdefghijklmnopqrstuvwxyz6789+/'
+        size = locator.decode_size_limit + 512 * 1024  # 500K bigger than limit
+        repetitions = (size + len(block) - 1) // len(block)
+        payload = (block * repetitions)[:size]
+        buf = io.BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode='wb', compresslevel=9) as f:
+            f.write(payload)
+        gzipped_data = buf.getvalue()
+        buf = io.BytesIO()
+        deflated_data = zlib.compress(payload, 9)
+        for encoding, data in (('gzip', gzipped_data), ('deflate', deflated_data)):
+            decoder = locator.decoders[encoding]
+            with self.assertRaises(DistlibException) as ctx:
+                decoder(data)
+            self.assertIn('Decompressed index response exceeds ', str(ctx.exception))
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -156,7 +156,7 @@ class ResourceFinder(object):
         # Confine the resolved resource to the package base so a resource
         # name containing '..' cannot read files outside the package.
         if not self._is_in_base(result):
-            raise DistlibException('resource name escapes package: '
+            raise DistlibException('Resource name escapes package: '
                                    '%r' % resource_name)
         return result
 

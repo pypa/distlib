@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012-2013 Vinay Sajip.
+# Copyright (C) 2012-2026 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -167,6 +167,12 @@ class FileResourceTestCase(DistlibTestCase):
         f = finder('foofoo')
         r = f.find('no_such_resource.bin')
         self.assertIsNone(r)
+
+    def test_escaping_resource(self):
+        f = finder('foofoo')
+        with self.assertRaises(DistlibException) as ctx:
+            r = f.find('../../foo_resource.bin')
+        self.assertIn('Resource name escapes package:', str(ctx.exception))
 
     def test_contents(self):
         f = finder('foofoo')

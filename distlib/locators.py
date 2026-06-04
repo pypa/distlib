@@ -598,25 +598,26 @@ class SimpleScrapingLocator(Locator):
     # decoder bounds its inflated output to decode_size_limit (see
     # _decompress) to avoid unbounded memory use from a hostile index.
     decoders = {
-        'deflate': lambda b: self._decompress(b, zlib.decompressobj()),
+        'deflate': lambda b: SimpleScrapingLocator._decompress(b, zlib.decompressobj()),
         # wbits 16 + MAX_WBITS selects gzip framing in zlib.
         'gzip': lambda b: SimpleScrapingLocator._decompress(b, zlib.decompressobj(16 + zlib.MAX_WBITS)),
         'none': lambda b: b,
     }
 
-    def _decompress(self, data, decompressor):
+    @classmethod
+    def _decompress(cls, data, decompressor):
         # Decompress and abort if the inflated output would exceed
         # decode_size_limit. zlib's decompress(max_length) bounds the output
         # of a single call; ask for one byte past the limit to detect
         # overflow, then ensure nothing remains unconsumed.
-        limit = self.decode_size_limit
+        limit = cls.decode_size_limit
         produced = decompressor.decompress(data, limit + 1)
         if len(produced) > limit or decompressor.unconsumed_tail:
-            raise DistlibException('decompressed index response exceeds '
+            raise DistlibException('Decompressed index response exceeds '
                                    '%d bytes' % limit)
         produced += decompressor.flush()
         if len(produced) > limit:
-            raise DistlibException('decompressed index response exceeds '
+            raise DistlibException('Decompressed index response exceeds '
                                    '%d bytes' % limit)
         return produced
 
