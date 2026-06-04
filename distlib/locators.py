@@ -600,8 +600,7 @@ class SimpleScrapingLocator(Locator):
     decoders = {
         'deflate': lambda b: self._decompress(b, zlib.decompressobj()),
         # wbits 16 + MAX_WBITS selects gzip framing in zlib.
-        'gzip': lambda b: SimpleScrapingLocator._decompress(
-            b, zlib.decompressobj(16 + zlib.MAX_WBITS)),
+        'gzip': lambda b: SimpleScrapingLocator._decompress(b, zlib.decompressobj(16 + zlib.MAX_WBITS)),
         'none': lambda b: b,
     }
 

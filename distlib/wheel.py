@@ -1009,7 +1009,9 @@ def compatible_tags():
     """
     Return (pyver, abi, arch) tuples compatible with this Python.
     """
+
     class _Version:
+
         def __init__(self, major, minor):
             self.major = major
             self.major_minor = (major, minor)
@@ -1018,10 +1020,8 @@ def compatible_tags():
         def __str__(self):
             return self.string
 
-
     versions = [
-        _Version(sys.version_info.major, minor_version)
-        for minor_version in range(sys.version_info.minor, -1, -1)
+        _Version(sys.version_info.major, minor_version) for minor_version in range(sys.version_info.minor, -1, -1)
     ]
     abis = []
     for suffix in _get_suffixes():

@@ -20,11 +20,11 @@ from .util import cached_property, get_cache_base, Cache
 
 logger = logging.getLogger(__name__)
 
-
-cache = None    # created when needed
+cache = None  # created when needed
 
 
 class ResourceCache(Cache):
+
     def __init__(self, base=None):
         if base is None:
             # Use native string to avoid issues on 2.x: see Python #20140.
@@ -69,6 +69,7 @@ class ResourceCache(Cache):
 
 
 class ResourceBase(object):
+
     def __init__(self, finder, name):
         self.finder = finder
         self.name = name
@@ -80,7 +81,7 @@ class Resource(ResourceBase):
     not normally instantiated by user code, but rather by a
     :class:`ResourceFinder` which manages the resource.
     """
-    is_container = False        # Backwards compatibility
+    is_container = False  # Backwards compatibility
 
     def as_stream(self):
         """
@@ -108,7 +109,7 @@ class Resource(ResourceBase):
 
 
 class ResourceContainer(ResourceBase):
-    is_container = True     # Backwards compatibility
+    is_container = True  # Backwards compatibility
 
     @cached_property
     def resources(self):
@@ -144,7 +145,7 @@ class ResourceFinder(object):
     def _make_path(self, resource_name):
         # Issue #50: need to preserve type of path on Python 2.x
         # like os.path._get_sep
-        if isinstance(resource_name, bytes):    # should only happen on 2.x
+        if isinstance(resource_name, bytes):  # should only happen on 2.x
             sep = b'/'
         else:
             sep = '/'
@@ -188,9 +189,10 @@ class ResourceFinder(object):
         return os.path.getsize(resource.path)
 
     def get_resources(self, resource):
+
         def allowed(f):
-            return (f != '__pycache__' and not
-                    f.endswith(self.skipped_extensions))
+            return (f != '__pycache__' and not f.endswith(self.skipped_extensions))
+
         return set([f for f in os.listdir(resource.path) if allowed(f)])
 
     def is_container(self, resource):
@@ -223,6 +225,7 @@ class ZipResourceFinder(ResourceFinder):
     """
     Resource finder for resources in .zip files.
     """
+
     def __init__(self, module):
         super(ZipResourceFinder, self).__init__(module)
         archive = self.loader.archive
@@ -281,7 +284,7 @@ class ZipResourceFinder(ResourceFinder):
             if not self.index[i].startswith(path):
                 break
             s = self.index[i][plen:]
-            result.add(s.split(os.sep, 1)[0])   # only immediate children
+            result.add(s.split(os.sep, 1)[0])  # only immediate children
             i += 1
         return result
 
@@ -297,10 +300,7 @@ class ZipResourceFinder(ResourceFinder):
         return result
 
 
-_finder_registry = {
-    type(None): ResourceFinder,
-    zipimport.zipimporter: ZipResourceFinder
-}
+_finder_registry = {type(None): ResourceFinder, zipimport.zipimporter: ZipResourceFinder}
 
 try:
     # In Python 3.6, _frozen_importlib -> _frozen_importlib_external
