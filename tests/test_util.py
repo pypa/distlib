@@ -99,11 +99,10 @@ class UtilTestCase(DistlibTestCase):
     @unittest.skipIf(os.name != 'posix', 'Test is only valid for POSIX')
     def test_path_to_cache_dir_posix(self):
         self.assertEqual(path_to_cache_dir('/home/user/some-file.zip'), '--home--user--some-file.zip.cache')
-        self.assertEqual(path_to_cache_dir('path/to/some-file.zip'),
-                         os.path.splitext(path_to_cache_dir(os.path.dirname(HERE)))[0] +
-                         '--path--to--some-file.zip.cache')
-        self.assertEqual(path_to_cache_dir('path/to/some-file.zip', use_abspath=False),
-                         'path--to--some-file.zip.cache')
+        self.assertEqual(
+            path_to_cache_dir('path/to/some-file.zip'),
+            os.path.splitext(path_to_cache_dir(os.path.dirname(HERE)))[0] + '--path--to--some-file.zip.cache')
+        self.assertEqual(path_to_cache_dir('path/to/some-file.zip', use_abspath=False), 'path--to--some-file.zip.cache')
 
     @unittest.skipIf(os.name != 'nt', 'Test is only valid for Windows')
     def test_path_to_cache_dir_nt(self):
@@ -395,7 +394,7 @@ class UtilTestCase(DistlibTestCase):
         self.assertEqual(seq._succs, {'A': set(['B'])})
 
     def test_unarchive(self):
-        import zipfile, tarfile
+        import io, zipfile, tarfile
 
         good_archives = (
             ('good.zip', zipfile.ZipFile, 'r', 'namelist'),
@@ -433,6 +432,60 @@ class UtilTestCase(DistlibTestCase):
                 self.assertRaises((OSError, ValueError), unarchive, name, td)
             finally:
                 shutil.rmtree(td)
+
+        # A tar member name being inside dest_dir says nothing about where a
+        # symlink/hardlink member *points*. A link whose target escapes
+        # dest_dir is the dangerous primitive: a subsequent member written
+        # *through* that link (or the link itself being followed later) drops
+        # data outside the destination. unarchive(check=True) must reject any
+        # archive that contains such a link, and must not create an escaping
+        # link or file on disk.
+        #
+        # Note on Python versions: unarchive() installs tarfile.tar_filter
+        # as its extraction filter on Pythons that support PEP-706 (3.12+,
+        # or backports). tar_filter permits symlinks/hardlinks whose *target*
+        # escapes the destination (only the stricter data_filter rejects
+        # those), so the escaping link is created even there. On 3.8 - 3.11
+        # there are no extraction filters at all. In every case unarchive's
+        # own link check is the guard this test relies on, so the test holds
+        # across all supported Pythons.
+
+        def make_link_tar(path, linktype, linkname, with_payload):
+            with tarfile.open(path, 'w:gz') as tf:
+                ti = tarfile.TarInfo('link')
+                ti.type = linktype
+                ti.linkname = linkname
+                tf.addfile(ti)
+                if with_payload:
+                    data = b'PWNED'
+                    fi = tarfile.TarInfo('link/escaped.txt')
+                    fi.size = len(data)
+                    tf.addfile(fi, io.BytesIO(data))
+
+        abs_target = os.path.join(tempfile.gettempdir(), 'distlib_unarchive_escape_target')
+        cases = (
+            ('relative symlink', tarfile.SYMTYPE, '../../../../distlib_unarchive_escape_target', True),
+            ('absolute symlink', tarfile.SYMTYPE, abs_target, False),
+            ('relative hardlink', tarfile.LNKTYPE, '../../../../distlib_unarchive_escape_target', False),
+        )
+        for label, linktype, linkname, with_payload in cases:
+            work = tempfile.mkdtemp()
+            try:
+                arc = os.path.join(work, 'evil.tar.gz')
+                make_link_tar(arc, linktype, linkname, with_payload)
+                dest = os.path.join(work, 'dest')
+                os.mkdir(dest)
+                # unarchive must refuse the archive ...
+                self.assertRaises((OSError, ValueError, DistlibException), unarchive, arc, dest, check=True)
+                # ... and must not have planted an escaping link inside dest.
+                linkpath = os.path.join(dest, 'link')
+                if os.path.islink(linkpath):
+                    self.fail('%s: escaping link was created: %r -> %r' % (label, linkpath, os.readlink(linkpath)))
+                # ... and no payload may have escaped outside dest.
+                escaped = os.path.normpath(os.path.join(dest, linkname, 'escaped.txt'))
+                self.assertFalse(os.path.exists(escaped), '%s: file escaped to %r' % (label, escaped))
+            finally:
+                shutil.rmtree(work)
 
     def test_string_sequence(self):
         self.assertTrue(is_string_sequence(['a']))
@@ -537,8 +590,7 @@ def _eta_range(min_eta, max_eta, prefix='ETA '):
 
 class ProgressTestCase(DistlibTestCase):
     # Of late, the speed tests keep failing on Windows
-    @unittest.skipIf(IN_GITHUB_WORKFLOW,
-                     'Test disabled on some environments due to performance')
+    @unittest.skipIf(IN_GITHUB_WORKFLOW, 'Test disabled on some environments due to performance')
     def test_basic(self):
 
         # These ranges may need tweaking to cater for especially slow
@@ -576,8 +628,7 @@ class ProgressTestCase(DistlibTestCase):
         self.assertIn(bar.speed, s)
 
     # Of late, the speed tests keep failing on Windows
-    @unittest.skipIf(IN_GITHUB_WORKFLOW,
-                     'Test disabled on some environments due to performance')
+    @unittest.skipIf(IN_GITHUB_WORKFLOW, 'Test disabled on some environments due to performance')
     def test_unknown(self):
         if os.name == 'nt':
             speed = _speed_range(17, 20)

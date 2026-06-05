@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012-2023 Vinay Sajip.
+# Copyright (C) 2012-2026 Vinay Sajip.
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
@@ -561,23 +561,36 @@ class LocatorTestCase(DistlibTestCase):
         """
         Test that decompression doesn't use too much memory
         """
+
+        def make_data(payload):
+            buf = io.BytesIO()
+            with gzip.GzipFile(fileobj=buf, mode='wb', compresslevel=9) as f:
+                f.write(payload)
+            gzipped_data = buf.getvalue()
+            buf = io.BytesIO()
+            deflated_data = zlib.compress(payload, 9)
+            return (gzipped_data, deflated_data)
+
         locator = SimpleScrapingLocator('https://pypi.org/simple/')
+        locator.decode_size_limit = 25000
         # Deterministic, moderately compressible test data
         block = b'ABCDEFGHIJKLMNOPQRSTUVWXYZ012345abcdefghijklmnopqrstuvwxyz6789+/'
-        size = locator.decode_size_limit + 512 * 1024  # 500K bigger than limit
+        size = locator.decode_size_limit + 1  # just bigger than limit
         repetitions = (size + len(block) - 1) // len(block)
         payload = (block * repetitions)[:size]
-        buf = io.BytesIO()
-        with gzip.GzipFile(fileobj=buf, mode='wb', compresslevel=9) as f:
-            f.write(payload)
-        gzipped_data = buf.getvalue()
-        buf = io.BytesIO()
-        deflated_data = zlib.compress(payload, 9)
+        gzipped_data, deflated_data = make_data(payload)
         for encoding, data in (('gzip', gzipped_data), ('deflate', deflated_data)):
             decoder = locator.decoders[encoding]
             with self.assertRaises(DistlibException) as ctx:
                 decoder(data)
             self.assertIn('Decompressed index response exceeds ', str(ctx.exception))
+
+        payload = payload[:-1]  # at limit
+        gzipped_data, deflated_data = make_data(payload)
+        for encoding, data in (('gzip', gzipped_data), ('deflate', deflated_data), ('none', payload)):
+            decoder = locator.decoders[encoding]
+            actual = decoder(data)
+            self.assertEqual(actual, payload)
 
 
 if __name__ == '__main__':  # pragma: no cover

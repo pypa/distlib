@@ -594,23 +594,12 @@ class SimpleScrapingLocator(Locator):
     # index. Index pages are HTML listings, so this limit is generous.
     decode_size_limit = 100 * 1024 * 1024
 
-    # These are used to deal with various Content-Encoding schemes. Each
-    # decoder bounds its inflated output to decode_size_limit (see
-    # _decompress) to avoid unbounded memory use from a hostile index.
-    decoders = {
-        'deflate': lambda b: SimpleScrapingLocator._decompress(b, zlib.decompressobj()),
-        # wbits 16 + MAX_WBITS selects gzip framing in zlib.
-        'gzip': lambda b: SimpleScrapingLocator._decompress(b, zlib.decompressobj(16 + zlib.MAX_WBITS)),
-        'none': lambda b: b,
-    }
-
-    @classmethod
-    def _decompress(cls, data, decompressor):
+    def _decompress(self, data, decompressor):
         # Decompress and abort if the inflated output would exceed
         # decode_size_limit. zlib's decompress(max_length) bounds the output
         # of a single call; ask for one byte past the limit to detect
         # overflow, then ensure nothing remains unconsumed.
-        limit = cls.decode_size_limit
+        limit = self.decode_size_limit
         produced = decompressor.decompress(data, limit + 1)
         if len(produced) > limit or decompressor.unconsumed_tail:
             raise DistlibException('Decompressed index response exceeds '
@@ -647,6 +636,15 @@ class SimpleScrapingLocator(Locator):
         # in _prepare_threads.
         self._gplock = threading.RLock()
         self.platform_check = False  # See issue #112
+        # These are used to deal with various Content-Encoding schemes. Each
+        # decoder bounds its inflated output to decode_size_limit (see
+        # _decompress) to avoid unbounded memory use from a hostile index.
+        self.decoders = {
+            'deflate': lambda b: self._decompress(b, zlib.decompressobj()),
+            # wbits 16 + MAX_WBITS selects gzip framing in zlib.
+            'gzip': lambda b: self._decompress(b, zlib.decompressobj(16 + zlib.MAX_WBITS)),
+            'none': lambda b: b,
+        }
 
     def _prepare_threads(self):
         """

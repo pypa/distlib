@@ -170,9 +170,21 @@ class FileResourceTestCase(DistlibTestCase):
 
     def test_escaping_resource(self):
         f = finder('foofoo')
-        with self.assertRaises(DistlibException) as ctx:
-            r = f.find('../../foo_resource.bin')
-        self.assertIn('Resource name escapes package:', str(ctx.exception))
+        escapes = (
+            '../included.json',
+            '../../tests/included.json',
+            'bar/../../included.json',
+        )
+        for path in escapes:
+            with self.assertRaises(DistlibException) as ctx:
+                r = f.find(path)
+            self.assertIn('Resource name escapes package:', str(ctx.exception))
+        # Allow a non-escaping resource which happens to have .. in it
+        r = f.find('bar/../bar/bar_resource.bin')
+        self.assertTrue(r)
+        self.assertFalse(r.is_container)
+        self.assertEqual(r.bytes, b'data\n')
+        self.assertEqual(r.size, 5)
 
     def test_contents(self):
         f = finder('foofoo')
