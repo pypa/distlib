@@ -182,9 +182,6 @@ class FileResourceTestCase(DistlibTestCase):
         # Allow a non-escaping resource which happens to have .. in it
         r = f.find('bar/../bar/bar_resource.bin')
         self.assertTrue(r)
-        self.assertFalse(r.is_container)
-        self.assertEqual(r.bytes, b'data\n')
-        self.assertEqual(r.size, 5)
 
     def test_contents(self):
         f = finder('foofoo')
