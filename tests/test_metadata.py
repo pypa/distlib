@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012-2013 The Python Software Foundation.
+# Copyright (C) 2012-2026 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
 """Tests for distlib.metadata."""
@@ -282,7 +282,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
         # self.assertRaises(MetadataConflictError,
         # metadata.set_metadata_version)
         metadata.set_metadata_version()
-        self.assertEqual(metadata['Metadata-Version'], '2.2')
+        self.assertEqual(metadata['Metadata-Version'], '2.5')
 
         del metadata['Obsoletes']
         del metadata['Obsoletes-Dist']
