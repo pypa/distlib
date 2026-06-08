@@ -41,6 +41,10 @@ Released: 2026-06-08
     - Check during unarchiving that the destination directory isn't escaped via symlinks.
       Thanks to tonghuaroot for the patch.
 
+    - Improved performance of normalize_name using dual replace. Thanks to
+      Hugo van Kemenade for the patch.
+
+
 - wheel
 
     - Add checks that installed files don't escape the installation directory. Thanks to
