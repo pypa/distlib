@@ -107,7 +107,7 @@ except ImportError:  # pragma: no cover
             # than one wildcard per fragment.  A survey of established
             # policy among SSL implementations showed it to be a
             # reasonable choice.
-            raise CertificateError("too many wildcards in certificate DNS name: " + repr(dn))
+            raise CertificateError('Too many wildcards in certificate DNS name: %r' % dn)
 
         # speed up common case w/o wildcards
         if not wildcards:
@@ -431,9 +431,9 @@ except ImportError:  # pragma: no cover
                 if codec.name != 'utf-8':
                     # This behaviour mimics the Python interpreter
                     if filename is None:
-                        msg = 'encoding problem: utf-8'
+                        msg = 'Encoding problem: utf-8'
                     else:
-                        msg = 'encoding problem for {!r}: utf-8'.format(filename)
+                        msg = 'Encoding problem for %r: utf-8' % filename
                     raise SyntaxError(msg)
                 encoding += '-sig'
             return encoding

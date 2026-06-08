@@ -1,10 +1,53 @@
 Change log for ``distlib``
 --------------------------
 
+0.4.3 (future)
+~~~~~~~~~~~~~~
+
+Released: Not yet.
+
 0.4.2
 ~~~~~
 
-Released: Not yet.
+Released: 2026-06-08
+
+- locators
+
+    - Fix URL percent-encoding using space-padding instead of zero-padding. Thanks to
+      Kadir Can Ozden for the patch.
+
+    - Harden decompression against malicious input. Thanks to tonghuaroot for the patch,
+      which was adapted slightly.
+
+- manifest
+
+    - Use os.lstat in findall to correctly detect symlinked directories. Thanks to
+      Kadir Can Ozden for the patch.
+
+- metadata
+
+    - Improve logic to incorporate newer metadata versions.
+
+- resources
+
+    - Ensure that constructed resource paths don't escape the package. Thanks to
+      tonghuaroot for the patch.
+
+- util
+
+    - Fix #255: Update cache_from_source() for Python 3.15. Thanks to Victor Stinner
+      for the patch.
+
+    - Check during unarchiving that the destination directory isn't escaped via symlinks.
+      Thanks to tonghuaroot for the patch.
+
+- wheel
+
+    - Add checks that installed files don't escape the installation directory. Thanks to
+      tonghuaroot for the patch.
+
+    - Add checks when mounting extensions to ensure path containment. Thanks to
+      tonghuaroot for the patch.
 
 0.4.1
 ~~~~~
