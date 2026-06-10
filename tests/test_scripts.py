@@ -157,10 +157,10 @@ class ScriptTestCase(DistlibTestCase):
         self.maker.clobber = True
 
         def do_test(maker, version_info):
-            for name in ('main', 'other_main'):
+            for name in (':main', ':other_main', ''):
                 for options in (None, {}, {'gui': False}, {'gui': True}):
                     gui = options and options.get('gui', False)
-                    spec = 'foo = foo:' + name
+                    spec = 'foo = foo' + name
                     files = maker.make(spec, options)
                     self.assertEqual(len(files), 2)
                     actual = set()
@@ -328,7 +328,7 @@ class ScriptTestCase(DistlibTestCase):
     def test_dry_run(self):
         self.maker.dry_run = True
         self.maker.variants = set([''])
-        specs = ('foo.py', 'bar = foo:main')
+        specs = ('foo.py', 'bar = foo:main', 'bar = foo')
         files = self.maker.make_multiple(specs)
         self.assertEqual(len(specs), len(files))
         if os.name == 'nt':  # pragma: no cover
