@@ -9,7 +9,7 @@ Released: Not yet.
 0.4.3
 ~~~~~
 
-Released: Not yet.
+Released: 2026-06-12
 
 - resources
 
