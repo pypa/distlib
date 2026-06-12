@@ -1,6 +1,8 @@
 [build-system]
 requires = [
-    "setuptools >= 68,<75",
+    # "setuptools >= 68,<75", # For metadata 2.1
+    # "setuptools==75.8.0", # for metadata 2.2
+    "setuptools >= 68", # for metadata 2.4
     "wheel"
 ]
 build-backend = 'setuptools.build_meta'

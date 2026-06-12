@@ -1,10 +1,19 @@
 Change log for ``distlib``
 --------------------------
 
-0.4.3 (future)
+0.4.4 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
+
+0.4.3
+~~~~~
+
+Released: Not yet.
+
+- resources
+
+    - Removed too-restrictive check for escaping resources.
 
 0.4.2
 ~~~~~
