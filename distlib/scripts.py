@@ -177,6 +177,12 @@ class ScriptMaker(object):
         if simple_shebang:
             result = b'#!' + executable + post_interp + b'\n'
         else:
+            if not self.executable:
+                # Quote the literal interpreter path for sh, while keeping
+                # escapes valid in the Python triple-quoted string below.
+                executable = executable.replace(b'\\', b'\\\\').replace(b'"', b'\\"')
+                executable = executable.replace(b'$', b'"\'$\'"').replace(b'`', b'"\'`\'"')
+                executable = b'"' + executable + b'"'
             result = b'#!/bin/sh\n'
             result += b"'''exec' " + executable + post_interp + b' "$0" "$@"\n'
             result += b"' '''\n"
@@ -218,7 +224,7 @@ class ScriptMaker(object):
 
         # If the user didn't specify an executable, it may be necessary to
         # cater for executable paths with spaces (not uncommon on Windows)
-        if enquote:
+        if enquote and os.name != 'posix':
             executable = enquote_executable(executable)
         # Issue #51: don't use fsencode, since we later try to
         # check that the shebang is decodable using utf-8.
