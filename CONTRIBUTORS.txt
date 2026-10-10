@@ -78,6 +78,7 @@ Thanks to:
 - Erik Rose
 - Brian Rosner
 - Vinay Sajip
+- Sinkleberg
 - Victor Stinner
 - Alexandre Vassalotti
 - Nadeem Vawda
