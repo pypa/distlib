@@ -547,6 +547,23 @@ class LegacyVersionTestCase(DistlibTestCase):
 
 class SemanticVersionTestCase(DistlibTestCase):
 
+    def test_numeric_prerelease_identifiers(self):
+        cases = (
+            ('99999999', '100000000'),
+            ('999999999', '1000000000'),
+            ('99999999999999999999', '100000000000000000000'),
+            ('999999999', '1alpha'),
+            ('999999999', '9-alpha'),
+        )
+        for smaller, larger in cases:
+            with self.subTest(smaller=smaller, larger=larger):
+                first = SV('1.0.0-alpha.' + smaller)
+                second = SV('1.0.0-alpha.' + larger)
+                self.assertLess(first, second)
+                self.assertTrue(SM('demo (<' + str(second) + ')').match(first))
+                self.assertTrue(first.is_prerelease)
+                self.assertLess(second, SV('1.0.0'))
+
     def test_basic(self):
         bad = [
             'a',
