@@ -77,6 +77,26 @@ class VersionTestCase(DistlibTestCase):
         for greater, smaller in cases:
             self.assertGreater(NV(greater), NV(smaller), (greater, smaller))
 
+    def test_implicit_suffix_numbers(self):
+        cases = (
+            ('1.0ALPHA', '1.0a0'),
+            ('1.0.REV', '1.0.post0'),
+            ('1.0.DEV', '1.0.dev0'),
+        )
+        scheme = get_scheme('normalized')
+        for implicit, explicit in cases:
+            expected = NV(explicit)
+            self.assertEqual(NV(implicit), expected, implicit)
+            self.assertEqual(scheme.key(implicit), expected.parse(explicit), implicit)
+
+            matcher = NM('demo (==' + explicit + ')')
+            self.assertTrue(matcher.match(implicit), implicit)
+
+    def test_scheme_key_rejects_invalid_versions(self):
+        scheme = get_scheme('normalized')
+        for version in ('', '1.0-', '1.0+a+'):
+            self.assertRaises(UnsupportedVersionError, scheme.key, version)
+
     def test_epoch_prerelease_detection(self):
         cases = (
             ('1!1.0a1', True),
@@ -92,7 +112,21 @@ class VersionTestCase(DistlibTestCase):
             self.assertEqual(NV(version).is_prerelease, expected, version)
 
     def test_non_ascii_version_components(self):
-        for version in (u'\u0661.0', u'1.0+\u0130', u'1.0+\u212a'):
+        versions = (
+            u'\u0661!1.0',
+            u'\u0661.0',
+            u'1.\u0661',
+            u'1.0a\u0661',
+            u'1.0.post\u0661',
+            u'1.0.dev\u0661',
+            u'1.0+\u0661',
+            u'1.0+abc.\u0661',
+            u'1.0+\u0130',
+            u'1.0+\u0131',
+            u'1.0+\u017f',
+            u'1.0+\u212a',
+        )
+        for version in versions:
             self.assertRaises(UnsupportedVersionError, NV, version)
 
     def test_release_clause_preserves_trailing_zeroes(self):
