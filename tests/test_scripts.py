@@ -6,6 +6,7 @@
 #
 from __future__ import unicode_literals
 
+import errno
 import os
 import shutil
 import subprocess
@@ -215,6 +216,43 @@ class ScriptTestCase(DistlibTestCase):
             with open(fn, 'rb') as f:
                 data = f.read()
             self.assertTrue(data.startswith(tlauncher))
+
+    @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
+    def test_launcher_write_error(self):  # pragma: no cover
+        # With no existing executable to move aside, the original error must
+        # be raised, not a confusing one from the .deleteme logic.
+        self.maker.add_launchers = True
+        error = OSError(errno.EACCES, 'Permission denied')
+
+        def write_binary_file(path, data):
+            raise error
+
+        self.maker._fileop.write_binary_file = write_binary_file
+        with self.assertRaises(OSError) as cm:
+            self.maker.make('foo = foo:main')
+        self.assertIs(cm.exception, error)
+        self.assertEqual(os.listdir(self.maker.target_dir), [])
+
+    @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
+    def test_launcher_in_use(self):  # pragma: no cover
+        # An existing executable that can't be overwritten (e.g. because it's
+        # running) is moved aside and replaced.
+        self.maker.add_launchers = True
+        files = self.maker.make('foo = foo:main')
+        write = self.maker._fileop.write_binary_file
+        failed = []
+
+        def write_binary_file(path, data):
+            if not failed:
+                failed.append(path)
+                raise OSError(errno.EACCES, 'Permission denied')
+            write(path, data)
+
+        self.maker._fileop.write_binary_file = write_binary_file
+        self.assertEqual(self.maker.make('foo = foo:main'), files)
+        self.assertEqual(failed, files[:1])
+        self.assertEqual(sorted(os.listdir(self.maker.target_dir)),
+                         sorted(os.path.basename(f) for f in files))
 
     @unittest.skipIf(os.name != 'nt', 'Test is Windows-specific')
     def test_launcher_run(self):

@@ -290,6 +290,10 @@ class ScriptMaker(object):
                 try:
                     self._fileop.write_binary_file(outname, script_bytes)
                 except Exception:
+                    if not os.path.exists(outname):
+                        # Nothing to move aside, so the original error
+                        # (e.g. no write permission) is the real one.
+                        raise
                     # Failed writing an executable - it might be in use.
                     logger.warning('Failed to write executable - trying to '
                                    'use .deleteme logic')
