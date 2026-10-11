@@ -12,7 +12,7 @@ from support import DistlibTestCase
 from distlib.version import (NormalizedVersion as NV, NormalizedMatcher as NM, UnsupportedVersionError,
                              _suggest_normalized_version, _suggest_semantic_version, LegacyVersion as LV, LegacyMatcher
                              as LM, SemanticVersion as SV, SemanticMatcher as SM, is_semver, get_scheme,
-                             _normalized_key, _legacy_key, _semantic_key)
+                             _normalized_key, _legacy_key, _semantic_key, Matcher, VersionScheme)
 
 
 class VersionTestCase(DistlibTestCase):
@@ -76,6 +76,34 @@ class VersionTestCase(DistlibTestCase):
         cases = (('1.0.r10', '1.0.post2'), ('1.0beta10', '1.0b2'))
         for greater, smaller in cases:
             self.assertGreater(NV(greater), NV(smaller), (greater, smaller))
+
+    def test_local_segment_order(self):
+        cases = (
+            ('1.0', '1.0+abc'),
+            ('1.0+abc', '1.0+abc.1'),
+            ('1.0+abc.def', '1.0+abc.1'),
+            ('1.0+abc.2', '1.0+ABC_10'),
+            ('1.0+abc.2.def.3', '1.0+abc-2-def-10'),
+        )
+        for smaller, greater in cases:
+            self.assertLess(NV(smaller), NV(greater), (smaller, greater))
+
+    def test_comparison_operators(self):
+        first, equal, greater = NV('1!1.0ALPHA1'), NV('1!1.0a1'), NV('1!1.0a2')
+        self.assertEqual(first, equal)
+        self.assertFalse(first != equal)
+        self.assertLessEqual(first, equal)
+        self.assertGreaterEqual(first, equal)
+        self.assertFalse(first < equal)
+        self.assertFalse(first > equal)
+
+        self.assertNotEqual(first, greater)
+        self.assertLess(first, greater)
+        self.assertLessEqual(first, greater)
+        self.assertGreater(greater, first)
+        self.assertGreaterEqual(greater, first)
+        self.assertFalse(first >= greater)
+        self.assertFalse(greater <= first)
 
     def test_implicit_suffix_numbers(self):
         cases = (
@@ -370,6 +398,103 @@ class VersionTestCase(DistlibTestCase):
         self.assertTrue(NM('Foo (>=2.6)').match('2.6+1.3'))
         # numeric > lexicographic in local versions
         self.assertTrue(NM('Foo (>2.6+a1.4)').match('2.6+1.4'))
+
+    def test_matcher_local_constraints(self):
+        cases = (
+            ('==1.0', '1.0+ABC_2-def.3', True),
+            ('!=1.0', '1.0+abc.2.def.3', False),
+            ('<=1.0', '1.0+abc.2.def.3', True),
+            ('>=1.0', '1.0+abc.2.def.3', True),
+            ('==1.0.*', '1.0+abc.2.def.3', True),
+            ('!=1.0.*', '1.0+abc.2.def.3', False),
+            ('==1.0+abc.2.def.3', '1.0+ABC_02-def.3', True),
+            ('!=1.0+abc.2.def.3', '1.0+ABC_02-def.3', False),
+            ('==1.0+abc.2.def.3', '1.0+abc.2.def.4', False),
+            ('!=1.0+abc.2.def.3', '1.0+abc.2.def.4', True),
+            ('==1.0+abc.*', '1.0+abc.2', True),
+            ('==1.0+abc.*', '1.0+abcd.2', False),
+            ('!=1.0+abc.*', '1.0+abc.2', False),
+            ('!=1.0+abc.*', '1.0+abcd.2', True),
+        )
+        for constraint, version, expected in cases:
+            matcher = NM('demo (' + constraint + ')')
+            self.assertEqual(matcher.match(version), expected, (constraint, version))
+            self.assertEqual(matcher.match(NV(version)), expected, (constraint, version))
+
+    def test_matcher_arbitrary_equality(self):
+        matcher = NM('demo (===1.0ALPHA1+ABC)')
+        self.assertTrue(matcher.match('1.0ALPHA1+ABC'))
+        self.assertFalse(matcher.match('1.0a1+abc'))
+        self.assertFalse(matcher.match('1.0ALPHA1'))
+
+        matcher = NM('demo (===1.0)')
+        self.assertTrue(matcher.match('1.0'))
+        self.assertFalse(matcher.match('1.0.0'))
+        self.assertFalse(matcher.match('1.0+abc'))
+
+    def test_matcher_equality_and_hash(self):
+        first = NM('demo (==1.0ALPHA1+ABC_02-def.3)')
+        equal = NM('demo (==1.0a1+abc.2.def.3)')
+        different = NM('demo (==1.0a2+abc.2.def.3)')
+        self.assertEqual(first, equal)
+        self.assertFalse(first != equal)
+        self.assertEqual(hash(first), hash(equal))
+        self.assertEqual(len(set([first, equal])), 1)
+        self.assertNotEqual(first, different)
+
+        self.assertEqual(str(first), 'demo (==1.0ALPHA1+ABC_02-def.3)')
+        self.assertEqual(repr(first), "NormalizedMatcher('demo (==1.0ALPHA1+ABC_02-def.3)')")
+        self.assertEqual(first.exact_version, NV('1.0a1+abc.2.def.3'))
+        self.assertIsNone(NM('demo (>=1.0,<=1.0)').exact_version)
+
+    def test_matcher_single_component_compatible_release(self):
+        matcher = NM('demo (~=1)')
+        self.assertTrue(matcher.match('1'))
+        self.assertTrue(matcher.match('1.9'))
+        self.assertFalse(matcher.match('0.9'))
+        self.assertFalse(matcher.match('2'))
+
+    def test_matcher_requires_version_class_and_operator(self):
+        self.assertRaises(ValueError, Matcher, 'demo')
+
+        class EqualityMatcher(NM):
+            _operators = {'==': '_match_eq'}
+
+        self.assertTrue(EqualityMatcher('demo (==1.0ALPHA1)').match('1.0a1'))
+        matcher = EqualityMatcher('demo (>=1.0)')
+        self.assertRaises(NotImplementedError, matcher.match, '1.0')
+
+    def test_matcher_invalid_requirements(self):
+        for requirement in ('# comment', 'demo (>=)', 'demo (>=1.0,broken)',
+                            'demo (1.0 extra)', 'demo ( )', 'demo (>=1.0',
+                            'demo [extra', 'demo [@]', 'demo [first second]',
+                            'demo @', 'demo @relative/path', 'demo unexpected'):
+            self.assertRaises((SyntaxError, ValueError), NM, requirement)
+
+    def test_scheme_validation(self):
+        scheme = get_scheme('normalized')
+        for version in ('1!1.0ALPHA1', '1.0+ABC_02-def.3', '1.0.REV', '1.0.DEV'):
+            self.assertTrue(scheme.is_valid_version(version), version)
+            self.assertTrue(scheme.is_valid_matcher('demo (==' + version + ')'), version)
+            self.assertTrue(scheme.is_valid_constraint_list('==' + version), version)
+        for version in ('1.0-', '1.0+a+', u'1.0+\u0661'):
+            self.assertFalse(scheme.is_valid_version(version), version)
+            self.assertFalse(scheme.is_valid_matcher('demo (==' + version + ')'), version)
+            self.assertFalse(scheme.is_valid_constraint_list('==' + version), version)
+
+        self.assertTrue(scheme.is_valid_constraint_list('>=1.0,!=1.1,'))
+        self.assertRaises(SyntaxError, scheme.is_valid_constraint_list, '')
+        self.assertRaises(SyntaxError, scheme.is_valid_matcher, 'demo (>=)')
+
+    def test_scheme_suggestions(self):
+        scheme = get_scheme('normalized')
+        self.assertEqual(scheme.suggest('1.0ALPHA1+ABC_02-def.3'), '1.0ALPHA1+ABC_02-def.3')
+        self.assertEqual(scheme.suggest('v1.0-alpha1'), '1.0a1')
+        self.assertEqual(scheme.suggest('1.0-dev-r3'), '1.0.dev3')
+        self.assertIsNone(scheme.suggest('unversioned'))
+
+        without_suggester = VersionScheme(scheme.key, scheme.matcher)
+        self.assertIsNone(without_suggester.suggest('1.0-alpha1'))
 
     def test_schemes(self):
         cases = (
