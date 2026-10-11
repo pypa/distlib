@@ -51,6 +51,58 @@ class VersionTestCase(DistlibTestCase):
 
         self.assertEqual(set([NV('1.0')]), set([NV('1.0'), NV('1.0')]))
 
+    def test_equivalent_versions(self):
+        cases = (
+            ('1.0alpha1', '1.0a1'),
+            ('1.0BETA2', '1.0b2'),
+            ('1.0c3', '1.0rc3'),
+            ('1.0PRE3', '1.0rc3'),
+            ('1.0preview3', '1.0rc3'),
+            ('1.0.r4', '1.0.post4'),
+            ('1.0.REV4', '1.0.post4'),
+            ('1.0.DEV5', '1.0.dev5'),
+            ('1.0+AbC', '1.0+abc'),
+            ('1.0+ABC_02-def.3', '1.0+abc.2.def.3'),
+        )
+        for alternative, canonical in cases:
+            first, second = NV(alternative), NV(canonical)
+            self.assertEqual(first, second, alternative)
+            self.assertEqual(hash(first), hash(second), alternative)
+
+            self.assertEqual(str(first), alternative)
+            self.assertTrue(NM('demo (==' + canonical + ')').match(first), alternative)
+
+    def test_alias_numeric_order(self):
+        cases = (('1.0.r10', '1.0.post2'), ('1.0beta10', '1.0b2'))
+        for greater, smaller in cases:
+            self.assertGreater(NV(greater), NV(smaller), (greater, smaller))
+
+    def test_epoch_prerelease_detection(self):
+        cases = (
+            ('1!1.0a1', True),
+            ('1!1.0rc1', True),
+            ('1!1.0.dev1', True),
+            ('1!1.0.post1.dev1', True),
+            ('1.0ALPHA1', True),
+            ('1!1.0', False),
+            ('1!1.0.post1', False),
+            ('1!1.0+dev', False),
+        )
+        for version, expected in cases:
+            self.assertEqual(NV(version).is_prerelease, expected, version)
+
+    def test_non_ascii_version_components(self):
+        for version in (u'\u0661.0', u'1.0+\u0130', u'1.0+\u212a'):
+            self.assertRaises(UnsupportedVersionError, NV, version)
+
+    def test_release_clause_preserves_trailing_zeroes(self):
+        version = NV('1.2.0')
+        self.assertEqual(version.parse('1.2.0'), (0, (1, 2), ('z',), ('_',), ('final',), ()))
+
+        matcher = NM('demo (~=1.2.0)')
+        self.assertTrue(matcher.match('1.2.1'))
+        self.assertFalse(matcher.match('1.3'))
+
     def test_unsupported_versions(self):
         unsupported = (
             # '1.2a', '1.2.3b',  # see issue 200 - not unsupported
@@ -351,11 +403,11 @@ class VersionTestCase(DistlibTestCase):
             '1.1.dev1',
         )
 
-        n = len(versions)
-        for i in range(n - 1):
-            v1 = versions[i]
-            v2 = versions[i + 1]
-            self.assertLess(NV(v1), NV(v2))
+        for first, second in zip(versions, versions[1:]):
+            if (first, second) == ('1.0c1', '1.0rc1'):
+                self.assertEqual(NV(first), NV(second))
+            else:
+                self.assertLess(NV(first), NV(second), (first, second))
 
     def test_440(self):
         # compatible release matching
