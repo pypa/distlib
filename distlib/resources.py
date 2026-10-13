@@ -249,7 +249,7 @@ class ZipResourceFinder(ResourceFinder):
         else:
             if path and path[-1] != os.sep:
                 path = path + os.sep
-            i = bisect.bisect(self.index, path)
+            i = bisect.bisect_left(self.index, path)
             try:
                 result = self.index[i].startswith(path)
             except IndexError:
@@ -294,7 +294,7 @@ class ZipResourceFinder(ResourceFinder):
         path = path[self.prefix_len:]
         if path and path[-1] != os.sep:
             path += os.sep
-        i = bisect.bisect(self.index, path)
+        i = bisect.bisect_left(self.index, path)
         try:
             result = self.index[i].startswith(path)
         except IndexError:
