@@ -511,6 +511,70 @@ class MetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
         self.assertEqual(md.version, '0.1')
         self.assertEqual(md.provides, ['foobar (0.1)'])
 
+    def test_urls_legacy(self):
+        md = Metadata(fileobj=StringIO(dedent("""\
+            Metadata-Version: 2.1
+            Name: example
+            Version: 1.0
+            Summary: Example
+            Home-page: https://example.com
+            Download-URL: https://example.com/archive
+            Project-URL: Source, https://example.com/src?a=1
+            Project-URL: Documentation, https://example.com/guide
+            """)))
+        self.assertEqual(md.urls, (
+            {'Source': 'https://example.com/src?a=1',
+             'Documentation': 'https://example.com/guide'},
+            {'home_page': 'https://example.com',
+             'download_url': 'https://example.com/archive'},
+        ))
+
+    def test_urls_preserve_commas_in_mapping(self):
+        md = Metadata(mapping={
+            'metadata_version': '2.1', 'name': 'example', 'version': '1.0',
+            'summary': 'Example',
+            'project_url': [('Source', 'https://example.com/src?a=1,2')],
+        })
+        self.assertEqual(md.urls, ({'Source': 'https://example.com/src?a=1,2'}, {}))
+
+    def test_urls_missing(self):
+        md = Metadata(mapping={
+            'metadata_version': '1.0', 'name': 'example', 'version': '1.0',
+            'summary': 'Example',
+        })
+        self.assertEqual(md.urls, ({}, {}))
+        self.assertEqual(Metadata().urls, ({}, {}))
+
+    def test_urls_json_metadata(self):
+        md = Metadata(mapping={
+            'metadata_version': '2.0', 'name': 'example', 'version': '1.0',
+            'summary': 'Example',
+            'home_page': 'https://example.com',
+            'download_url': 'https://example.com/archive',
+            'extensions': {'python.project': {'project_urls': {
+                'Documentation': 'https://example.com/guide',
+            }}},
+        })
+        self.assertEqual(md.urls, (
+            {'Documentation': 'https://example.com/guide'},
+            {'home_page': 'https://example.com',
+             'download_url': 'https://example.com/archive'},
+        ))
+
+    def test_urls_are_independent_dictionaries(self):
+        md = Metadata(mapping={
+            'metadata_version': '2.1', 'name': 'example', 'version': '1.0',
+            'summary': 'Example', 'home_page': 'https://example.com',
+            'project_url': [('Source', 'https://example.com/old'),
+                            ('Source', 'https://example.com/new')],
+        })
+        project_urls, other_urls = md.urls
+        self.assertEqual(project_urls, {'Source': 'https://example.com/new'})
+        project_urls.clear()
+        other_urls.clear()
+        self.assertEqual(md.urls, ({'Source': 'https://example.com/new'},
+                                  {'home_page': 'https://example.com'}))
+
     def test_add_requirements(self):
         md = Metadata()
         md.name = 'bar'

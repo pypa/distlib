@@ -866,6 +866,28 @@ class Metadata(object):
         return result
 
     @property
+    def urls(self):
+        """Return project URLs and home/download URLs as separate dictionaries.
+
+        Each access returns new dictionaries. If a project URL label occurs
+        more than once, the last value is used.
+        """
+        if self._legacy:
+            project_urls = dict((label.strip(), url.strip())
+                                for label, url in self._legacy.get('Project-URL', []))
+            other_urls = {}
+            for key, field in (('home_page', 'Home-page'), ('download_url', 'Download-URL')):
+                value = self._legacy.get(field, None)
+                if value:
+                    other_urls[key] = value
+        else:
+            project = self._data.get('extensions', {}).get('python.project', {})
+            project_urls = dict(project.get('project_urls', {}))
+            other_urls = dict((key, self._data[key]) for key in ('home_page', 'download_url')
+                              if self._data.get(key))
+        return project_urls, other_urls
+
+    @property
     def dictionary(self):
         if self._legacy:
             return self._from_legacy()
