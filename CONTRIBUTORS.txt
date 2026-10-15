@@ -79,6 +79,7 @@ Thanks to:
 - Brian Rosner
 - Vinay Sajip
 - Damian Shaw
+- Sinkleberg
 - Victor Stinner
 - Alexandre Vassalotti
 - Nadeem Vawda

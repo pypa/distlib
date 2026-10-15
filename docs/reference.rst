@@ -1720,6 +1720,21 @@ Classes
 
    This class represents a distribution's metadata.
 
+   .. attribute:: urls
+
+      A pair of dictionaries: the first maps ``Project-URL`` labels to URLs;
+      the second contains any available ``home_page`` and ``download_url``
+      fields. For JSON metadata, project URLs come from the
+      ``extensions['python.project']['project_urls']`` mapping. Missing fields
+      are omitted. If a project label is repeated, its last URL is used.
+
+      The dictionaries are independent copies, so modifying them does not
+      change the metadata::
+
+         project_urls, other_urls = metadata.urls
+         source_url = project_urls.get('Source')
+         home_page = other_urls.get('home_page')
+
    .. method:: todict()
 
       Returns the metadata as a dictionary.

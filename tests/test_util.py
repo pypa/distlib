@@ -78,6 +78,18 @@ class UtilTestCase(DistlibTestCase):
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [a,,b]')
         self.assertRaises(DistlibException, get_export_entry, 'foo=foo.bar:x [a b]')
 
+    def test_export_entry_long_invalid_name(self):
+        # Searching for an entry used to rescan a long name from every position
+        # in it when the value was not a valid callable: ~10 s for 32000 chars.
+        for spec in ('a' * 32000 + ' = -', ' ' * 32000 + 'x', '=' * 32000):
+            start = time.time()
+            self.assertIsNone(get_export_entry(spec))
+            self.assertLess(time.time() - start, 1)
+        start = time.time()
+        self.assertRaises(DistlibException, get_export_entry, '[a' * 16000 + ' = -')
+        self.assertLess(time.time() - start, 1)
+        self.check_entry(get_export_entry('a' * 32000 + ' = foo:main'), 'a' * 32000, 'foo', 'main', [])
+
     def test_resolve(self):
         import logging
         import logging.handlers

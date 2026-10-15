@@ -720,9 +720,35 @@ ENTRY_RE = re.compile(
                       \s*(\[\s*(?P<flags>[\w-]+(=\w+)?(,\s*\w+(=\w+)?)*)\s*\])?
                       ''', re.VERBOSE)
 
+# ENTRY_RE, but only starting at the first or last character of a whitespace
+# run. See _search_export_entry.
+_ENTRY_RE_AT_SPACE = re.compile(r'(?:(?<!\s)(?=\s)|(?=\s\S))' +
+                                ENTRY_RE.pattern, re.VERBOSE)
+
+
+def _search_export_entry(specification):
+    """
+    Return ENTRY_RE.search(specification), in linear rather than quadratic
+    time.
+
+    search() tries every start position, and each attempt can rescan the rest
+    of a long name. Most positions cannot hold the leftmost match: a match that
+    starts inside a run of non-space characters implies one starting earlier in
+    the run (or at the whitespace just before it, since a name may start with
+    whitespace), and a match starting inside a whitespace run, other than at
+    its last character, implies one at its first. So the leftmost match starts
+    at the first character that is not '[' (a name cannot start with '['), or
+    at the first or last character of a whitespace run.
+    """
+    start = len(specification) - len(specification.lstrip('['))
+    m = ENTRY_RE.match(specification, start)
+    if not m:
+        m = _ENTRY_RE_AT_SPACE.search(specification, start)
+    return m
+
 
 def get_export_entry(specification):
-    m = ENTRY_RE.search(specification)
+    m = _search_export_entry(specification)
     if not m:
         result = None
         if '[' in specification or ']' in specification:
