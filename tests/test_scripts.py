@@ -145,6 +145,39 @@ class ScriptTestCase(DistlibTestCase):
                          b'"$0" "$@"\n')
         self.assertEqual(third_line, b"' '''\n")
 
+    @unittest.skipIf(os.name != 'posix', 'Test only appropriate for '
+                     'POSIX systems')
+    def test_shell_script_executable_shebang(self):
+        srcdir = tempfile.mkdtemp(prefix='distlib-test-')
+        self.addCleanup(shutil.rmtree, srcdir)
+        fake_python = os.path.join(srcdir, 'nix-python')
+        with open(fake_python, 'w') as f:
+            f.write('#!/bin/sh\n')
+            f.write('export NIX_PYTHONPREFIX=/tmp/fake-nix-env\n')
+            f.write('exec "%s" "$@"\n' % sys.executable)
+        os.chmod(fake_python, 0o755)
+
+        self.assertTrue(self.maker._is_shell(fake_python))
+        self.assertFalse(self.maker._is_shell(sys.executable))
+        self.assertFalse(self.maker._is_shell(os.path.join(srcdir, 'missing')))
+
+        self.maker.executable = fake_python
+        filenames = self.maker.make('script8.py')
+        with open(filenames[0], 'rb') as f:
+            first_line = f.readline()
+            second_line = f.readline()
+            third_line = f.readline()
+        self.assertEqual(first_line, b'#!/bin/sh\n')
+        expected_second = b"'''exec' " + fake_python.encode('utf-8') + b' "$0" "$@"\n'
+        self.assertEqual(second_line, expected_second)
+        self.assertEqual(third_line, b"' '''\n")
+        p = subprocess.Popen([filenames[0]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        self.assertEqual(p.returncode, 0)
+        self.assertEqual(stderr, b'')
+        self.assertEqual(os.path.realpath(stdout.strip()),
+                         os.path.realpath(sys.executable).encode('utf-8'))
+
     def test_multiple(self):
         specs = ('foo.py', 'script1.py', 'script2.py', 'script3.py', 'shell.sh', 'uwsgi_part')
         files = self.maker.make_multiple(specs)
