@@ -556,13 +556,12 @@ class SemanticVersionTestCase(DistlibTestCase):
             ('999999999', '9-alpha'),
         )
         for smaller, larger in cases:
-            with self.subTest(smaller=smaller, larger=larger):
-                first = SV('1.0.0-alpha.' + smaller)
-                second = SV('1.0.0-alpha.' + larger)
-                self.assertLess(first, second)
-                self.assertTrue(SM('demo (<' + str(second) + ')').match(first))
-                self.assertTrue(first.is_prerelease)
-                self.assertLess(second, SV('1.0.0'))
+            first = SV('1.0.0-alpha.' + smaller)
+            second = SV('1.0.0-alpha.' + larger)
+            self.assertLess(first, second)
+            self.assertTrue(SM('demo (<' + str(second) + ')').match(first))
+            self.assertTrue(first.is_prerelease)
+            self.assertLess(second, SV('1.0.0'))
 
     def test_basic(self):
         bad = [
