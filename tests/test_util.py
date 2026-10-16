@@ -556,6 +556,23 @@ class UtilTestCase(DistlibTestCase):
             finally:
                 shutil.rmtree(work)
 
+    @unittest.skipUnless(hasattr(tarfile, 'data_filter'), 'requires tarfile extraction filters')
+    def test_unarchive_absolute_symlink_unchecked(self):
+        # Even with check=False, data_filter must reject absolute links.
+        work = tempfile.mkdtemp()
+        try:
+            arc = os.path.join(work, 'abs.tar')
+            ti = tarfile.TarInfo('abslink')
+            ti.type = tarfile.SYMTYPE
+            ti.linkname = os.path.join(work, 'outside')
+            self._make_tar(arc, [(ti, None)])
+            dest = os.path.join(work, 'dest')
+            os.mkdir(dest)
+            self.assertRaises(ValueError, unarchive, arc, dest, check=False)
+            self.assertFalse(os.path.lexists(os.path.join(dest, 'abslink')))
+        finally:
+            shutil.rmtree(work)
+
     def test_string_sequence(self):
         self.assertTrue(is_string_sequence(['a']))
         self.assertTrue(is_string_sequence(['a', 'b']))
