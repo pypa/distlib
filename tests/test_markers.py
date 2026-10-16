@@ -18,6 +18,80 @@ from distlib.util import in_venv
 
 class MarkersTestCase(DistlibTestCase):
 
+    def _check_compatible(self, marker, variable, cases):
+        for version, expected in cases:
+            self.assertEqual(interpret(marker, {variable: version}), expected, version)
+
+    def test_compatible_major_bound(self):
+        self._check_compatible('python_version ~= "3.10"', 'python_version', [
+            ('4.0', False),
+            ('3.9', False),
+            ('3.10', True),
+            ('3.11', True),
+        ])
+
+    def test_compatible_minor_bound(self):
+        self._check_compatible('python_full_version ~= "3.10.1"', 'python_full_version', [
+            ('3.11.0', False),
+            ('3.10.0', False),
+            ('3.10.1', True),
+            ('3.10.9', True),
+        ])
+
+    def test_compatible_precision(self):
+        self._check_compatible('python_full_version ~= "3.10.0.0"', 'python_full_version', [
+            ('3.10.1', False),
+            ('3.10', True),
+            ('3.10.0', True),
+            ('3.10.0.1', True),
+        ])
+
+    def test_compatible_normalized_release(self):
+        self._check_compatible('python_full_version ~= "3.010.1"', 'python_full_version', [
+            ('3.11.0', False),
+            ('3.10.1', True),
+            ('3.010.2', True),
+            ('v3.10.2', True),
+        ])
+
+    def test_compatible_epoch(self):
+        self._check_compatible('implementation_version ~= "1!3.10"', 'implementation_version', [
+            ('2!3.11', False),
+            ('1!3.9', False),
+            ('1!3.10', True),
+            ('1!3.11', True),
+        ])
+
+    def test_compatible_implementation_version(self):
+        self._check_compatible('implementation_version ~= "3.10"', 'implementation_version', [
+            ('3.9', False),
+            ('4.0', False),
+            ('3.10', True),
+            ('3.11', True),
+        ])
+
+    def test_compatible_reversed_operands(self):
+        self._check_compatible('"4.0" ~= python_version', 'python_version', [('3.10', False)])
+        self._check_compatible('"3.10.9" ~= python_full_version', 'python_full_version', [
+            ('3.10.1', True),
+            ('3.11.0', False),
+        ])
+
+    def test_compatible_prerelease(self):
+        self._check_compatible('python_full_version ~= "3.10rc1"', 'python_full_version', [
+            ('4.0rc1', False),
+            ('3.10b1', False),
+            ('3.10rc1', True),
+            ('3.10', True),
+            ('3.11rc1', True),
+        ])
+
+    def test_other_version_operators_keep_legacy_labels(self):
+        context = {'python_full_version': '3.13.0a1+'}
+        self.assertTrue(interpret('python_full_version == "3.13.0a1+"', context))
+        self.assertTrue(interpret('python_full_version >= "3.12.0"', context))
+        self.assertFalse(interpret('python_full_version < "3.12.0"', context))
+
     def test_interpret(self):
         sys_platform = sys.platform
         version = sys.version.split()[0]

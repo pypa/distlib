@@ -39,6 +39,7 @@ Thanks to:
 - Filip Gruszczyński
 - Walker Hale IV
 - Alexandre Hamelin
+- harbinresearcher
 - Kelsey Hightower
 - Thomas Holmes
 - Preston Holmes
