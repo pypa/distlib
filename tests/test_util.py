@@ -6,6 +6,7 @@
 #
 from io import BytesIO
 from itertools import islice
+import io
 import os
 import re
 import shutil
@@ -14,6 +15,7 @@ try:
 except ImportError:
     ssl = None
 import sys
+import tarfile
 import tempfile
 import textwrap
 import time
@@ -496,6 +498,61 @@ class UtilTestCase(DistlibTestCase):
                 # ... and no payload may have escaped outside dest.
                 escaped = os.path.normpath(os.path.join(dest, linkname, 'escaped.txt'))
                 self.assertFalse(os.path.exists(escaped), '%s: file escaped to %r' % (label, escaped))
+            finally:
+                shutil.rmtree(work)
+
+    def _make_tar(self, path, members):
+        with tarfile.open(path, 'w') as tf:
+            for ti, data in members:
+                tf.addfile(ti, io.BytesIO(data) if data is not None else None)
+
+    def test_unarchive_dot_member(self):
+        # GNU tar commonly emits a './' directory member.
+        work = tempfile.mkdtemp()
+        try:
+            arc = os.path.join(work, 'dot.tar')
+            d = tarfile.TarInfo('./')
+            d.type = tarfile.DIRTYPE
+            d.mode = 0o755
+            f = tarfile.TarInfo('./hello.txt')
+            f.size = 5
+            self._make_tar(arc, [(d, None), (f, b'hello')])
+            dest = os.path.join(work, 'dest')
+            os.mkdir(dest)
+            unarchive(arc, dest)
+            self.assertTrue(os.path.isfile(os.path.join(dest, 'hello.txt')))
+        finally:
+            shutil.rmtree(work)
+
+    def test_unarchive_escaping_symlink(self):
+        work = tempfile.mkdtemp()
+        try:
+            arc = os.path.join(work, 'sym.tar')
+            ti = tarfile.TarInfo('sub/link')
+            ti.type = tarfile.SYMTYPE
+            ti.linkname = '../../outside'
+            self._make_tar(arc, [(ti, None)])
+            dest = os.path.join(work, 'dest')
+            os.mkdir(dest)
+            self.assertRaises((OSError, ValueError), unarchive, arc, dest)
+            self.assertFalse(os.path.lexists(os.path.join(dest, 'sub', 'link')))
+        finally:
+            shutil.rmtree(work)
+
+    @unittest.skipUnless(hasattr(tarfile, 'data_filter'), 'requires tarfile extraction filters')
+    def test_unarchive_rejects_special_files(self):
+        for label, ttype in (('fifo', tarfile.FIFOTYPE), ('chardev', tarfile.CHRTYPE),
+                             ('blockdev', tarfile.BLKTYPE)):
+            work = tempfile.mkdtemp()
+            try:
+                arc = os.path.join(work, 'special.tar')
+                ti = tarfile.TarInfo('special')
+                ti.type = ttype
+                self._make_tar(arc, [(ti, None)])
+                dest = os.path.join(work, 'dest')
+                os.mkdir(dest)
+                self.assertRaises(ValueError, unarchive, arc, dest)
+                self.assertFalse(os.path.lexists(os.path.join(dest, 'special')), label)
             finally:
                 shutil.rmtree(work)
 

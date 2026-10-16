@@ -6,6 +6,13 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- util
+
+    - Use ``tarfile.data_filter`` rather than ``tarfile.tar_filter`` in ``unarchive()``
+      when extraction filters are available, matching the Python 3.14 default. Path and
+      link containment checks now use ``os.path.realpath`` and no longer fail with
+      ``IndexError`` for members such as ``.`` or ``./``.
+
 0.4.3
 ~~~~~
 

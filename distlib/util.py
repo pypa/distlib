@@ -1258,8 +1258,8 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
             path = path.decode('utf-8')
         if base is None:
             base = dest_dir
-        p = os.path.abspath(os.path.join(base, path))
-        if not p.startswith(dest_dir) or p[plen] != os.sep:
+        p = os.path.realpath(os.path.join(base, path))
+        if not (p == dest_dir or p.startswith(dest_dir + os.sep)):
             raise ValueError('path outside destination: %r' % p)
 
     def check_link(member):
@@ -1278,8 +1278,7 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
             link_base = dest_dir
         check_path(member.linkname, base=link_base)
 
-    dest_dir = os.path.abspath(dest_dir)
-    plen = len(dest_dir)
+    dest_dir = os.path.realpath(dest_dir)
     archive = None
     if format is None:
         if archive_filename.endswith(('.zip', '.whl')):
@@ -1320,11 +1319,13 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
         # Limit extraction of dangerous items, if this Python
         # allows it easily. If not, just trust the input.
         # See: https://docs.python.org/3/library/tarfile.html#extraction-filters
+        # data_filter is the stdlib default from Python 3.14 onwards; using the
+        # laxer tar_filter here would downgrade that secure default.
         def extraction_filter(member, path):
-            """Run tarfile.tar_filter, but raise the expected ValueError"""
+            """Run tarfile.data_filter, but raise the expected ValueError"""
             # This is only called if the current Python has tarfile filters
             try:
-                return tarfile.tar_filter(member, path)
+                return tarfile.data_filter(member, path)
             except tarfile.FilterError as exc:
                 raise ValueError(str(exc))
 
