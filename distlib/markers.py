@@ -20,6 +20,7 @@ import platform
 from .compat import string_types
 from .util import in_venv, parse_marker
 from .version import LegacyVersion as LV
+from .version import NormalizedVersion as NV
 
 __all__ = ['interpret']
 
@@ -41,6 +42,13 @@ def _get_versions(s):
     return {LV(m.groups()[0]) for m in _VERSION_PATTERN.finditer(s)}
 
 
+def _match_compatible(lhs, rhs):
+    version, constraint = NV(str(lhs)), NV(str(rhs))
+    prefix = constraint._release_clause[:-1]
+    release = version._release_clause + (0, ) * len(prefix)
+    return (version >= constraint and version._parts[0] == constraint._parts[0] and release[:len(prefix)] == prefix)
+
+
 class Evaluator(object):
     """
     This class is used to evaluate marker expressions.
@@ -49,7 +57,7 @@ class Evaluator(object):
     operations = {
         '==': lambda x, y: x == y,
         '===': lambda x, y: x == y,
-        '~=': lambda x, y: x == y or x > y,
+        '~=': _match_compatible,
         '!=': lambda x, y: x != y,
         '<': lambda x, y: x < y,
         '<=': lambda x, y: x == y or x < y,
