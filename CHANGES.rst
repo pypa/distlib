@@ -13,6 +13,10 @@ Released: Not yet.
       link containment checks now use ``os.path.realpath`` and no longer fail with
       ``IndexError`` for members such as ``.`` or ``./``.
 
+    - ``unarchive()`` now resolves member paths through symlinks seen earlier in the
+      same archive, so a chain of individually harmless-looking links cannot be used
+      to write outside the destination on Pythons without extraction filters.
+
 0.4.3
 ~~~~~
 

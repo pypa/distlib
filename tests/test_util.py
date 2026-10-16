@@ -573,6 +573,28 @@ class UtilTestCase(DistlibTestCase):
         finally:
             shutil.rmtree(work)
 
+    def test_unarchive_chained_symlink(self):
+        # a -> . then a/b -> .. looks safe lexically, but a/b really points
+        # at dest's parent; a/b/file must be rejected even without filters.
+        work = tempfile.mkdtemp()
+        try:
+            arc = os.path.join(work, 'chain.tar')
+            a = tarfile.TarInfo('a')
+            a.type = tarfile.SYMTYPE
+            a.linkname = '.'
+            b = tarfile.TarInfo('a/b')
+            b.type = tarfile.SYMTYPE
+            b.linkname = '..'
+            f = tarfile.TarInfo('a/b/distlib_poc_marker.txt')
+            f.size = 4
+            self._make_tar(arc, [(a, None), (b, None), (f, b'PWND')])
+            dest = os.path.join(work, 'dest')
+            os.mkdir(dest)
+            self.assertRaises(ValueError, unarchive, arc, dest, check=True)
+            self.assertFalse(os.path.exists(os.path.join(work, 'distlib_poc_marker.txt')))
+        finally:
+            shutil.rmtree(work)
+
     def test_string_sequence(self):
         self.assertTrue(is_string_sequence(['a']))
         self.assertTrue(is_string_sequence(['a', 'b']))

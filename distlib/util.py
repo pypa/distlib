@@ -1253,14 +1253,33 @@ ARCHIVE_EXTENSIONS = ('.tar.gz', '.tar.bz2', '.tar', '.zip', '.tgz', '.tbz', '.w
 
 def unarchive(archive_filename, dest_dir, format=None, check=True):
 
+    # Symlinks seen so far in the archive, mapping the link's resolved path
+    # to its resolved target. Earlier members don't exist on disk while we
+    # check, so later member paths are resolved through this map lexically.
+    links = {}
+
+    def resolve(path):
+        cur = dest_dir
+        if not (path == dest_dir or path.startswith(dest_dir + os.sep)):
+            return os.path.realpath(path)
+        for part in path[len(dest_dir):].split(os.sep):
+            if part in ('', '.'):
+                continue
+            if part == '..':
+                cur = os.path.dirname(cur)
+            else:
+                cur = links.get(os.path.join(cur, part), os.path.join(cur, part))
+        return os.path.realpath(cur)
+
     def check_path(path, base=None):
         if not isinstance(path, text_type):
             path = path.decode('utf-8')
         if base is None:
             base = dest_dir
-        p = os.path.realpath(os.path.join(base, path))
+        p = resolve(os.path.join(base, path))
         if not (p == dest_dir or p.startswith(dest_dir + os.sep)):
             raise ValueError('path outside destination: %r' % p)
+        return p
 
     def check_link(member):
         # A symlink/hardlink member's name is validated like any other
@@ -1272,11 +1291,12 @@ def unarchive(archive_filename, dest_dir, format=None, check=True):
         # relative to the archive root (i.e. dest_dir).
         if not (member.issym() or member.islnk()):
             return
-        if member.issym():
-            link_base = os.path.dirname(os.path.join(dest_dir, member.name))
-        else:
-            link_base = dest_dir
-        check_path(member.linkname, base=link_base)
+        if member.islnk():
+            check_path(member.linkname)
+            return
+        name = member.name.rstrip('/')
+        parent = check_path(os.path.dirname(name) or '.')
+        links[os.path.join(parent, os.path.basename(name))] = check_path(member.linkname, base=parent)
 
     dest_dir = os.path.realpath(dest_dir)
     archive = None
