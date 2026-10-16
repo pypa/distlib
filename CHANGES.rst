@@ -1,21 +1,62 @@
 Change log for ``distlib``
 --------------------------
 
-0.4.4 (future)
+0.4.5 (future)
 ~~~~~~~~~~~~~~
 
 Released: Not yet.
 
+
+0.4.4
+~~~~~
+
+Released: 2026-10-16
+
+- compat
+
+    - Fixed a missing import. Thanks to Andrej730 for the patch.
+
+- markers
+
+    - Fixed #273: Enforce compatible-release bounds in environment markers.
+      Thanks to Luochenchen for the patch.
+
+- metadata
+
+    - Fix #194: Add an urls property to expose project and home URLs. Thanks to
+      Sinkleberg for the patch.
+
+- scripts
+
+    - Raise the correct exception when a launcher can't be written. Thanks to
+      candygoogy for the patch.
+
+    - Fix #144: Detect shell-script Python executables in ScriptMaker shebangs.
+      Thanks to Alex Chen for the patch.
+
 - util
+
+    - Improve performance of export entry search to take linear time. Thanks to
+      Brian Willows for the patch.
 
     - Use ``tarfile.data_filter`` rather than ``tarfile.tar_filter`` in ``unarchive()``
       when extraction filters are available, matching the Python 3.14 default. Path and
       link containment checks now use ``os.path.realpath`` and no longer fail with
-      ``IndexError`` for members such as ``.`` or ``./``.
+      ``IndexError`` for members such as ``.`` or ``./``. Thanks to Kobain for the patch.
 
     - ``unarchive()`` now resolves member paths through symlinks seen earlier in the
       same archive, so a chain of individually harmless-looking links cannot be used
-      to write outside the destination on Pythons without extraction filters.
+      to write outside the destination on Pythons without extraction filters. Thanks to
+      Kobain for the patch.
+
+- version
+
+    - Improve NormalizedVersion by addressing correctness and performance gaps
+      found by comparison with packaging. Thanks to Damian Shaw for the patch.
+
+    - Improve SemanticVersion by comparing numeric prerelease identifiers,
+      including those longer than 8 digits. Thanks to Muneeb Sheikh for the
+      patch.
 
 0.4.3
 ~~~~~
