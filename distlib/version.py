@@ -683,8 +683,14 @@ def _semantic_key(s):
         raise UnsupportedVersionError(s)
     groups = m.groups()
     major, minor, patch = [int(i) for i in groups[:3]]
-    # choose the '|' and '*' so that versions sort correctly
-    pre, build = make_tuple(groups[3], '|'), make_tuple(groups[5], '*')
+    # Numeric prerelease identifiers compare numerically, below nonnumeric ones.
+    # An absent prerelease sorts above either kind of identifier.
+    if groups[3] is None:
+        pre = ((2,),)
+    else:
+        pre = tuple((0, int(p)) if p.isdigit() else (1, p)
+                    for p in groups[3][1:].split('.'))
+    build = make_tuple(groups[5], '*')
     return (major, minor, patch), pre, build
 
 
@@ -694,7 +700,7 @@ class SemanticVersion(Version):
 
     @property
     def is_prerelease(self):
-        return self._parts[1][0] != '|'
+        return self._parts[1][0] != (2,)
 
 
 class SemanticMatcher(Matcher):
