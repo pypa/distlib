@@ -74,10 +74,10 @@ class Manifest(object):
             for name in names:
                 fullname = os.path.join(root, name)
 
-                # Avoid excess stat calls -- just one will do, thank you!
+                # Only follow symlinks when checking for regular files.
                 stat = os.lstat(fullname)
                 mode = stat.st_mode
-                if S_ISREG(mode):
+                if S_ISREG(mode) or (S_ISLNK(mode) and os.path.isfile(fullname)):
                     allfiles.append(fsdecode(fullname))
                 elif S_ISDIR(mode) and not S_ISLNK(mode):
                     push(fullname)
