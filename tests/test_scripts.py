@@ -21,7 +21,7 @@ except ImportError:
 from compat import unittest
 from support import DistlibTestCase
 
-from distlib import DistlibException
+from distlib import DistlibException, scripts
 from distlib.compat import fsencode, sysconfig
 from distlib.scripts import ScriptMaker, enquote_executable
 from distlib.util import get_executable
@@ -83,6 +83,76 @@ class ScriptTestCase(DistlibTestCase):
         with open(filenames[0], 'rb') as f:
             actual = f.readline().decode('utf-8')
         self.assertIn(maker.executable, actual)
+
+    def _check_default_shebang(self, executable):
+        os.symlink(get_executable(), executable)
+        source_dir = tempfile.mkdtemp(prefix='distlib-test-')
+        self.addCleanup(shutil.rmtree, source_dir)
+        body = 'import sys\nprint(repr(sys.argv[1:]))\n'
+        with open(os.path.join(source_dir, 'copied'), 'w') as f:
+            f.write('#!python -Werror\n' + body)
+        with open(os.path.join(source_dir, 'shebang_test.py'), 'w') as f:
+            f.write('def main():\n' + ''.join('    ' + line for line in body.splitlines(True)))
+        maker = ScriptMaker(source_dir, self.maker.target_dir, add_launchers=False)
+        maker.variants = set([''])
+        self.assertIsNone(maker.executable)
+        original = scripts.get_executable
+        scripts.get_executable = lambda: executable
+        try:
+            copied = maker.make('copied')
+            entry = maker.make('made = shebang_test:main', options={'interpreter_args': ['-Werror']})
+        finally:
+            scripts.get_executable = original
+        env = dict(os.environ)
+        env['PYTHONPATH'] = source_dir
+        env.pop('distlib_shebang_unset', None)
+        for filename in copied + entry:
+            with open(filename, 'rb') as f:
+                self.assertEqual(f.readline(), b'#!/bin/sh\n')
+            process = subprocess.Popen([filename, 'argument with spaces', '$literal'],
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
+                                       env=env)
+            stdout, stderr = process.communicate()
+            self.assertEqual(process.returncode, 0, stderr)
+            self.assertEqual(stdout, b"['argument with spaces', '$literal']\n")
+            self.assertEqual(stderr, b'')
+
+    @unittest.skipIf(os.name != 'posix' or sysconfig.is_python_build(), 'Test requires a POSIX Python installation')
+    def test_default_shebang_shell_characters(self):
+        executable = os.path.join(self.maker.target_dir,
+                                  'python $distlib_shebang_unset "quoted" \\unicode \'single\' `true`')
+        self._check_default_shebang(executable)
+
+    @unittest.skipIf(os.name != 'posix' or sysconfig.is_python_build(), 'Test requires a POSIX Python installation')
+    def test_default_shebang_long_literal_path(self):
+        directory = self.maker.target_dir
+        while len(directory) <= 512:
+            directory = os.path.join(directory, 'long-path-' + 'x' * 50)
+        os.makedirs(directory)
+        executable = os.path.join(directory, 'python$distlib_shebang_unset')
+        self._check_default_shebang(executable)
+
+    @unittest.skipIf(os.name != 'posix' or sysconfig.is_python_build(), 'Test requires a POSIX Python installation')
+    def test_default_shebang_cross_compiling_literal_path(self):
+        original = getattr(sys, 'cross_compiling', None)
+        sys.cross_compiling = True
+        try:
+            self._check_default_shebang(os.path.join(self.maker.target_dir, 'python$distlib_shebang_unset'))
+        finally:
+            if original is None:
+                del sys.cross_compiling
+            else:
+                sys.cross_compiling = original
+
+    @unittest.skipIf(os.name != 'posix' or sysconfig.is_python_build(), 'Test requires a POSIX Python installation')
+    def test_default_shebang_simple_literal_path(self):
+        original = scripts.get_executable
+        scripts.get_executable = lambda: '/python$distlib_shebang_unset'
+        try:
+            self.assertEqual(self.maker._get_shebang('utf-8'), b'#!/python$distlib_shebang_unset\n')
+        finally:
+            scripts.get_executable = original
 
     @unittest.skipIf(os.name != 'posix', 'Test only appropriate for '
                      'POSIX systems')
