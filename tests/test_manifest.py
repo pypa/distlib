@@ -10,7 +10,7 @@ import os
 import re
 
 from compat import unittest
-from support import DistlibTestCase
+from support import DistlibTestCase, TempdirManager, skip_unless_symlink
 
 from distlib import DistlibException
 from distlib.manifest import Manifest
@@ -246,6 +246,44 @@ class ManifestTestCase(DistlibTestCase):
             "no previously-included directories found matching 'nonexistent'",
         ]
         self.assertEqual(actual, expected)
+
+
+class ManifestSymlinkTestCase(TempdirManager, DistlibTestCase):
+
+    def setUp(self):
+        super(ManifestSymlinkTestCase, self).setUp()
+        self.base = self.mkdtemp()
+        self.manifest = Manifest(self.base)
+
+    @skip_unless_symlink
+    def test_findall_file_symlinks(self):
+        target = os.path.join(self.base, 'actual.txt')
+        self.write_file(target)
+        os.symlink('actual.txt', os.path.join(self.base, 'relative.txt'))
+        os.symlink(target, os.path.join(self.base, 'absolute.txt'))
+        os.symlink('relative.txt', os.path.join(self.base, 'chained.txt'))
+        self.manifest.findall()
+        expected = set(os.path.join(self.base, name) for name in
+                       ('actual.txt', 'relative.txt', 'absolute.txt', 'chained.txt'))
+        self.assertEqual(set(self.manifest.allfiles), expected)
+
+    @skip_unless_symlink
+    def test_include_file_symlink(self):
+        self.write_file(os.path.join(self.base, 'actual.txt'))
+        link = os.path.join(self.base, 'LICENSE')
+        os.symlink('actual.txt', link)
+        self.manifest.process_directive('include LICENSE')
+        self.assertEqual(self.manifest.sorted(), [link])
+
+    @skip_unless_symlink
+    def test_findall_skips_directory_and_broken_symlinks(self):
+        directory = self.mkdtemp()
+        self.write_file(os.path.join(directory, 'outside.txt'))
+        os.symlink(directory, os.path.join(self.base, 'directory'))
+        os.symlink('.', os.path.join(self.base, 'loop'))
+        os.symlink('missing.txt', os.path.join(self.base, 'broken.txt'))
+        self.manifest.findall()
+        self.assertEqual(self.manifest.allfiles, [])
 
 
 if __name__ == '__main__':  # pragma: no cover
