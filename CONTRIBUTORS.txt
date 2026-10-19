@@ -45,7 +45,6 @@ Thanks to:
 - Thomas Holmes
 - Preston Holmes
 - Christian Hudon
-- Hulk
 - Julien Jehannet
 - Jeremy Kloth
 - Thomas Kluyver
