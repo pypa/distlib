@@ -749,7 +749,7 @@ class VersionScheme(object):
 _SCHEMES = {
     'normalized': VersionScheme(_normalized_key, NormalizedMatcher,
                                 _suggest_normalized_version),
-    'legacy': VersionScheme(_legacy_key, LegacyMatcher, lambda self, s: s),
+    'legacy': VersionScheme(_legacy_key, LegacyMatcher, lambda s: s),
     'semantic': VersionScheme(_semantic_key, SemanticMatcher,
                               _suggest_semantic_version),
 }

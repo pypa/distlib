@@ -662,6 +662,12 @@ class VersionTestCase(DistlibTestCase):
 
 
 class LegacyVersionTestCase(DistlibTestCase):
+
+    def test_scheme_suggestions(self):
+        scheme = get_scheme('legacy')
+        for version in ('1.0', '1.0-dev-r3', '0.80.1-3', 'A56'):
+            self.assertEqual(scheme.suggest(version), version)
+
     # These tests are the same as distribute's
     def test_equality(self):
 
