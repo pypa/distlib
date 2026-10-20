@@ -65,7 +65,6 @@ Thanks to:
 - Zubin Mithra
 - Derek McTavish Mounce
 - Paul Moore
-- Yuki Morikawa
 - Michael Mulich
 - Louis Munro
 - Gaël Pasgrimaud
