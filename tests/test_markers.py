@@ -13,10 +13,25 @@ from support import DistlibTestCase
 
 from distlib.compat import python_implementation
 from distlib.markers import interpret
-from distlib.util import in_venv
+from distlib.util import in_venv, parse_marker, parse_requirement
 
 
 class MarkersTestCase(DistlibTestCase):
+
+    def test_unterminated_parentheses(self):
+        for marker in ('(python_version >= "3.6"',
+                       '(python_version >= "3.6"   ',
+                       '((python_version >= "3.6")',
+                       '(python_version >= "3.6" and os_name == "posix"'):
+            self.assertRaises(SyntaxError, parse_marker, marker)
+            self.assertRaises(SyntaxError, interpret, marker)
+            self.assertRaises(SyntaxError, parse_requirement, 'demo; ' + marker)
+
+    def test_nested_parentheses(self):
+        marker = '((python_version >= "3.6") and os_name == "posix")'
+        self.assertTrue(interpret(marker, {'python_version': '3.13', 'os_name': 'posix'}))
+        self.assertFalse(interpret(marker, {'python_version': '3.13', 'os_name': 'nt'}))
+        self.assertIsNotNone(parse_requirement('demo; ' + marker))
 
     def _check_compatible(self, marker, variable, cases):
         for version, expected in cases:

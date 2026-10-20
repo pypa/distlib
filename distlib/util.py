@@ -100,7 +100,7 @@ def parse_marker(marker_string):
     def marker_expr(remaining):
         if remaining and remaining[0] == '(':
             result, remaining = marker(remaining[1:].lstrip())
-            if remaining[0] != ')':
+            if not remaining or remaining[0] != ')':
                 raise SyntaxError('unterminated parenthesis: %s' % remaining)
             remaining = remaining[1:].lstrip()
         else:
