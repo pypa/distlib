@@ -8,7 +8,10 @@ from __future__ import unicode_literals
 
 from operator import attrgetter
 import os
+import shutil
 import sys
+import tempfile
+import zipfile
 
 from compat import unittest
 from support import DistlibTestCase, in_github_workflow
@@ -127,6 +130,68 @@ class ZipResourceTestCase(DistlibTestCase):
         iterator = f.iterator('bar/bar_resource.bin')
         actual = set([(r.name, r.is_container) for r in iterator])
         self.assertEqual(actual, set([('bar/bar_resource.bin', False)]))
+
+    def _make_directory_zip(self):
+        directory = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, directory)
+        archive = os.path.join(directory, 'resources.zip')
+        with zipfile.ZipFile(archive, 'w') as zf:
+            for name in ('empty/', 'empty-sibling.txt', 'implicit/data.txt',
+                         'nested/empty/', 'populated/', 'populated/data.txt', 'zempty/'):
+                zf.writestr(name, b'')
+        return archive
+
+    def test_empty_directories(self):
+        f = finder_for_path(self._make_directory_zip())
+        for name in ('empty', 'nested/empty', 'zempty'):
+            r = f.find(name)
+            self.assertIsNotNone(r)
+            self.assertTrue(r.is_container)
+            self.assertEqual(r.resources, set())
+
+    def test_empty_directories_with_separator(self):
+        f = finder_for_path(self._make_directory_zip())
+        for name in ('empty/', 'nested/empty/', 'zempty/'):
+            r = f.find(name)
+            self.assertIsNotNone(r)
+            self.assertTrue(r.is_container)
+            self.assertEqual(r.resources, set())
+
+    def test_directory_prefix(self):
+        archive = self._make_directory_zip()
+        for prefix, expected in (('empty', set()), ('nested', set(['empty']))):
+            f = finder_for_path(os.path.join(archive, prefix))
+            r = f.find('')
+            self.assertIsNotNone(r)
+            self.assertTrue(r.is_container)
+            self.assertEqual(r.resources, expected)
+        r = f.find('empty')
+        self.assertIsNotNone(r)
+        self.assertTrue(r.is_container)
+        self.assertEqual(r.resources, set())
+
+    def test_directory_boundaries(self):
+        f = finder_for_path(self._make_directory_zip())
+        for name in ('implicit', 'populated'):
+            for suffix in ('', '/'):
+                r = f.find(name + suffix)
+                self.assertIsNotNone(r)
+                self.assertTrue(r.is_container)
+                self.assertEqual(r.resources, set(['data.txt']))
+        for name in ('empty-sibling.txt', 'implicit/data.txt', 'populated/data.txt'):
+            self.assertFalse(f.find(name).is_container)
+        for name in ('missing', 'empty-sibling', 'empty/missing', 'nested/missing', 'zempty/missing'):
+            self.assertIsNone(f.find(name))
+            self.assertIsNone(f.find(name + '/'))
+
+    def test_iterator_with_empty_directories(self):
+        f = finder_for_path(self._make_directory_zip())
+        actual = set((r.name, r.is_container) for r in f.iterator(''))
+        expected = set([('', True), ('empty', True), ('empty-sibling.txt', False),
+                        ('implicit', True), ('implicit/data.txt', False), ('nested', True),
+                        ('nested/empty', True), ('populated', True), ('populated/data.txt', False),
+                        ('zempty', True)])
+        self.assertEqual(actual, expected)
 
 
 class FileResourceTestCase(DistlibTestCase):
