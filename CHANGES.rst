@@ -6,6 +6,11 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- util
+
+    - Raise ``SyntaxError`` rather than ``IndexError`` for environment markers
+      missing a closing parenthesis.
+
 
 0.4.4
 ~~~~~
