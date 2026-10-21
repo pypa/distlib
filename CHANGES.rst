@@ -6,6 +6,10 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- resources
+
+    - Skip resource children that no longer exist during iteration.
+
 - util
 
     - Raise ``SyntaxError`` rather than ``IndexError`` for environment markers
