@@ -799,6 +799,34 @@ class FileOpsTestCase(DistlibTestCase):
         self.fileop.ensure_removed(td)
         self.assertFalse(os.path.exists(td))
 
+    @unittest.skipIf(os.name != 'posix', 'Test requires symbolic links')
+    def test_ensure_removed_dangling_symlink(self):
+        path = os.path.join(self.workdir, 'link')
+        os.symlink(os.path.join(self.workdir, 'missing'), path)
+        self.fileop.dry_run = True
+        self.fileop.ensure_removed(path)
+        self.assertTrue(os.path.lexists(path))
+
+        self.fileop.dry_run = False
+        self.fileop.record = True
+        self.fileop.record_as_written(path)
+        self.fileop.ensure_removed(path)
+        self.assertFalse(os.path.lexists(path))
+        self.assertNotIn(path, self.fileop.files_written)
+        self.fileop.ensure_removed(path)
+
+    @unittest.skipIf(os.name != 'posix', 'Test requires symbolic links')
+    def test_ensure_removed_directory_symlink(self):
+        target = os.path.join(self.workdir, 'target')
+        os.mkdir(target)
+        marker = os.path.join(target, 'keep.txt')
+        self.fileop.write_text_file(marker, 'keep', 'utf-8')
+        path = os.path.join(self.workdir, 'link')
+        os.symlink(target, path)
+        self.fileop.ensure_removed(path)
+        self.assertFalse(os.path.lexists(path))
+        self.assertTrue(os.path.isfile(marker))
+
     def test_is_writable(self):
         sd = 'subdir'
         ssd = 'subsubdir'

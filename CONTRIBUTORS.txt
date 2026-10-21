@@ -25,6 +25,7 @@ Thanks to:
 - Julien Courteau
 - Christophe Combelles
 - Jason R. Coombs
+- Jeffrey D. Cooney
 - Pierre-Yves David
 - Ned Deily
 - Konrad Delong

@@ -11,6 +11,8 @@ Released: Not yet.
     - Raise ``SyntaxError`` rather than ``IndexError`` for environment markers
       missing a closing parenthesis.
 
+    - Remove dangling symbolic links when ensuring that a path is removed.
+
 
 0.4.4
 ~~~~~
