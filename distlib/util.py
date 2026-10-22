@@ -677,7 +677,8 @@ def resolve(module_name, dotted_path):
     if module_name in sys.modules:
         mod = sys.modules[module_name]
     else:
-        mod = __import__(module_name)
+        __import__(module_name)
+        mod = sys.modules[module_name]
     if dotted_path is None:
         result = mod
     else:
