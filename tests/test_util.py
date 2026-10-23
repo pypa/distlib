@@ -10,6 +10,7 @@ import io
 import os
 import re
 import shutil
+import subprocess
 try:
     import ssl
 except ImportError:
@@ -846,14 +847,15 @@ class FileOpsTestCase(DistlibTestCase):
         from importlib.machinery import SourcelessFileLoader
 
         path = os.path.join(self.workdir, 'hello.py')
-        self.fileop.write_text_file(path, 'value = __debug__', 'utf-8')
+        self.fileop.write_text_file(path, 'print(__debug__)', 'utf-8')
         for optimize in (False, True):
             dpath = self.fileop.byte_compile(path, optimize=optimize, prefix=self.workdir + os.sep)
             code = SourcelessFileLoader('hello', dpath).get_code('hello')
             self.assertEqual(code.co_filename, 'hello.py')
-            namespace = {}
-            eval(code, namespace)
-            self.assertEqual(namespace['value'], not optimize)
+            # Run the generated code separately so coverage does not try to
+            # report on its deliberately relative diagnostic filename.
+            output = subprocess.check_output([sys.executable, dpath])
+            self.assertEqual(output.strip(), str(not optimize).encode('ascii'))
 
     def test_byte_compile_dry_run(self):
         path = os.path.join(self.workdir, 'missing.py')
