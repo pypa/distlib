@@ -10,6 +10,7 @@ import io
 import os
 import re
 import shutil
+import subprocess
 try:
     import ssl
 except ImportError:
@@ -846,6 +847,62 @@ class FileOpsTestCase(DistlibTestCase):
         self.fileop.write_text_file(path, 'print("Hello, world!")', 'utf-8')
         self.fileop.byte_compile(path, optimize=False)
         self.assertTrue(os.path.exists(dpath))
+
+    def test_byte_compile_current_cache(self):
+        path = os.path.join(self.workdir, 'hello.py')
+        self.fileop.write_text_file(path, 'value = 1', 'utf-8')
+        dpath = self.fileop.byte_compile(path)
+        os.utime(path, (1, 1))
+        os.utime(dpath, (2, 2))
+        with open(dpath, 'rb') as stream:
+            original = stream.read()
+
+        self.fileop.record = True
+        self.assertEqual(self.fileop.byte_compile(path), dpath)
+        self.assertEqual(os.stat(dpath).st_mtime, 2)
+        self.assertIn(dpath, self.fileop.files_written)
+        with open(dpath, 'rb') as stream:
+            self.assertEqual(stream.read(), original)
+
+        self.fileop.write_text_file(path, 'value = 2', 'utf-8')
+        os.utime(path, (1, 1))
+        self.fileop.byte_compile(path, force=True)
+        with open(dpath, 'rb') as stream:
+            self.assertNotEqual(stream.read(), original)
+
+    @unittest.skipIf(sys.version_info[0] < 3, 'Explicit optimization requires Python 3')
+    def test_byte_compile_optimization(self):
+        from importlib.machinery import SourcelessFileLoader
+
+        path = os.path.join(self.workdir, 'hello.py')
+        self.fileop.write_text_file(path, 'print(__debug__)', 'utf-8')
+        for optimize in (False, True):
+            dpath = self.fileop.byte_compile(path, optimize=optimize, prefix=self.workdir + os.sep)
+            code = SourcelessFileLoader('hello', dpath).get_code('hello')
+            self.assertEqual(code.co_filename, 'hello.py')
+            # Run the generated code separately so coverage does not try to
+            # report on its deliberately relative diagnostic filename.
+            output = subprocess.check_output([sys.executable, dpath])
+            self.assertEqual(output.strip(), str(not optimize).encode('ascii'))
+
+    def test_byte_compile_dry_run(self):
+        path = os.path.join(self.workdir, 'missing.py')
+        self.fileop.dry_run = True
+        self.fileop.record = True
+        dpath = self.fileop.byte_compile(path)
+        self.assertFalse(os.path.exists(dpath))
+        self.assertIn(dpath, self.fileop.files_written)
+
+    @unittest.skipIf(sys.version_info[:2] < (3, 7), 'Hash invalidation requires Python 3.7')
+    def test_byte_compile_hashed_invalidation(self):
+        import py_compile
+
+        path = os.path.join(self.workdir, 'hello.py')
+        self.fileop.write_text_file(path, 'value = 1', 'utf-8')
+        for mode, flags in ((True, 3), (py_compile.PycInvalidationMode.UNCHECKED_HASH, 1)):
+            dpath = self.fileop.byte_compile(path, force=True, hashed_invalidation=mode)
+            with open(dpath, 'rb') as stream:
+                self.assertEqual(int.from_bytes(stream.read(8)[4:], 'little'), flags)
 
     def write_some_files(self):
         path = os.path.join(self.workdir, 'file1')

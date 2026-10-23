@@ -6,10 +6,17 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- resources
+
+    - Skip resource children that no longer exist during iteration.
+
 - util
 
     - Raise ``SyntaxError`` rather than ``IndexError`` for environment markers
       missing a closing parenthesis.
+
+    - Preserve current bytecode caches and honor the requested optimization
+      level when compiling source files.
 
     - Remove dangling symbolic links when ensuring that a path is removed.
 

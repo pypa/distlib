@@ -602,12 +602,14 @@ class FileOperator(object):
                 else:
                     assert path.startswith(prefix)
                     diagpath = path[len(prefix):]
-            compile_kwargs = {}
-            if hashed_invalidation and hasattr(py_compile, 'PycInvalidationMode'):
-                if not isinstance(hashed_invalidation, py_compile.PycInvalidationMode):
-                    hashed_invalidation = py_compile.PycInvalidationMode.CHECKED_HASH
-                compile_kwargs['invalidation_mode'] = hashed_invalidation
-            py_compile.compile(path, dpath, diagpath, True, **compile_kwargs)  # raise error
+                compile_kwargs = {}
+                if sys.version_info[0] >= 3:
+                    compile_kwargs['optimize'] = int(bool(optimize))
+                if hashed_invalidation and hasattr(py_compile, 'PycInvalidationMode'):
+                    if not isinstance(hashed_invalidation, py_compile.PycInvalidationMode):
+                        hashed_invalidation = py_compile.PycInvalidationMode.CHECKED_HASH
+                    compile_kwargs['invalidation_mode'] = hashed_invalidation
+                py_compile.compile(path, dpath, diagpath, True, **compile_kwargs)  # raise error
         self.record_as_written(dpath)
         return dpath
 

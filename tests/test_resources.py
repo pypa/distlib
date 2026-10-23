@@ -314,6 +314,36 @@ class FileResourceTestCase(DistlibTestCase):
         self.assertEqual(actual, set([('bar/bar_resource.bin', False)]))
 
 
+class FileResourceIterationTestCase(DistlibTestCase):
+
+    def setUp(self):
+        self.workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.workdir)
+        with open(os.path.join(self.workdir, 'keep.txt'), 'wb') as stream:
+            stream.write(b'keep')
+
+    @unittest.skipIf(os.name != 'posix', 'Test requires symbolic links')
+    def test_iterator_dangling_symlink(self):
+        os.symlink(os.path.join(self.workdir, 'missing'), os.path.join(self.workdir, 'link'))
+        f = finder_for_path(self.workdir)
+        self.assertEqual(set(r.name for r in f.iterator('')), set(['', 'keep.txt']))
+
+    def test_iterator_disappearing_child(self):
+        path = os.path.join(self.workdir, 'removed.txt')
+        with open(path, 'wb') as stream:
+            stream.write(b'removed')
+        f = finder_for_path(self.workdir)
+        get_resources = f.get_resources
+
+        def disappearing_resources(resource):
+            names = get_resources(resource)
+            os.remove(path)
+            return names
+
+        f.get_resources = disappearing_resources
+        self.assertEqual(set(r.name for r in f.iterator('')), set(['', 'keep.txt']))
+
+
 class CacheTestCase(DistlibTestCase):
 
     def test_base(self):
