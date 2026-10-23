@@ -15,6 +15,9 @@ Released: Not yet.
     - Raise ``SyntaxError`` rather than ``IndexError`` for environment markers
       missing a closing parenthesis.
 
+    - Preserve current bytecode caches and honor the requested optimization
+      level when compiling source files.
+
 
 0.4.4
 ~~~~~
