@@ -614,7 +614,7 @@ class FileOperator(object):
         return dpath
 
     def ensure_removed(self, path):
-        if os.path.exists(path):
+        if os.path.lexists(path):
             if os.path.isdir(path) and not os.path.islink(path):
                 logger.debug('Removing directory tree at %s', path)
                 if not self.dry_run:

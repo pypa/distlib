@@ -18,6 +18,8 @@ Released: Not yet.
     - Preserve current bytecode caches and honor the requested optimization
       level when compiling source files.
 
+    - Remove dangling symbolic links when ensuring that a path is removed.
+
 
 0.4.4
 ~~~~~
