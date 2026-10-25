@@ -166,6 +166,8 @@ class VersionTestCase(DistlibTestCase):
             self.assertRaises(UnsupportedVersionError, NV, spelling)
             self.assertRaises(UnsupportedVersionError, NM, 'demo==' + spelling)
         self.assertRaises(UnsupportedVersionError, NV, u'1.0post\u0662')
+        if sys.version_info[0] > 2:
+            self.assertRaises(UnsupportedVersionError, NM, u'demo==1.0post\u0662')
 
     def test_scheme_key_rejects_invalid_versions(self):
         scheme = get_scheme('normalized')
