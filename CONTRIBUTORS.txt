@@ -80,7 +80,6 @@ Thanks to:
 - Erik Rose
 - Brian Rosner
 - Vinay Sajip
-- SAY-5
 - Damian Shaw
 - Sinkleberg
 - Victor Stinner

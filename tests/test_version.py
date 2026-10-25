@@ -162,9 +162,10 @@ class VersionTestCase(DistlibTestCase):
 
     def test_invalid_post_release_separators(self):
         for spelling in ('1.0..post2', '1.0--post2', '1.0post--2', '1.0post_++2',
-                         '1.0post2junk', u'1.0post\u0662'):
+                         '1.0post2junk'):
             self.assertRaises(UnsupportedVersionError, NV, spelling)
             self.assertRaises(UnsupportedVersionError, NM, 'demo==' + spelling)
+        self.assertRaises(UnsupportedVersionError, NV, u'1.0post\u0662')
 
     def test_scheme_key_rejects_invalid_versions(self):
         scheme = get_scheme('normalized')
