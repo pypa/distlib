@@ -46,6 +46,7 @@ Thanks to:
 - Preston Holmes
 - Christian Hudon
 - Julien Jehannet
+- jovial-liu (AI-assisted)
 - Jeremy Kloth
 - Thomas Kluyver
 - Amos Latteier
