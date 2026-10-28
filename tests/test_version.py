@@ -447,6 +447,28 @@ class VersionTestCase(DistlibTestCase):
         self.assertEqual(first.exact_version, NV('1.0a1+abc.2.def.3'))
         self.assertIsNone(NM('demo (>=1.0,<=1.0)').exact_version)
 
+    def test_matcher_compatible_normalized_release(self):
+        cases = (
+            ('~=1.4.5', '1.04.6', True),
+            ('~=1.4.5', 'v1.4.6', True),
+            ('~=1.4.5', '0!1.4.6', True),
+            ('~=1.4.5', '1.04.6+local', True),
+            ('~=1.4.5', '1.04.6rc1', True),
+            ('~=1.0.0', '1.post1', True),
+            ('~=1.4.5', '1.04.4', False),
+            ('~=1.4.5', '1.04.5rc1', False),
+            ('~=1.4.5', '1.05.0', False),
+            ('~=1.4.5', '1!1.4.6', False),
+            ('~=1.4', '2.0', False),
+            ('~=1.4.0', '1.5', False),
+            ('~=1.4.5', '1.4.5', True),
+            ('~=1.4.5', '1.4.6', True),
+        )
+        for constraint, version, expected in cases:
+            matcher = NM('demo (' + constraint + ')')
+            self.assertEqual(matcher.match(version), expected, (constraint, version))
+            self.assertEqual(matcher.match(NV(version)), expected, (constraint, version))
+
     def test_matcher_single_component_compatible_release(self):
         matcher = NM('demo (~=1)')
         self.assertTrue(matcher.match('1'))

@@ -390,8 +390,9 @@ class NormalizedMatcher(Matcher):
         release_clause = constraint._release_clause
         if len(release_clause) > 1:
             release_clause = release_clause[:-1]
-        pfx = '.'.join([str(i) for i in release_clause])
-        return _match_prefix(version, pfx)
+        release = version._release_clause + (0,) * len(release_clause)
+        return (version._parts[0] == constraint._parts[0] and
+                release[:len(release_clause)] == release_clause)
 
 
 _REPLACEMENTS = (
