@@ -70,6 +70,8 @@ class ManifestTestCase(DistlibTestCase):
     def test_invalid(self):
         mf = self.manifest
         self.assertRaises(DistlibException, mf.process_directive, 'random abc')
+        for directive in ('', ' ', '\t\r\n'):
+            self.assertRaises(DistlibException, mf.process_directive, directive)
         for cmd in ('include', 'exclude', 'global-include', 'global-exclude'):
             self.assertRaises(DistlibException, mf.process_directive, cmd)
         for cmd in ('recursive-include', 'recursive-exclude'):
