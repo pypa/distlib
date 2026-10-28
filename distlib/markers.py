@@ -25,7 +25,7 @@ from .version import NormalizedVersion as NV
 __all__ = ['interpret']
 
 _VERSION_PATTERN = re.compile(r'((\d+(\.\d+)*\w*)|\'(\d+(\.\d+)*\w*)\'|\"(\d+(\.\d+)*\w*)\")')
-_VERSION_MARKERS = {'python_version', 'python_full_version'}
+_VERSION_MARKERS = {'python_version', 'python_full_version', 'implementation_version'}
 
 
 def _is_version_marker(s):
