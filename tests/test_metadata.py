@@ -6,7 +6,6 @@
 """Tests for distlib.metadata."""
 from __future__ import unicode_literals
 
-import codecs
 import json
 import os
 import sys
@@ -15,7 +14,7 @@ from textwrap import dedent
 from compat import unittest
 
 from distlib import __version__
-from distlib.compat import StringIO
+from distlib.compat import StringIO, text_open
 from distlib.metadata import (LegacyMetadata, Metadata, METADATA_FILENAME, LEGACY_METADATA_FILENAME,
                               PKG_INFO_PREFERRED_VERSION, MetadataMissingError, MetadataUnrecognizedVersionError,
                               MetadataInvalidError, _ATTR2FIELD)
@@ -44,7 +43,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
 
     def get_file_contents(self, name):
         name = os.path.join(HERE, name)
-        f = codecs.open(name, 'r', encoding='utf-8')
+        f = text_open(name, 'r', encoding='utf-8')
         try:
             contents = f.read() % sys.platform
         finally:
@@ -53,7 +52,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
 
     def test_instantiation(self):
         PKG_INFO = os.path.join(HERE, 'PKG-INFO')
-        f = codecs.open(PKG_INFO, 'r', encoding='utf-8')
+        f = text_open(PKG_INFO, 'r', encoding='utf-8')
         try:
             contents = f.read()
         finally:
@@ -150,7 +149,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
 
         # the file should use UTF-8
         metadata2 = LegacyMetadata()
-        fp = codecs.open(my_file, encoding='utf-8')
+        fp = text_open(my_file, encoding='utf-8')
         try:
             metadata2.read_file(fp)
         finally:
@@ -173,7 +172,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
         metadata.write(my_file)
 
         metadata2 = LegacyMetadata()
-        fp = codecs.open(my_file, encoding='utf-8')
+        fp = text_open(my_file, encoding='utf-8')
         try:
             metadata2.read_file(fp)
         finally:
@@ -661,7 +660,7 @@ class MetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
         sfn = os.path.join(HERE, 'fake_dists', 'choxie-2.0.0.9.dist-info', LEGACY_METADATA_FILENAME)
         md = Metadata(path=sfn)
         md.write(path=dfn)
-        with codecs.open(dfn, 'r', 'utf-8') as f:
+        with text_open(dfn, 'r', 'utf-8') as f:
             data = json.load(f)
         self.assertEqual(
             data, {

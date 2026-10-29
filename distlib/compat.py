@@ -21,6 +21,7 @@ if sys.version_info[0] < 3:  # pragma: no cover
     string_types = basestring,
     text_type = unicode
     from types import FileType as file_type
+    from codecs import open as text_open
     import __builtin__ as builtins
     import ConfigParser as configparser
     from urlparse import urlparse, urlunparse, urljoin, urlsplit, urlunsplit
@@ -65,6 +66,14 @@ else:  # pragma: no cover
     text_type = str
     from io import TextIOWrapper as file_type
     import builtins
+
+    def text_open(filename, mode='r', encoding=None):
+        # Replaces codecs.open(), deprecated since Python 3.14: like it, don't
+        # translate newlines when an encoding is given.
+        if encoding is None:
+            return open(filename, mode)
+        return open(filename, mode, encoding=encoding, newline='')
+
     import configparser
     from urllib.parse import (urlparse, urlunparse, urljoin, quote, unquote, urlsplit, urlunsplit, splittype)
     from urllib.request import (urlopen, urlretrieve, Request, url2pathname, pathname2url, HTTPBasicAuthHandler,
