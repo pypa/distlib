@@ -4,7 +4,6 @@
 # Licensed to the Python Software Foundation under a contributor agreement.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
-import codecs
 import json
 import logging
 import os
@@ -29,7 +28,7 @@ if ssl:
     from support import HTTPSServerThread
 
 from distlib import DistlibException
-from distlib.compat import urlopen, HTTPError, URLError
+from distlib.compat import urlopen, HTTPError, URLError, text_open
 from distlib.index import PackageIndex
 from distlib.metadata import Metadata, MetadataMissingError, METADATA_FILENAME
 from distlib.util import zip_dir
@@ -135,7 +134,7 @@ class PackageIndexTestCase(DistlibTestCase):
         for bn in (METADATA_FILENAME, 'package.json'):
             fn = os.path.join(path, bn)
             if os.path.exists(fn):
-                with codecs.open(fn, 'r', 'utf-8') as jf:
+                with text_open(fn, 'r', 'utf-8') as jf:
                     result = json.load(jf)
                     break
         if not result:
@@ -164,10 +163,10 @@ class PackageIndexTestCase(DistlibTestCase):
             for fn in os.listdir(destdir):
                 fn = os.path.join(destdir, fn)
                 if os.path.isfile(fn):
-                    with codecs.open(fn, 'r', 'utf-8') as f:
+                    with text_open(fn, 'r', 'utf-8') as f:
                         data = f.read()
                     data = data.format(username=self.username)
-                    with codecs.open(fn, 'w', 'utf-8') as f:
+                    with text_open(fn, 'w', 'utf-8') as f:
                         f.write(data)
             zip_data = zip_dir(destdir).getvalue()
             zip_name = destdir + '.zip'

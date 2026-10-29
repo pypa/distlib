@@ -8,7 +8,6 @@
 from __future__ import unicode_literals
 
 import base64
-import codecs
 import contextlib
 import hashlib
 import logging
@@ -18,7 +17,7 @@ import sys
 import zipimport
 
 from . import DistlibException, resources
-from .compat import StringIO
+from .compat import StringIO, text_open
 from .version import get_scheme, UnsupportedVersionError
 from .metadata import (Metadata, METADATA_FILENAME, WHEEL_METADATA_FILENAME, LEGACY_METADATA_FILENAME)
 from .util import (parse_requirement, cached_property, parse_name_and_version, read_exports, write_exports, CSVReader,
@@ -748,7 +747,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         result = {}
         shared_path = os.path.join(self.path, 'SHARED')
         if os.path.isfile(shared_path):
-            with codecs.open(shared_path, 'r', encoding='utf-8') as f:
+            with text_open(shared_path, 'r', encoding='utf-8') as f:
                 lines = f.read().splitlines()
             for line in lines:
                 key, value = line.split('=', 1)
@@ -779,7 +778,7 @@ class InstalledDistribution(BaseInstalledDistribution):
         for ns in paths.get('namespace', ()):
             lines.append('namespace=%s' % ns)
 
-        with codecs.open(shared_path, 'w', encoding='utf-8') as f:
+        with text_open(shared_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
         return shared_path
 
@@ -914,7 +913,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
 
             reqs = []
             try:
-                with codecs.open(req_path, 'r', 'utf-8') as fp:
+                with text_open(req_path, 'r', 'utf-8') as fp:
                     reqs = parse_requires_data(fp.read())
             except IOError:
                 pass
@@ -1012,7 +1011,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
         record_path = os.path.join(self.path, 'installed-files.txt')
         result = []
         if os.path.exists(record_path):
-            with codecs.open(record_path, 'r', encoding='utf-8') as f:
+            with text_open(record_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     line = line.strip()
                     p = os.path.normpath(os.path.join(self.path, line))
@@ -1043,7 +1042,7 @@ class EggInfoDistribution(BaseInstalledDistribution):
         record_path = os.path.join(self.path, 'installed-files.txt')
         if os.path.exists(record_path):
             skip = True
-            with codecs.open(record_path, 'r', encoding='utf-8') as f:
+            with text_open(record_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     line = line.strip()
                     if line == './':

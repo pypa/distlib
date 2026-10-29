@@ -33,7 +33,7 @@ import time
 from . import DistlibException
 from .compat import (string_types, text_type, shutil, raw_input, StringIO, cache_from_source, urlopen, urljoin, httplib,
                      xmlrpclib, HTTPHandler, BaseConfigurator, valid_ident, Container, configparser, URLError, ZipFile,
-                     fsdecode, unquote, urlparse)
+                     fsdecode, unquote, urlparse, text_open)
 
 logger = logging.getLogger(__name__)
 
@@ -543,7 +543,7 @@ class FileOperator(object):
             if encoding is None:
                 outstream = open(outfile, 'wb')
             else:
-                outstream = codecs.open(outfile, 'w', encoding=encoding)
+                outstream = text_open(outfile, 'w', encoding=encoding)
             try:
                 shutil.copyfileobj(instream, outstream)
             finally:
@@ -1795,7 +1795,7 @@ class Configurator(BaseConfigurator):
         """Default converter for the inc:// protocol."""
         if not os.path.isabs(value):
             value = os.path.join(self.base, value)
-        with codecs.open(value, 'r', encoding='utf-8') as f:
+        with text_open(value, 'r', encoding='utf-8') as f:
             result = json.load(f)
         return result
 
