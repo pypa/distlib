@@ -41,6 +41,20 @@ class VersionTestCase(DistlibTestCase):
         for v, s in self.versions:
             self.assertEqual(str(v), s)
 
+    def test_many_trailing_zeros_parses_in_linear_time(self):
+        # A version with many trailing-zero release segments must parse in
+        # roughly linear time. Trimming them one slice at a time rebuilt the
+        # whole release tuple on every iteration, which was O(n^2) (CWE-407) and
+        # let a crafted version string from package metadata stall the parser.
+        # Trailing zeros are still normalised away.
+        import time
+        s = '1' + '.0' * 50000
+        start = time.perf_counter()
+        v = NV(s)
+        elapsed = time.perf_counter() - start
+        self.assertEqual(v, NV('1'))
+        self.assertLess(elapsed, 2.0)
+
     def test_hash(self):
         for v, s in self.versions:
             self.assertEqual(hash(v), hash(NV(s)))
