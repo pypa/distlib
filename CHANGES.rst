@@ -20,6 +20,11 @@ Released: Not yet.
 
     - Remove dangling symbolic links when ensuring that a path is removed.
 
+- version
+
+    - Parse versions with many trailing-zero release segments in linear rather
+      than quadratic time, so a crafted version string cannot stall the parser.
+
 
 0.4.4
 ~~~~~
