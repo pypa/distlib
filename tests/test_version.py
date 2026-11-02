@@ -323,6 +323,18 @@ class VersionTestCase(DistlibTestCase):
         self.assertEqual(suggest('1'), '1.0.0')
         self.assertEqual(suggest('1.2'), '1.2.0')
 
+    def test_epoch_requirement_matcher(self):
+        for requirement in ('a >= 1!1.0, < 2!1.0', 'a (>= 1!1.0, < 2!1.0)'):
+            matcher = NM(requirement)
+            self.assertFalse(matcher.match('1.0'))
+            self.assertTrue(matcher.match('1!1.0'))
+            self.assertTrue(matcher.match('1!1.5'))
+            self.assertFalse(matcher.match('2!1.0'))
+        for requirement in ('a == 1!1.0', 'a (== 1!1.0)'):
+            matcher = NM(requirement)
+            self.assertTrue(matcher.match('1!1.0'))
+            self.assertFalse(matcher.match('1.0'))
+
     def test_matcher(self):
         # NormalizedMatcher knows how to parse stuff like:
         #

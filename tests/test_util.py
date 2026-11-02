@@ -1161,6 +1161,17 @@ class GlobTestCase(GlobTestCaseBase):
                 r = parse_requirement('a [%s]' % e)
                 validate(r, ('a', None, [e], 'a', None))
 
+    def test_parse_epoch_requirement(self):
+        cases = (
+            ('a == 1!1.0', [('==', '1!1.0')]),
+            ('a (== 1!1.0)', [('==', '1!1.0')]),
+            ('a >= 1!1.0, < 2!1.0', [('>=', '1!1.0'), ('<', '2!1.0')]),
+            ('a (>= 1!1.0, < 2!1.0)', [('>=', '1!1.0'), ('<', '2!1.0')]),
+            ('a (1!1.0)', [('~=', '1!1.0')]),
+        )
+        for requirement, constraints in cases:
+            self.assertEqual(parse_requirement(requirement).constraints, constraints)
+
     def test_write_exports(self):
         exports = {
             'foo': {
