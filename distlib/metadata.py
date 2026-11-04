@@ -9,14 +9,13 @@ Supports metadata formats 1.0, 1.1, 1.2, 1.3/2.1, 2.2, 2,3, 2.4, 2.5.
 """
 from __future__ import unicode_literals
 
-import codecs
 from email import message_from_file
 import json
 import logging
 import re
 
 from . import DistlibException, __version__
-from .compat import StringIO, string_types, text_type
+from .compat import StringIO, string_types, text_type, text_open
 from .markers import interpret
 from .util import extract_by_key, get_extras
 from .version import get_scheme, PEP440_VERSION_RE
@@ -341,7 +340,7 @@ class LegacyMetadata(object):
 
     def read(self, filepath):
         """Read the metadata values from a file path."""
-        fp = codecs.open(filepath, 'r', encoding='utf-8')
+        fp = text_open(filepath, 'r', encoding='utf-8')
         try:
             self.read_file(fp)
         finally:
@@ -377,7 +376,7 @@ class LegacyMetadata(object):
 
     def write(self, filepath, skip_unknown=False):
         """Write the metadata fields to filepath."""
-        fp = codecs.open(filepath, 'w', encoding='utf-8')
+        fp = text_open(filepath, 'w', encoding='utf-8')
         try:
             self.write_file(fp, skip_unknown)
         finally:
@@ -1048,7 +1047,7 @@ class Metadata(object):
             if fileobj:
                 json.dump(d, fileobj, ensure_ascii=True, indent=2, sort_keys=True)
             else:
-                with codecs.open(path, 'w', 'utf-8') as f:
+                with text_open(path, 'w', 'utf-8') as f:
                     json.dump(d, f, ensure_ascii=True, indent=2, sort_keys=True)
 
     def add_requirements(self, requirements):

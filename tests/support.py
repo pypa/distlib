@@ -3,7 +3,6 @@
 # Copyright (C) 2012-2013 The Python Software Foundation.
 # See LICENSE.txt and CONTRIBUTORS.txt.
 #
-import codecs
 import os
 import logging
 import logging.handlers
@@ -24,6 +23,7 @@ import weakref
 from compat import (unittest, HTTPServer as BaseHTTPServer, SimpleHTTPRequestHandler, urlparse)
 
 from distlib import logger
+from distlib.compat import text_open
 
 HERE = os.path.dirname(__file__)
 
@@ -147,7 +147,7 @@ class TempdirManager(object):
         """
         if isinstance(path, (list, tuple)):
             path = os.path.join(*path)
-        f = codecs.open(path, 'w', encoding=encoding)
+        f = text_open(path, 'w', encoding=encoding)
         try:
             f.write(content)
         finally:

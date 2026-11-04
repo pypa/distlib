@@ -6,6 +6,11 @@ Change log for ``distlib``
 
 Released: Not yet.
 
+- compat
+
+    - Add ``text_open()``, used instead of ``codecs.open()``, which is deprecated
+      in Python 3.14.
+
 - resources
 
     - Skip resource children that no longer exist during iteration.
