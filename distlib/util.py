@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 #
 
 IDENTIFIER = re.compile(r'^([\w\.-]+)\s*')
-VERSION_IDENTIFIER = re.compile(r'^([\w\.*+-]+)\s*')
+VERSION_IDENTIFIER = re.compile(r'^([\w\.*+!-]+)\s*')
 COMPARE_OP = re.compile(r'^(<=?|>=?|={2,3}|[~!]=)\s*')
 MARKER_OP = re.compile(r'^((<=?)|(>=?)|={2,3}|[~!]=|in|not\s+in)\s*')
 OR = re.compile(r'^or\b\s*')
