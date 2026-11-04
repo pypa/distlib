@@ -49,9 +49,9 @@ class VersionTestCase(DistlibTestCase):
         # Trailing zeros are still normalised away.
         import time
         s = '1' + '.0' * 50000
-        start = time.perf_counter()
+        start = time.time()
         v = NV(s)
-        elapsed = time.perf_counter() - start
+        elapsed = time.time() - start
         self.assertEqual(v, NV('1'))
         self.assertLess(elapsed, 2.0)
 
