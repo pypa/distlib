@@ -128,7 +128,11 @@ class ResourceFinder(object):
 
     def __init__(self, module):
         self.module = module
-        self.loader = getattr(module, '__loader__', None)
+        spec = getattr(module, '__spec__', None)
+        if spec:
+            self.loader = getattr(spec, 'loader', None)
+        else:
+            self.loader = getattr(module, '__loader__', None)
         self.base = os.path.dirname(getattr(module, '__file__', ''))
 
     def _adjust_path(self, path):
@@ -344,7 +348,11 @@ def finder(package):
         if path is None:
             raise DistlibException('You cannot get a finder for a module, '
                                    'only for a package')
-        loader = getattr(module, '__loader__', None)
+        spec = getattr(module, '__spec__', None)
+        if spec:
+            loader = getattr(spec, 'loader', None)
+        else:
+            loader = getattr(module, '__loader__', None)
         finder_maker = _finder_registry.get(type(loader))
         if finder_maker is None:
             raise DistlibException('Unable to locate finder for %r' % package)
@@ -371,6 +379,10 @@ def finder_for_path(path):
     if finder:
         module = _dummy_module
         module.__file__ = os.path.join(path, '')
-        module.__loader__ = loader
+        spec = getattr(module, '__spec__', None)
+        if spec:
+            spec.loader = loader
+        else:
+            module.__loader__ = loader
         result = finder(module)
     return result

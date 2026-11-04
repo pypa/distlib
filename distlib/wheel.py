@@ -162,7 +162,11 @@ class Mounter(object):
             if fullname not in self.libs:
                 raise ImportError('unable to find extension for %s' % fullname)
             result = _load_dynamic(fullname, self.libs[fullname])
-            result.__loader__ = self
+            spec = getattr(result, '__spec__', None)
+            if spec:
+                spec.loader = self
+            else:
+                result.__loader__ = self
             parts = fullname.rsplit('.', 1)
             if len(parts) > 1:
                 result.__package__ = parts[0]
