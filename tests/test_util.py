@@ -101,6 +101,26 @@ class UtilTestCase(DistlibTestCase):
         self.assertIs(resolve('logging', 'root'), logging.root)
         self.assertEqual(resolve('logging', 'root.debug'), logging.root.debug)
 
+    def test_resolve_unimported_submodule(self):
+        dirname = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, dirname)
+        package = os.path.join(dirname, 'resolve_test_package')
+        os.mkdir(package)
+        with open(os.path.join(package, '__init__.py'), 'w'):
+            pass
+        with open(os.path.join(package, 'child.py'), 'w') as f:
+            f.write('value = object()\n')
+        sys.path.insert(0, dirname)
+        try:
+            actual = resolve('resolve_test_package.child', 'value')
+            module = sys.modules['resolve_test_package.child']
+            self.assertIs(actual, module.value)
+            self.assertIs(resolve('resolve_test_package.child', None), module)
+        finally:
+            sys.path.remove(dirname)
+            sys.modules.pop('resolve_test_package.child', None)
+            sys.modules.pop('resolve_test_package', None)
+
     def test_cache_base(self):
         actual = get_cache_base()
         if os.name == 'nt' and 'LOCALAPPDATA' in os.environ:
