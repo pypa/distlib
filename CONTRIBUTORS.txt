@@ -32,6 +32,7 @@ Thanks to:
 - John Edmonds
 - André Espaze
 - Boris Feld
+- Jaden Fix
 - Andrew Francis
 - Hallvard B Furuseth
 - Aryan R. Ganjoo
