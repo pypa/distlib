@@ -107,6 +107,22 @@ class MarkersTestCase(DistlibTestCase):
         self.assertTrue(interpret('python_full_version >= "3.12.0"', context))
         self.assertFalse(interpret('python_full_version < "3.12.0"', context))
 
+    def test_implementation_version_comparisons(self):
+        operators = ('<', '<=', '==', '!=', '>=', '>')
+        reversed_operators = ('>', '>=', '==', '!=', '<=', '<')
+        cases = [
+            ('3.10', '3.9', (False, False, False, True, True, True)),
+            ('7.3.9', '7.3.13', (True, True, False, True, False, False)),
+            ('3.10', '3.10.0', (False, True, True, False, True, False)),
+        ]
+        for version, other, expected_results in cases:
+            for op, reverse_op, expected in zip(operators, reversed_operators, expected_results):
+                context = {'implementation_version': version}
+                marker = 'implementation_version %s "%s"' % (op, other)
+                self.assertEqual(interpret(marker, context), expected, marker)
+                marker = '"%s" %s implementation_version' % (other, reverse_op)
+                self.assertEqual(interpret(marker, context), expected, marker)
+
     def test_interpret(self):
         sys_platform = sys.platform
         version = sys.version.split()[0]
