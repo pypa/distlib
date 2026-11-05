@@ -191,8 +191,14 @@ def _pep_440_key(s, match=None, release=None):
         raise UnsupportedVersionError('Not a valid version: %s' % s)
     groups = m.groups()
     nums = release if release is not None else tuple(map(int, groups[1].split('.')))
-    while len(nums) > 1 and nums[-1] == 0:
-        nums = nums[:-1]
+    # Strip trailing-zero release segments (keeping at least one component) in a
+    # single pass. Slicing one element off at a time rebuilt the whole tuple on
+    # every iteration, which is O(n^2) for a version with many trailing zeros and
+    # lets a crafted version string from package metadata stall the parser (CWE-407).
+    end = len(nums)
+    while end > 1 and nums[end - 1] == 0:
+        end -= 1
+    nums = nums[:end]
 
     if not groups[0]:
         epoch = 0
