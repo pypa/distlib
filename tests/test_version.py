@@ -447,6 +447,39 @@ class VersionTestCase(DistlibTestCase):
             self.assertEqual(matcher.match(version), expected, (constraint, version))
             self.assertEqual(matcher.match(NV(version)), expected, (constraint, version))
 
+    def test_matcher_exclusive_ordered_comparison(self):
+        cases = (
+            ('>1.7', '1.7.1', True),
+            ('>1.7', '1.7.0.post1', False),
+            ('>1.7', '1.7+abc', False),
+            ('>1.7', '1.8', True),
+            ('>1.7', '1.7.1.post1', True),
+            ('>1.7.post2', '1.7.0.post3', True),
+            ('>1.7.post2', '1.7.post2+abc', False),
+            ('>0!1.0', '1.0.1', True),
+            ('>1!1.0', '1.0.1', False),
+            ('>1.7rc1', '1.7rc1.post1', False),
+            ('>1.7rc1', '1.7', True),
+            ('>1.7.dev1', '1.7.post1', True),
+            ('>1.7rc1.dev1', '1.7rc1.post1', True),
+            ('<1.7', '1.6.9', True),
+            ('<1.7', '1.6.9rc1', True),
+            ('<1.7', '1.7.0a1', False),
+            ('<1.7', '1.7.dev0', False),
+            ('<1.7a2', '1.7a1', True),
+            ('<1.7a1', '1.7.dev0', True),
+            ('<1!0.1', '0.1.2', True),
+            ('<1.7.1', '1.7.0.post1', True),
+            ('<1.7', '1.7rc1.post1', False),
+            ('<1.7.post1', '1.7.post1.dev0', False),
+            ('<1.7.post1', '1.7.dev0', True),
+            ('<1.7.post1', '1.7rc1', True),
+        )
+        for constraint, version, expected in cases:
+            matcher = NM('demo (' + constraint + ')')
+            self.assertEqual(matcher.match(version), expected, (constraint, version))
+            self.assertEqual(matcher.match(NV(version)), expected, (constraint, version))
+
     def test_matcher_arbitrary_equality(self):
         matcher = NM('demo (===1.0ALPHA1+ABC)')
         self.assertTrue(matcher.match('1.0ALPHA1+ABC'))
@@ -654,11 +687,11 @@ class VersionTestCase(DistlibTestCase):
             msg = 'Failed for %s' % should_not_match
             self.assertFalse(m.match(should_not_match), msg)
         m = NM('foo (> 1.5)')
-        for should_match in ('1.6', '2.0'):
+        for should_match in ('1.6', '2.0', '1.5.0.1'):
             msg = 'Failed for %s' % should_match
             self.assertTrue(m.match(should_match), msg)
-        for should_not_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0', '1.5', '1.5.0', '1.5.post0', '1.5.post0.dev0',
-                                 '1.5.0.1'):
+        for should_not_match in ('0.1', '1.4', '1.4.9.post1', '1.5.dev0', '1.5', '1.5.0', '1.5.post0',
+                                 '1.5.post0.dev0'):
             msg = 'Failed for %s' % should_not_match
             self.assertFalse(m.match(should_not_match), msg)
 
