@@ -349,16 +349,17 @@ class NormalizedMatcher(Matcher):
         # PEP 440: <V excludes the pre-releases of V itself, unless V is one
         if constraint.is_prerelease or not version.is_prerelease:
             return True
-        return version._parts[:2] != constraint._parts[:2]
+        return version < self.version_class(constraint._string.split('+', 1)[0] + '.dev0')
 
     def _match_gt(self, version, constraint, prefix):
         version, constraint = self._adjust_local(version, constraint, prefix)
         if version <= constraint:
             return False
-        # PEP 440: >V excludes the post-releases of V itself, unless V is one
-        if constraint._parts[3][0] == 'post' or version._parts[3][0] != 'post':
+        # PEP 440: >V excludes the post-releases of V itself, unless V is a
+        # post-release or a development release
+        if constraint._parts[3:5] != (('_',), ('final',)):
             return True
-        return version._parts[:2] != constraint._parts[:2]
+        return version._parts[3] == ('_',) or version._parts[:3] != constraint._parts[:3]
 
     def _match_le(self, version, constraint, prefix):
         version, constraint = self._adjust_local(version, constraint, prefix)

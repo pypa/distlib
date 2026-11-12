@@ -458,6 +458,10 @@ class VersionTestCase(DistlibTestCase):
             ('>1.7.post2', '1.7.post2+abc', False),
             ('>0!1.0', '1.0.1', True),
             ('>1!1.0', '1.0.1', False),
+            ('>1.7rc1', '1.7rc1.post1', False),
+            ('>1.7rc1', '1.7', True),
+            ('>1.7.dev1', '1.7.post1', True),
+            ('>1.7rc1.dev1', '1.7rc1.post1', True),
             ('<1.7', '1.6.9', True),
             ('<1.7', '1.6.9rc1', True),
             ('<1.7', '1.7.0a1', False),
@@ -466,6 +470,10 @@ class VersionTestCase(DistlibTestCase):
             ('<1.7a1', '1.7.dev0', True),
             ('<1!0.1', '0.1.2', True),
             ('<1.7.1', '1.7.0.post1', True),
+            ('<1.7', '1.7rc1.post1', False),
+            ('<1.7.post1', '1.7.post1.dev0', False),
+            ('<1.7.post1', '1.7.dev0', True),
+            ('<1.7.post1', '1.7rc1', True),
         )
         for constraint, version, expected in cases:
             matcher = NM('demo (' + constraint + ')')
