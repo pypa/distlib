@@ -149,6 +149,9 @@ class UtilTestCase(DistlibTestCase):
         self.assertEqual(split_filename('python-gnupg-0.1'), ('python-gnupg', '0.1', None))
         self.assertEqual(split_filename('baklabel-1.0.3-2729-py3.2'), ('baklabel', '1.0.3-2729', '3.2'))
         self.assertEqual(split_filename('baklabel-1.0.3-2729-py27'), ('baklabel', '1.0.3-2729', '27'))
+        self.assertEqual(split_filename('baklabel-1.0.3-2729-py3.11'), ('baklabel', '1.0.3-2729', '3.11'))
+        self.assertEqual(split_filename('baklabel-1.0.3-2729-py310'), ('baklabel', '1.0.3-2729', '310'))
+        self.assertEqual(split_filename('greenlet-0.4.0-py3.12-win32'), ('greenlet', '0.4.0', '3.12'))
         self.assertEqual(split_filename('advpy-0.99b'), ('advpy', '0.99b', None))
         self.assertEqual(split_filename('asv_files-dev-20120501-01', 'asv_files'),
                          ('asv_files', 'dev-20120501-01', None))
