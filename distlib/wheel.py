@@ -1118,9 +1118,14 @@ def is_compatible(wheel, tags=None):
         wheel = Wheel(wheel)  # assume it's a filename
     result = False
     if tags is None:
-        tags = COMPATIBLE_TAGS
-    for ver, abi, arch in tags:
-        if ver in wheel.pyver and abi in wheel.abi and arch in wheel.arch:
-            result = True
-            break
+        # COMPATIBLE_TAGS is a set, so look up the tags of the wheel in it.
+        for tag in wheel.tags:
+            if tag in COMPATIBLE_TAGS:
+                result = True
+                break
+    else:
+        for ver, abi, arch in tags:
+            if ver in wheel.pyver and abi in wheel.abi and arch in wheel.arch:
+                result = True
+                break
     return result
