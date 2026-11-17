@@ -30,6 +30,11 @@ Released: Not yet.
     - Parse versions with many trailing-zero release segments in linear rather
       than quadratic time, so a crafted version string cannot stall the parser.
 
+- wheel
+
+    - Look up the tags of a wheel in the set of compatible tags in
+      ``is_compatible()``, rather than scan all the compatible tags.
+
 
 0.4.4
 ~~~~~
