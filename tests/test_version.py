@@ -134,6 +134,54 @@ class VersionTestCase(DistlibTestCase):
             matcher = NM('demo (==' + explicit + ')')
             self.assertTrue(matcher.match(implicit), implicit)
 
+    def test_development_release_number_separators(self):
+        scheme = get_scheme('normalized')
+        for label in ('dev', 'DEV'):
+            for separator in ('', '.', '-', '_'):
+                for number_separator in ('', '.', '-', '_'):
+                    for number in ('0', '2'):
+                        spelling = '1.2' + separator + label + number_separator + number
+                        canonical = '1.2.dev' + number
+                        version, expected = NV(spelling), NV(canonical)
+                        self.assertEqual(version, expected, spelling)
+                        self.assertEqual(hash(version), hash(expected), spelling)
+                        self.assertEqual(str(version), spelling)
+                        self.assertTrue(version.is_prerelease, spelling)
+                        self.assertEqual(scheme.key(spelling), expected.parse(canonical), spelling)
+                        self.assertTrue(NM('demo==' + spelling).match(canonical), spelling)
+                        self.assertTrue(NM('demo==' + canonical).match(spelling), spelling)
+                        self.assertEqual(scheme.suggest(spelling), spelling)
+
+    def test_development_release_separators_with_implicit_number(self):
+        for label in ('dev', 'DEV'):
+            for separator in ('', '.', '-', '_'):
+                for number_separator in ('.', '-', '_'):
+                    spelling = '1.2' + separator + label + number_separator
+                    self.assertEqual(NV(spelling), NV('1.2.dev0'), spelling)
+                    self.assertEqual(str(NV(spelling)), spelling)
+                    self.assertTrue(NM('demo==' + spelling).match('1.2.dev0'), spelling)
+
+    def test_development_release_separator_combinations(self):
+        cases = (
+            ('2!1.2rc1.dev-3+ABC_02', '2!1.2rc1.dev3+abc.2'),
+            ('1.2.post1-dev_3', '1.2.post1.dev3'),
+            ('1.2a1dev.2', '1.2a1.dev2'),
+            ('v1.2DEV-02', '1.2.dev2'),
+        )
+        for spelling, canonical in cases:
+            self.assertEqual(NV(spelling), NV(canonical), spelling)
+            self.assertTrue(NM('demo==' + spelling).match(canonical), spelling)
+            self.assertTrue(NM('demo==' + canonical).match(spelling), spelling)
+        self.assertLess(NV('1.2.dev-2'), NV('1.2.dev3'))
+        self.assertLess(NV('1.2.dev_3'), NV('1.2a0'))
+
+    def test_invalid_development_release_number_separators(self):
+        for spelling in ('1.2..dev2', '1.2--dev2', '1.2dev..2', '1.2dev--2',
+                         '1.2dev_-2', '1.2dev 2', '1.2dev-2junk', '1.2dev_++2',
+                         u'1.2dev-\u0662'):
+            self.assertRaises(UnsupportedVersionError, NV, spelling)
+            self.assertRaises((UnsupportedVersionError, SyntaxError), NM, 'demo==' + spelling)
+
     def test_scheme_key_rejects_invalid_versions(self):
         scheme = get_scheme('normalized')
         for version in ('', '1.0-', '1.0+a+'):
@@ -183,7 +231,7 @@ class VersionTestCase(DistlibTestCase):
         unsupported = (
             # '1.2a', '1.2.3b',  # see issue 200 - not unsupported
             # '1.02', '1.2a03', '1.2a3.04',
-            '1.2.dev.2',
+            '1.2.dev..2',
             # '1.2dev', '1.2.dev',  # see issue 200 - these are not unsupported
             '1.2-',
             '1.2-a',
