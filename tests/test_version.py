@@ -480,6 +480,33 @@ class VersionTestCase(DistlibTestCase):
             self.assertEqual(matcher.match(version), expected, (constraint, version))
             self.assertEqual(matcher.match(NV(version)), expected, (constraint, version))
 
+    def test_matcher_exclusive_ordered_comparison_matrix(self):
+        # the versions that > and < match among these, as packaging computes them
+        candidates = ('1.7', '1.7.post1', '1.7rc1', '1.7.dev0', '1.7+l', '1!1.7', '1.7.1', '1.6.9')
+        greater = {
+            '1.7': ('1!1.7', '1.7.1'),
+            '1.7.post1': ('1!1.7', '1.7.1'),
+            '1.7rc1': ('1.7', '1.7.post1', '1.7+l', '1!1.7', '1.7.1'),
+            '1.7.dev0': ('1.7', '1.7.post1', '1.7rc1', '1.7+l', '1!1.7', '1.7.1'),
+            '1!1.7': (),
+            '1.7.1': ('1!1.7',),
+            '1.6.9': ('1.7', '1.7.post1', '1.7rc1', '1.7.dev0', '1.7+l', '1!1.7', '1.7.1'),
+        }
+        less = {
+            '1.7': ('1.6.9',),
+            '1.7.post1': ('1.7', '1.7rc1', '1.7.dev0', '1.7+l', '1.6.9'),
+            '1.7rc1': ('1.7.dev0', '1.6.9'),
+            '1.7.dev0': ('1.6.9',),
+            '1!1.7': ('1.7', '1.7.post1', '1.7rc1', '1.7.dev0', '1.7+l', '1.7.1', '1.6.9'),
+            '1.7.1': ('1.7', '1.7.post1', '1.7rc1', '1.7.dev0', '1.7+l', '1.6.9'),
+            '1.6.9': (),
+        }
+        for operator, expected in (('>', greater), ('<', less)):
+            for spec, matching in expected.items():
+                matcher = NM('demo (' + operator + spec + ')')
+                for version in candidates:
+                    self.assertEqual(matcher.match(version), version in matching, (operator + spec, version))
+
     def test_matcher_arbitrary_equality(self):
         matcher = NM('demo (===1.0ALPHA1+ABC)')
         self.assertTrue(matcher.match('1.0ALPHA1+ABC'))
