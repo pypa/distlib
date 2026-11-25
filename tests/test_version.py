@@ -790,6 +790,46 @@ class LegacyVersionTestCase(DistlibTestCase):
 
 class SemanticVersionTestCase(DistlibTestCase):
 
+    def test_hyphenated_prerelease_identifiers(self):
+        scheme = get_scheme('semantic')
+        for suffix in ('alpha-1', 'alpha-1.beta-2', '-', '-alpha', 'alpha-', '0.alpha-1'):
+            text = '6.1.2-' + suffix
+            version = SV(text)
+            self.assertTrue(is_semver(text), text)
+            self.assertEqual(str(version), text)
+            self.assertTrue(version.is_prerelease, text)
+            self.assertLess(version, SV('6.1.2'), text)
+            self.assertTrue(scheme.is_valid_version(text), text)
+            self.assertTrue(SM('twilio (==' + text + ')').match(text), text)
+
+    def test_hyphenated_build_identifiers(self):
+        scheme = get_scheme('semantic')
+        for suffix in ('sha-5114f85', 'sha-5114f85.build-2', '-', '-build', 'build-', 'build.sha-5114f85'):
+            text = '1.0.0+' + suffix
+            version = SV(text)
+            self.assertTrue(is_semver(text), text)
+            self.assertEqual(str(version), text)
+            self.assertFalse(version.is_prerelease, text)
+            self.assertTrue(scheme.is_valid_version(text), text)
+            self.assertTrue(SM('demo (==' + text + ')').match(text), text)
+        self.assertTrue(SV('1.0.0-alpha-1+sha-5114f85').is_prerelease)
+
+    def test_hyphenated_prerelease_ordering(self):
+        self.assertLess(SV('6.1.2-alpha-1'), SV('6.1.2-alpha-2'))
+        self.assertLess(SV('6.1.2-alpha-2'), SV('6.1.2-beta-1'))
+        self.assertLess(SV('6.1.2-1'), SV('6.1.2-1-alpha'))
+        matcher = SM('twilio (>= 6.1.2-alpha-1)')
+        self.assertFalse(matcher.match('6.1.2-alpha-0'))
+        self.assertTrue(matcher.match('6.1.2-alpha-1'))
+        self.assertTrue(matcher.match('6.1.2'))
+
+    def test_invalid_hyphenated_identifiers(self):
+        for suffix in ('', '.alpha-1', 'alpha-1.', 'alpha-1..beta', 'alpha_1', 'alpha/1'):
+            for separator in ('-', '+'):
+                text = '1.0.0' + separator + suffix
+                self.assertFalse(is_semver(text), text)
+                self.assertRaises(UnsupportedVersionError, SV, text)
+
     def test_numeric_prerelease_identifiers(self):
         cases = (
             ('99999999', '100000000'),
