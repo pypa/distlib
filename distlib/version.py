@@ -176,7 +176,7 @@ class Matcher(object):
         return self._string
 
 
-PEP440_VERSION_RE = re.compile(r'^v?([0-9]+!)?([0-9]+(\.[0-9]+)*)((a|alpha|b|beta|c|rc|pre|preview)([0-9]+)?)?'
+PEP440_VERSION_RE = re.compile(r'^v?([0-9]+!)?([0-9]+(\.[0-9]+)*)([._-]?(a|alpha|b|beta|c|rc|pre|preview)[._-]?([0-9]+)?)?'
                                r'(\.(post|r|rev)([0-9]+)?)?([._-]?(dev)([0-9]+)?)?'
                                r'(\+([a-zA-Z0-9]+([._-][a-zA-Z0-9]+)*))?$', re.I | getattr(re, 'ASCII', 0))
 
