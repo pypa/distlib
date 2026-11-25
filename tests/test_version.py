@@ -91,6 +91,43 @@ class VersionTestCase(DistlibTestCase):
         for greater, smaller in cases:
             self.assertGreater(NV(greater), NV(smaller), (greater, smaller))
 
+    def test_prerelease_separators(self):
+        labels = (('a', 'a'), ('alpha', 'a'), ('b', 'b'), ('beta', 'b'),
+                  ('c', 'rc'), ('rc', 'rc'), ('pre', 'rc'), ('preview', 'rc'))
+        scheme = get_scheme('normalized')
+        for label, canonical_label in labels:
+            for spelling in (label, label.upper()):
+                for before in ('.', '-', '_', ''):
+                    for after in ('', '.', '-', '_'):
+                        text = '1.2' + before + spelling + after + '2'
+                        canonical = '1.2' + canonical_label + '2'
+                        version = NV(text)
+                        self.assertEqual(version, NV(canonical), text)
+                        self.assertEqual(hash(version), hash(NV(canonical)), text)
+                        self.assertEqual(str(version), text)
+                        self.assertTrue(version.is_prerelease, text)
+                        self.assertTrue(scheme.is_valid_version(text), text)
+                        self.assertEqual(scheme.suggest(text), text)
+                        self.assertTrue(NM('demo (==' + text + ')').match(canonical), text)
+                        self.assertTrue(NM('demo (==' + canonical + ')').match(text), text)
+
+    def test_prerelease_separators_with_implicit_number(self):
+        for text in ('1.2-a', '1.2.a', '1.2_a', '1.2-alpha_', '1.2.BETA-', '1.2-rc.'):
+            canonical = '1.2b0' if 'BETA' in text else '1.2rc0' if 'rc' in text else '1.2a0'
+            self.assertEqual(NV(text), NV(canonical), text)
+
+    def test_prerelease_separators_with_other_components(self):
+        text = '2!1.2-RC_03.post4.dev5+build.6'
+        canonical = '2!1.2rc3.post4.dev5+build.6'
+        self.assertEqual(NV(text), NV(canonical))
+        self.assertEqual(_normalized_key(text), _normalized_key(canonical))
+        self.assertLess(NV('1.2-a.2'), NV('1.2a3'))
+        self.assertLess(NV('1.2-rc_2'), NV('1.2'))
+
+    def test_invalid_prerelease_separators(self):
+        for text in ('1.2..a1', '1.2--rc1', '1.2a..1', '1.2rc_-1', '1.2a 1', '1.2a1junk'):
+            self.assertRaises(UnsupportedVersionError, NV, text)
+
     def test_local_segment_order(self):
         cases = (
             ('1.0', '1.0+abc'),
@@ -186,7 +223,7 @@ class VersionTestCase(DistlibTestCase):
             '1.2.dev.2',
             # '1.2dev', '1.2.dev',  # see issue 200 - these are not unsupported
             '1.2-',
-            '1.2-a',
+            '1.2--a',
             '1.2.dev2.post2',
             '1.2.post2.dev3.post4')
 
@@ -302,7 +339,7 @@ class VersionTestCase(DistlibTestCase):
     def test_suggest_normalized_version(self):
         suggest = _suggest_normalized_version
         self.assertEqual(suggest('1.0'), '1.0')
-        self.assertEqual(suggest('1.0-alpha1'), '1.0a1')
+        self.assertEqual(suggest('1.0-alpha1'), '1.0-alpha1')
         self.assertEqual(suggest('1.0c2'), '1.0c2')
         self.assertEqual(suggest('walla walla washington'), None)
         self.assertEqual(suggest('2.4c1'), '2.4c1')
@@ -314,7 +351,7 @@ class VersionTestCase(DistlibTestCase):
         self.assertEqual(suggest('0.6a9.dev-r41475'), '0.6a9.dev41475')
         # self.assertEqual(suggest('2.4preview1'), '2.4c1')  # see issue #200
         # self.assertEqual(suggest('2.4pre1'), '2.4c1')  # see issue #200
-        self.assertEqual(suggest('2.1-rc2'), '2.1c2')
+        self.assertEqual(suggest('2.1-rc2'), '2.1-rc2')
 
         # from pypi
         # self.assertEqual(suggest('0.1dev'), '0.1.dev0')   # see issue 200 - 0.1dev is now rational
@@ -515,7 +552,7 @@ class VersionTestCase(DistlibTestCase):
     def test_scheme_suggestions(self):
         scheme = get_scheme('normalized')
         self.assertEqual(scheme.suggest('1.0ALPHA1+ABC_02-def.3'), '1.0ALPHA1+ABC_02-def.3')
-        self.assertEqual(scheme.suggest('v1.0-alpha1'), '1.0a1')
+        self.assertEqual(scheme.suggest('v1.0-alpha1'), 'v1.0-alpha1')
         self.assertEqual(scheme.suggest('1.0-dev-r3'), '1.0.dev3')
         self.assertIsNone(scheme.suggest('unversioned'))
 

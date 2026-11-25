@@ -422,7 +422,7 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
         # argument of the constructor), see comment in LegacyMetadata.update
         metadata = LegacyMetadata()
         metadata['Requires-Dist'] = 'Funky (Groovie)'
-        metadata['Requires-Python'] = '1a-4'
+        metadata['Requires-Python'] = '1a--4'
         self.assertEqual(len(self.get_logs()), 2)
 
         # test multiple version matches
@@ -431,6 +431,11 @@ class LegacyMetadataTestCase(LoggingCatcher, TempdirManager, DistlibTestCase):
         # XXX check PEP and see if 3 == 3.0
         metadata['Requires-Python'] = '>=2.6, <3.0'
         metadata['Requires-Dist'] = ['Foo (>=2.6, <3.0)']
+        self.assertEqual(self.get_logs(), [])
+
+        # PEP 440 permits separators around prerelease labels.
+        metadata['Requires-Python'] = '>=1a-4'
+        metadata['Requires-Dist'] = ['Foo (>=1.0-rc_2)']
         self.assertEqual(self.get_logs(), [])
 
     def test_obsoletes_dist(self):
