@@ -665,8 +665,8 @@ class LegacyMatcher(Matcher):
 
 
 _SEMVER_RE = re.compile(r'^(\d+)\.(\d+)\.(\d+)'
-                        r'(-[a-z0-9]+(\.[a-z0-9-]+)*)?'
-                        r'(\+[a-z0-9]+(\.[a-z0-9-]+)*)?$', re.I)
+                        r'(-[a-z0-9-]+(\.[a-z0-9-]+)*)?'
+                        r'(\+[a-z0-9-]+(\.[a-z0-9-]+)*)?$', re.I)
 
 
 def is_semver(s):
