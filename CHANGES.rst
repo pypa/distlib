@@ -27,6 +27,8 @@ Released: Not yet.
 
 - version
 
+    - Return no exact version for wildcard prefix constraints.
+
     - Parse versions with many trailing-zero release segments in linear rather
       than quadratic time, so a crafted version string cannot stall the parser.
 
