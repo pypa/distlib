@@ -409,6 +409,16 @@ class VersionTestCase(DistlibTestCase):
             m = NM(s)
             self.assertEqual(m.exact_version is not None, b)
 
+    def test_exact_version_with_prefix(self):
+        for constraint in ('Dummy (==1.2.*)', 'Dummy (==1.2.3.*)'):
+            matcher = NM(constraint)
+            self.assertIsNone(matcher.exact_version)
+        self.assertEqual(NM('Dummy (==1.2)').exact_version, NV('1.2'))
+        self.assertEqual(NM('Dummy (===1.2)').exact_version, NV('1.2'))
+        self.assertIsNone(NM('Dummy (==1.2,>=1.0)').exact_version)
+        self.assertTrue(NM('Dummy (==1.2.*)').match('1.2'))
+        self.assertTrue(NM('Dummy (==1.2.*)').match('1.2.3'))
+
     def test_matcher_name(self):
         # Test that names are parsed the right way
 
