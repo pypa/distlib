@@ -1127,7 +1127,8 @@ class GlobTestCase(GlobTestCaseBase):
             self.assertIsNone(parse_requirement(empty))
 
         # Invalid requirements
-        for invalid in ('a (', 'a/', 'a$', 'a [', 'a () [],', 'a 1.2'):
+        for invalid in ('a (', 'a/', 'a$', 'a [', 'a () [],', 'a 1.2', 'a [ ab cd ]',
+                        'a ( )', 'a ( >= 1 < 2 )'):
             self.assertRaises(SyntaxError, parse_requirement, invalid)
 
         # Valid requirements
@@ -1148,6 +1149,12 @@ class GlobTestCase(GlobTestCaseBase):
         validate(r, ('a', None, None, 'a', None))
         r = parse_requirement('a (== 1.2.*, != 1.2.1.*)')
         validate(r, ('a', [('==', '1.2.*'), ('!=', '1.2.1.*')], None, 'a == 1.2.*, != 1.2.1.*', None))
+        r = parse_requirement('a [ ab, cd ] (\t>= 1.2, < 2.0\t)')
+        validate(r, ('a', [('>=', '1.2'), ('<', '2.0')], ['ab', 'cd'], 'a >= 1.2, < 2.0', None))
+        r = parse_requirement('a [\t ]')
+        validate(r, ('a', None, None, 'a', None))
+        r = parse_requirement('a ( 1.2 )')
+        validate(r, ('a', [('~=', '1.2')], None, 'a ~= 1.2', None))
         r = parse_requirement('a @ http://domain.com/path#abc=def')
         validate(r, ('a', None, None, 'a', 'http://domain.com/path#abc=def'))
         # See issue #148

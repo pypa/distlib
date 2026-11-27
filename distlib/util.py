@@ -159,7 +159,7 @@ def parse_requirement(req):
         i = remaining.find(']', 1)
         if i < 0:
             raise SyntaxError('unterminated extra: %s' % remaining)
-        s = remaining[1:i]
+        s = remaining[1:i].lstrip(' \t')
         remaining = remaining[i + 1:].lstrip()
         extras = []
         while s:
@@ -231,22 +231,22 @@ def parse_requirement(req):
                 i = remaining.find(')', 1)
                 if i < 0:
                     raise SyntaxError('unterminated parenthesis: %s' % remaining)
-                s = remaining[1:i]
+                s = remaining[1:i].lstrip(' \t')
                 remaining = remaining[i + 1:].lstrip()
                 # As a special diversion from PEP 508, allow a version number
                 # a.b.c in parentheses as a synonym for ~= a.b.c (because this
                 # is allowed in earlier PEPs)
                 if COMPARE_OP.match(s):
-                    versions, _ = get_versions(s)
+                    versions, s = get_versions(s)
                 else:
                     m = VERSION_IDENTIFIER.match(s)
                     if not m:
                         raise SyntaxError('invalid constraint: %s' % s)
                     v = m.groups()[0]
                     s = s[m.end():].lstrip()
-                    if s:
-                        raise SyntaxError('invalid constraint: %s' % s)
                     versions = [('~=', v)]
+                if s:
+                    raise SyntaxError('invalid constraint: %s' % s)
 
     if remaining:
         if remaining[0] != ';':
